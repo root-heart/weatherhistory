@@ -25,6 +25,9 @@ class SsvParserSpec extends Specification {
 
         where:
         fileContent                                             | expectedColumnNames               | expectedLines
+        ''                                                      | []                                | []
+        'column1'                                               | ['column1']                       | []
+        'column1\n'                                             | ['column1']                       | []
         'column1\nvalue1'                                       | ['column1']                       | [['value1']]
         'column1\nvalue1\nvalue2\nvalue3'                       | ['column1']                       | [['value1'], ['value2'], ['value3']]
         'column1;column2\nvalue1;value2'                        | ['column1', 'column2']            | [['value1', 'value2']]
