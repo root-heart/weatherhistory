@@ -34,12 +34,12 @@ open class RecordConverter<R : BaseRecord>(
         val expectedColumnNames = columnMappings.keys + COLUMN_NAME_STATION_ID + COLUMN_NAME_MEASUREMENT_TIME
         ssvData.columnNames.forEach {
             if (!expectedColumnNames.contains(it)) {
-                throw Exception("columnName $it not expected")
+                throw InvalidColumnsException("columnName $it not expected")
             }
         }
         expectedColumnNames.forEach {
             if (!ssvData.columnNames.contains(it)) {
-                throw Exception("column name $it expected, but not found")
+                throw InvalidColumnsException("column name $it expected, but not found")
             }
         }
     }
@@ -86,3 +86,5 @@ class BigDecimalProperty<R>(property: KMutableProperty1<R, BigDecimal?>) :
 
 class QualityLevelProperty<R>(property: KMutableProperty1<R, QualityLevel?>) :
     RecordProperty<R, QualityLevel?>(property, { QualityLevel.of(it) })
+
+class InvalidColumnsException(message: String) : Exception(message)
