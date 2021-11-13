@@ -6,7 +6,7 @@ enum class QualityLevel(val code: Int, val description: String) {
     THREE(3, "in ROUTINE mit dem Verfahren QUALIMET und QCSY geprüft"),
     FIVE(5, "historische, subjektive Verfahren"),
     SEVEN(7, "in ROUTINE geprüft, aber keine Korrekturen"),
-    EIGHT(8, "Qualitätsicherung ausserhalb ROUTINE"),
+    EIGHT(8, "Qualitätssicherung außerhalb ROUTINE"),
     NINE(9, "in ROUTINE geprüft, nicht alle Parameter korrigiert"),
     TEN(10, "in ROUTINE geprüft, routinemäßige Korrektur beendet");
 
