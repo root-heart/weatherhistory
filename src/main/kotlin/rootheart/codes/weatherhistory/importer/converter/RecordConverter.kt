@@ -1,15 +1,11 @@
 package rootheart.codes.weatherhistory.importer.converter
 
-import rootheart.codes.weatherhistory.importer.QualityLevel
 import rootheart.codes.weatherhistory.importer.SsvData
 import rootheart.codes.weatherhistory.importer.StationId
 import rootheart.codes.weatherhistory.importer.records.BaseRecord
-import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Stream
-import kotlin.reflect.KMutableProperty1
 
 open class RecordConverter<R : BaseRecord>(
     private val recordConstructor: () -> R,
@@ -71,20 +67,5 @@ open class RecordConverter<R : BaseRecord>(
         return record
     }
 }
-
-private val bigDecimalObjectPool: MutableMap<String, BigDecimal> = ConcurrentHashMap()
-
-open class RecordProperty<R, T>(
-    private val property: KMutableProperty1<R, T>,
-    private val valueParser: (String) -> T
-) {
-    fun setValue(record: R, value: String) = property.set(record, valueParser.invoke(value))
-}
-
-class BigDecimalProperty<R>(property: KMutableProperty1<R, BigDecimal?>) :
-    RecordProperty<R, BigDecimal?>(property, { bigDecimalObjectPool.computeIfAbsent(it, ::BigDecimal) })
-
-class QualityLevelProperty<R>(property: KMutableProperty1<R, QualityLevel?>) :
-    RecordProperty<R, QualityLevel?>(property, { QualityLevel.of(it) })
 
 class InvalidColumnsException(message: String) : Exception(message)

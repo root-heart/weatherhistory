@@ -5,6 +5,7 @@ enum class MeasurementOrObservation(val code: String) {
     OBSERVATION("P");
 
     companion object {
+        @JvmStatic
         fun of(string: String): MeasurementOrObservation {
             for (measurementOrObservation in values()) {
                 if (string == measurementOrObservation.code) {

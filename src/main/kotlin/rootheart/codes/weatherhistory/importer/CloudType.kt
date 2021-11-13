@@ -15,13 +15,21 @@ enum class CloudType(val description: String, val code: Int, val abbreviation: S
 
     companion object {
         private val CLOUD_TYPE_BY_CODE: MutableMap<Int, CloudType> = HashMap()
+        private val CLOUD_TYPE_BY_ABBREViATION: MutableMap<String, CloudType> = HashMap()
 
         init {
             for (cloudType in values()) {
                 CLOUD_TYPE_BY_CODE[cloudType.code] = cloudType
+                CLOUD_TYPE_BY_ABBREViATION[cloudType.abbreviation] = cloudType
             }
         }
 
+        @JvmStatic
+        fun of(code: String) = CLOUD_TYPE_BY_CODE.getValue(Integer.parseInt(code))
+
         fun of(code: Int) = CLOUD_TYPE_BY_CODE.getValue(code)
+
+        @JvmStatic
+        fun ofAbbreviation(abbreviation: String) = CLOUD_TYPE_BY_ABBREViATION.getValue(abbreviation)
     }
 }

@@ -1,7 +1,7 @@
 package rootheart.codes.weatherhistory.importer
 
 data class CloudLayer (
-    val cloudType: CloudType,
-    val height: Int,
-    val coverage: Int
+    var cloudType: CloudType? = null,
+    var height: Int? = null,
+    var coverage: Int? = null
 )
