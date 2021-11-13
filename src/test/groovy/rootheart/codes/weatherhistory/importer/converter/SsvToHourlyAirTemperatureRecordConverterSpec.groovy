@@ -1,5 +1,8 @@
-package rootheart.codes.weatherhistory.importer
+package rootheart.codes.weatherhistory.importer.converter
 
+import rootheart.codes.weatherhistory.importer.QualityLevel
+import rootheart.codes.weatherhistory.importer.SsvData
+import rootheart.codes.weatherhistory.importer.StationId
 import rootheart.codes.weatherhistory.importer.converter.InvalidColumnsException
 import rootheart.codes.weatherhistory.importer.converter.SsvToHourlyAirTemperatureRecordConverter
 import spock.lang.Specification
