@@ -46,20 +46,28 @@ open class RecordConverter<R : BaseRecord>(
     }
 
     private fun convertValues(ssvData: SsvData): Stream<R> {
-        return ssvData.columnValuesStream.map { createRecord(ssvData.columnNames, it) }
+        return ssvData.columnValuesStream
+            .map { createRecord(ssvData.columnNames, it) }
+            .filter { it != null }
+            .map { it!! }
     }
 
-    private fun createRecord(columnNames: List<String>, values: List<String>): R {
+    private fun createRecord(columnNames: List<String>, values: List<String?>): R? {
+        val stationIdString = values[columnIndexStationId]
+        val measurementTimeString = values[columnIndexMeasurementTime]
+        if (stationIdString == null || measurementTimeString == null) {
+            return null
+        }
         val record = recordConstructor.invoke()
-        record.stationId = StationId.of(values[columnIndexStationId])
-        record.measurementTime = LocalDateTime.parse(values[columnIndexMeasurementTime], DATE_TIME_FORMATTER)
+        record.stationId = StationId.of(stationIdString)
+        record.measurementTime = LocalDateTime.parse(measurementTimeString, DATE_TIME_FORMATTER)
         for (i in columnNames.indices) {
             if (i == columnIndexMeasurementTime || i == columnIndexStationId) {
                 continue
             }
             val columnName = columnNames[i]
             val stringValue = values[i]
-            if (stringValue != "-999" && stringValue != "-99.9") {
+            if (stringValue != null) {
                 val recordProperty = columnMappings.getValue(columnName)
                 recordProperty.setValue(record, stringValue)
             }
