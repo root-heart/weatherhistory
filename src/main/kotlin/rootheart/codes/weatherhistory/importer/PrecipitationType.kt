@@ -1,4 +1,4 @@
-package rootheart.codes.weatherhistory.importer.records
+package rootheart.codes.weatherhistory.importer
 
 enum class PrecipitationType(val code: Int, val description: String) {
     NONE(0, "kein Niederschlag gefallenen und/ oder keine Niederschlagshöhe aus abgesetzten Niederschlägen (wie Tau, Reif), bei automatischen Stationen entspricht das der WMO-Code-Zahl 10"),
