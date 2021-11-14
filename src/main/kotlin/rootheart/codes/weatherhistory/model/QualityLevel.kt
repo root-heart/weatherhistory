@@ -1,4 +1,4 @@
-package rootheart.codes.weatherhistory.importer
+package rootheart.codes.weatherhistory.model
 
 enum class QualityLevel(val code: Int, val description: String) {
     ONE(1, "nur formale Prüfung beim Entschlüsseln und Laden"),

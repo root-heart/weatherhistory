@@ -2,8 +2,8 @@ package rootheart.codes.weatherhistory.importer.converter
 
 
 import rootheart.codes.weatherhistory.importer.SpecUtils
-import rootheart.codes.weatherhistory.importer.SsvData
-import rootheart.codes.weatherhistory.importer.StationId
+import rootheart.codes.weatherhistory.importer.ssv.SsvData
+import rootheart.codes.weatherhistory.model.StationId
 import spock.lang.Specification
 import spock.lang.Unroll
 

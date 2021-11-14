@@ -1,7 +1,7 @@
 package rootheart.codes.weatherhistory.importer.records
 
-import rootheart.codes.weatherhistory.importer.QualityLevel
-import rootheart.codes.weatherhistory.importer.StationId
+import rootheart.codes.weatherhistory.model.QualityLevel
+import rootheart.codes.weatherhistory.model.StationId
 import java.time.LocalDateTime
 
 abstract class BaseRecord {

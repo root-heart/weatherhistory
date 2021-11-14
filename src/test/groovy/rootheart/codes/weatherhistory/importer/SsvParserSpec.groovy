@@ -1,5 +1,6 @@
 package rootheart.codes.weatherhistory.importer
 
+import rootheart.codes.weatherhistory.importer.ssv.SsvParser
 import spock.lang.Specification
 import spock.lang.Unroll
 

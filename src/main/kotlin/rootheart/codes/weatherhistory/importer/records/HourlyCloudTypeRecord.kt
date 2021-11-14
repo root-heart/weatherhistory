@@ -1,7 +1,7 @@
 package rootheart.codes.weatherhistory.importer.records
 
 import rootheart.codes.weatherhistory.importer.CloudLayer
-import rootheart.codes.weatherhistory.importer.MeasurementOrObservation
+import rootheart.codes.weatherhistory.model.MeasurementOrObservation
 
 data class HourlyCloudTypeRecord(
     var overallCoverage: Int? = null,

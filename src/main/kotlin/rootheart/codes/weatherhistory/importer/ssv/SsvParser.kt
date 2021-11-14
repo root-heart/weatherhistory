@@ -1,4 +1,4 @@
-package rootheart.codes.weatherhistory.importer
+package rootheart.codes.weatherhistory.importer.ssv
 
 import java.io.BufferedReader
 

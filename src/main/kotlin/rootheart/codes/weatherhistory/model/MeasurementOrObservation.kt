@@ -1,4 +1,4 @@
-package rootheart.codes.weatherhistory.importer
+package rootheart.codes.weatherhistory.model
 
 enum class MeasurementOrObservation(val code: String) {
     MEASUREMENT("I"),

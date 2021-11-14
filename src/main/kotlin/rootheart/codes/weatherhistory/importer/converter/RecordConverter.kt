@@ -1,7 +1,7 @@
 package rootheart.codes.weatherhistory.importer.converter
 
-import rootheart.codes.weatherhistory.importer.SsvData
-import rootheart.codes.weatherhistory.importer.StationId
+import rootheart.codes.weatherhistory.importer.ssv.SsvData
+import rootheart.codes.weatherhistory.model.StationId
 import rootheart.codes.weatherhistory.importer.records.BaseRecord
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

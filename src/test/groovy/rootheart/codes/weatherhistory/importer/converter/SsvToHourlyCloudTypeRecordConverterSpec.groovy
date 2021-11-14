@@ -1,11 +1,11 @@
 package rootheart.codes.weatherhistory.importer.converter
 
-import rootheart.codes.weatherhistory.importer.CloudType
-import rootheart.codes.weatherhistory.importer.MeasurementOrObservation
-import rootheart.codes.weatherhistory.importer.QualityLevel
+import rootheart.codes.weatherhistory.model.CloudType
+import rootheart.codes.weatherhistory.model.MeasurementOrObservation
+import rootheart.codes.weatherhistory.model.QualityLevel
 import rootheart.codes.weatherhistory.importer.SpecUtils
-import rootheart.codes.weatherhistory.importer.SsvData
-import rootheart.codes.weatherhistory.importer.StationId
+import rootheart.codes.weatherhistory.importer.ssv.SsvData
+import rootheart.codes.weatherhistory.model.StationId
 import spock.lang.Specification
 import spock.lang.Unroll
 

@@ -1,4 +1,4 @@
-package rootheart.codes.weatherhistory.importer
+package rootheart.codes.weatherhistory.model
 
 import java.util.concurrent.ConcurrentHashMap
 

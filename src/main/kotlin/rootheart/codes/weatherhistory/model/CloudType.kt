@@ -1,4 +1,4 @@
-package rootheart.codes.weatherhistory.importer
+package rootheart.codes.weatherhistory.model
 
 enum class CloudType(val description: String, val code: Int, val abbreviation: String) {
     CIRRUS("Cirrus", 0, "CI"),

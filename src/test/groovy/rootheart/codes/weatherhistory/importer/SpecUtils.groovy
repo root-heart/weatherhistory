@@ -1,5 +1,9 @@
 package rootheart.codes.weatherhistory.importer
 
+import rootheart.codes.weatherhistory.model.MeasurementOrObservation
+import rootheart.codes.weatherhistory.model.PrecipitationType
+import rootheart.codes.weatherhistory.model.QualityLevel
+
 trait SpecUtils {
     List<BigDecimal> allBigDecimalsOf(List<List<String>> values, int index) {
         values.collect { it[index] != null ? new BigDecimal(it[index]) : null }

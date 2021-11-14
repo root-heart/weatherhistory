@@ -1,6 +1,10 @@
 package rootheart.codes.weatherhistory.importer.converter
 
 import rootheart.codes.weatherhistory.importer.*
+import rootheart.codes.weatherhistory.model.CloudType
+import rootheart.codes.weatherhistory.model.MeasurementOrObservation
+import rootheart.codes.weatherhistory.model.PrecipitationType
+import rootheart.codes.weatherhistory.model.QualityLevel
 import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KMutableProperty1
