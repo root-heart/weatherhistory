@@ -16,4 +16,8 @@ trait SpecUtils {
     List<PrecipitationType> allPrecipitationTypesOf(List<List<String>> values, int index) {
         values.collect { it[index] != null ? PrecipitationType.of(it[index]) : null }
     }
+
+    List<MeasurementOrObservation> allMeasurementOrObservationsOf(List<List<String>> values, int index) {
+        values.collect { it[index] != null ? MeasurementOrObservation.of(it[index]) : null }
+    }
 }
