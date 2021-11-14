@@ -1,16 +1,13 @@
 package rootheart.codes.weatherhistory.importer.records
 
-import rootheart.codes.weatherhistory.importer.QualityLevel
-import rootheart.codes.weatherhistory.importer.StationId
 import java.math.BigDecimal
-import java.time.LocalDateTime
 
 data class HourlyMoistureRecord(
-    val stationId: StationId,
-    val measurementTime: LocalDateTime,
-    val qualityLevel: QualityLevel,
-    val absoluteHumidity: BigDecimal,
-    val vaporPressureHectopascals: BigDecimal,
-    val wetBulbTemperatureCentigrade: BigDecimal,
-    val airPressureHectopascals: BigDecimal,
-)
+    var absoluteHumidity: BigDecimal? = null,
+    var relativeHumidityPercent: BigDecimal? = null,
+    var vaporPressureHectopascals: BigDecimal? = null,
+    var dewPointTemperatureCentigrade: BigDecimal? = null,
+    var wetBulbTemperatureCentigrade: BigDecimal? = null,
+    var airPressureHectopascals: BigDecimal? = null,
+    var airTemperatureAtTwoMetersHeightCentigrade: BigDecimal? = null,
+) : BaseRecord()
