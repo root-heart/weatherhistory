@@ -12,4 +12,8 @@ trait SpecUtils {
     List<QualityLevel> allQualityLevelsOf(List<List<String>> values, int index) {
         values.collect { it[index] != null ? QualityLevel.of(it[index]) : null }
     }
+
+    List<PrecipitationType> allPrecipitationTypesOf(List<List<String>> values, int index) {
+        values.collect { it[index] != null ? PrecipitationType.of(it[index]) : null }
+    }
 }

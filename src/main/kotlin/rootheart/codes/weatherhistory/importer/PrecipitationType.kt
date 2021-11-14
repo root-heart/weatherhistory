@@ -19,5 +19,8 @@ enum class PrecipitationType(val code: Int, val description: String) {
                 PRECIPITATION_TYPE_BY_CODE.put(precipitationType.code, precipitationType)
             }
         }
+
+        @JvmStatic
+        fun of(code: String) = PRECIPITATION_TYPE_BY_CODE.getValue(Integer.parseInt(code))
     }
 }

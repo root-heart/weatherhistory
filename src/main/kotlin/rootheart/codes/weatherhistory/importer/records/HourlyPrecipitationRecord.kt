@@ -7,9 +7,6 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 data class HourlyPrecipitationRecord(
-    val stationId: StationId,
-    val measurementTime: LocalDateTime,
-    val qualityLevel: QualityLevel,
-    val precipitationMillimeters: BigDecimal,
-    val precipitationType: PrecipitationType
-)
+    var precipitationMillimeters: BigDecimal? = null,
+    var precipitationType: PrecipitationType? = null
+) : BaseRecord()

@@ -1,22 +1,19 @@
 package rootheart.codes.weatherhistory.importer.converter
 
-import rootheart.codes.weatherhistory.importer.CloudLayer
-import rootheart.codes.weatherhistory.importer.CloudType
-import rootheart.codes.weatherhistory.importer.MeasurementOrObservation
-import rootheart.codes.weatherhistory.importer.QualityLevel
+import rootheart.codes.weatherhistory.importer.*
 import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KMutableProperty1
 
 
-abstract class RecordProperty<R, T> {
-    abstract fun setValue(record: R, value: String)
+fun interface RecordProperty<R, T> {
+    fun setValue(record: R, value: String)
 }
 
 open class SimpleRecordProperty<R, T>(
     private val property: KMutableProperty1<R, T>,
     private val valueParser: (String) -> T
-) : RecordProperty<R, T>() {
+) : RecordProperty<R, T> {
     override fun setValue(record: R, value: String) = property.set(record, valueParser.invoke(value))
 }
 
@@ -25,7 +22,7 @@ open class NestedRecordProperty<R, P1, P2>(
     private val firstPropertyValueConstructor: () -> P1,
     private val secondProperty: KMutableProperty1<P1, P2>,
     private val valueParser: (String) -> P2
-) : RecordProperty<R, P2>() {
+) : RecordProperty<R, P2> {
     override fun setValue(record: R, value: String) {
         var firstPropertyValue = firstProperty.get(record)
         if (firstPropertyValue == null) {
@@ -84,3 +81,6 @@ class CloudLayerCoverageProperty<R>(layerProperty: KMutableProperty1<R, CloudLay
         CloudLayer::coverage,
         { intObjectPool.computeIfAbsent(it, Integer::parseInt) }
     )
+
+class PrecipitationTypeProperty<R>(property: KMutableProperty1<R, PrecipitationType?>) :
+    SimpleRecordProperty<R, PrecipitationType?>(property, PrecipitationType::of)
