@@ -3,6 +3,7 @@ package rootheart.codes.weatherhistory.importer.converter
 import rootheart.codes.weatherhistory.importer.CloudType
 import rootheart.codes.weatherhistory.importer.MeasurementOrObservation
 import rootheart.codes.weatherhistory.importer.QualityLevel
+import rootheart.codes.weatherhistory.importer.SpecUtils
 import rootheart.codes.weatherhistory.importer.SsvData
 import rootheart.codes.weatherhistory.importer.StationId
 import spock.lang.Specification
@@ -12,7 +13,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Collectors
 
-class SsvToHourlyCloudTypeRecordConverterSpec extends Specification {
+class SsvToHourlyCloudTypeRecordConverterSpec extends Specification implements SpecUtils {
     static final columnNames = ["STATIONS_ID", "MESS_DATUM", "QN_8", "V_N", "V_N_I",
                                 "V_S1_CS", "V_S1_CSA", "V_S1_HHS", "V_S1_NS",
                                 "V_S2_CS", "V_S2_CSA", "V_S2_HHS", "V_S2_NS",
@@ -35,7 +36,7 @@ class SsvToHourlyCloudTypeRecordConverterSpec extends Specification {
         records*.stationId == values.collect { it[0] != null ? StationId.of(it[0]) : null }
         records*.measurementTime == values.collect { LocalDateTime.parse(it[1], DateTimeFormatter.ofPattern('yyyyMMddHH')) }
         records*.qualityLevel == values.collect { QualityLevel.of(it[2]) }
-        records*.overallCoverage == values.collect { Integer.parseInt(it[3]) }
+        records*.overallCoverage == allIntsOf(values, 3)
         records*.measurementOrObservation == values.collect { MeasurementOrObservation.of(it[4]) }
 
         and: 'the four different layers are not set'
@@ -68,8 +69,8 @@ class SsvToHourlyCloudTypeRecordConverterSpec extends Specification {
 
         and: 'the values in the first layer are set correctly'
         records*.layer1.collect { it.cloudType } == values.collect { cloudTypeOfCodeAndAbbreviation(it[5], it[6]) }
-        records*.layer1.collect { it.height } == values.collect { it[7] == null ? null : Integer.parseInt(it[7]) }
-        records*.layer1.collect { it.coverage } == values.collect { it[8] == null ? null : Integer.parseInt(it[8]) }
+        records*.layer1.collect { it.height } == allIntsOf(values, 7)
+        records*.layer1.collect { it.coverage } == allIntsOf(values, 8)
 
         where:
         description                                     | values
@@ -98,8 +99,8 @@ class SsvToHourlyCloudTypeRecordConverterSpec extends Specification {
 
         and: 'the values in the second layer are set correctly'
         records*.layer2.collect { it.cloudType } == values.collect { cloudTypeOfCodeAndAbbreviation(it[9], it[10]) }
-        records*.layer2.collect { it.height } == values.collect { it[11] == null ? null : Integer.parseInt(it[11]) }
-        records*.layer2.collect { it.coverage } == values.collect { it[12] == null ? null : Integer.parseInt(it[12]) }
+        records*.layer2.collect { it.height } == allIntsOf(values, 11)
+        records*.layer2.collect { it.coverage } == allIntsOf(values, 12)
 
         where:
         description                                     | values
@@ -129,8 +130,8 @@ class SsvToHourlyCloudTypeRecordConverterSpec extends Specification {
 
         and: 'the values in the third layer are set correctly'
         records*.layer3.collect { it.cloudType } == values.collect { cloudTypeOfCodeAndAbbreviation(it[13], it[14]) }
-        records*.layer3.collect { it.height } == values.collect { it[15] == null ? null : Integer.parseInt(it[15]) }
-        records*.layer3.collect { it.coverage } == values.collect { it[16] == null ? null : Integer.parseInt(it[16]) }
+        records*.layer3.collect { it.height } == allIntsOf(values, 15)
+        records*.layer3.collect { it.coverage } == allIntsOf(values, 16)
 
         where:
         description                                     | values
@@ -159,8 +160,8 @@ class SsvToHourlyCloudTypeRecordConverterSpec extends Specification {
 
         and: 'the values in the fourth layer are set correctly'
         records*.layer4.collect { it.cloudType } == values.collect { cloudTypeOfCodeAndAbbreviation(it[17], it[18]) }
-        records*.layer4.collect { it.height } == values.collect { it[19] == null ? null : Integer.parseInt(it[19]) }
-        records*.layer4.collect { it.coverage } == values.collect { it[20] == null ? null : Integer.parseInt(it[20]) }
+        records*.layer4.collect { it.height } == allIntsOf(values, 19)
+        records*.layer4.collect { it.coverage } == allIntsOf(values, 20)
 
         where:
         description                                     | values

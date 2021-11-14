@@ -1,6 +1,7 @@
 package rootheart.codes.weatherhistory.importer.converter
 
 import rootheart.codes.weatherhistory.importer.QualityLevel
+import rootheart.codes.weatherhistory.importer.SpecUtils
 import rootheart.codes.weatherhistory.importer.SsvData
 import rootheart.codes.weatherhistory.importer.StationId
 import rootheart.codes.weatherhistory.importer.converter.InvalidColumnsException
@@ -12,7 +13,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Collectors
 
-class SsvToHourlyAirTemperatureRecordConverterSpec extends Specification {
+class SsvToHourlyAirTemperatureRecordConverterSpec extends Specification implements SpecUtils {
 
     @Unroll('#description')
     def 'Test that strings are converted correctly to hourly air temperature record'() {
@@ -28,9 +29,9 @@ class SsvToHourlyAirTemperatureRecordConverterSpec extends Specification {
         then: 'the values of each record matches the parsed values of each input line'
         records*.stationId == values.collect { StationId.of(it[0]) }
         records*.measurementTime == values.collect { LocalDateTime.parse(it[1], DateTimeFormatter.ofPattern('yyyyMMddHH')) }
-        records*.qualityLevel == values.collect { QualityLevel.of(it[2]) }
-        records*.airTemperatureAtTwoMetersHeightCentigrade == values.collect { new BigDecimal(it[3]) }
-        records*.relativeHumidityPercent == values.collect { new BigDecimal(it[4]) }
+        records*.qualityLevel == allQualityLevelsOf(values, 2)
+        records*.airTemperatureAtTwoMetersHeightCentigrade == allBigDecimalsOf(values, 3)
+        records*.relativeHumidityPercent == allBigDecimalsOf(values, 4)
 
         where:
         columnNames = ["STATIONS_ID", "MESS_DATUM", "QN_9", "TT_TU", "RF_TU"]

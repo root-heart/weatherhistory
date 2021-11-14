@@ -1,6 +1,7 @@
 package rootheart.codes.weatherhistory.importer.converter
 
 import rootheart.codes.weatherhistory.importer.QualityLevel
+import rootheart.codes.weatherhistory.importer.SpecUtils
 import rootheart.codes.weatherhistory.importer.SsvData
 import rootheart.codes.weatherhistory.importer.StationId
 import spock.lang.Specification
@@ -10,7 +11,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Collectors
 
-class SsvToHourlyMaxWindSpeedRecordConverterSpec extends Specification {
+class SsvToHourlyMaxWindSpeedRecordConverterSpec extends Specification implements SpecUtils {
 
     @Unroll('#description')
     def 'Test that strings are converted correctly to hourly dew point temperature record'() {
@@ -26,8 +27,8 @@ class SsvToHourlyMaxWindSpeedRecordConverterSpec extends Specification {
         then: 'the values of each record matches the parsed values of each input line'
         records*.stationId == values.collect { it[0] != null ? StationId.of(it[0]) : null }
         records*.measurementTime == values.collect { LocalDateTime.parse(it[1], DateTimeFormatter.ofPattern('yyyyMMddHH')) }
-        records*.qualityLevel == values.collect { it[2] != null ? QualityLevel.of(it[2]) : null }
-        records*.maxWindSpeedMetersPerSecond == values.collect { it[3] != null ? new BigDecimal(it[3]) : null }
+        records*.qualityLevel == allQualityLevelsOf(values, 2)
+        records*.maxWindSpeedMetersPerSecond == allBigDecimalsOf(values, 3)
 
         where:
         columnNames = ["STATIONS_ID", "MESS_DATUM", "QN_8", "FX_911"]
