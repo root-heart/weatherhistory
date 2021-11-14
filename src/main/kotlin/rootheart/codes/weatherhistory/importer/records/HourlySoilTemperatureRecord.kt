@@ -1,18 +1,12 @@
 package rootheart.codes.weatherhistory.importer.records
 
-import rootheart.codes.weatherhistory.importer.QualityLevel
-import rootheart.codes.weatherhistory.importer.StationId
 import java.math.BigDecimal
-import java.time.LocalDateTime
 
 data class HourlySoilTemperatureRecord(
-    val stationId: StationId,
-    val measurementTime: LocalDateTime,
-    val qualityLevel: QualityLevel,
-    val soilTemperature2Centimeters: BigDecimal,
-    val soilTemperature5Centimeters: BigDecimal,
-    val soilTemperature10Centimeters: BigDecimal,
-    val soilTemperature20Centimeters: BigDecimal,
-    val soilTemperature50Centimeters: BigDecimal,
-    val soilTemperature100Centimeters: BigDecimal,
-)
+    var soilTemperature2Centimeters: BigDecimal? = null,
+    var soilTemperature5Centimeters: BigDecimal? = null,
+    var soilTemperature10Centimeters: BigDecimal? = null,
+    var soilTemperature20Centimeters: BigDecimal? = null,
+    var soilTemperature50Centimeters: BigDecimal? = null,
+    var soilTemperature100Centimeters: BigDecimal? = null,
+) : BaseRecord()
