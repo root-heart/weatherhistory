@@ -9,7 +9,7 @@ import java.util.stream.Stream
 
 open class RecordConverter<R : BaseRecord>(
     private val recordConstructor: () -> R,
-    private val columnMappings: Map<String, RecordProperty<R, *>>,
+    private val columnMappings: Map<String, RecordProperty<R>>,
     private var columnIndexStationId: Int = 0,
     private var columnIndexMeasurementTime: Int = 0,
 ) {
@@ -29,7 +29,7 @@ open class RecordConverter<R : BaseRecord>(
     private fun validateColumnNames(ssvData: SsvData) {
         val expectedColumnNames = columnMappings.keys + COLUMN_NAME_STATION_ID + COLUMN_NAME_MEASUREMENT_TIME
         ssvData.columnNames.forEach {
-            if (!expectedColumnNames.contains(it)) {
+            if (!expectedColumnNames.contains(it) && it != "eor") {
                 throw InvalidColumnsException("columnName $it not expected")
             }
         }
@@ -66,10 +66,13 @@ open class RecordConverter<R : BaseRecord>(
                 continue
             }
             val columnName = columnNames[i]
+            if (columnName == "eor") {
+                continue
+            }
             val stringValue = values[i]
             if (stringValue != null) {
                 val recordProperty = columnMappings.getValue(columnName)
-                recordProperty.setValue(record, stringValue)
+                recordProperty.setValue(record, stringValue.trim())
             }
         }
         return record

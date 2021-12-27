@@ -10,14 +10,14 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KMutableProperty1
 
 
-fun interface RecordProperty<R, T> {
+fun interface RecordProperty<R> {
     fun setValue(record: R, value: String)
 }
 
 open class SimpleRecordProperty<R, T>(
     private val property: KMutableProperty1<R, T>,
     private val valueParser: (String) -> T
-) : RecordProperty<R, T> {
+) : RecordProperty<R> {
     override fun setValue(record: R, value: String) = property.set(record, valueParser.invoke(value))
 }
 
@@ -26,7 +26,7 @@ open class NestedRecordProperty<R, P1, P2>(
     private val firstPropertyValueConstructor: () -> P1,
     private val secondProperty: KMutableProperty1<P1, P2>,
     private val valueParser: (String) -> P2
-) : RecordProperty<R, P2> {
+) : RecordProperty<R> {
     override fun setValue(record: R, value: String) {
         var firstPropertyValue = firstProperty.get(record)
         if (firstPropertyValue == null) {

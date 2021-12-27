@@ -2,7 +2,7 @@ package rootheart.codes.weatherhistory.importer.ssv
 
 import java.io.BufferedReader
 
-class SsvParser {
+object SsvParser {
     fun parse(reader: BufferedReader): SsvData {
         val columnNames = reader.readLine()?.split(";") ?: listOf()
         val columnValues = reader.lines().map { nullifyValues(it.split(";")) }
