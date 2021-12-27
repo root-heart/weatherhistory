@@ -8,9 +8,16 @@ import org.mockserver.model.HttpResponse
 import rootheart.codes.weatherhistory.importer.converter.RecordConverter
 import rootheart.codes.weatherhistory.importer.converter.RecordProperty
 import rootheart.codes.weatherhistory.importer.records.BaseRecord
+import rootheart.codes.weatherhistory.model.QualityLevel
+import rootheart.codes.weatherhistory.model.StationId
 import spock.genesis.Gen
 import spock.lang.Specification
+import spock.lang.Unroll
 
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.Month
+import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
 import java.util.stream.Collectors
 import java.util.zip.ZipEntry
@@ -20,10 +27,19 @@ class UrlDirectoryReaderSpec extends Specification {
     private static final dateTimePattern = Pattern.compile('\\d{2}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{4} \\d{2}:\\d{2}')
     private static final dataFilenamePattern = Pattern.compile("(stunden|tages)werte_([A-Z]{2})_(\\d{5})_\\w{5}(akt|hist)\\.zip")
     private static final stationFilenamePattern = Pattern.compile("[A-Z]{2}_(Stunden|Tages)werte_Beschreibung_Stationen\\.txt")
+    private static final columnNamePattern = Pattern.compile("[A-Z_0-9]{4,10}")
+    private static final stringValuePattern = Pattern.compile("[A-Za-z-_0-9]{2,10}")
     private static final random = new Random(System.currentTimeMillis())
+    private static final dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHH")
 
+    @Unroll("Test run #i")
     def 'Test that processing an index HTML file from DWD works'() {
-        given: "A mocked web server"
+        given: "Some test records"
+        def recordCount = random.nextInt(10) + 2
+        def stationId = random.nextInt(100) + 100
+        def randomTestRecords = (0..recordCount).collect { randomTestRecord(stationId) }
+
+        and: "A mocked web server"
         def randomPort = random.nextInt(10000) + 8000
         ClientAndServer.startClientAndServer(randomPort)
         def mockServer = new MockServerClient("127.0.0.1", randomPort)
@@ -41,7 +57,10 @@ class UrlDirectoryReaderSpec extends Specification {
                 .respond(respond(200, stationDataFileContent()))
 
         and: "That serves the zipped data file for the data file name"
-        def dataFileContent = dataFileContent()
+        def qualityLevelColumnName = Gen.string(columnNamePattern).first()
+        def stringValueColumnName = Gen.string(columnNamePattern).first()
+        def numericValueColumnName = Gen.string(columnNamePattern).first()
+        def dataFileContent = dataFileContent(randomTestRecords, qualityLevelColumnName, stringValueColumnName, numericValueColumnName)
         def baos = new ByteArrayOutputStream()
         def entry = new ZipEntry("produkt_what_comes_here_doesnt_matter.txt")
         new ZipOutputStream(baos).with {
@@ -52,11 +71,15 @@ class UrlDirectoryReaderSpec extends Specification {
         mockServer.when(request("GET", "/$dataFileName"))
                 .respond(respond(200, baos.toByteArray()))
 
+        println "Data file content ==================================================="
+        println dataFileContent
+        println "====================================================================="
+
         and: "A converter able to populate TestRecords with data"
         def columnMapping = [
-                "column1": { TestRecord r, String v -> r.property1 = v } as RecordProperty<TestRecord>,
-                "column2": { TestRecord r, String v -> r.property2 = v } as RecordProperty<TestRecord>,
-                "column3": { TestRecord r, String v -> r.property3 = v } as RecordProperty<TestRecord>
+                (qualityLevelColumnName): { TestRecord r, String v -> r.qualityLevel = QualityLevel.of(v) } as RecordProperty<TestRecord>,
+                (stringValueColumnName) : { TestRecord r, String v -> r.stringValue = v } as RecordProperty<TestRecord>,
+                (numericValueColumnName): { TestRecord r, String v -> r.numericValue = new BigDecimal(v) } as RecordProperty<TestRecord>
         ]
         def recordConverter = new RecordConverter(TestRecord::new, columnMapping, 0, 0)
 
@@ -67,20 +90,47 @@ class UrlDirectoryReaderSpec extends Specification {
 
         then: "The downloaded data equals the data specified before"
         records != null
-        records.size() == 1
+        records.size() == randomTestRecords.size()
+        records.eachWithIndex { record, index ->
+            assert record != null
+            assert record instanceof TestRecord
+            assert record.stationId.stationId == stationId
+            assert record.measurementTime == randomTestRecords[index].measurementTime
+            assert record.qualityLevel == randomTestRecords[index].qualityLevel
+            assert record.stringValue == randomTestRecords[index].stringValue
+            assert record.numericValue == randomTestRecords[index].numericValue
+        }
 
-        records[0] != null
-        records[0] instanceof TestRecord
-        def testRecord = (TestRecord) records[0]
-        testRecord.property1 == '1'
-        testRecord.property2 == '6.3'
-        testRecord.property3 == '3.0'
+        where:
+        i << (1..10)
     }
 
     static class TestRecord extends BaseRecord {
-        String property1
-        String property2
-        String property3
+        String stringValue
+        BigDecimal numericValue
+    }
+
+    private static randomTestRecord(int stationId) {
+        def record = new TestRecord()
+        record.stationId = StationId.of(stationId)
+        record.measurementTime = randomMeasurementTime()
+        record.qualityLevel = QualityLevel.values()[random.nextInt(QualityLevel.values().length)]
+        record.numericValue = random.nextDouble()
+        record.stringValue = Gen.string(stringValuePattern).first()
+        return record
+    }
+
+    private static LocalDateTime randomMeasurementTime() {
+        def month = Month.of(random.nextInt(12) + 1)
+        def year = random.nextInt(100) + 1900
+        def yearAndMonth = LocalDate.of(year, month, 1)
+        def day = random.nextInt(month.maxLength()) + 1
+        if (month == Month.FEBRUARY && day == 29 && yearAndMonth.isLeapYear()) {
+            day--
+        }
+        def date = LocalDate.of(year, month, day)
+        def hour = random.nextInt(24)
+        return date.atTime(hour, 0)
     }
 
     private static String directoryListing(String stationDataFileName, String dataFileName) {
@@ -106,11 +156,22 @@ class UrlDirectoryReaderSpec extends Specification {
         ].join('\n')
     }
 
-    private static String dataFileContent(/*int stationId, String[] measurementDates, String[] values1, String[] values2, String[] values3*/) {
-        return [
-                "STATIONS_ID;MESS_DATUM;column1;column2;column3;eor",
-                "3;1979110421;    1;    6.3;    3.0;eor"
-        ].join('\n')
+    private static String dataFileContent(List<TestRecord> records, String qualityLevelColumnName,
+                                          String stringPropertyColumnName, String numericPropertyColumnMame) {
+        def recordsStringList = [
+                "STATIONS_ID;MESS_DATUM;$qualityLevelColumnName;$stringPropertyColumnName;$numericPropertyColumnMame;eor"
+        ]
+        recordsStringList += records.collect { testRecordToSsvString(it) }
+        return recordsStringList.join('\n')
+    }
+
+    private static String testRecordToSsvString(TestRecord record) {
+        return "$record.stationId.stationId;" +
+                "${dateTimeFormatter.format(record.measurementTime)};" +
+                "$record.qualityLevel.code;" +
+                "$record.stringValue;" +
+                "$record.numericValue;" +
+                "eor"
     }
 
     private static request(String method, String path) {
