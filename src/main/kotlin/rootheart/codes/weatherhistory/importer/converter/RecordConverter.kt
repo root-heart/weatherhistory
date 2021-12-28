@@ -59,8 +59,8 @@ open class RecordConverter<R : BaseRecord>(
             return null
         }
         val record = recordConstructor.invoke()
-        record.stationId = StationId.of(stationIdString)
-        record.measurementTime = LocalDateTime.parse(measurementTimeString, DATE_TIME_FORMATTER)
+        record.stationId = StationId.of(stationIdString.trim())
+        record.measurementTime = LocalDateTime.parse(measurementTimeString.trim(), DATE_TIME_FORMATTER)
         for (i in columnNames.indices) {
             if (i == columnIndexMeasurementTime || i == columnIndexStationId) {
                 continue
