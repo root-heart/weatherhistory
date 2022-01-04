@@ -1,6 +1,5 @@
 package rootheart.codes.weatherhistory.importer
 
-
 import org.mockserver.client.MockServerClient
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.model.HttpRequest
@@ -19,25 +18,46 @@ import java.time.LocalDateTime
 import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
-import java.util.stream.Collectors
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 class UrlDirectoryReaderSpec extends Specification {
     private static final dateTimePattern = Pattern.compile('\\d{2}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{4} \\d{2}:\\d{2}')
-    private static final dataFilenamePattern = Pattern.compile("(stunden|tages)werte_([A-Z]{2})_(\\d{5})_\\w{5}(akt|hist)\\.zip")
     private static final stationFilenamePattern = Pattern.compile("[A-Z]{2}_(Stunden|Tages)werte_Beschreibung_Stationen\\.txt")
     private static final columnNamePattern = Pattern.compile("[A-Z_0-9]{4,10}")
     private static final stringValuePattern = Pattern.compile("[A-Za-z-_0-9]{2,10}")
     private static final random = new Random(System.currentTimeMillis())
     private static final dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHH")
 
-    @Unroll("Test run #i")
+    private static class TestData {
+        def stationId = Gen.using { StationId.of(randomInt(1, 99999)) }.first()
+        def records = generateTestRecords(stationId, 10)
+        def filename = generateDataFileName(stationId)
+
+        byte[] getZippedDataFile(String qualityLvlColName, String stringColName, String numericColName) {
+            def recordsStringList = [
+                    "STATIONS_ID;MESS_DATUM;$qualityLvlColName;$stringColName;$numericColName;eor"
+            ]
+            recordsStringList += records.collect { testRecordToSsvString(it) }
+            def dataFileStringContent = recordsStringList.join('\n')
+            def baos = new ByteArrayOutputStream()
+            new ZipOutputStream(baos).with {
+                putNextEntry(new ZipEntry("produkt_what_comes_here_doesnt_matter.txt"))
+                write(dataFileStringContent.getBytes())
+                close()
+            }
+            return baos.toByteArray()
+        }
+    }
+
+    @Unroll("Test Run #i")
     def 'Test that processing an index HTML file from DWD works'() {
-        given: "Some test records"
-        def recordCount = random.nextInt(10) + 2
-        def stationId = random.nextInt(100) + 100
-        def randomTestRecords = (0..recordCount).collect { randomTestRecord(stationId) }
+        given: "Some randomized test data"
+        def qualityLvlColName = randomColumnName()
+        def stringColName = randomColumnName()
+        def numericColName = randomColumnName()
+        def stationDataFileName = Gen.string(stationFilenamePattern).first()
+        def testData = (1..10).collect { new TestData() }
 
         and: "A mocked web server"
         def randomPort = random.nextInt(10000) + 8000
@@ -45,96 +65,62 @@ class UrlDirectoryReaderSpec extends Specification {
         def mockServer = new MockServerClient("127.0.0.1", randomPort)
 
         and: "That serves a directory listing containing links to a station data file and a data file with randomly generated names"
-        def stationDataFileName = Gen.string(stationFilenamePattern).first()
-        def dataFileName = Gen.string(dataFilenamePattern).first()
-        def directoryListing = directoryListing(stationDataFileName, dataFileName)
         mockServer
                 .when(request("GET", "/"))
-                .respond(respond(200, directoryListing))
+                .respond(respond(200, generateDirectoryListing(stationDataFileName, testData)))
 
         and: "That serves the station data file for the station data file name"
         mockServer.when(request("GET", "/$stationDataFileName"))
-                .respond(respond(200, stationDataFileContent()))
+                .respond(respond(200, stationDataFileContent(testData)))
 
         and: "That serves the zipped data file for the data file name"
-        def qualityLevelColumnName = Gen.string(columnNamePattern).first()
-        def stringValueColumnName = Gen.string(columnNamePattern).first()
-        def numericValueColumnName = Gen.string(columnNamePattern).first()
-        def dataFileContent = dataFileContent(randomTestRecords, qualityLevelColumnName, stringValueColumnName, numericValueColumnName)
-        def baos = new ByteArrayOutputStream()
-        def entry = new ZipEntry("produkt_what_comes_here_doesnt_matter.txt")
-        new ZipOutputStream(baos).with {
-            putNextEntry(entry)
-            write(dataFileContent.getBytes())
-            close()
+        testData.each {
+            mockServer.when(request("GET", "/$it.filename"))
+                    .respond(respond(200, it.getZippedDataFile(qualityLvlColName, stringColName, numericColName)))
         }
-        mockServer.when(request("GET", "/$dataFileName"))
-                .respond(respond(200, baos.toByteArray()))
 
-        println "Data file content ==================================================="
-        println dataFileContent
-        println "====================================================================="
+//        println "Data file content ==================================================="
+//        println testData.generateDataFileContent
+//        println "====================================================================="
 
         and: "A converter able to populate TestRecords with data"
         def columnMapping = [
-                (qualityLevelColumnName): { TestRecord r, String v -> r.qualityLevel = QualityLevel.of(v) } as RecordProperty<TestRecord>,
-                (stringValueColumnName) : { TestRecord r, String v -> r.stringValue = v } as RecordProperty<TestRecord>,
-                (numericValueColumnName): { TestRecord r, String v -> r.numericValue = new BigDecimal(v) } as RecordProperty<TestRecord>
+                (qualityLvlColName): { TestRecord r, String v -> r.qualityLevel = QualityLevel.of(v) } as RecordProperty<TestRecord>,
+                (stringColName)    : { TestRecord r, String v -> r.stringValue = v } as RecordProperty<TestRecord>,
+                (numericColName)   : { TestRecord r, String v -> r.numericValue = new BigDecimal(v) } as RecordProperty<TestRecord>
         ]
         def recordConverter = new RecordConverter(TestRecord::new, columnMapping, 0, 0)
 
-        when: "The data is downloaded from the server and parsed"
-        def records = new UrlDirectoryReader(new URL("http://127.0.0.1:$randomPort"))
-                .createStreamForDownloadingAndConvertingZippedDataFiles(recordConverter)
-                .collect(Collectors.toList())
+        when: "The data is downloaded from the server, parsed and converted"
+        def url = new URL("http://127.0.0.1:$randomPort")
+        def parsedRecords = new UrlDirectoryReader(url)
+                .downloadAndParseData(recordConverter)
 
         then: "The downloaded data equals the data specified before"
-        records != null
-        records.size() == randomTestRecords.size()
-        records.eachWithIndex { record, index ->
-            assert record != null
-            assert record instanceof TestRecord
-            assert record.stationId.stationId == stationId
-            assert record.measurementTime == randomTestRecords[index].measurementTime
-            assert record.qualityLevel == randomTestRecords[index].qualityLevel
-            assert record.stringValue == randomTestRecords[index].stringValue
-            assert record.numericValue == randomTestRecords[index].numericValue
+        parsedRecords != null
+        parsedRecords.size() == testData.size()
+        parsedRecords.keySet().containsAll(testData*.stationId)
+
+        parsedRecords.each { stationId, recordsStream ->
+            def parsedRecordsForStation = recordsStream.collect() as List<TestRecord>
+            def testRecordsForStation = testData.find { it.stationId == stationId }.records
+
+            assert parsedRecordsForStation.size() == testRecordsForStation.size()
+            parsedRecordsForStation.eachWithIndex { generatedRecord, index ->
+                assert generatedRecord.stationId == stationId
+                assert generatedRecord.measurementTime == testRecordsForStation[index].measurementTime
+                assert generatedRecord.qualityLevel == testRecordsForStation[index].qualityLevel
+                assert generatedRecord.stringValue == testRecordsForStation[index].stringValue
+                assert generatedRecord.numericValue == testRecordsForStation[index].numericValue
+            }
         }
 
         where:
         i << (1..10)
     }
 
-    static class TestRecord extends BaseRecord {
-        String stringValue
-        BigDecimal numericValue
-    }
-
-    private static randomTestRecord(int stationId) {
-        def record = new TestRecord()
-        record.stationId = StationId.of(stationId)
-        record.measurementTime = randomMeasurementTime()
-        record.qualityLevel = QualityLevel.values()[random.nextInt(QualityLevel.values().length)]
-        record.numericValue = random.nextDouble()
-        record.stringValue = Gen.string(stringValuePattern).first()
-        return record
-    }
-
-    private static LocalDateTime randomMeasurementTime() {
-        def month = Month.of(random.nextInt(12) + 1)
-        def year = random.nextInt(100) + 1900
-        def yearAndMonth = LocalDate.of(year, month, 1)
-        def day = random.nextInt(month.maxLength()) + 1
-        if (month == Month.FEBRUARY && day == 29 && yearAndMonth.isLeapYear()) {
-            day--
-        }
-        def date = LocalDate.of(year, month, day)
-        def hour = random.nextInt(24)
-        return date.atTime(hour, 0)
-    }
-
-    private static String directoryListing(String stationDataFileName, String dataFileName) {
-        return [
+    private static String generateDirectoryListing(String stationDataFileName, List<TestData> testData) {
+        def lines = [
                 "<html>",
                 "<head><title>Index of /some/directory/containing/zipped/files</title></head>",
                 "<body>",
@@ -142,28 +128,73 @@ class UrlDirectoryReaderSpec extends Specification {
                 fileLink("some_pdf_file_containing_a_german_description.pdf"),
                 fileLink("some_pdf_file_containing_an_english_description.pdf"),
                 fileLink(stationDataFileName),
-                fileLink(dataFileName),
-                "</pre><hr></body>",
-                "</html>"
-        ].join('\n')
-    }
-
-    private static stationDataFileContent() {
-        return [
-                "Stations_id von_datum bis_datum Stationshoehe geoBreite geoLaenge Stationsname Bundesland",
-                "----------- --------- --------- ------------- --------- --------- ----------------------------------------- ----------",
-                "00003 19500401 20110401            202     50.7827    6.0941 Aachen                                   Nordrhein-Westfalen"
-        ].join('\n')
-    }
-
-    private static String dataFileContent(List<TestRecord> records, String qualityLevelColumnName,
-                                          String stringPropertyColumnName, String numericPropertyColumnMame) {
-        def recordsStringList = [
-                "STATIONS_ID;MESS_DATUM;$qualityLevelColumnName;$stringPropertyColumnName;$numericPropertyColumnMame;eor"
         ]
-        recordsStringList += records.collect { testRecordToSsvString(it) }
-        return recordsStringList.join('\n')
+        testData.forEach { lines.add(fileLink(it.filename)) }
+        lines += "</pre><hr></body>"
+        lines += "</html>"
+        return lines.join('\n')
     }
+
+    private static String generateDataFileName(StationId stationId) {
+        def stationIdString = String.format("%05d", stationId.stationId)
+        def dataFilenamePattern = Pattern.compile("(stunden|tages)werte_([A-Z]{2})_${stationIdString}_\\w{5}(akt|hist)\\.zip")
+        Gen.string(dataFilenamePattern).first()
+    }
+
+    private static List<TestRecord> generateTestRecords(StationId stationId, int count) {
+        return Gen.type(
+                [stationId      : Gen.using { stationId },
+                 measurementTime: Gen.using { randomMeasurementTime() },
+                 qualityLevel   : Gen.using { randomQualityLevel() },
+                 stringValue    : Gen.string(stringValuePattern),
+                 numericValue   : Gen.double],
+                TestRecord
+        ).take(10).collect() as List<TestRecord>
+    }
+
+    static int randomInt(int min, int max) {
+        return random.nextInt(max - min) + min
+    }
+
+    static String randomColumnName() {
+        Gen.string(columnNamePattern).first()
+    }
+
+    static class TestRecord extends BaseRecord {
+        String stringValue
+        BigDecimal numericValue
+    }
+
+    private static QualityLevel randomQualityLevel() {
+        QualityLevel.values()[random.nextInt(QualityLevel.values().length)]
+    }
+
+    private static LocalDateTime randomMeasurementTime() {
+        def month = Month.of(random.nextInt(12) + 1)
+        def year = random.nextInt(100) + 1900
+        def yearAndMonth = LocalDate.of(year, month, 1)
+        def day = random.nextInt(month.maxLength()) + 1
+        if (month == Month.FEBRUARY && day == 29 && !yearAndMonth.isLeapYear()) {
+            day--
+        }
+        def date = LocalDate.of(year, month, day)
+        def hour = random.nextInt(24)
+        return date.atTime(hour, 0)
+    }
+
+
+    private static stationDataFileContent(List<TestData> testData) {
+        def fileContentLines = [
+                "Stations_id von_datum bis_datum Stationshoehe geoBreite geoLaenge Stationsname Bundesland",
+                "----------- --------- --------- ------------- --------- --------- ----------------------------------------- ----------"]
+        testData.forEach {
+            fileContentLines +=
+                    "$it.stationId 19500401 20110401            202     50.7827    6.0941 Aachen                                   Nordrhein-Westfalen"
+        }
+
+        return fileContentLines.join('\n')
+    }
+
 
     private static String testRecordToSsvString(TestRecord record) {
         return "$record.stationId.stationId;" +

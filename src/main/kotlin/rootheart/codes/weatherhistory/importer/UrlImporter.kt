@@ -14,6 +14,8 @@ import rootheart.codes.weatherhistory.importer.records.BaseRecord
 import rootheart.codes.weatherhistory.model.StationId
 import java.math.BigDecimal
 import java.net.URL
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.stream.Collectors
 import java.util.stream.Stream
 
 fun main(args: Array<String>) {
@@ -39,26 +41,27 @@ private fun crawlDwd(baseUrlString: String) {
     )
     for ((subDirectory, recordConverter) in urlSubDirectories) {
         for (timePeriodDirectory in listOf("historical", "recent")) {
+            println("Crawling $baseUrlString/$subDirectory/$timePeriodDirectory")
             val url = URL("$baseUrlString/$subDirectory/$timePeriodDirectory")
             val urlDirectoryReader = UrlDirectoryReader(url)
             val recordsStream =
-                urlDirectoryReader.createStreamForDownloadingAndConvertingZippedDataFiles(recordConverter)
-            insertRecordsIntoDatabase(recordsStream)
-
-            val stationFile = urlDirectoryReader.downloadAndParseStationFile()
+                urlDirectoryReader.downloadAndParseData(recordConverter)
+//            insertRecordsIntoDatabase(recordsStream)
+//
+//            val stationFile = urlDirectoryReader.downloadAndParseStationFile()
         }
     }
 }
 
 private fun <R : BaseRecord> insertRecordsIntoDatabase(records: Stream<R>) {
-
+    val count = AtomicInteger(0)
+    records
+        .peek {
+            val currentCount = count.incrementAndGet()
+            if (currentCount % 1_000_000 == 0) {
+                println(currentCount)
+            }
+        }
+        .collect(Collectors.toList())
 }
 
-data class DwdStation(
-    var stationsId: StationId,
-    val stationshoehe: Int,
-    val geoBreite: BigDecimal,
-    val geoLaenge: BigDecimal,
-    val stationsname: String,
-    val bundesland: String
-)
