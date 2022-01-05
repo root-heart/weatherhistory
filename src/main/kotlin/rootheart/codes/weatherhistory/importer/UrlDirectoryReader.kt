@@ -9,21 +9,16 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.math.BigDecimal
 import java.net.URL
+import java.util.*
 import java.util.stream.Stream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
+import kotlin.collections.HashMap
 
 class UrlDirectoryReader(private val url: URL) {
-    private var lines: String = ""
-
-    private fun readContentFromUrlAsTextLines() {
-        if (lines.isEmpty()) {
-            lines = url.readText()
-        }
-    }
+    private val lines by lazy { url.readText() }
 
     fun <R : BaseRecord> downloadAndParseData(recordConverter: RecordConverter<R>): Map<StationId, Stream<R>> {
-        readContentFromUrlAsTextLines()
         val result = HashMap<StationId, Stream<R>>()
         val all = DATA_FILENAME_REGEX.findAll(lines)
         for (matchResult in all) {
@@ -47,8 +42,8 @@ class UrlDirectoryReader(private val url: URL) {
 //            .orElse(null)
 //    }
 
-    private fun getDataFileReader(filename: String): BufferedReader {
-        val fileUrl = URL("$url/$filename")
+    private fun getDataFileReader(fileName: String): BufferedReader {
+        val fileUrl = URL("$url/$fileName")
         val zipInputStream = ZipInputStream(fileUrl.openStream())
         var zipEntry: ZipEntry?
         var inputStream = InputStream.nullInputStream()
