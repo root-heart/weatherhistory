@@ -44,8 +44,8 @@ private fun crawlDwd(baseUrlString: String) {
             println("Crawling $baseUrlString/$subDirectory/$timePeriodDirectory")
             val url = URL("$baseUrlString/$subDirectory/$timePeriodDirectory")
             val urlDirectoryReader = UrlDirectoryReader(url)
-            val recordsStream =
-                urlDirectoryReader.downloadAndParseData(recordConverter)
+//            val recordsStream =
+//                urlDirectoryReader.downloadAndParseData(recordConverter)
 //            insertRecordsIntoDatabase(recordsStream)
 //
 //            val stationFile = urlDirectoryReader.downloadAndParseStationFile()

@@ -89,20 +89,32 @@ class UrlDirectoryReaderSpec extends Specification {
                 (stringColName)    : { TestRecord r, String v -> r.stringValue = v } as RecordProperty<TestRecord>,
                 (numericColName)   : { TestRecord r, String v -> r.numericValue = new BigDecimal(v) } as RecordProperty<TestRecord>
         ]
-        def recordConverter = new RecordConverter(TestRecord::new, columnMapping, 0, 0)
+        def recordConverter = new RecordConverter<TestRecord>(TestRecord::new, columnMapping, 0, 0)
 
         when: "The data is downloaded from the server, parsed and converted"
         def url = new URL("http://127.0.0.1:$randomPort")
-        def parsedRecords = new UrlDirectoryReader(url)
-                .downloadAndParseData(recordConverter)
+        def parsedRecords = [:] as Map<StationId, List<TestRecord>>
+        new UrlDirectoryReader(url)
+                .forEachDataLine((colNames, values) -> {
+                    recordConverter.validateColumnNames(colNames)
+                    recordConverter.determineIndicesOfColumnsAlwaysPresent(colNames)
+                    def record = recordConverter.createRecord(colNames, values)
+                    def records = parsedRecords[record.stationId]
+                    if (records == null) {
+                        records = []
+                        parsedRecords[record.stationId] = records
+                    }
+                    records.add(record)
+                })
+//                .downloadAndParseData(recordConverter)
 
         then: "The downloaded data equals the data specified before"
         parsedRecords != null
         parsedRecords.size() == testData.size()
         parsedRecords.keySet().containsAll(testData*.stationId)
 
-        parsedRecords.each { stationId, recordsStream ->
-            def parsedRecordsForStation = recordsStream.collect() as List<TestRecord>
+        parsedRecords.each { stationId, parsedRecordsForStation ->
+//            def parsedRecordsForStation = recordsStream.collect() as List<TestRecord>
             def testRecordsForStation = testData.find { it.stationId == stationId }.records
 
             assert parsedRecordsForStation.size() == testRecordsForStation.size()

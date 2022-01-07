@@ -1,8 +1,8 @@
 package rootheart.codes.weatherhistory.importer.converter
 
+import rootheart.codes.weatherhistory.importer.records.BaseRecord
 import rootheart.codes.weatherhistory.importer.ssv.SsvData
 import rootheart.codes.weatherhistory.model.StationId
-import rootheart.codes.weatherhistory.importer.records.BaseRecord
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Stream
@@ -21,38 +21,39 @@ open class RecordConverter<R : BaseRecord>(
     }
 
     fun convert(ssvData: SsvData): Stream<R> {
-        validateColumnNames(ssvData)
-        determineIndicesOfColumnsAlwaysPresent(ssvData)
-        return convertValues(ssvData)
+//        validateColumnNames(ssvData)
+//        determineIndicesOfColumnsAlwaysPresent(ssvData)
+//        return convertValues(ssvData)
+        return Stream.empty()
     }
 
-    private fun validateColumnNames(ssvData: SsvData) {
+    fun validateColumnNames(columnNames: List<String>) {
         val expectedColumnNames = columnMappings.keys + COLUMN_NAME_STATION_ID + COLUMN_NAME_MEASUREMENT_TIME
-        ssvData.columnNames.forEach {
+        columnNames.forEach {
             if (!expectedColumnNames.contains(it) && it != "eor") {
                 throw InvalidColumnsException("columnName $it not expected")
             }
         }
         expectedColumnNames.forEach {
-            if (!ssvData.columnNames.contains(it)) {
+            if (!columnNames.contains(it)) {
                 throw InvalidColumnsException("column name $it expected, but not found")
             }
         }
     }
 
-    private fun determineIndicesOfColumnsAlwaysPresent(ssvData: SsvData) {
-        columnIndexStationId = ssvData.columnNames.indexOf(COLUMN_NAME_STATION_ID)
-        columnIndexMeasurementTime = ssvData.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
+    fun determineIndicesOfColumnsAlwaysPresent(columnNames: List<String>) {
+        columnIndexStationId = columnNames.indexOf(COLUMN_NAME_STATION_ID)
+        columnIndexMeasurementTime = columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
     }
 
-    private fun convertValues(ssvData: SsvData): Stream<R> {
-        return ssvData.columnValuesStream
-            .map { createRecord(ssvData.columnNames, it) }
-            .filter { it != null }
-            .map { it!! }
-    }
+//    private fun convertValues(ssvData: SsvData): Stream<R> {
+//        return ssvData.columnValuesStream
+//            .map { createRecord(ssvData.columnNames, it) }
+//            .filter { it != null }
+//            .map { it!! }
+//    }
 
-    private fun createRecord(columnNames: List<String>, values: List<String?>): R? {
+     fun createRecord(columnNames: List<String>, values: List<String?>): R? {
         val stationIdString = values[columnIndexStationId]
         val measurementTimeString = values[columnIndexMeasurementTime]
         if (stationIdString == null || measurementTimeString == null) {
