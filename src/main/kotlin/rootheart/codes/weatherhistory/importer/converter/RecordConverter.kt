@@ -46,13 +46,6 @@ open class RecordConverter<R : BaseRecord>(
         columnIndexMeasurementTime = columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
     }
 
-//    private fun convertValues(ssvData: SsvData): Stream<R> {
-//        return ssvData.columnValuesStream
-//            .map { createRecord(ssvData.columnNames, it) }
-//            .filter { it != null }
-//            .map { it!! }
-//    }
-
      fun createRecord(columnNames: List<String>, values: List<String?>): R? {
         val stationIdString = values[columnIndexStationId]
         val measurementTimeString = values[columnIndexMeasurementTime]
