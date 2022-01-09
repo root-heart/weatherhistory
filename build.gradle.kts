@@ -22,6 +22,8 @@ dependencies {
     implementation("com.h2database:h2:2.0.202")
     implementation("com.zaxxer:HikariCP:5.0.0")
     implementation("net.lingala.zip4j:zip4j:2.9.0")
+    implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
+    implementation("ch.qos.logback:logback-classic:1.2.10")
 
     testImplementation("org.spockframework:spock-core:2.0-groovy-3.0")
     testImplementation("com.nagternal:spock-genesis:0.6.0")

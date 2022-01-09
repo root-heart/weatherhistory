@@ -94,19 +94,15 @@ class UrlDirectoryReaderSpec extends Specification {
         when: "The data is downloaded from the server, parsed and converted"
         def url = new URL("http://127.0.0.1:$randomPort")
         def parsedRecords = [:] as Map<StationId, List<TestRecord>>
-        new UrlDirectoryReader(url)
-                .forEachDataLine((colNames, values) -> {
-                    recordConverter.validateColumnNames(colNames)
-                    recordConverter.determineIndicesOfColumnsAlwaysPresent(colNames)
-                    def record = recordConverter.createRecord(colNames, values)
+        new UrlDirectoryReader<TestRecord>(url, recordConverter)
+                .forEachRecord { record ->
                     def records = parsedRecords[record.stationId]
                     if (records == null) {
                         records = []
                         parsedRecords[record.stationId] = records
                     }
                     records.add(record)
-                })
-//                .downloadAndParseData(recordConverter)
+                }
 
         then: "The downloaded data equals the data specified before"
         parsedRecords != null
@@ -114,7 +110,6 @@ class UrlDirectoryReaderSpec extends Specification {
         parsedRecords.keySet().containsAll(testData*.stationId)
 
         parsedRecords.each { stationId, parsedRecordsForStation ->
-//            def parsedRecordsForStation = recordsStream.collect() as List<TestRecord>
             def testRecordsForStation = testData.find { it.stationId == stationId }.records
 
             assert parsedRecordsForStation.size() == testRecordsForStation.size()

@@ -43,7 +43,7 @@ private fun crawlDwd(baseUrlString: String) {
         for (timePeriodDirectory in listOf("historical", "recent")) {
             println("Crawling $baseUrlString/$subDirectory/$timePeriodDirectory")
             val url = URL("$baseUrlString/$subDirectory/$timePeriodDirectory")
-            val urlDirectoryReader = UrlDirectoryReader(url)
+//            val urlDirectoryReader = UrlDirectoryReader(url)
 //            val recordsStream =
 //                urlDirectoryReader.downloadAndParseData(recordConverter)
 //            insertRecordsIntoDatabase(recordsStream)

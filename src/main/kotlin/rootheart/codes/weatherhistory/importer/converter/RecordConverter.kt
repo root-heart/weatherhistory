@@ -7,6 +7,8 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Stream
 
+private const val NULL_STRING = "-999"
+
 open class RecordConverter<R : BaseRecord>(
     private val recordConstructor: () -> R,
     private val columnMappings: Map<String, RecordProperty<R>>,
@@ -46,12 +48,9 @@ open class RecordConverter<R : BaseRecord>(
         columnIndexMeasurementTime = columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
     }
 
-     fun createRecord(columnNames: List<String>, values: List<String?>): R? {
+     fun createRecord(columnNames: List<String>, values: List<String>): R? {
         val stationIdString = values[columnIndexStationId]
         val measurementTimeString = values[columnIndexMeasurementTime]
-        if (stationIdString == null || measurementTimeString == null) {
-            return null
-        }
         val record = recordConstructor.invoke()
         record.stationId = StationId.of(stationIdString.trim())
         record.measurementTime = LocalDateTime.parse(measurementTimeString.trim(), DATE_TIME_FORMATTER)
@@ -64,7 +63,7 @@ open class RecordConverter<R : BaseRecord>(
                 continue
             }
             val stringValue = values[i]
-            if (stringValue != null) {
+            if (stringValue != NULL_STRING) {
                 val recordProperty = columnMappings.getValue(columnName)
                 recordProperty.setValue(record, stringValue.trim())
             }

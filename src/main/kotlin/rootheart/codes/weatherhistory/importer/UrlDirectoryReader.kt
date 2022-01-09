@@ -1,5 +1,8 @@
 package rootheart.codes.weatherhistory.importer
 
+import mu.KotlinLogging
+import rootheart.codes.weatherhistory.importer.converter.RecordConverter
+import rootheart.codes.weatherhistory.importer.records.BaseRecord
 import rootheart.codes.weatherhistory.model.StationId
 import java.math.BigDecimal
 import java.net.URL
@@ -14,8 +17,10 @@ val DATA_FILENAME_REGEX =
 private fun fileIsDataFile(filename: String) =
     filename.startsWith("produkt_") && filename.endsWith(".txt")
 
-class UrlDirectoryReader(private val url: URL) {
+class UrlDirectoryReader<R : BaseRecord>(private val url: URL, private val recordConverter: RecordConverter<R>) {
+
     private val directoryHtml by lazy { url.readText() }
+    private val log = KotlinLogging.logger {}
 
     fun forEachStation(consumer: (Station) -> Unit) {
         val groups = STATION_FILENAME_PATTERN.find(directoryHtml)?.groups as MatchNamedGroupCollection? ?: return
@@ -35,28 +40,63 @@ class UrlDirectoryReader(private val url: URL) {
         }
     }
 
-    fun forEachDataLine(consumer: (List<String>, List<String?>) -> Unit) {
+    fun forEachRecord(processRecord: (R) -> Unit) {
+        log.debug { "searching for hrefs in directory HTML in $url" }
         DATA_FILENAME_REGEX.findAll(directoryHtml)
             .map { it.groups as MatchNamedGroupCollection }
             .forEach { matchResult ->
-                val href = URL(url.toString() + "/" + matchResult["fileName"]!!.value)
-                ZipInputStream(href.openStream()).use { zipInputStream ->
+                val href = url.toString() + "/" + matchResult["fileName"]!!.value
+                log.debug { "found href $href" }
+                val zipUrl = URL(href)
+                ZipInputStream(zipUrl.openStream()).use { zipInputStream ->
                     val entries = generateSequence { zipInputStream.nextEntry }
                     if (entries.any { fileIsDataFile(it.name) }) {
+                        log.debug { "Found data file in ZIP" }
                         zipInputStream.bufferedReader().use { reader ->
-                            val columnNames = reader.readLine()?.split(";") ?: listOf()
-                            reader.lines()
-                                .map { it.split(";") }
-                                .map { values -> values.map { nullify(it) } }
-                                .forEach { consumer(columnNames, it) }
+                            val header = reader.readLine()
+                            if (header != null) {
+                                val columnNames = splitColumns(header)
+                                recordConverter.validateColumnNames(columnNames)
+                                recordConverter.determineIndicesOfColumnsAlwaysPresent(columnNames)
+                                val values = ArrayList<String>()
+                                for (line in reader.lines()) {
+                                    splitColumns(line, values)
+                                    val record = recordConverter.createRecord(columnNames, values)
+                                    if (record != null) {
+                                        processRecord(record)
+                                    }
+                                    values.clear()
+                                }
+                            }
                         }
+                        log.debug { "processed data file" }
                     }
                 }
             }
     }
 }
 
-private fun nullify(value: String) = if (value == "-999") null else value
+fun splitColumns(line: String, list: MutableList<String> = ArrayList()): List<String> {
+    var pos = 0
+    var end = line.indexOf(';', pos)
+    while (end >= 0) {
+        while (line[pos] == ' ') {
+            pos++
+        }
+        while (line[end - 1] == ' ') {
+            end--
+        }
+        val column = line.substring(pos, end)
+        list.add(column)
+        pos = end + 1
+        end = line.indexOf(';', pos)
+    }
+    return list
+}
+
+fun splitWithKotlin(line: String): List<String> {
+    return line.split(";")
+}
 
 data class DataFile(val url: URL)
 
