@@ -16,24 +16,24 @@ fun interface RecordProperty<R> {
 
 open class SimpleRecordProperty<R, T>(
     private val property: KMutableProperty1<R, T>,
-    private val valueParser: (String) -> T
+    private val parseValue: (String) -> T
 ) : RecordProperty<R> {
-    override fun setValue(record: R, value: String) = property.set(record, valueParser.invoke(value))
+    override fun setValue(record: R, value: String) = property.set(record, parseValue(value))
 }
 
 open class NestedRecordProperty<R, P1, P2>(
     private val firstProperty: KMutableProperty1<R, P1?>,
-    private val firstPropertyValueConstructor: () -> P1,
+    private val constructFirstPropertyValue: () -> P1,
     private val secondProperty: KMutableProperty1<P1, P2>,
-    private val valueParser: (String) -> P2
+    private val parseValue: (String) -> P2
 ) : RecordProperty<R> {
     override fun setValue(record: R, value: String) {
         var firstPropertyValue = firstProperty.get(record)
         if (firstPropertyValue == null) {
-            firstPropertyValue = firstPropertyValueConstructor.invoke()
+            firstPropertyValue = constructFirstPropertyValue()
             firstProperty.set(record, firstPropertyValue)
         }
-        secondProperty.set(firstPropertyValue!!, valueParser.invoke(value))
+        secondProperty.set(firstPropertyValue!!, parseValue(value))
     }
 }
 
