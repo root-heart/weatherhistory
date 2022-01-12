@@ -39,7 +39,7 @@ class UrlDirectoryReaderSpec extends Specification {
                     "STATIONS_ID;MESS_DATUM;$qualityLvlColName;$stringColName;$numericColName;eor"
             ]
             recordsStringList += records.collect { testRecordToSsvString(it) }
-            def dataFileStringContent = recordsStringList.join('\n')
+            def dataFileStringContent = recordsStringList.join('\r\n')
             def baos = new ByteArrayOutputStream()
             new ZipOutputStream(baos).with {
                 putNextEntry(new ZipEntry("produkt_what_comes_here_doesnt_matter.txt"))
@@ -139,7 +139,7 @@ class UrlDirectoryReaderSpec extends Specification {
         testData.forEach { lines.add(fileLink(it.filename)) }
         lines += "</pre><hr></body>"
         lines += "</html>"
-        return lines.join('\n')
+        return lines.join('\r\n')
     }
 
     private static String generateDataFileName(StationId stationId) {
@@ -199,7 +199,7 @@ class UrlDirectoryReaderSpec extends Specification {
                     "$it.stationId 19500401 20110401            202     50.7827    6.0941 Aachen                                   Nordrhein-Westfalen"
         }
 
-        return fileContentLines.join('\n')
+        return fileContentLines.join('\r\n')
     }
 
 

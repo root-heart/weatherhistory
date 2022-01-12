@@ -22,13 +22,6 @@ open class RecordConverter<R : BaseRecord>(
         private const val COLUMN_NAME_MEASUREMENT_TIME = "MESS_DATUM"
     }
 
-    fun convert(ssvData: SsvData): Stream<R> {
-//        validateColumnNames(ssvData)
-//        determineIndicesOfColumnsAlwaysPresent(ssvData)
-//        return convertValues(ssvData)
-        return Stream.empty()
-    }
-
     fun validateColumnNames(columnNames: List<String>) {
         val expectedColumnNames = columnMappings.keys + COLUMN_NAME_STATION_ID + COLUMN_NAME_MEASUREMENT_TIME
         columnNames.forEach {
@@ -43,29 +36,39 @@ open class RecordConverter<R : BaseRecord>(
         }
     }
 
+    private var recordProperties = Array<RecordProperty<R>?>(0) { null }
+
+
     fun determineIndicesOfColumnsAlwaysPresent(columnNames: List<String>) {
         columnIndexStationId = columnNames.indexOf(COLUMN_NAME_STATION_ID)
         columnIndexMeasurementTime = columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
+        recordProperties = Array(columnNames.size) { index ->
+            if (index != columnIndexStationId && index != columnIndexMeasurementTime) {
+                columnMappings.getValue(columnNames[index])
+            } else {
+                null
+            }
+        }
     }
 
-     fun createRecord(columnNames: List<String>, values: List<String>): R? {
+    fun createRecord(values: List<String>): R {
         val stationIdString = values[columnIndexStationId]
         val measurementTimeString = values[columnIndexMeasurementTime]
-        val record = recordConstructor.invoke()
-        record.stationId = StationId.of(stationIdString.trim())
-        record.measurementTime = LocalDateTime.parse(measurementTimeString.trim(), DATE_TIME_FORMATTER)
-        for (i in columnNames.indices) {
+        val record = recordConstructor()
+        record.stationId = StationId.of(stationIdString)
+        record.measurementTime = LocalDateTime.parse(measurementTimeString, DATE_TIME_FORMATTER)
+        for (i in values.indices) {
             if (i == columnIndexMeasurementTime || i == columnIndexStationId) {
                 continue
             }
-            val columnName = columnNames[i]
-            if (columnName == "eor") {
+            val value = values[i]
+            if (value == "eor") {
                 continue
             }
             val stringValue = values[i]
             if (stringValue != NULL_STRING) {
-                val recordProperty = columnMappings.getValue(columnName)
-                recordProperty.setValue(record, stringValue.trim())
+                val recordProperty = recordProperties[i]!!//columnMappings.getValue(columnName)
+                recordProperty.setValue(record, stringValue)
             }
         }
         return record

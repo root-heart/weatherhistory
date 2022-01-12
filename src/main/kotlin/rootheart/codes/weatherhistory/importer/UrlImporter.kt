@@ -43,25 +43,15 @@ private fun crawlDwd(baseUrlString: String) {
         for (timePeriodDirectory in listOf("historical", "recent")) {
             println("Crawling $baseUrlString/$subDirectory/$timePeriodDirectory")
             val url = URL("$baseUrlString/$subDirectory/$timePeriodDirectory")
-//            val urlDirectoryReader = UrlDirectoryReader(url)
-//            val recordsStream =
-//                urlDirectoryReader.downloadAndParseData(recordConverter)
-//            insertRecordsIntoDatabase(recordsStream)
-//
-//            val stationFile = urlDirectoryReader.downloadAndParseStationFile()
-        }
-    }
-}
-
-private fun <R : BaseRecord> insertRecordsIntoDatabase(records: Stream<R>) {
-    val count = AtomicInteger(0)
-    records
-        .peek {
-            val currentCount = count.incrementAndGet()
-            if (currentCount % 1_000_000 == 0) {
-                println(currentCount)
+            val urlDirectoryReader = UrlDirectoryReader(url, recordConverter)
+            val count = AtomicInteger(0)
+            urlDirectoryReader.forEachRecord { record ->
+                val currentCount = count.incrementAndGet()
+                if (currentCount % 1_000_000 == 0) {
+                    println(currentCount)
+                }
             }
         }
-        .collect(Collectors.toList())
+    }
 }
 

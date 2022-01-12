@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import rootheart.codes.weatherhistory.importer.converter.RecordConverter
 import rootheart.codes.weatherhistory.importer.records.BaseRecord
 import rootheart.codes.weatherhistory.model.StationId
+import java.io.BufferedReader
 import java.math.BigDecimal
 import java.net.URL
 import java.util.zip.ZipInputStream
@@ -11,7 +12,7 @@ import java.util.zip.ZipInputStream
 private val STATION_FILENAME_PATTERN =
     Regex("<a href=\"(?<fileName>[A-Z]{1,2}_(Stunden|Tages)werte_Beschreibung_Stationen.txt)\">")
 
-val DATA_FILENAME_REGEX =
+private val DATA_FILENAME_REGEX =
     Regex("<a href=\"(?<fileName>(stunden|tages)werte_([A-Z]{2})_(?<stationId>\\d{5})_.*?(akt|hist)\\.zip)\">")
 
 private fun fileIsDataFile(filename: String) =
@@ -42,41 +43,49 @@ class UrlDirectoryReader<R : BaseRecord>(private val url: URL, private val recor
 
     fun forEachRecord(processRecord: (R) -> Unit) {
         log.debug { "searching for hrefs in directory HTML in $url" }
-        DATA_FILENAME_REGEX.findAll(directoryHtml)
-            .map { it.groups as MatchNamedGroupCollection }
-            .forEach { matchResult ->
-                val href = url.toString() + "/" + matchResult["fileName"]!!.value
-                log.debug { "found href $href" }
-                val zipUrl = URL(href)
-                ZipInputStream(zipUrl.openStream()).use { zipInputStream ->
-                    val entries = generateSequence { zipInputStream.nextEntry }
-                    if (entries.any { fileIsDataFile(it.name) }) {
-                        log.debug { "Found data file in ZIP" }
-                        zipInputStream.bufferedReader().use { reader ->
-                            val header = reader.readLine()
-                            if (header != null) {
-                                val columnNames = splitColumns(header)
-                                recordConverter.validateColumnNames(columnNames)
-                                recordConverter.determineIndicesOfColumnsAlwaysPresent(columnNames)
-                                val values = ArrayList<String>()
-                                for (line in reader.lines()) {
-                                    splitColumns(line, values)
-                                    val record = recordConverter.createRecord(columnNames, values)
-                                    if (record != null) {
-                                        processRecord(record)
-                                    }
-                                    values.clear()
-                                }
-                            }
-                        }
-                        log.debug { "processed data file" }
-                    }
-                }
+        val matchResults = DATA_FILENAME_REGEX.findAll(directoryHtml).map { it.groups as MatchNamedGroupCollection }
+        for (matchResult in matchResults) {
+            val href = url.toString() + "/" + matchResult["fileName"]!!.value
+            log.debug { "found href $href" }
+            val zipUrl = URL(href)
+            processZipFile(zipUrl, processRecord)
+        }
+    }
+
+    private fun processZipFile(zipUrl: URL, processRecord: (R) -> Unit) {
+        ZipInputStream(zipUrl.openStream()).use { zipInputStream ->
+            val entries = generateSequence { zipInputStream.nextEntry }
+            if (entries.any { fileIsDataFile(it.name) }) {
+                log.debug { "Found data file in ZIP" }
+                processDataFile(zipInputStream, processRecord)
+                log.debug { "processed data file" }
             }
+        }
+    }
+
+
+    private fun processDataFile(zipInputStream: ZipInputStream, processRecord: (R) -> Unit) {
+        zipInputStream.bufferedReader().let { reader ->
+            val header = reader.readLine() ?: return
+            val columnNames = splitAndTrimTokens(header)
+            recordConverter.validateColumnNames(columnNames)
+            recordConverter.determineIndicesOfColumnsAlwaysPresent(columnNames)
+            parseLines(reader, processRecord)
+        }
+    }
+
+    private fun parseLines(reader: BufferedReader, processRecord: (R) -> Unit) {
+        val values = ArrayList<String>()
+        for (line in reader.lines()) {
+            splitAndTrimTokens(line, values)
+            val record = recordConverter.createRecord(values)
+            processRecord(record)
+            values.clear()
+        }
     }
 }
 
-fun splitColumns(line: String, list: MutableList<String> = ArrayList()): List<String> {
+fun splitAndTrimTokens(line: String, list: MutableList<String> = ArrayList()): List<String> {
     var pos = 0
     var end = line.indexOf(';', pos)
     while (end >= 0) {
@@ -92,10 +101,6 @@ fun splitColumns(line: String, list: MutableList<String> = ArrayList()): List<St
         end = line.indexOf(';', pos)
     }
     return list
-}
-
-fun splitWithKotlin(line: String): List<String> {
-    return line.split(";")
 }
 
 data class DataFile(val url: URL)
