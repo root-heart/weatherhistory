@@ -6,6 +6,7 @@ object SsvToHourlyDewPointTemperatureRecordConverter : RecordConverter<HourlyDew
     ::HourlyDewPointTemperatureRecord,
     mapOf(
         "QN_8" to QualityLevelProperty(HourlyDewPointTemperatureRecord::qualityLevel),
-        "TT" to BigDecimalProperty(HourlyDewPointTemperatureRecord::dewPointTemperatureCentigrade)
+        "TD" to BigDecimalProperty(HourlyDewPointTemperatureRecord::dewPointTemperatureCentigrade),
+        "TT" to BigDecimalProperty(HourlyDewPointTemperatureRecord::airTemperatureCentigrade)
     )
 )

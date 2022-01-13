@@ -62,7 +62,7 @@ open class RecordConverter<R : BaseRecord>(
                 continue
             }
             val value = values[i]
-            if (value == "eor") {
+            if (value == "eor" || value.endsWith("-999")) {
                 continue
             }
             val stringValue = values[i]

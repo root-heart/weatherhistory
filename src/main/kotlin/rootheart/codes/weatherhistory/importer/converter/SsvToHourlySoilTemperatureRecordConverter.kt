@@ -5,7 +5,7 @@ import rootheart.codes.weatherhistory.importer.records.HourlySoilTemperatureReco
 object SsvToHourlySoilTemperatureRecordConverter : RecordConverter<HourlySoilTemperatureRecord>(
     ::HourlySoilTemperatureRecord,
     mapOf(
-        "QN_8" to QualityLevelProperty(HourlySoilTemperatureRecord::qualityLevel),
+        "QN_2" to QualityLevelProperty(HourlySoilTemperatureRecord::qualityLevel),
         "V_TE002" to BigDecimalProperty(HourlySoilTemperatureRecord::soilTemperature2Centimeters),
         "V_TE005" to BigDecimalProperty(HourlySoilTemperatureRecord::soilTemperature5Centimeters),
         "V_TE010" to BigDecimalProperty(HourlySoilTemperatureRecord::soilTemperature10Centimeters),
