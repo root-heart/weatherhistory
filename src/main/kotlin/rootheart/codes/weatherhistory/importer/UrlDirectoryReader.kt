@@ -42,17 +42,17 @@ class UrlDirectoryReader<R : BaseRecord>(private val url: URL, private val recor
     }
 
     fun forEachRecord(processRecord: (R) -> Unit) {
-        log.debug { "searching for hrefs in directory HTML in $url" }
+        log.info { "searching for hrefs in directory HTML in $url" }
         val matchResults = DATA_FILENAME_REGEX.findAll(directoryHtml).map { it.groups as MatchNamedGroupCollection }
         for (matchResult in matchResults) {
             val href = url.toString() + "/" + matchResult["fileName"]!!.value
-            log.debug { "found href $href" }
             val zipUrl = URL(href)
             processZipFile(zipUrl, processRecord)
         }
     }
 
     private fun processZipFile(zipUrl: URL, processRecord: (R) -> Unit) {
+        log.info { "processing zip file at $zipUrl" }
         ZipInputStream(zipUrl.openStream()).use { zipInputStream ->
             val entries = generateSequence { zipInputStream.nextEntry }
             if (entries.any { fileIsDataFile(it.name) }) {
