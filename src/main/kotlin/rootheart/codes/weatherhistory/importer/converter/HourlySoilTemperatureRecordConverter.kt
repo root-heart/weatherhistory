@@ -2,7 +2,7 @@ package rootheart.codes.weatherhistory.importer.converter
 
 import rootheart.codes.weatherhistory.importer.records.HourlySoilTemperatureRecord
 
-object SsvToHourlySoilTemperatureRecordConverter : RecordConverter<HourlySoilTemperatureRecord>(
+object HourlySoilTemperatureRecordConverter : RecordConverter<HourlySoilTemperatureRecord>(
     ::HourlySoilTemperatureRecord,
     mapOf(
         "QN_2" to QualityLevelProperty(HourlySoilTemperatureRecord::qualityLevel),

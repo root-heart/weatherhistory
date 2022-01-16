@@ -11,11 +11,11 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Collectors
 
-class SsvToHourlySoilTemperatureRecordConverterSpec extends Specification implements SpecUtils {
+class HourlySoilTemperatureRecordConverterSpec extends Specification implements SpecUtils {
     @Unroll('#description')
     def 'Test that strings are converted correctly to hourly soil temperature record'() {
         given: 'a converter able to convert from semicolon-separated data to hourly soil temperature records'
-        def converter = SsvToHourlySoilTemperatureRecordConverter.INSTANCE
+        def converter = HourlySoilTemperatureRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
         def ssvData = new SsvData(columnNames, values.stream())

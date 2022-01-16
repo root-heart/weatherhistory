@@ -68,8 +68,8 @@ class UrlDirectoryReader<R : BaseRecord>(private val url: URL, private val recor
         zipInputStream.bufferedReader().let { reader ->
             val header = reader.readLine() ?: return
             val columnNames = splitAndTrimTokens(header)
-            recordConverter.validateColumnNames(columnNames)
-            recordConverter.determineIndicesOfColumnsAlwaysPresent(columnNames)
+//            recordConverter.validateColumnNames(columnNames)
+//            recordConverter.determineIndicesOfColumnsAlwaysPresent(columnNames)
             parseLines(reader, processRecord)
         }
     }
@@ -78,8 +78,8 @@ class UrlDirectoryReader<R : BaseRecord>(private val url: URL, private val recor
         val values = ArrayList<String>()
         for (line in reader.lines()) {
             splitAndTrimTokens(line, values)
-            val record = recordConverter.createRecord(values)
-            processRecord(record)
+//            val record = recordConverter.createRecord(values)
+//            processRecord(record)
             values.clear()
         }
     }

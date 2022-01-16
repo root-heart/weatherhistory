@@ -2,7 +2,7 @@ package rootheart.codes.weatherhistory.importer.converter
 
 import rootheart.codes.weatherhistory.importer.records.HourlyWindSpeedRecord
 
-object SsvToHourlyWindSpeedRecordConverter : RecordConverter<HourlyWindSpeedRecord>(
+object HourlyWindSpeedRecordConverter : RecordConverter<HourlyWindSpeedRecord>(
     ::HourlyWindSpeedRecord,
     mapOf(
         "QN_3" to QualityLevelProperty(HourlyWindSpeedRecord::qualityLevel),

@@ -11,11 +11,11 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Collectors
 
-class SsvToHourlyPrecipitationRecordConverterSpec extends Specification implements SpecUtils {
+class HourlyPrecipitationRecordConverterSpec extends Specification implements SpecUtils {
     @Unroll('#description')
     def 'Test that strings are converted correctly to hourly precipitation record'() {
         given: 'a converter able to convert from semicolon-separated data to hourly precipitation records'
-        def converter = SsvToHourlyPrecipitationRecordConverter.INSTANCE
+        def converter = HourlyPrecipitationRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
         def ssvData = new SsvData(columnNames, values.stream())

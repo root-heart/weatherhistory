@@ -11,11 +11,12 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Collectors
 
-class SsvToHourlyDewPointTemperatureRecordConverterSpec extends Specification implements SpecUtils {
+class HourlyMaxWindSpeedRecordConverterSpec extends Specification implements SpecUtils {
+
     @Unroll('#description')
     def 'Test that strings are converted correctly to hourly dew point temperature record'() {
         given: 'a converter able to convert from semicolon-separated data to hourly dew point temperature records'
-        def converter = SsvToHourlyDewPointTemperatureRecordConverter.INSTANCE
+        def converter = HourlyMaxWindSpeedRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
         def ssvData = new SsvData(columnNames, values.stream())
@@ -27,10 +28,10 @@ class SsvToHourlyDewPointTemperatureRecordConverterSpec extends Specification im
         records*.stationId == values.collect { it[0] != null ? StationId.of(it[0]) : null }
         records*.measurementTime == values.collect { LocalDateTime.parse(it[1], DateTimeFormatter.ofPattern('yyyyMMddHH')) }
         records*.qualityLevel == allQualityLevelsOf(values, 2)
-        records*.dewPointTemperatureCentigrade == allBigDecimalsOf(values, 3)
+        records*.maxWindSpeedMetersPerSecond == allBigDecimalsOf(values, 3)
 
         where:
-        columnNames = ["STATIONS_ID", "MESS_DATUM", "QN_8", "TT"]
+        columnNames = ["STATIONS_ID", "MESS_DATUM", "QN_8", "FX_911"]
 
         and:
         description                          | values

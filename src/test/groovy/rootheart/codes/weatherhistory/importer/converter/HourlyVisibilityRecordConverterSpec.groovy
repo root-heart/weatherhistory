@@ -10,11 +10,11 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Collectors
 
-class SsvToHourlyVisibilityRecordConverterSpec extends Specification implements SpecUtils {
+class HourlyVisibilityRecordConverterSpec extends Specification implements SpecUtils {
     @Unroll('#description')
     def 'Test that strings are converted correctly to hourly dew point temperature record'() {
         given: 'a converter able to convert from semicolon-separated data to hourly dew point temperature records'
-        def converter = SsvToHourlyVisibilityRecordConverter.INSTANCE
+        def converter = HourlyVisibilityRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
         def ssvData = new SsvData(columnNames, values.stream())

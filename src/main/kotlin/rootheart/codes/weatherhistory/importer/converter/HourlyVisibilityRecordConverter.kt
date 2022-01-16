@@ -2,7 +2,7 @@ package rootheart.codes.weatherhistory.importer.converter
 
 import rootheart.codes.weatherhistory.importer.records.HourlyVisibilityRecord
 
-object SsvToHourlyVisibilityRecordConverter : RecordConverter<HourlyVisibilityRecord>(
+object HourlyVisibilityRecordConverter : RecordConverter<HourlyVisibilityRecord>(
     ::HourlyVisibilityRecord,
     mapOf(
         "QN_8" to QualityLevelProperty(HourlyVisibilityRecord::qualityLevel),

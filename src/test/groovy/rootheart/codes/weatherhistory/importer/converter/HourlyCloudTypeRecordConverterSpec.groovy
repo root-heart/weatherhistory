@@ -13,7 +13,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Collectors
 
-class SsvToHourlyCloudTypeRecordConverterSpec extends Specification implements SpecUtils {
+class HourlyCloudTypeRecordConverterSpec extends Specification implements SpecUtils {
     static final columnNames = ["STATIONS_ID", "MESS_DATUM", "QN_8", "V_N", "V_N_I",
                                 "V_S1_CS", "V_S1_CSA", "V_S1_HHS", "V_S1_NS",
                                 "V_S2_CS", "V_S2_CSA", "V_S2_HHS", "V_S2_NS",
@@ -24,7 +24,7 @@ class SsvToHourlyCloudTypeRecordConverterSpec extends Specification implements S
     @Unroll('#description')
     def 'Test that strings are converted correctly to hourly cloud type record'() {
         given: 'a converter able to convert from semicolon-separated data to hourly cloud type records'
-        def converter = SsvToHourlyCloudTypeRecordConverter.INSTANCE
+        def converter = HourlyCloudTypeRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
         def ssvData = new SsvData(columnNames, values.stream())
@@ -53,7 +53,7 @@ class SsvToHourlyCloudTypeRecordConverterSpec extends Specification implements S
     @Unroll('#description')
     def 'Test that the values are correctly set in cloud layer 1'() {
         given: 'a converter able to convert from semicolon-separated data to hourly cloud type records'
-        def converter = SsvToHourlyCloudTypeRecordConverter.INSTANCE
+        def converter = HourlyCloudTypeRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
         def ssvData = new SsvData(columnNames, values.stream())
@@ -83,7 +83,7 @@ class SsvToHourlyCloudTypeRecordConverterSpec extends Specification implements S
     @Unroll('#description')
     def 'Test that the values are correctly set in cloud layer 2'() {
         given: 'a converter able to convert from semicolon-separated data to hourly cloud type records'
-        def converter = SsvToHourlyCloudTypeRecordConverter.INSTANCE
+        def converter = HourlyCloudTypeRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
         def ssvData = new SsvData(columnNames, values.stream())
@@ -114,7 +114,7 @@ class SsvToHourlyCloudTypeRecordConverterSpec extends Specification implements S
     @Unroll('#description')
     def 'Test that the values are correctly set in cloud layer 3'() {
         given: 'a converter able to convert from semicolon-separated data to hourly cloud type records'
-        def converter = SsvToHourlyCloudTypeRecordConverter.INSTANCE
+        def converter = HourlyCloudTypeRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
         def ssvData = new SsvData(columnNames, values.stream())
@@ -144,7 +144,7 @@ class SsvToHourlyCloudTypeRecordConverterSpec extends Specification implements S
     @Unroll('#description')
     def 'Test that the values are correctly set in cloud layer 4'() {
         given: 'a converter able to convert from semicolon-separated data to hourly cloud type records'
-        def converter = SsvToHourlyCloudTypeRecordConverter.INSTANCE
+        def converter = HourlyCloudTypeRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
         def ssvData = new SsvData(columnNames, values.stream())

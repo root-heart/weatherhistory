@@ -2,7 +2,7 @@ package rootheart.codes.weatherhistory.importer.converter
 
 import rootheart.codes.weatherhistory.importer.records.HourlyCloudTypeRecord
 
-object SsvToHourlyCloudTypeRecordConverter : RecordConverter<HourlyCloudTypeRecord>(
+object HourlyCloudTypeRecordConverter : RecordConverter<HourlyCloudTypeRecord>(
     ::HourlyCloudTypeRecord,
     mapOf(
         "QN_8" to QualityLevelProperty(HourlyCloudTypeRecord::qualityLevel),

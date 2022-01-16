@@ -7,68 +7,69 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Stream
 
-private const val NULL_STRING = "-999"
-
 open class RecordConverter<R : BaseRecord>(
     private val recordConstructor: () -> R,
-    private val columnMappings: Map<String, RecordProperty<R>>,
-    private var columnIndexStationId: Int = 0,
-    private var columnIndexMeasurementTime: Int = 0,
+    private val columnMappings: Map<String, RecordProperty<R>>
 ) {
-    companion object {
-        @JvmStatic
-        private val DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHH")
-        private const val COLUMN_NAME_STATION_ID = "STATIONS_ID"
-        private const val COLUMN_NAME_MEASUREMENT_TIME = "MESS_DATUM"
+    private var columnIndexStationId: Int = 0
+    private var columnIndexMeasurementTime: Int = 0
+    private var recordProperties = Array<RecordProperty<R>?>(0) { null }
+
+    fun convert(ssvData: SsvData): Stream<R> {
+        validateColumnNames(ssvData)
+        determineIndicesOfColumnsAlwaysPresent(ssvData)
+        return convertValues(ssvData)
     }
 
-    fun validateColumnNames(columnNames: List<String>) {
+    private fun validateColumnNames(ssvData: SsvData) {
         val expectedColumnNames = columnMappings.keys + COLUMN_NAME_STATION_ID + COLUMN_NAME_MEASUREMENT_TIME
-        columnNames.forEach {
+        ssvData.columnNames.forEach {
             if (!expectedColumnNames.contains(it) && it != "eor") {
                 throw InvalidColumnsException("columnName $it not expected")
             }
         }
         expectedColumnNames.forEach {
-            if (!columnNames.contains(it)) {
+            if (!ssvData.columnNames.contains(it)) {
                 throw InvalidColumnsException("column name $it expected, but not found")
             }
         }
     }
 
-    private var recordProperties = Array<RecordProperty<R>?>(0) { null }
-
-
-    fun determineIndicesOfColumnsAlwaysPresent(columnNames: List<String>) {
-        columnIndexStationId = columnNames.indexOf(COLUMN_NAME_STATION_ID)
-        columnIndexMeasurementTime = columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
-        recordProperties = Array(columnNames.size) { index ->
-            if (index != columnIndexStationId && index != columnIndexMeasurementTime) {
-                columnMappings.getValue(columnNames[index])
-            } else {
-                null
-            }
-        }
+    private fun determineIndicesOfColumnsAlwaysPresent(ssvData: SsvData) {
+        columnIndexStationId = ssvData.columnNames.indexOf(COLUMN_NAME_STATION_ID)
+        columnIndexMeasurementTime = ssvData.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
     }
 
-    fun createRecord(values: List<String>): R {
+    private fun convertValues(ssvData: SsvData): Stream<R> {
+        return ssvData.columnValuesStream
+            .map { createRecord(ssvData.columnNames, it) }
+            .filter { it != null }
+            .map { it!! }
+    }
+
+    private fun createRecord(columnNames: List<String>, values: List<String?>): R? {
         val stationIdString = values[columnIndexStationId]
         val measurementTimeString = values[columnIndexMeasurementTime]
-        val record = recordConstructor()
+        if (stationIdString == null || measurementTimeString == null) {
+            return null
+        }
+        val record = recordConstructor.invoke()
         record.stationId = StationId.of(stationIdString)
         record.measurementTime = LocalDateTime.parse(measurementTimeString, DATE_TIME_FORMATTER)
-        for (i in values.indices) {
+        record.stationId = StationId.of(stationIdString.trim())
+        record.measurementTime = LocalDateTime.parse(measurementTimeString.trim(), DATE_TIME_FORMATTER)
+        for (i in columnNames.indices) {
             if (i == columnIndexMeasurementTime || i == columnIndexStationId) {
                 continue
             }
-            val value = values[i]
-            if (value == "eor" || value.endsWith("-999")) {
+            val columnName = columnNames[i]
+            if (columnName == "eor") {
                 continue
             }
             val stringValue = values[i]
-            if (stringValue != NULL_STRING) {
-                val recordProperty = recordProperties[i]!!//columnMappings.getValue(columnName)
-                recordProperty.setValue(record, stringValue)
+            if (stringValue != null) {
+                val recordProperty = columnMappings.getValue(columnName)
+                recordProperty.setValue(record, stringValue.trim())
             }
         }
         return record
@@ -76,3 +77,7 @@ open class RecordConverter<R : BaseRecord>(
 }
 
 class InvalidColumnsException(message: String) : Exception(message)
+
+private val DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHH")
+private const val COLUMN_NAME_STATION_ID = "STATIONS_ID"
+private const val COLUMN_NAME_MEASUREMENT_TIME = "MESS_DATUM"

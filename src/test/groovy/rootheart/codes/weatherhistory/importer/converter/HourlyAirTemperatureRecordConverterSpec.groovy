@@ -3,6 +3,7 @@ package rootheart.codes.weatherhistory.importer.converter
 
 import rootheart.codes.weatherhistory.importer.SpecUtils
 import rootheart.codes.weatherhistory.importer.ssv.SsvData
+import rootheart.codes.weatherhistory.model.QualityLevel
 import rootheart.codes.weatherhistory.model.StationId
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -11,12 +12,12 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Collectors
 
-class SsvToHourlyAirTemperatureRecordConverterSpec extends Specification implements SpecUtils {
+class HourlyAirTemperatureRecordConverterSpec extends Specification implements SpecUtils {
 
     @Unroll('#description')
     def 'Test that strings are converted correctly to hourly air temperature record'() {
         given: 'a converter able to convert from semicolon-separated data to hourly air temperature records'
-        def converter = SsvToHourlyAirTemperatureRecordConverter.INSTANCE
+        def converter = HourlyAirTemperatureRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
         def ssvData = new SsvData(columnNames, values.stream())
@@ -43,7 +44,7 @@ class SsvToHourlyAirTemperatureRecordConverterSpec extends Specification impleme
 
     def 'Test that an error is thrown if the column names are not as expected'() {
         given: 'a converter able to convert from semicolon-separated data to hourly air temperature records'
-        def converter = SsvToHourlyAirTemperatureRecordConverter.INSTANCE
+        def converter = HourlyAirTemperatureRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
         def ssvData = new SsvData(columnNames, [].stream())
