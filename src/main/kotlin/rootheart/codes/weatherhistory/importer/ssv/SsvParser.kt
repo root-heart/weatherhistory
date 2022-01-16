@@ -10,10 +10,6 @@ object SsvParser {
         return SsvData(columnNames, columnValues)
     }
 
-    private fun nullifyValues(values: List<String>) = values.map { nullify(it) }
-
-    private fun nullify(value: String) = if (value == "-999") null else value
-
     private fun splitAndTrimTokens(line: String, list: MutableList<String?> = ArrayList()): List<String?> {
         var pos = 0
         var end = line.indexOf(';', pos)

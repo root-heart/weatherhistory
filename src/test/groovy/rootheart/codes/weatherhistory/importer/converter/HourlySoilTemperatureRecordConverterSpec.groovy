@@ -35,7 +35,7 @@ class HourlySoilTemperatureRecordConverterSpec extends Specification implements 
         records*.soilTemperature100Centimeters == allBigDecimalsOf(values, 8)
 
         where:
-        columnNames = ["STATIONS_ID", "MESS_DATUM", "QN_8", "V_TE002", "V_TE005", "V_TE010", "V_TE020", "V_TE050", "V_TE100"]
+        columnNames = ["STATIONS_ID", "MESS_DATUM", "QN_2", "V_TE002", "V_TE005", "V_TE010", "V_TE020", "V_TE050", "V_TE100"]
 
         and:
         description                                       | values
