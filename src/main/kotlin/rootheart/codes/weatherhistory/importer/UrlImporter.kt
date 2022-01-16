@@ -1,7 +1,6 @@
 package rootheart.codes.weatherhistory.importer
 
 import mu.KotlinLogging
-import rootheart.codes.weatherhistory.database.SummarizedMeasurement
 import rootheart.codes.weatherhistory.importer.converter.HourlyAirTemperatureRecordConverter
 import rootheart.codes.weatherhistory.importer.converter.HourlyCloudTypeRecordConverter
 import rootheart.codes.weatherhistory.importer.converter.HourlyDewPointTemperatureRecordConverter
@@ -25,16 +24,11 @@ import rootheart.codes.weatherhistory.importer.records.HourlySunshineDurationRec
 import rootheart.codes.weatherhistory.importer.records.HourlyVisibilityRecord
 import rootheart.codes.weatherhistory.importer.records.HourlyWindSpeedRecord
 import rootheart.codes.weatherhistory.importer.ssv.SsvParser
-import rootheart.codes.weatherhistory.model.PrecipitationType
 import rootheart.codes.weatherhistory.model.StationId
-import java.math.BigDecimal
 import java.net.URL
 import java.time.LocalDateTime
 import java.util.*
 import java.util.zip.ZipInputStream
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
-import kotlin.reflect.KProperty0
 
 fun main(args: Array<String>) {
     val baseUrlString =
@@ -64,7 +58,8 @@ private val urlSubDirectories = listOf(
 
 private fun crawlDwd(baseUrlString: String) {
     val zipDataFileUrlsByStation = findZipDataFileUrlsByStation(baseUrlString)
-    for ((stationId, dataFileUrls) in zipDataFileUrlsByStation) {
+    for ((stationId, dataFileUrls) in zipDataFileUrlsByStation.filter { it.key.stationId == 691 }) {
+        log.info { "Downloading, parsing and merging records for station $stationId"}
         val records = downloadAndParseDataFiles(dataFileUrls)
         val mergedHourlyRecords = mergeHourlyRecords(stationId, records)
         log.info { "Station ID $stationId, ${mergedHourlyRecords.size} merged records" }
@@ -186,6 +181,7 @@ private fun mergeHourlyRecords(stationId: StationId, records: DataFileRecords): 
         hourlyRecord.windSpeedMetersPerSecond = r.windSpeedMetersPerSecond
         hourlyRecord.windDirectionDegrees = r.windDirectionDegrees
     }
+    log.info { "Merged ${hourlyRecords.size} records for station $stationId"}
     return hourlyRecords.values
 }
 
