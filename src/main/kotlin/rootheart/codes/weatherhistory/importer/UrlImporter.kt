@@ -141,23 +141,7 @@ private fun downloadAndParseDataFiles(urls: DataFileUrls) = DataFileRecords(
     windSpedRecords = windSpeedParser.parse(urls.windSpedUrls)
 )
 
-data class HourlyRecord(
-    val stationId: StationId,
-    val measurementTime: LocalDateTime,
-    var airTemperatureAtTwoMetersHeightCentigrade: BigDecimal? = null,
-    var relativeHumidityPercent: BigDecimal? = null,
-    var cloudCoverage: Int? = null,
-    var dewPointTemperatureCentigrade: BigDecimal? = null,
-    var airPressureHectopascals: BigDecimal? = null,
-    var precipitationMillimeters: BigDecimal? = null,
-    var precipitationType: PrecipitationType? = null,
-    var sunshineDuration: BigDecimal? = null,
-    var windSpeedMetersPerSecond: BigDecimal? = null,
-    var maxWindSpeedMetersPerSecond: BigDecimal? = null,
-    var windDirectionDegrees: BigDecimal? = null,
-    var visibilityInMeters: BigDecimal? = null
-)
-
+// TODO creating separate records and then merging them seconds after creating is wasting many CPU cycles...
 private fun mergeHourlyRecords(stationId: StationId, records: DataFileRecords): Collection<HourlyRecord> {
     val hourlyRecords = HashMap<LocalDateTime, HourlyRecord>()
     for (r in records.airTemperatureRecords) {
