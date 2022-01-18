@@ -32,7 +32,7 @@ data class HtmlDirectory(
 
 }
 
-enum class DataType(val abbreviation: String) {
+enum class RecordType(val abbreviation: String) {
     AIR_TEMPERATURE("TU"),
     CLOUD_TYPE("CS"),
     DEW_POINT("TD"),
@@ -45,14 +45,14 @@ enum class DataType(val abbreviation: String) {
     PRECIPITATION("RR");
 
     companion object {
-        fun of(abbreviation: String): DataType = values().first { it.abbreviation == abbreviation }
+        fun of(abbreviation: String): RecordType = values().first { it.abbreviation == abbreviation }
     }
 }
 
 data class ZippedDataFile(
     val fileName: String,
     val stationId: StationId,
-    val dataType: DataType,
+    val recordType: RecordType,
     val historical: Boolean,
     val url: URL
 )
@@ -79,7 +79,7 @@ object HtmlDirectoryParser {
                 ZippedDataFile(
                     fileName = fileName,
                     stationId = StationId.of(it["stationId"]!!.value),
-                    dataType = DataType.of(it["key"]!!.value),
+                    recordType = RecordType.of(it["key"]!!.value),
                     historical = it["recentness"]!!.value == "hist",
                     url = URL("${url.toExternalForm()}$fileName")
                 )

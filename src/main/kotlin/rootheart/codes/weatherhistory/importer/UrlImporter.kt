@@ -4,7 +4,7 @@ import mu.KotlinLogging
 import rootheart.codes.weatherhistory.importer.converter.BigDecimalProperty
 import rootheart.codes.weatherhistory.importer.converter.IntProperty
 import rootheart.codes.weatherhistory.importer.converter.PrecipitationTypeProperty
-import rootheart.codes.weatherhistory.importer.html.DataType
+import rootheart.codes.weatherhistory.importer.html.RecordType
 import rootheart.codes.weatherhistory.importer.html.HtmlDirectoryParser
 import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
 import rootheart.codes.weatherhistory.importer.ssv.SsvParser
@@ -35,35 +35,35 @@ fun main(args: Array<String>) {
     }
 }
 
-private val dataTypeColumnMapping = mapOf(
-    DataType.AIR_TEMPERATURE to mapOf(
+private val recordTypeColumnMapping = mapOf(
+    RecordType.AIR_TEMPERATURE to mapOf(
         "TT_TU" to BigDecimalProperty(HourlyRecord::airTemperatureAtTwoMetersHeightCentigrade),
         "RF_TU" to BigDecimalProperty(HourlyRecord::relativeHumidityPercent)
     ),
-    DataType.CLOUD_TYPE to mapOf(
+    RecordType.CLOUD_TYPE to mapOf(
         "V_N" to IntProperty(HourlyRecord::cloudCoverage),
     ),
-    DataType.DEW_POINT to mapOf(
+    RecordType.DEW_POINT to mapOf(
         "TD" to BigDecimalProperty(HourlyRecord::dewPointTemperatureCentigrade),
     ),
-    DataType.MAX_WIND_SPEED to mapOf(
+    RecordType.MAX_WIND_SPEED to mapOf(
         "FX_911" to BigDecimalProperty(HourlyRecord::maxWindSpeedMetersPerSecond)
     ),
-    DataType.MOISTURE to mapOf(
+    RecordType.MOISTURE to mapOf(
         "P_STD" to BigDecimalProperty(HourlyRecord::airPressureHectopascals),
     ),
-    DataType.PRECIPITATION to mapOf(
+    RecordType.PRECIPITATION to mapOf(
         "R1" to BigDecimalProperty(HourlyRecord::precipitationMillimeters),
         "WRTR" to PrecipitationTypeProperty(HourlyRecord::precipitationType)
     ),
-    DataType.SOIL_TEMPERATURE to mapOf(),
-    DataType.SUNSHINE_DURATION to mapOf(
+    RecordType.SOIL_TEMPERATURE to mapOf(),
+    RecordType.SUNSHINE_DURATION to mapOf(
         "SD_SO" to BigDecimalProperty(HourlyRecord::sunshineDuration)
     ),
-    DataType.VISIBILITY to mapOf(
+    RecordType.VISIBILITY to mapOf(
         "V_VV" to BigDecimalProperty(HourlyRecord::visibilityInMeters)
     ),
-    DataType.WIND_SPEED to mapOf(
+    RecordType.WIND_SPEED to mapOf(
         "F" to BigDecimalProperty(HourlyRecord::windSpeedMetersPerSecond),
         "D" to BigDecimalProperty(HourlyRecord::windDirectionDegrees)
     )
@@ -78,9 +78,9 @@ private fun parseRecords(zippedDataFile: ZippedDataFile, records: MutableMap<Loc
             val reader = zipInputStream.bufferedReader()
             val data = SsvParser.parse(reader)
             log.info { "Parsed data file" }
-            val columnMapping = dataTypeColumnMapping[zippedDataFile.dataType]
+            val columnMapping = recordTypeColumnMapping[zippedDataFile.recordType]
             if (columnMapping != null) {
-                log.info { "Column name mapping for type ${zippedDataFile.dataType} found: $columnMapping" }
+                log.info { "Column name mapping for type ${zippedDataFile.recordType} found: $columnMapping" }
                 val indexMeasurementTime = data.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
                 val columnIndices = columnMapping.mapKeys { data.columnNames.indexOf(it.key) }
                 for (columnValues in data.columnValuesStream) {
