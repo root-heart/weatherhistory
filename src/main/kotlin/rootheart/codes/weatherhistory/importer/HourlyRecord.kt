@@ -1,9 +1,9 @@
 package rootheart.codes.weatherhistory.importer
 
+import org.joda.time.LocalDateTime
 import rootheart.codes.weatherhistory.model.PrecipitationType
 import rootheart.codes.weatherhistory.model.StationId
 import java.math.BigDecimal
-import java.time.LocalDateTime
 
 data class HourlyRecord(
     val stationId: StationId,
