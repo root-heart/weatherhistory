@@ -22,7 +22,7 @@ class SsvParserSpec extends Specification {
         parsed.columnNames == expectedColumnNames
 
         and: 'the values for each line as well'
-        parsed.columnValuesStream.collect(Collectors.toList()) == expectedLines
+        parsed.rows.collect(Collectors.toList()) == expectedLines
 
         where:
         fileContent                                             | expectedColumnNames               | expectedLines
@@ -53,7 +53,7 @@ class SsvParserSpec extends Specification {
         parsed.columnNames == expectedColumnNames
 
         and: 'the values for each line as well'
-        parsed.columnValuesStream.collect(Collectors.toList()) == expectedLines
+        parsed.rows.collect(Collectors.toList()) == expectedLines
 
         where:
         fileContent                     | expectedColumnNames    | expectedLines

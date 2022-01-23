@@ -2,25 +2,21 @@ package rootheart.codes.weatherhistory.importer.html
 
 import org.mockserver.client.MockServerClient
 import org.mockserver.integration.ClientAndServer
-import org.mockserver.model.HttpRequest
-import org.mockserver.model.HttpResponse
+import rootheart.codes.weatherhistory.importer.SpecUtils
 import spock.genesis.Gen
 import spock.lang.Specification
 
 import java.util.regex.Pattern
 
-class HtmlDirectoryParserSpec extends Specification {
-    private static final dateTimePattern = Pattern.compile('\\d{2}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{4} \\d{2}:\\d{2}')
-    private static final random = new Random(System.currentTimeMillis())
-
-    private static final STATIONS_FILENAME_GENERATOR = Gen.string(Pattern.compile("(TU|CS|TD|FX|TF|EB|SD|VV|FF|RR)_(Stunden|Tages)werte_Beschreibung_Stationen.txt"))
-    private static final DATA_FILENAME_GENERATOR = Gen.string(Pattern.compile("(stunden|tages)werte_(TU|CS|TD|FX|TF|EB|SD|VV|FF|RR)_\\d{5}_(akt|[0-9]{8}-[0-9]{8}_hist)\\.zip"))
+class HtmlDirectoryParserSpec extends Specification implements SpecUtils {
+    private static final STATIONS_FILENAME_GENERATOR = Gen.string(Pattern.compile("(TU|CS|TD|FX|TF|SD|VV|FF|RR)_(Stunden|Tages)werte_Beschreibung_Stationen.txt"))
+    private static final DATA_FILENAME_GENERATOR = Gen.string(Pattern.compile("(stunden|tages)werte_(TU|CS|TD|FX|TF|SD|VV|FF|RR)_\\d{5}_(akt|[0-9]{8}-[0-9]{8}_hist)\\.zip"))
     private static final DIRECTORY_NAME_GENERATOR = Gen.string(Pattern.compile("[A-Za-z0-9_]{10,30}"))
 
     def """Test that parsing a HTML that contains three subdirectories with no content, three data files and a
            stations file produces the corresponding HtmlDirectory"""() {
         given:
-        def randomPort = random.nextInt(10000) + 8000
+        def randomPort = randomInt(8000, 10000)
         ClientAndServer.startClientAndServer(randomPort)
         def mockServer = new MockServerClient("127.0.0.1", randomPort)
 
@@ -62,7 +58,7 @@ class HtmlDirectoryParserSpec extends Specification {
     def """Test that parsing a HTML that contains one subdirectory with two data files and two subdirectories
            produces the corresponding HTML directory"""() {
         given:
-        def randomPort = random.nextInt(10000) + 8000
+        def randomPort = randomInt(8000, 10000)
         ClientAndServer.startClientAndServer(randomPort)
         def mockServer = new MockServerClient("127.0.0.1", randomPort)
 
@@ -107,34 +103,7 @@ class HtmlDirectoryParserSpec extends Specification {
         htmlDirectory.zippedDataFiles.size() == 0
     }
 
-    // TODO copy paste from UrlImporterSpec
-    private static request(String method, String path) {
-        new HttpRequest()
-                .withMethod(method)
-                .withPath(path)
-    }
 
-    // TODO copy paste from UrlImporterSpec
-    private static respond(int status, String body) {
-        new HttpResponse()
-                .withStatusCode(status)
-                .withBody(body)
-    }
-
-    // TODO copy paste from UrlImporterSpec
-    private static String fileLink(String target) {
-        "<a href=\"$target\">$target</a>         ${randomDateTime()}              ${randomSize()}"
-    }
-
-    // TODO copy paste from UrlImporterSpec
-    private static String randomDateTime() {
-        Gen.string(dateTimePattern).first()
-    }
-
-    // TODO copy paste from UrlImporterSpec
-    private static String randomSize() {
-        random.nextInt(100_000)
-    }
 
     private static String directoryListing(String stationDataFileName,
                                            List<String> dataFilenames,

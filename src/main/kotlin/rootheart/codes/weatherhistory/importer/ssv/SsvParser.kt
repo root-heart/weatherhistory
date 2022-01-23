@@ -1,12 +1,13 @@
 package rootheart.codes.weatherhistory.importer.ssv
 
 import java.io.BufferedReader
+import java.util.stream.Collectors
 
 object SsvParser {
     fun parse(reader: BufferedReader): SsvData {
         val header = reader.readLine() ?: ""
         val columnNames = splitAndTrimTokens(header).map { it!! }
-        val columnValues = reader.lines().map { splitAndTrimTokens(it) }
+        val columnValues = reader.lines().map { splitAndTrimTokens(it) }.collect(Collectors.toList())
         return SsvData(columnNames, columnValues)
     }
 

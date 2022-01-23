@@ -4,5 +4,5 @@ import java.util.stream.Stream
 
 data class SsvData(
     val columnNames: List<String>,
-    val columnValuesStream: Stream<List<String?>>
+    val rows: List<List<String?>>
 )

@@ -2,19 +2,20 @@ package rootheart.codes.weatherhistory.importer
 
 import mu.KotlinLogging
 import org.joda.time.LocalDate
+import rootheart.codes.weatherhistory.database.SummarizedMeasurement
 import rootheart.codes.weatherhistory.database.TableMapping
 import rootheart.codes.weatherhistory.database.WeatherDb
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.SQLException
 
-class RecordsImporter<POKO : Any>(private val tableMapping: TableMapping<POKO>) {
+open class RecordsImporter<POKO : Any>(private val tableMapping: TableMapping<POKO>) {
     private val tableName = determineTableName()
     private val insertSql = buildInsertSql()
     private val log = KotlinLogging.logger {}
 
     fun importEntities(entities: Collection<POKO>) {
-        log.info { "Import data into table $tableName" }
+        log.info { "importEntities($tableName, ${entities.size})" }
         try {
             WeatherDb.dataSource.connection.use { connection ->
                 connection.prepareStatement(insertSql).use { statement ->
@@ -41,8 +42,10 @@ class RecordsImporter<POKO : Any>(private val tableMapping: TableMapping<POKO>) 
                 }
             }
         } catch (e: SQLException) {
-            log.error("Error during batch insert", e)
+            log.error("importEntities($tableName, ${entities.size}) error during batch insert", e)
+            throw e
         }
+        log.info { "importEntities($tableName, ${entities.size}) finished" }
     }
 
     private fun determineTableName(): String {
@@ -60,4 +63,8 @@ class RecordsImporter<POKO : Any>(private val tableMapping: TableMapping<POKO>) 
                 + "VALUES (" + parameterQuestionMarks + ") "
                 + "ON CONFLICT DO NOTHING")
     }
+}
+
+object SummarizedMeasurementImporter : RecordsImporter<SummarizedMeasurement>(SummarizedMeasurement.tableMapping) {
+
 }
