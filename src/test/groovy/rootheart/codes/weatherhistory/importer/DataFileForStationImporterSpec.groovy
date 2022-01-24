@@ -1,13 +1,13 @@
 package rootheart.codes.weatherhistory.importer
 
-import groovy.sql.DataSet
+
 import groovy.sql.Sql
 import org.mockserver.client.MockServerClient
 import org.mockserver.integration.ClientAndServer
 import rootheart.codes.weatherhistory.database.WeatherDb
 import rootheart.codes.weatherhistory.importer.converter.BigDecimalProperty
 import rootheart.codes.weatherhistory.importer.converter.IntProperty
-import rootheart.codes.weatherhistory.importer.html.RecordType
+import rootheart.codes.weatherhistory.importer.html.MeasurementType
 import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
 import rootheart.codes.weatherhistory.model.StationId
 import spock.genesis.Gen
@@ -21,7 +21,7 @@ import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-class StationDataImporterSpec extends Specification implements SpecUtils {
+class DataFileForStationImporterSpec extends Specification implements SpecUtils {
     private static final dateTimePattern = Pattern.compile('\\d{2}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\\d{4} \\d{2}:\\d{2}')
     private static final stationFilenamePattern = Pattern.compile("[A-Z]{2}_(Stunden|Tages)werte_Beschreibung_Stationen\\.txt")
     private static final columnNamePattern = Pattern.compile("[A-Z_0-9]{4,10}")
@@ -38,7 +38,7 @@ class StationDataImporterSpec extends Specification implements SpecUtils {
     }
 
     private static byte[] getZippedDataFileBytes(ZippedDataFile zippedDataFile, List<Map<String, String>> measurements) {
-        def columnNames = new ArrayList<>(zippedDataFile.recordType.columnNameMapping.keySet())
+        def columnNames = new ArrayList<>(zippedDataFile.measurementType.columnNameMapping.keySet())
         columnNames.add("STATIONS_ID")
         columnNames.add("MESS_DATUM")
         columnNames.add("eor")
@@ -65,7 +65,7 @@ class StationDataImporterSpec extends Specification implements SpecUtils {
 
         and: "Some randomized test data"
         def stationId = StationId.of(randomInt(1, 99999))
-        def recordType = RecordType.AIR_TEMPERATURE
+        def recordType = MeasurementType.AIR_TEMPERATURE
         def fileName = generateDataFileName(stationId)
         def file = new ZippedDataFile(fileName, stationId, recordType, false, new URL("http://localhost:$randomPort/$fileName"))
         def measurementStrings = [
@@ -83,7 +83,7 @@ class StationDataImporterSpec extends Specification implements SpecUtils {
                 .respond(respond(200, getZippedDataFileBytes(file, measurementStrings)))
 
         when:
-        StationDataImporter.INSTANCE.import([file])
+        DataFileForStationImporter.INSTANCE.import([file])
 
         then: "The downloaded data equals the data specified before"
         noExceptionThrown()
@@ -104,7 +104,7 @@ class StationDataImporterSpec extends Specification implements SpecUtils {
         Gen.string(dataFilenamePattern).first()
     }
 
-    private static Map<String, Object> getRandomValues(RecordType recordType) {
+    private static Map<String, Object> getRandomValues(MeasurementType recordType) {
         return recordType.columnNameMapping.collectEntries { name, property ->
             def value = ''
             if (property instanceof BigDecimalProperty) {

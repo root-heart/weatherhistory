@@ -5,7 +5,7 @@ import org.joda.time.LocalDateTime
 import org.joda.time.format.DateTimeFormat
 import rootheart.codes.weatherhistory.database.DateInterval
 import rootheart.codes.weatherhistory.database.SummarizedMeasurement
-import rootheart.codes.weatherhistory.importer.html.RecordType
+import rootheart.codes.weatherhistory.importer.html.MeasurementType
 import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
 import rootheart.codes.weatherhistory.importer.ssv.SsvData
 import rootheart.codes.weatherhistory.importer.ssv.SsvParser
@@ -16,7 +16,7 @@ import java.math.RoundingMode
 import java.net.URL
 import java.util.zip.ZipInputStream
 
-object StationDataImporter {
+object DataFileForStationImporter {
     private val log = KotlinLogging.logger {}
 
     fun import(zippedDataFiles: List<ZippedDataFile>) {
@@ -45,7 +45,7 @@ object Downloader {
         for (dataFile in zippedDataFiles) {
             downloadBytes(dataFile.url)
                 ?.let { findAndUnzipMeasurementFile(it) }
-                ?.let { convertToHourlyMeasurements(it, dataFile.recordType, measurementsByTime) }
+                ?.let { convertToHourlyMeasurements(it, dataFile.measurementType, measurementsByTime) }
         }
         return measurementsByTime.values
     }
@@ -73,12 +73,12 @@ object Downloader {
 
     private fun convertToHourlyMeasurements(
         ssvData: SsvData,
-        recordType: RecordType,
+        measurementType: MeasurementType,
         measurementByTime: HourlyMeasurementByTime
     ) {
-        log.info { "convertToHourlyMeasurements(${ssvData.rows.size} rows, ${recordType}, ${measurementByTime.size} measurements by time)" }
+        log.info { "convertToHourlyMeasurements(${ssvData.rows.size} rows, ${measurementType}, ${measurementByTime.size} measurements by time)" }
         val indexMeasurementTime = ssvData.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
-        val columnMappingByIndex = recordType.columnNameMapping.mapKeys { ssvData.columnNames.indexOf(it.key) }
+        val columnMappingByIndex = measurementType.columnNameMapping.mapKeys { ssvData.columnNames.indexOf(it.key) }
         for (row in ssvData.rows) {
             val measurementTimeString = row[indexMeasurementTime]
             val measurementTime = LocalDateTime.parse(measurementTimeString, DATE_TIME_FORMATTER)
@@ -90,7 +90,7 @@ object Downloader {
                 }
             }
         }
-        log.info { "convertToHourlyMeasurements(${ssvData.rows.size} rows, ${recordType}, ${measurementByTime.size} measurements by time) finished" }
+        log.info { "convertToHourlyMeasurements(${ssvData.rows.size} rows, ${measurementType}, ${measurementByTime.size} measurements by time) finished" }
     }
 
     private fun fileIsMeasurementFile(filename: String) = filename.startsWith("produkt_") && filename.endsWith(".txt")
@@ -152,7 +152,7 @@ inline fun <T> Iterable<T>.minDecimal(selector: (T) -> BigDecimal?): BigDecimal?
         val v = selector(iterator.next())
         if (minValue == null) {
             minValue = v
-        } else if (minValue > v) {
+        } else if (v != null && minValue > v) {
             minValue = v
         }
     }
@@ -167,7 +167,7 @@ inline fun <T> Iterable<T>.maxDecimal(selector: (T) -> BigDecimal?): BigDecimal?
         val v = selector(iterator.next())
         if (maxValue == null) {
             maxValue = v
-        } else if (maxValue < v) {
+        } else if (v != null && maxValue < v) {
             maxValue = v
         }
     }
@@ -180,7 +180,7 @@ inline fun <T> Collection<T>.avgDecimal(selector: (T) -> BigDecimal?): BigDecima
     var sum = selector(iterator.next())
     while (iterator.hasNext()) {
         val v = selector(iterator.next())
-        v?.let { sum = sum?.add(v) }
+        v?.let { sum = sum?.add(v) ?: v }
     }
     return sum?.divide(BigDecimal.valueOf(size.toLong()), RoundingMode.HALF_UP)
 }

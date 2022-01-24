@@ -5,7 +5,7 @@ import rootheart.codes.weatherhistory.importer.HourlyMeasurement
 import rootheart.codes.weatherhistory.importer.converter.BigDecimalProperty
 import rootheart.codes.weatherhistory.importer.converter.IntProperty
 import rootheart.codes.weatherhistory.importer.converter.PrecipitationTypeProperty
-import rootheart.codes.weatherhistory.importer.converter.SimpleRecordProperty
+import rootheart.codes.weatherhistory.importer.converter.SimpleMeasurementProperty
 import rootheart.codes.weatherhistory.model.StationId
 import java.net.URL
 
@@ -32,14 +32,14 @@ data class HtmlDirectory(
         for (subDirectory in subDirectories) {
             subDirectory.getAllZippedDataFiles(resultList)
         }
-        return resultList;
+        return resultList
     }
 
 }
 
-enum class RecordType(
+enum class MeasurementType(
     val abbreviation: String,
-    val columnNameMapping: Map<String, SimpleRecordProperty<HourlyMeasurement, *>>
+    val columnNameMapping: Map<String, SimpleMeasurementProperty<HourlyMeasurement, *>>
 ) {
     AIR_TEMPERATURE(
         "TU", mapOf(
@@ -48,11 +48,9 @@ enum class RecordType(
         )
     ),
 
-    CLOUD_TYPE(
-        "CS", mapOf(
-            "V_N" to IntProperty(HourlyMeasurement::cloudCoverage),
-        )
-    ),
+//    CLOUD_TYPE( "CS", mapOf("V_N" to IntProperty(HourlyMeasurement::cloudCoverage))),
+
+    CLOUDINESS("N", mapOf("V_N" to IntProperty(HourlyMeasurement::cloudCoverage))),
 
     DEW_POINT(
         "TD", mapOf(
@@ -60,31 +58,15 @@ enum class RecordType(
         )
     ),
 
-    MAX_WIND_SPEED(
-        "FX", mapOf(
-            "FX_911" to BigDecimalProperty(HourlyMeasurement::maxWindSpeedMetersPerSecond)
-        )
-    ),
+    MAX_WIND_SPEED("FX", mapOf("FX_911" to BigDecimalProperty(HourlyMeasurement::maxWindSpeedMetersPerSecond))),
 
-    MOISTURE(
-        "TF", mapOf(
-            "P_STD" to BigDecimalProperty(HourlyMeasurement::airPressureHectopascals),
-        )
-    ),
+    MOISTURE("TF", mapOf("P_STD" to BigDecimalProperty(HourlyMeasurement::airPressureHectopascals))),
 
 //    SOIL_TEMPERATURE("EB", mapOf()),
 
-    SUNSHINE_DURATION(
-        "SD", mapOf(
-            "SD_SO" to BigDecimalProperty(HourlyMeasurement::sunshineDuration)
-        )
-    ),
+    SUNSHINE_DURATION("SD", mapOf("SD_SO" to BigDecimalProperty(HourlyMeasurement::sunshineDuration))),
 
-    VISIBILITY(
-        "VV", mapOf(
-            "V_VV" to BigDecimalProperty(HourlyMeasurement::visibilityInMeters)
-        )
-    ),
+    VISIBILITY("VV", mapOf("V_VV" to BigDecimalProperty(HourlyMeasurement::visibilityInMeters))),
 
     WIND_SPEED(
         "FF", mapOf(
@@ -101,14 +83,14 @@ enum class RecordType(
     );
 
     companion object {
-        fun of(abbreviation: String): RecordType = values().first { it.abbreviation == abbreviation }
+        fun of(abbreviation: String): MeasurementType = values().first { it.abbreviation == abbreviation }
     }
 }
 
 data class ZippedDataFile(
     val fileName: String,
     val stationId: StationId,
-    val recordType: RecordType,
+    val measurementType: MeasurementType,
     val historical: Boolean,
     val url: URL
 )
@@ -135,7 +117,7 @@ object HtmlDirectoryParser {
                 ZippedDataFile(
                     fileName = fileName,
                     stationId = StationId.of(it["stationId"]!!.value),
-                    recordType = RecordType.of(it["key"]!!.value),
+                    measurementType = MeasurementType.of(it["key"]!!.value),
                     historical = it["recentness"]!!.value == "hist",
                     url = URL("${url.toExternalForm()}$fileName")
                 )
