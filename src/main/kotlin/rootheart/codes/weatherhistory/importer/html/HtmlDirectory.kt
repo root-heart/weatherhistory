@@ -1,7 +1,7 @@
 package rootheart.codes.weatherhistory.importer.html
 
 import mu.KotlinLogging
-import rootheart.codes.weatherhistory.importer.HourlyMeasurement
+import rootheart.codes.weatherhistory.database.HourlyMeasurement
 import rootheart.codes.weatherhistory.importer.converter.BigDecimalProperty
 import rootheart.codes.weatherhistory.importer.converter.IntProperty
 import rootheart.codes.weatherhistory.importer.converter.PrecipitationTypeProperty
@@ -15,10 +15,10 @@ val DIRECTORY_NAME_REGEX =
     Regex("<a href=\"(?<directoryName>[A-Za-z0-9_]*)/\">")
 
 val STATIONS_FILE_NAME_REGEX =
-    Regex("<a href=\"(?<fileName>(?<key>TU|CS|TD|FX|TF|SD|VV|FF|RR)_(Stunden|Tages)werte_Beschreibung_Stationen.txt)\">")
+    Regex("<a href=\"(?<fileName>(?<key>TU|N|TD|FX|TF|SD|VV|FF|RR)_(Stunden|Tages)werte_Beschreibung_Stationen.txt)\">")
 
 val DATA_FILE_NAME_REGEX =
-    Regex("<a href=\"(?<fileName>(stunden|tages)werte_(?<key>(TU|CS|TD|FX|TF|SD|VV|FF|RR))_(?<stationId>\\d{5})_.*?(?<recentness>akt|hist)\\.zip)\">")
+    Regex("<a href=\"(?<fileName>(stunden|tages)werte_(?<key>(TU|N|TD|FX|TF|SD|VV|FF|RR))_(?<stationId>\\d{5})_.*?(?<recentness>akt|hist)\\.zip)\">")
 
 data class HtmlDirectory(
     val url: URL,
@@ -31,6 +31,14 @@ data class HtmlDirectory(
         resultList.addAll(zippedDataFiles)
         for (subDirectory in subDirectories) {
             subDirectory.getAllZippedDataFiles(resultList)
+        }
+        return resultList
+    }
+
+    fun getAllStationsFiles(resultList: MutableList<StationsFile> = ArrayList()): List<StationsFile> {
+        stationsFile?.let { resultList.add(it) }
+        for (subDirectory in subDirectories) {
+            subDirectory.getAllStationsFiles(resultList)
         }
         return resultList
     }
@@ -64,7 +72,7 @@ enum class MeasurementType(
 
 //    SOIL_TEMPERATURE("EB", mapOf()),
 
-    SUNSHINE_DURATION("SD", mapOf("SD_SO" to BigDecimalProperty(HourlyMeasurement::sunshineDuration))),
+    SUNSHINE_DURATION("SD", mapOf("SD_SO" to BigDecimalProperty(HourlyMeasurement::sunshineDurationMinutes))),
 
     VISIBILITY("VV", mapOf("V_VV" to BigDecimalProperty(HourlyMeasurement::visibilityInMeters))),
 
