@@ -2,6 +2,8 @@ package rootheart.codes.weatherhistory.database
 
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.Column
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
 import org.joda.time.LocalDate
 import org.joda.time.LocalDateTime
 import rootheart.codes.weatherhistory.model.StationId
@@ -9,7 +11,7 @@ import java.math.BigDecimal
 import kotlin.reflect.KProperty1
 
 object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
-    val stationId = integer("STATION_ID")
+    val stationId = reference("STATION_ID", StationsTable.stationId).index("FK_IDX_MEASUREMENT_STATION")
     val firstDay = date("FIRST_DAY")
     val lastDay = date("LAST_DAY")
     val intervalType = varchar("INTERVAL_TYPE", 6)
@@ -30,7 +32,7 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val countCloudCoverage8 = integer("COUNT_CLOUD_COVERAGE8").nullable()
     val countCloudCoverageNotVisible = integer("COUNT_CLOUD_COVERAGE_NOT_VISIBLE").nullable()
     val countCloudCoverageNotMeasured = integer("COUNT_CLOUD_COVERAGE_NOT_MEASURED").nullable()
-    val sumSunshineDurationHours = decimal("SUM_SUNSHINE_DURATION_HOURS", 6, 1).nullable()
+    val sumSunshineDurationHours = decimal("SUM_SUNSHINE_DURATION_HOURS", 8, 1).nullable()
     val sumRainfallMillimeters = decimal("SUM_RAINFALL_MILLIMETERS", 6, 1).nullable()
     val sumSnowfallMillimeters = decimal("SUM_SNOWFALL_MILLIMETERS", 6, 1).nullable()
     val maxWindSpeedMetersPerSecond = decimal("MAX_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
@@ -38,7 +40,6 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val avgAirPressureHectopascals = decimal("AVG_AIR_PRESSURE_HECTOPASCALS", 4, 1).nullable()
 }
 
-typealias TableMapping<POKO> = Map<KProperty1<POKO, *>, Column<*>>
 
 class SummarizedMeasurement(
     val stationId: StationId,
@@ -60,7 +61,7 @@ class SummarizedMeasurement(
     var countCloudCoverage8: Int = 0,
     var countCloudCoverageNotVisible: Int = 0,
     var countCloudCoverageNotMeasured: Int = 0,
-    var sumSunshineDurationHours: BigDecimal = BigDecimal.ZERO,
+    var sumSunshineDurationHours: BigDecimal? = null,
     var sumRainfallMillimeters: BigDecimal = BigDecimal.ZERO,
     var sumSnowfallMillimeters: BigDecimal = BigDecimal.ZERO,
     var maxWindSpeedMetersPerSecond: BigDecimal? = null,
@@ -95,6 +96,7 @@ class SummarizedMeasurement(
             SummarizedMeasurement::minAirTemperatureCentigrade to SummarizedMeasurementsTable.minAirTemperatureCentigrade,
             SummarizedMeasurement::avgAirTemperatureCentigrade to SummarizedMeasurementsTable.avgAirTemperatureCentigrade,
             SummarizedMeasurement::maxAirTemperatureCentigrade to SummarizedMeasurementsTable.maxAirTemperatureCentigrade,
+            SummarizedMeasurement::sumSunshineDurationHours to SummarizedMeasurementsTable.sumSunshineDurationHours,
         )
     }
 }
@@ -104,26 +106,34 @@ enum class DateIntervalType {
 }
 
 data class DateInterval(
-    val firstDay: LocalDate,
-    val lastDay: LocalDate,
+    val firstDay: DateTime,
+    val lastDay: DateTime,
     val type: DateIntervalType
 ) {
     companion object {
-        fun day(time: LocalDateTime): DateInterval {
-            return DateInterval(time.toLocalDate(), time.toLocalDate(), DateIntervalType.DAY)
+        fun day(time: DateTime): DateInterval {
+            return DateInterval(
+                time.withTimeAtStartOfDay(),
+                time.withTimeAtStartOfDay(),
+                DateIntervalType.DAY
+            )
         }
 
         fun month(year: Int, month: Int): DateInterval {
             val fromDate = LocalDate(year, month, 1)
             val toDate = fromDate.plusMonths(1).minusDays(1)
-            return DateInterval(fromDate, toDate, DateIntervalType.MONTH)
+            return DateInterval(
+                fromDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                toDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                DateIntervalType.MONTH
+            )
         }
 
-        fun month(day: LocalDate) = month(day.year, day.monthOfYear)
+//        fun month(day: Date) = month(day.year, day.monthOfYear)
 
-        fun month(time: LocalDateTime) = month(time.year, time.monthOfYear)
+        fun month(time: DateTime) = month(time.year, time.monthOfYear)
 
-        fun season(time: LocalDateTime): DateInterval {
+        fun season(time: DateTime): DateInterval {
             val startMonth: Int
             var startYear = time.year
             when (time.monthOfYear) {
@@ -138,20 +148,32 @@ data class DateInterval(
             }
             val fromDate = LocalDate(startYear, startMonth, 1)
             val toDate = fromDate.plusMonths(3).minusDays(1)
-            return DateInterval(fromDate, toDate, DateIntervalType.SEASON)
+            return DateInterval(
+                fromDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                toDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                DateIntervalType.SEASON
+            )
         }
 
-        fun year(time: LocalDateTime): DateInterval {
+        fun year(time: DateTime): DateInterval {
             val fromDate = LocalDate(time.year, 1, 1)
             val toDate = fromDate.plusYears(1).minusDays(1)
-            return DateInterval(fromDate, toDate, DateIntervalType.YEAR)
+            return DateInterval(
+                fromDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                toDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                DateIntervalType.YEAR
+            )
         }
 
-        fun decade(time: LocalDateTime): DateInterval {
+        fun decade(time: DateTime): DateInterval {
             val startYear = (time.year / 10) * 10
             val fromDate = LocalDate(startYear, 1, 1)
             val toDate = fromDate.plusYears(10).minusDays(1)
-            return DateInterval(fromDate, toDate, DateIntervalType.DECADE)
+            return DateInterval(
+                fromDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                toDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                DateIntervalType.DECADE
+            )
         }
     }
 }

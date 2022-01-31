@@ -2,15 +2,20 @@ package rootheart.codes.weatherhistory.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 import javax.sql.DataSource
+import kotlin.reflect.KProperty1
 
 fun main() {
+    WeatherDb.dropTables()
     WeatherDb.createTables()
 }
+
+typealias TableMapping<POKO> = Map<KProperty1<POKO, *>, Column<*>>
 
 object WeatherDb {
     val dataSource: DataSource = createDataSource()
@@ -25,7 +30,7 @@ object WeatherDb {
         config.password = properties.getProperty("config.password")
         config.driverClassName = properties.getProperty("config.driverClassName")
         config.dataSourceProperties = Properties()
-//        config.dataSourceProperties["reWriteBatchedInserts"] = "true"
+        config.dataSourceProperties["reWriteBatchedInserts"] = "true"
 //        config.dataSourceProperties["loggerLevel"] = "TRACE"
         return HikariDataSource(config)
     }
@@ -33,14 +38,14 @@ object WeatherDb {
     fun createTables() {
         Database.connect(dataSource)
         transaction {
-            SchemaUtils.create(SummarizedMeasurementsTable)
+            SchemaUtils.create(HourlyMeasurementsTable, SummarizedMeasurementsTable, StationsTable)
         }
     }
 
     fun dropTables() {
         Database.connect(dataSource)
         transaction {
-            SchemaUtils.drop(SummarizedMeasurementsTable)
+            SchemaUtils.drop(HourlyMeasurementsTable, SummarizedMeasurementsTable, StationsTable)
         }
     }
 }

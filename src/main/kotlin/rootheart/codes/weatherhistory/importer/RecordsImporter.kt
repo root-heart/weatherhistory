@@ -1,13 +1,15 @@
 package rootheart.codes.weatherhistory.importer
 
 import mu.KotlinLogging
-import org.joda.time.LocalDate
+import org.joda.time.DateTime
+import rootheart.codes.weatherhistory.database.HourlyMeasurement
+import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.SummarizedMeasurement
 import rootheart.codes.weatherhistory.database.TableMapping
 import rootheart.codes.weatherhistory.database.WeatherDb
 import java.math.BigDecimal
-import java.sql.Date
 import java.sql.SQLException
+import java.sql.Timestamp
 
 open class RecordsImporter<POKO : Any>(private val tableMapping: TableMapping<POKO>) {
     private val tableName = determineTableName()
@@ -25,10 +27,7 @@ open class RecordsImporter<POKO : Any>(private val tableMapping: TableMapping<PO
                         for (property in tableMapping.keys) {
                             when (val value = property.get(entity)) {
                                 is BigDecimal -> statement.setBigDecimal(parameterIndex, value)
-                                is LocalDate -> statement.setDate(
-                                    parameterIndex,
-                                    Date(value.toDateTimeAtStartOfDay().millis)
-                                )
+                                is DateTime -> statement.setTimestamp(parameterIndex, Timestamp(value.millis))
                                 is String -> statement.setString(parameterIndex, value)
                                 else -> statement.setObject(parameterIndex, value)
                             }
@@ -65,6 +64,8 @@ open class RecordsImporter<POKO : Any>(private val tableMapping: TableMapping<PO
     }
 }
 
-object SummarizedMeasurementImporter : RecordsImporter<SummarizedMeasurement>(SummarizedMeasurement.tableMapping) {
+object SummarizedMeasurementImporter : RecordsImporter<SummarizedMeasurement>(SummarizedMeasurement.tableMapping)
 
-}
+object StationsImporter : RecordsImporter<Station>(Station.tableMapping)
+
+object HourlyMeasurementsImporter : RecordsImporter<HourlyMeasurement>(HourlyMeasurement.tableMapping)

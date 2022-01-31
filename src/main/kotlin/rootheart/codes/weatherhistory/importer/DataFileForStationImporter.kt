@@ -1,9 +1,11 @@
 package rootheart.codes.weatherhistory.importer
 
 import mu.KotlinLogging
-import org.joda.time.LocalDateTime
+import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import rootheart.codes.weatherhistory.database.DateInterval
+import rootheart.codes.weatherhistory.database.HourlyMeasurement
+import rootheart.codes.weatherhistory.database.HourlyMeasurements
 import rootheart.codes.weatherhistory.database.SummarizedMeasurement
 import rootheart.codes.weatherhistory.importer.html.MeasurementType
 import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
@@ -23,6 +25,7 @@ object DataFileForStationImporter {
         log.info { "import(${zippedDataFiles.size} zipped data files)" }
         val stationId = getStationId(zippedDataFiles)
         val measurements = Downloader.download(zippedDataFiles)
+        HourlyMeasurementsImporter.importEntities(measurements)
         val summarizedMeasurements = Summarizer.summarizeMeasurements(stationId, measurements)
         SummarizedMeasurementImporter.importEntities(summarizedMeasurements)
         log.info { "import(${zippedDataFiles.size} zipped data files) finished" }
@@ -41,7 +44,7 @@ object Downloader {
     private val log = KotlinLogging.logger {}
 
     fun download(zippedDataFiles: List<ZippedDataFile>): Collection<HourlyMeasurement> {
-        val measurementsByTime = HashMap<LocalDateTime, HourlyMeasurement>()
+        val measurementsByTime = HashMap<DateTime, HourlyMeasurement>()
         for (dataFile in zippedDataFiles) {
             downloadBytes(dataFile.url)
                 ?.let { findAndUnzipMeasurementFile(it) }
@@ -81,7 +84,7 @@ object Downloader {
         val columnMappingByIndex = measurementType.columnNameMapping.mapKeys { ssvData.columnNames.indexOf(it.key) }
         for (row in ssvData.rows) {
             val measurementTimeString = row[indexMeasurementTime]
-            val measurementTime = LocalDateTime.parse(measurementTimeString, DATE_TIME_FORMATTER)
+            val measurementTime = DATE_TIME_FORMATTER.parseDateTime(measurementTimeString)
             val record = measurementByTime.getOrPut(measurementTime) { HourlyMeasurement(measurementTime) }
             for (columnIndex in columnMappingByIndex) {
                 val stringValue = row[columnIndex.key]
@@ -104,44 +107,37 @@ object Summarizer {
 
     fun summarizeMeasurements(stationId: StationId, measurements: HourlyMeasurements): SummarizedMeasurements {
         log.info { "summarizeMeasurements(${stationId}, ${measurements.size} measurements)" }
-        val summarizedMeasurements = ArrayList<SummarizedMeasurement>()
-        groupByFunctions.forEach { groupByFunction ->
+        val summarizedMeasurements = groupByFunctions.flatMap { groupByFunction ->
             measurements.groupBy { groupByFunction(it.measurementTime) }
-                .forEach { (interval, measurementsForInterval) ->
-                    val summarizedMeasurement =
-                        summarizeHourlyRecords(stationId, interval, measurementsForInterval)
-                    summarizedMeasurements.add(summarizedMeasurement)
-                }
+                .map { (interval, measurements) -> summarizeHourlyRecords(stationId, interval, measurements) }
         }
         log.info { "summarizeMeasurements(${stationId}, ${measurements.size} measurements) finished, ${summarizedMeasurements.size} summarized measurements" }
         return summarizedMeasurements
     }
 
-    private fun summarizeHourlyRecords(
-        stationId: StationId,
-        interval: DateInterval,
-        measurement: Collection<HourlyMeasurement>
-    ) = SummarizedMeasurement(
-        stationId = stationId,
-        interval = interval,
-        countCloudCoverage0 = measurement.count { it.cloudCoverage == 0 },
-        countCloudCoverage1 = measurement.count { it.cloudCoverage == 1 },
-        countCloudCoverage2 = measurement.count { it.cloudCoverage == 2 },
-        countCloudCoverage3 = measurement.count { it.cloudCoverage == 3 },
-        countCloudCoverage4 = measurement.count { it.cloudCoverage == 4 },
-        countCloudCoverage5 = measurement.count { it.cloudCoverage == 5 },
-        countCloudCoverage6 = measurement.count { it.cloudCoverage == 6 },
-        countCloudCoverage7 = measurement.count { it.cloudCoverage == 7 },
-        countCloudCoverage8 = measurement.count { it.cloudCoverage == 8 },
-        countCloudCoverageNotVisible = measurement.count { it.cloudCoverage == -1 },
-        countCloudCoverageNotMeasured = measurement.count { it.cloudCoverage == null },
-        minDewPointTemperatureCentigrade = measurement.minDecimal { it.dewPointTemperatureCentigrade },
-        avgDewPointTemperatureCentigrade = measurement.avgDecimal { it.dewPointTemperatureCentigrade },
-        maxDewPointTemperatureCentigrade = measurement.maxDecimal { it.dewPointTemperatureCentigrade },
-        minAirTemperatureCentigrade = measurement.minDecimal { it.airTemperatureAtTwoMetersHeightCentigrade },
-        avgAirTemperatureCentigrade = measurement.avgDecimal { it.airTemperatureAtTwoMetersHeightCentigrade },
-        maxAirTemperatureCentigrade = measurement.maxDecimal { it.airTemperatureAtTwoMetersHeightCentigrade }
-    )
+    private fun summarizeHourlyRecords(stationId: StationId, interval: DateInterval, measurements: HourlyMeasurements) =
+        SummarizedMeasurement(stationId = stationId,
+            interval = interval,
+            countCloudCoverage0 = measurements.count { it.cloudCoverage == 0 },
+            countCloudCoverage1 = measurements.count { it.cloudCoverage == 1 },
+            countCloudCoverage2 = measurements.count { it.cloudCoverage == 2 },
+            countCloudCoverage3 = measurements.count { it.cloudCoverage == 3 },
+            countCloudCoverage4 = measurements.count { it.cloudCoverage == 4 },
+            countCloudCoverage5 = measurements.count { it.cloudCoverage == 5 },
+            countCloudCoverage6 = measurements.count { it.cloudCoverage == 6 },
+            countCloudCoverage7 = measurements.count { it.cloudCoverage == 7 },
+            countCloudCoverage8 = measurements.count { it.cloudCoverage == 8 },
+            countCloudCoverageNotVisible = measurements.count { it.cloudCoverage == -1 },
+            countCloudCoverageNotMeasured = measurements.count { it.cloudCoverage == null },
+            minDewPointTemperatureCentigrade = measurements.minDecimal { it.dewPointTemperatureCentigrade },
+            avgDewPointTemperatureCentigrade = measurements.avgDecimal { it.dewPointTemperatureCentigrade },
+            maxDewPointTemperatureCentigrade = measurements.maxDecimal { it.dewPointTemperatureCentigrade },
+            minAirTemperatureCentigrade = measurements.minDecimal { it.airTemperatureAtTwoMetersHeightCentigrade },
+            avgAirTemperatureCentigrade = measurements.avgDecimal { it.airTemperatureAtTwoMetersHeightCentigrade },
+            maxAirTemperatureCentigrade = measurements.maxDecimal { it.airTemperatureAtTwoMetersHeightCentigrade },
+            sumSunshineDurationHours = measurements.sumDecimal { it.sunshineDurationMinutes }
+                ?.divide(SIXTY, RoundingMode.HALF_UP)
+        )
 }
 
 inline fun <T> Iterable<T>.minDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
@@ -175,6 +171,10 @@ inline fun <T> Iterable<T>.maxDecimal(selector: (T) -> BigDecimal?): BigDecimal?
 }
 
 inline fun <T> Collection<T>.avgDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
+    return sumDecimal(selector)?.divide(BigDecimal.valueOf(size.toLong()), RoundingMode.HALF_UP)
+}
+
+inline fun <T> Collection<T>.sumDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
     val iterator = iterator()
     if (!iterator.hasNext()) throw NoSuchElementException()
     var sum = selector(iterator.next())
@@ -182,11 +182,14 @@ inline fun <T> Collection<T>.avgDecimal(selector: (T) -> BigDecimal?): BigDecima
         val v = selector(iterator.next())
         v?.let { sum = sum?.add(v) ?: v }
     }
-    return sum?.divide(BigDecimal.valueOf(size.toLong()), RoundingMode.HALF_UP)
+    return sum
 }
 
-private typealias HourlyMeasurementByTime = MutableMap<LocalDateTime, HourlyMeasurement>
+private typealias HourlyMeasurementByTime = MutableMap<DateTime, HourlyMeasurement>
 private typealias SummarizedMeasurements = List<SummarizedMeasurement>
 
-private val DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHH")
+private val DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHH").withZoneUTC()
 private const val COLUMN_NAME_MEASUREMENT_TIME = "MESS_DATUM"
+
+private val SIXTY = BigDecimal.valueOf(60)
+
