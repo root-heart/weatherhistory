@@ -31,6 +31,8 @@ object WeatherDb {
         config.driverClassName = properties.getProperty("config.driverClassName")
         config.dataSourceProperties = Properties()
         config.dataSourceProperties["reWriteBatchedInserts"] = "true"
+        config.minimumIdle = 10
+        config.maximumPoolSize = 20
 //        config.dataSourceProperties["loggerLevel"] = "TRACE"
         return HikariDataSource(config)
     }
