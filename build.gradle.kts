@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.5.10"
+    kotlin("jvm") version "1.6.0"
     groovy
     java
 }
@@ -22,6 +22,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.0")
     implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
     implementation("ch.qos.logback:logback-classic:1.2.10")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
 
     testImplementation("org.spockframework:spock-core:2.0-groovy-3.0")
     testImplementation("com.nagternal:spock-genesis:0.6.0")

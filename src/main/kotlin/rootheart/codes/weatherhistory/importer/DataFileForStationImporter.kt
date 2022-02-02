@@ -1,5 +1,9 @@
 package rootheart.codes.weatherhistory.importer
 
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newFixedThreadPoolContext
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
@@ -16,8 +20,11 @@ import java.io.ByteArrayInputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.net.URL
+import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.ZipInputStream
 
+
+@DelicateCoroutinesApi
 object DataFileForStationImporter {
     private val log = KotlinLogging.logger {}
 
@@ -40,15 +47,21 @@ object DataFileForStationImporter {
     }
 }
 
+@DelicateCoroutinesApi
 object Downloader {
     private val log = KotlinLogging.logger {}
+    private val downloadThreadPool = newFixedThreadPoolContext(2, "downloader")
 
     fun download(zippedDataFiles: List<ZippedDataFile>): Collection<HourlyMeasurement> {
-        val measurementsByTime = HashMap<DateTime, HourlyMeasurement>()
-        for (dataFile in zippedDataFiles) {
-            downloadBytes(dataFile.url)
-                ?.let { findAndUnzipMeasurementFile(it) }
-                ?.let { convertToHourlyMeasurements(it, dataFile.measurementType, measurementsByTime) }
+        val measurementsByTime = ConcurrentHashMap<DateTime, HourlyMeasurement>()
+        runBlocking {
+            for (dataFile in zippedDataFiles) {
+                launch(downloadThreadPool) {
+                    downloadBytes(dataFile.url)
+                        ?.let { findAndUnzipMeasurementFile(it) }
+                        ?.let { convertToHourlyMeasurements(it, dataFile.measurementType, measurementsByTime) }
+                }
+            }
         }
         return measurementsByTime.values
     }
@@ -99,17 +112,29 @@ object Downloader {
     private fun fileIsMeasurementFile(filename: String) = filename.startsWith("produkt_") && filename.endsWith(".txt")
 }
 
+@DelicateCoroutinesApi
 object Summarizer {
     private val log = KotlinLogging.logger {}
+    private val summarizeThreadPool = newFixedThreadPoolContext(10, "summarizer")
 
     private val groupByFunctions =
         listOf(DateInterval::day, DateInterval::month, DateInterval::season, DateInterval::year, DateInterval::decade)
 
     fun summarizeMeasurements(stationId: StationId, measurements: HourlyMeasurements): SummarizedMeasurements {
         log.info { "summarizeMeasurements(${stationId}, ${measurements.size} measurements)" }
-        val summarizedMeasurements = groupByFunctions.flatMap { groupByFunction ->
-            measurements.groupBy { groupByFunction(it.measurementTime) }
-                .map { (interval, measurements) -> summarizeHourlyRecords(stationId, interval, measurements) }
+        val summarizedMeasurements = ArrayList<SummarizedMeasurement>()
+        runBlocking {
+            for (groupByFunction in groupByFunctions) {
+                val measurementsGroupedByInterval = measurements.groupBy { groupByFunction(it.measurementTime) }
+                measurementsGroupedByInterval.forEach { (interval, measurements) ->
+                    launch(summarizeThreadPool) {
+                        val summarized = summarizeHourlyRecords(stationId, interval, measurements)
+                        synchronized(summarizedMeasurements) {
+                            summarizedMeasurements.add(summarized)
+                        }
+                    }
+                }
+            }
         }
         log.info { "summarizeMeasurements(${stationId}, ${measurements.size} measurements) finished, ${summarizedMeasurements.size} summarized measurements" }
         return summarizedMeasurements

@@ -1,5 +1,9 @@
 package rootheart.codes.weatherhistory.importer
 
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newFixedThreadPoolContext
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.importer.html.HtmlDirectoryParser
@@ -7,12 +11,14 @@ import rootheart.codes.weatherhistory.model.StationId
 import java.math.BigDecimal
 import java.net.URL
 import java.nio.charset.Charset
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import kotlin.system.exitProcess
 
 private val log = KotlinLogging.logger {}
 
+@DelicateCoroutinesApi
+private val importThreadPool = newFixedThreadPoolContext(2, "importer")
+
+@DelicateCoroutinesApi
 fun main(args: Array<String>) {
     var baseUrlString =
         if (args.size == 1) args[0]
@@ -41,16 +47,15 @@ fun main(args: Array<String>) {
     }
 
     StationsImporter.importEntities(stations.values)
-//    exitProcess(0)
-
 
     val zippedDataFiles = rootDirectory.getAllZippedDataFiles()
-    val threadPool = Executors.newFixedThreadPool(20)
-    val futures = ArrayList<Future<*>>()
-    zippedDataFiles.groupBy { it.stationId }.filter { it.key.stationId == 691 }.forEach {
-        futures += threadPool.submit { DataFileForStationImporter.import(it.value) }
+    runBlocking {
+        zippedDataFiles.groupBy { it.stationId }.filter { it.key.stationId <= 691 }.forEach {
+            launch(importThreadPool) {
+                DataFileForStationImporter.import(it.value)
+            }
+        }
     }
-    futures.forEach { it.get() }
     log.info { "Finished import, exiting program" }
     exitProcess(0)
 }
