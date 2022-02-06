@@ -7,7 +7,7 @@ import org.mockserver.integration.ClientAndServer
 import rootheart.codes.weatherhistory.database.WeatherDb
 import rootheart.codes.weatherhistory.importer.converter.BigDecimalProperty
 import rootheart.codes.weatherhistory.importer.converter.IntProperty
-import rootheart.codes.weatherhistory.importer.html.MeasurementType
+import rootheart.codes.weatherhistory.model.MeasurementType
 import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
 import rootheart.codes.weatherhistory.model.StationId
 import spock.genesis.Gen

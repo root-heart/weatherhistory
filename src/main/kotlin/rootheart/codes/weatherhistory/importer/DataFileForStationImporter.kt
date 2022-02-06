@@ -11,7 +11,7 @@ import rootheart.codes.weatherhistory.database.DateInterval
 import rootheart.codes.weatherhistory.database.HourlyMeasurement
 import rootheart.codes.weatherhistory.database.HourlyMeasurements
 import rootheart.codes.weatherhistory.database.SummarizedMeasurement
-import rootheart.codes.weatherhistory.importer.html.MeasurementType
+import rootheart.codes.weatherhistory.model.MeasurementType
 import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
 import rootheart.codes.weatherhistory.importer.ssv.SsvData
 import rootheart.codes.weatherhistory.importer.ssv.SsvParser
