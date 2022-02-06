@@ -3,12 +3,17 @@ package rootheart.codes.weatherhistory.importer.ssv
 import java.io.BufferedReader
 import java.util.stream.Collectors
 
-object SsvParser {
-    fun parse(reader: BufferedReader): SsvData {
+data class SemicolonSeparatedValues(
+    val columnNames: List<String>,
+    val rows: List<List<String?>>
+)
+
+object SemicolonSeparatedValuesParser {
+    fun parse(reader: BufferedReader): SemicolonSeparatedValues {
         val header = reader.readLine() ?: ""
         val columnNames = splitAndTrimTokens(header).map { it!! }
         val columnValues = reader.lines().map { splitAndTrimTokens(it) }.collect(Collectors.toList())
-        return SsvData(columnNames, columnValues)
+        return SemicolonSeparatedValues(columnNames, columnValues)
     }
 
     private fun splitAndTrimTokens(line: String, list: MutableList<String?> = ArrayList()): List<String?> {

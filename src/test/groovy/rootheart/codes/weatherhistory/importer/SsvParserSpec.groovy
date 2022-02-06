@@ -1,6 +1,6 @@
 package rootheart.codes.weatherhistory.importer
 
-import rootheart.codes.weatherhistory.importer.ssv.SsvParser
+import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValuesParser
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -10,7 +10,7 @@ class SsvParserSpec extends Specification {
     @Unroll
     def 'Test that parsing a string that contains newlines as line separators and semicolons as column separators is parsed correctly'() {
         given: 'a parser able to parse semicolon-separated values'
-        def ssvParser = new SsvParser()
+        def ssvParser = new SemicolonSeparatedValuesParser()
 
         and: 'lines with semicolon separated strings with a line that contains column names'
         def reader = new BufferedReader(new StringReader(fileContent))
@@ -41,7 +41,7 @@ class SsvParserSpec extends Specification {
     @Unroll
     def 'Test that values that represent null are interpreted as null'() {
         given: 'a parser able to parse semicolon-separated values'
-        def ssvParser = new SsvParser()
+        def ssvParser = new SemicolonSeparatedValuesParser()
 
         and: 'lines with semicolon separated strings with a line that contains column names'
         def reader = new BufferedReader(new StringReader(fileContent))

@@ -13,8 +13,8 @@ import rootheart.codes.weatherhistory.database.HourlyMeasurements
 import rootheart.codes.weatherhistory.database.SummarizedMeasurement
 import rootheart.codes.weatherhistory.model.MeasurementType
 import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
-import rootheart.codes.weatherhistory.importer.ssv.SsvData
-import rootheart.codes.weatherhistory.importer.ssv.SsvParser
+import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValues
+import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValuesParser
 import rootheart.codes.weatherhistory.model.StationId
 import java.io.ByteArrayInputStream
 import java.math.BigDecimal
@@ -73,12 +73,12 @@ object Downloader {
         return bytes
     }
 
-    private fun findAndUnzipMeasurementFile(zippedBytes: ByteArray): SsvData? {
+    private fun findAndUnzipMeasurementFile(zippedBytes: ByteArray): SemicolonSeparatedValues? {
         log.info { "findAndUnzipMeasurementFile(${zippedBytes.size} bytes)" }
         val bytes = ZipInputStream(ByteArrayInputStream(zippedBytes)).use { zipInputStream ->
             val entries = generateSequence { zipInputStream.nextEntry }
             if (entries.any { fileIsMeasurementFile(it.name) }) {
-                SsvParser.parse(zipInputStream.bufferedReader())
+                SemicolonSeparatedValuesParser.parse(zipInputStream.bufferedReader())
             } else {
                 null
             }
@@ -88,14 +88,14 @@ object Downloader {
     }
 
     private fun convertToHourlyMeasurements(
-        ssvData: SsvData,
+        values: SemicolonSeparatedValues,
         measurementType: MeasurementType,
         measurementByTime: HourlyMeasurementByTime
     ) {
-        log.info { "convertToHourlyMeasurements(${ssvData.rows.size} rows, ${measurementType}, ${measurementByTime.size} measurements by time)" }
-        val indexMeasurementTime = ssvData.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
-        val columnMappingByIndex = measurementType.columnNameMapping.mapKeys { ssvData.columnNames.indexOf(it.key) }
-        for (row in ssvData.rows) {
+        log.info { "convertToHourlyMeasurements(${values.rows.size} rows, ${measurementType}, ${measurementByTime.size} measurements by time)" }
+        val indexMeasurementTime = values.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
+        val columnMappingByIndex = measurementType.columnNameMapping.mapKeys { values.columnNames.indexOf(it.key) }
+        for (row in values.rows) {
             val measurementTimeString = row[indexMeasurementTime]
             val measurementTime = DATE_TIME_FORMATTER.parseDateTime(measurementTimeString)
             val record = measurementByTime.getOrPut(measurementTime) { HourlyMeasurement(measurementTime) }
@@ -106,7 +106,7 @@ object Downloader {
                 }
             }
         }
-        log.info { "convertToHourlyMeasurements(${ssvData.rows.size} rows, ${measurementType}, ${measurementByTime.size} measurements by time) finished" }
+        log.info { "convertToHourlyMeasurements(${values.rows.size} rows, ${measurementType}, ${measurementByTime.size} measurements by time) finished" }
     }
 
     private fun fileIsMeasurementFile(filename: String) = filename.startsWith("produkt_") && filename.endsWith(".txt")

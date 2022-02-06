@@ -4,7 +4,7 @@ import rootheart.codes.weatherhistory.model.CloudType
 import rootheart.codes.weatherhistory.model.MeasurementOrObservation
 import rootheart.codes.weatherhistory.model.QualityLevel
 import rootheart.codes.weatherhistory.importer.SpecUtils
-import rootheart.codes.weatherhistory.importer.ssv.SsvData
+import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValues
 import rootheart.codes.weatherhistory.model.StationId
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -27,7 +27,7 @@ class HourlyCloudTypeRecordConverterSpec extends Specification implements SpecUt
         def converter = HourlyCloudTypeRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
-        def ssvData = new SsvData(columnNames, values.stream())
+        def ssvData = new SemicolonSeparatedValues(columnNames, values.stream())
 
         when: 'the input is converted'
         def records = converter.convert(ssvData).collect(Collectors.toList())
@@ -56,7 +56,7 @@ class HourlyCloudTypeRecordConverterSpec extends Specification implements SpecUt
         def converter = HourlyCloudTypeRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
-        def ssvData = new SsvData(columnNames, values.stream())
+        def ssvData = new SemicolonSeparatedValues(columnNames, values.stream())
 
         when: 'the input is converted'
         def records = converter.convert(ssvData).collect(Collectors.toList())
@@ -86,7 +86,7 @@ class HourlyCloudTypeRecordConverterSpec extends Specification implements SpecUt
         def converter = HourlyCloudTypeRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
-        def ssvData = new SsvData(columnNames, values.stream())
+        def ssvData = new SemicolonSeparatedValues(columnNames, values.stream())
 
         when: 'the input is converted'
         def records = converter.convert(ssvData).collect(Collectors.toList())
@@ -117,7 +117,7 @@ class HourlyCloudTypeRecordConverterSpec extends Specification implements SpecUt
         def converter = HourlyCloudTypeRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
-        def ssvData = new SsvData(columnNames, values.stream())
+        def ssvData = new SemicolonSeparatedValues(columnNames, values.stream())
 
         when: 'the input is converted'
         def records = converter.convert(ssvData).collect(Collectors.toList())
@@ -147,7 +147,7 @@ class HourlyCloudTypeRecordConverterSpec extends Specification implements SpecUt
         def converter = HourlyCloudTypeRecordConverter.INSTANCE
 
         and: 'some data from a semicolon-separated file'
-        def ssvData = new SsvData(columnNames, values.stream())
+        def ssvData = new SemicolonSeparatedValues(columnNames, values.stream())
 
         when: 'the input is converted'
         def records = converter.convert(ssvData).collect(Collectors.toList())
