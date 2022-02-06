@@ -17,7 +17,7 @@ enum class MeasurementType(
         )
     ),
 
-    CLOUD_TYPE("CS", mapOf("V_N" to IntProperty(HourlyMeasurement::cloudCoverage))),
+//    CLOUD_TYPE("CS", mapOf("V_N" to IntProperty(HourlyMeasurement::cloudCoverage))),
 
     CLOUDINESS("N", mapOf("V_N" to IntProperty(HourlyMeasurement::cloudCoverage))),
 

@@ -9,8 +9,8 @@ import spock.lang.Specification
 import java.util.regex.Pattern
 
 class HtmlDirectoryParserSpec extends Specification implements SpecUtils {
-    private static final STATIONS_FILENAME_GENERATOR = Gen.string(Pattern.compile("(TU|CS|TD|FX|TF|SD|VV|FF|RR)_(Stunden|Tages)werte_Beschreibung_Stationen.txt"))
-    private static final DATA_FILENAME_GENERATOR = Gen.string(Pattern.compile("(stunden|tages)werte_(TU|CS|TD|FX|TF|SD|VV|FF|RR)_\\d{5}_(akt|[0-9]{8}-[0-9]{8}_hist)\\.zip"))
+    private static final STATIONS_FILENAME_GENERATOR = Gen.string(Pattern.compile("(TU|N|TD|FX|TF|SD|VV|FF|RR)_(Stunden|Tages)werte_Beschreibung_Stationen.txt"))
+    private static final DATA_FILENAME_GENERATOR = Gen.string(Pattern.compile("(stunden|tages)werte_(TU|N|TD|FX|TF|SD|VV|FF|RR)_\\d{5}_(akt|[0-9]{8}-[0-9]{8}_hist)\\.zip"))
     private static final DIRECTORY_NAME_GENERATOR = Gen.string(Pattern.compile("[A-Za-z0-9_]{10,30}"))
 
     def """Test that parsing a HTML that contains three subdirectories with no content, three data files and a
