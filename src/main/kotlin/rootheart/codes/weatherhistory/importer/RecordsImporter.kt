@@ -7,8 +7,11 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.joda.time.DateTime
 import rootheart.codes.weatherhistory.database.HourlyMeasurement
+import rootheart.codes.weatherhistory.database.HourlyMeasurementTableMapping
 import rootheart.codes.weatherhistory.database.Station
+import rootheart.codes.weatherhistory.database.StationTableMapping
 import rootheart.codes.weatherhistory.database.SummarizedMeasurement
+import rootheart.codes.weatherhistory.database.SummarizedMeasurementTableMapping
 import rootheart.codes.weatherhistory.database.TableMapping
 import rootheart.codes.weatherhistory.database.WeatherDb
 import java.math.BigDecimal
@@ -98,8 +101,8 @@ open class RecordsImporter<POKO : Any>(private val tableMapping: TableMapping<PO
     }
 }
 
-object SummarizedMeasurementImporter : RecordsImporter<SummarizedMeasurement>(SummarizedMeasurement.tableMapping)
+object SummarizedMeasurementImporter : RecordsImporter<SummarizedMeasurement>(SummarizedMeasurementTableMapping)
 
-object StationsImporter : RecordsImporter<Station>(Station.tableMapping)
+object StationsImporter : RecordsImporter<Station>(StationTableMapping)
 
-object HourlyMeasurementsImporter : RecordsImporter<HourlyMeasurement>(HourlyMeasurement.tableMapping)
+object HourlyMeasurementsImporter : RecordsImporter<HourlyMeasurement>(HourlyMeasurementTableMapping)

@@ -41,6 +41,31 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
 }
 
 
+object SummarizedMeasurementTableMapping : TableMapping<SummarizedMeasurement>(
+    SummarizedMeasurement::stationIdInt to SummarizedMeasurementsTable.stationId,
+    SummarizedMeasurement::firstDay to SummarizedMeasurementsTable.firstDay,
+    SummarizedMeasurement::lastDay to SummarizedMeasurementsTable.lastDay,
+    SummarizedMeasurement::intervalType to SummarizedMeasurementsTable.intervalType,
+    SummarizedMeasurement::countCloudCoverage0 to SummarizedMeasurementsTable.countCloudCoverage0,
+    SummarizedMeasurement::countCloudCoverage1 to SummarizedMeasurementsTable.countCloudCoverage1,
+    SummarizedMeasurement::countCloudCoverage2 to SummarizedMeasurementsTable.countCloudCoverage2,
+    SummarizedMeasurement::countCloudCoverage3 to SummarizedMeasurementsTable.countCloudCoverage3,
+    SummarizedMeasurement::countCloudCoverage4 to SummarizedMeasurementsTable.countCloudCoverage4,
+    SummarizedMeasurement::countCloudCoverage5 to SummarizedMeasurementsTable.countCloudCoverage5,
+    SummarizedMeasurement::countCloudCoverage6 to SummarizedMeasurementsTable.countCloudCoverage6,
+    SummarizedMeasurement::countCloudCoverage7 to SummarizedMeasurementsTable.countCloudCoverage7,
+    SummarizedMeasurement::countCloudCoverage8 to SummarizedMeasurementsTable.countCloudCoverage8,
+    SummarizedMeasurement::countCloudCoverageNotMeasured to SummarizedMeasurementsTable.countCloudCoverageNotMeasured,
+    SummarizedMeasurement::countCloudCoverageNotVisible to SummarizedMeasurementsTable.countCloudCoverageNotVisible,
+    SummarizedMeasurement::minDewPointTemperatureCentigrade to SummarizedMeasurementsTable.minDewPointTemperatureCentigrade,
+    SummarizedMeasurement::avgDewPointTemperatureCentigrade to SummarizedMeasurementsTable.avgDewPointTemperatureCentigrade,
+    SummarizedMeasurement::maxDewPointTemperatureCentigrade to SummarizedMeasurementsTable.maxDewPointTemperatureCentigrade,
+    SummarizedMeasurement::minAirTemperatureCentigrade to SummarizedMeasurementsTable.minAirTemperatureCentigrade,
+    SummarizedMeasurement::avgAirTemperatureCentigrade to SummarizedMeasurementsTable.avgAirTemperatureCentigrade,
+    SummarizedMeasurement::maxAirTemperatureCentigrade to SummarizedMeasurementsTable.maxAirTemperatureCentigrade,
+    SummarizedMeasurement::sumSunshineDurationHours to SummarizedMeasurementsTable.sumSunshineDurationHours,
+)
+
 class SummarizedMeasurement(
     val stationId: StationId,
     private val interval: DateInterval,
@@ -73,32 +98,6 @@ class SummarizedMeasurement(
     val lastDay get() = interval.lastDay
     val intervalType get() = interval.type.name
 
-    companion object {
-        val tableMapping: TableMapping<SummarizedMeasurement> = mapOf(
-            SummarizedMeasurement::stationIdInt to SummarizedMeasurementsTable.stationId,
-            SummarizedMeasurement::firstDay to SummarizedMeasurementsTable.firstDay,
-            SummarizedMeasurement::lastDay to SummarizedMeasurementsTable.lastDay,
-            SummarizedMeasurement::intervalType to SummarizedMeasurementsTable.intervalType,
-            SummarizedMeasurement::countCloudCoverage0 to SummarizedMeasurementsTable.countCloudCoverage0,
-            SummarizedMeasurement::countCloudCoverage1 to SummarizedMeasurementsTable.countCloudCoverage1,
-            SummarizedMeasurement::countCloudCoverage2 to SummarizedMeasurementsTable.countCloudCoverage2,
-            SummarizedMeasurement::countCloudCoverage3 to SummarizedMeasurementsTable.countCloudCoverage3,
-            SummarizedMeasurement::countCloudCoverage4 to SummarizedMeasurementsTable.countCloudCoverage4,
-            SummarizedMeasurement::countCloudCoverage5 to SummarizedMeasurementsTable.countCloudCoverage5,
-            SummarizedMeasurement::countCloudCoverage6 to SummarizedMeasurementsTable.countCloudCoverage6,
-            SummarizedMeasurement::countCloudCoverage7 to SummarizedMeasurementsTable.countCloudCoverage7,
-            SummarizedMeasurement::countCloudCoverage8 to SummarizedMeasurementsTable.countCloudCoverage8,
-            SummarizedMeasurement::countCloudCoverageNotMeasured to SummarizedMeasurementsTable.countCloudCoverageNotMeasured,
-            SummarizedMeasurement::countCloudCoverageNotVisible to SummarizedMeasurementsTable.countCloudCoverageNotVisible,
-            SummarizedMeasurement::minDewPointTemperatureCentigrade to SummarizedMeasurementsTable.minDewPointTemperatureCentigrade,
-            SummarizedMeasurement::avgDewPointTemperatureCentigrade to SummarizedMeasurementsTable.avgDewPointTemperatureCentigrade,
-            SummarizedMeasurement::maxDewPointTemperatureCentigrade to SummarizedMeasurementsTable.maxDewPointTemperatureCentigrade,
-            SummarizedMeasurement::minAirTemperatureCentigrade to SummarizedMeasurementsTable.minAirTemperatureCentigrade,
-            SummarizedMeasurement::avgAirTemperatureCentigrade to SummarizedMeasurementsTable.avgAirTemperatureCentigrade,
-            SummarizedMeasurement::maxAirTemperatureCentigrade to SummarizedMeasurementsTable.maxAirTemperatureCentigrade,
-            SummarizedMeasurement::sumSunshineDurationHours to SummarizedMeasurementsTable.sumSunshineDurationHours,
-        )
-    }
 }
 
 enum class DateIntervalType {

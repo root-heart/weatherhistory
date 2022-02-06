@@ -16,7 +16,7 @@ import kotlin.system.exitProcess
 private val log = KotlinLogging.logger {}
 
 @DelicateCoroutinesApi
-private val importThreadPool = newFixedThreadPoolContext(2, "importer")
+private val importThreadPool = newFixedThreadPoolContext(8, "importer")
 
 @DelicateCoroutinesApi
 fun main(args: Array<String>) {
@@ -50,7 +50,7 @@ fun main(args: Array<String>) {
 
     val zippedDataFiles = rootDirectory.getAllZippedDataFiles()
     runBlocking {
-        zippedDataFiles.groupBy { it.stationId }.filter { it.key.stationId <= 691 }.forEach {
+        zippedDataFiles.groupBy { it.stationId }.forEach {
             launch(importThreadPool) {
                 DataFileForStationImporter.import(it.value)
             }

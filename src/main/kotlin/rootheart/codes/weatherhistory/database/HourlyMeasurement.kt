@@ -22,6 +22,23 @@ object HourlyMeasurementsTable : LongIdTable("HOURLY_MEASUREMENTS") {
     val visibilityInMeters = integer("VISIBILITY_METERS").nullable()
 }
 
+object HourlyMeasurementTableMapping : TableMapping<HourlyMeasurement>(
+    HourlyMeasurement::measurementTime to HourlyMeasurementsTable.measurementTime,
+    HourlyMeasurement::airTemperatureAtTwoMetersHeightCentigrade to HourlyMeasurementsTable.airTemperatureAtTwoMetersHeightCentigrade,
+    HourlyMeasurement::relativeHumidityPercent to HourlyMeasurementsTable.relativeHumidityPercent,
+    HourlyMeasurement::cloudCoverage to HourlyMeasurementsTable.cloudCoverage,
+    HourlyMeasurement::dewPointTemperatureCentigrade to HourlyMeasurementsTable.dewPointTemperatureCentigrade,
+    HourlyMeasurement::airPressureHectopascals to HourlyMeasurementsTable.airPressureHectopascals,
+    HourlyMeasurement::precipitationMillimeters to HourlyMeasurementsTable.precipitationMillimeters,
+    HourlyMeasurement::precipitationTypeName to HourlyMeasurementsTable.precipitationType,
+    HourlyMeasurement::sunshineDurationMinutes to HourlyMeasurementsTable.sunshineDurationMinutes,
+    HourlyMeasurement::windSpeedMetersPerSecond to HourlyMeasurementsTable.windSpeedMetersPerSecond,
+    HourlyMeasurement::maxWindSpeedMetersPerSecond to HourlyMeasurementsTable.maxWindSpeedMetersPerSecond,
+    HourlyMeasurement::windDirectionDegrees to HourlyMeasurementsTable.windDirectionDegrees,
+    HourlyMeasurement::visibilityInMeters to HourlyMeasurementsTable.visibilityInMeters,
+)
+
+
 class HourlyMeasurement(
     val measurementTime: DateTime,
     var airTemperatureAtTwoMetersHeightCentigrade: BigDecimal? = null,
@@ -39,23 +56,6 @@ class HourlyMeasurement(
 ) {
     val precipitationTypeName get() = precipitationType?.name
 
-    companion object {
-        val tableMapping: TableMapping<HourlyMeasurement> = mapOf(
-            HourlyMeasurement::measurementTime to HourlyMeasurementsTable.measurementTime,
-            HourlyMeasurement::airTemperatureAtTwoMetersHeightCentigrade to HourlyMeasurementsTable.airTemperatureAtTwoMetersHeightCentigrade,
-            HourlyMeasurement::relativeHumidityPercent to HourlyMeasurementsTable.relativeHumidityPercent,
-            HourlyMeasurement::cloudCoverage to HourlyMeasurementsTable.cloudCoverage,
-            HourlyMeasurement::dewPointTemperatureCentigrade to HourlyMeasurementsTable.dewPointTemperatureCentigrade,
-            HourlyMeasurement::airPressureHectopascals to HourlyMeasurementsTable.airPressureHectopascals,
-            HourlyMeasurement::precipitationMillimeters to HourlyMeasurementsTable.precipitationMillimeters,
-            HourlyMeasurement::precipitationTypeName to HourlyMeasurementsTable.precipitationType,
-            HourlyMeasurement::sunshineDurationMinutes to HourlyMeasurementsTable.sunshineDurationMinutes,
-            HourlyMeasurement::windSpeedMetersPerSecond to HourlyMeasurementsTable.windSpeedMetersPerSecond,
-            HourlyMeasurement::maxWindSpeedMetersPerSecond to HourlyMeasurementsTable.maxWindSpeedMetersPerSecond,
-            HourlyMeasurement::windDirectionDegrees to HourlyMeasurementsTable.windDirectionDegrees,
-            HourlyMeasurement::visibilityInMeters to HourlyMeasurementsTable.visibilityInMeters,
-        )
-    }
 }
 
 typealias HourlyMeasurements = Collection<HourlyMeasurement>

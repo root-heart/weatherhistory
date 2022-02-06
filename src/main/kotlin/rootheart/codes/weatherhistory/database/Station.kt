@@ -13,6 +13,14 @@ object StationsTable : LongIdTable("STATIONS") {
     val longitude = decimal("LONGITUDE", 7, 4)
 }
 
+object StationTableMapping : TableMapping<Station>(
+    Station::stationIdInt to StationsTable.stationId,
+    Station::name to StationsTable.name,
+    Station::federalState to StationsTable.federalState,
+    Station::height to StationsTable.height,
+    Station::latitude to StationsTable.latitude,
+    Station::longitude to StationsTable.longitude
+)
 
 class Station(
     val stationId: StationId,
@@ -24,14 +32,5 @@ class Station(
 ) {
     val stationIdInt get() = stationId.stationId
 
-    companion object {
-        val tableMapping: TableMapping<Station> = mapOf(
-            Station::stationIdInt to StationsTable.stationId,
-            Station::name to StationsTable.name,
-            Station::federalState to StationsTable.federalState,
-            Station::height to StationsTable.height,
-            Station::latitude to StationsTable.latitude,
-            Station::longitude to StationsTable.longitude
-        )
-    }
+
 }
