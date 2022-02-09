@@ -22,4 +22,5 @@ fun main() {
 
 fun Application.routing() = routing {
     stationsEndpoints()
+    summaryDataEndpoints()
 }

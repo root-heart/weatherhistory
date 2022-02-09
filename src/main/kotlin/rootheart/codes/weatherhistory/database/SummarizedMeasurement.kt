@@ -1,14 +1,16 @@
 package rootheart.codes.weatherhistory.database
 
 import org.jetbrains.exposed.dao.LongIdTable
-import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalDate
-import org.joda.time.LocalDateTime
 import rootheart.codes.weatherhistory.model.StationId
 import java.math.BigDecimal
-import kotlin.reflect.KProperty1
+import kotlin.reflect.KMutableProperty1
 
 object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val stationId = reference("STATION_ID", StationsTable.stationId).index("FK_IDX_MEASUREMENT_STATION")
@@ -97,7 +99,56 @@ class SummarizedMeasurement(
     val firstDay get() = interval.firstDay
     val lastDay get() = interval.lastDay
     val intervalType get() = interval.type.name
+}
 
+object SummarizedMeasurementDao {
+    fun findByStationIdAndYear(stationId: Int, year: Int): List<SummarizedMeasurement> {
+        return transaction {
+            val start = DateTime(year, 1, 1, 0, 0)
+            val end = DateTime(year + 1, 1, 1, 0, 0)
+            return@transaction selectAll(stationId, start, end, DateIntervalType.MONTH)
+        }
+    }
+
+    fun findByStationIdAndYearAndMonth(stationId: Int, year: Int, month: Int): List<SummarizedMeasurement> {
+        return transaction {
+            val start = DateTime(year, month, 1, 0, 0)
+            val end = DateTime(year, month + 1, 1, 0, 0)
+            return@transaction selectAll(stationId, start, end, DateIntervalType.DAY)
+        }
+    }
+
+    private fun selectAll(stationId: Int, start: DateTime, end: DateTime, intervalType: DateIntervalType) =
+        SummarizedMeasurementsTable.select {
+            SummarizedMeasurementsTable.stationId.eq(stationId)
+                .and(SummarizedMeasurementsTable.intervalType eq intervalType.name)
+                .and(SummarizedMeasurementsTable.firstDay greaterEq start)
+                .and(SummarizedMeasurementsTable.lastDay less end)
+        }.map(::toSummarizedMeasurement)
+
+    private fun toSummarizedMeasurement(row: ResultRow): SummarizedMeasurement {
+        val summarizedMeasurement = createSummarizedMeasurement(row)
+        setValuesFromResultRow(row, summarizedMeasurement)
+        return summarizedMeasurement
+    }
+
+    private fun createSummarizedMeasurement(row: ResultRow) = SummarizedMeasurement(
+        stationId = StationId.of(row[SummarizedMeasurementsTable.stationId]),
+        interval = DateInterval(
+            row[SummarizedMeasurementsTable.firstDay],
+            row[SummarizedMeasurementsTable.lastDay],
+            DateIntervalType.valueOf(row[SummarizedMeasurementsTable.intervalType])
+        )
+    )
+
+    private fun setValuesFromResultRow(row: ResultRow, summarizedMeasurement: SummarizedMeasurement) {
+        for (mapping in SummarizedMeasurementTableMapping.mappings) {
+            val property = mapping.first
+            if (property is KMutableProperty1) {
+                property.set(summarizedMeasurement, row[mapping.second])
+            }
+        }
+    }
 }
 
 enum class DateIntervalType {
