@@ -15,12 +15,12 @@ fun main() {
     val server = embeddedServer(Netty, port = 8080) {
         install(IgnoreTrailingSlash)
         install(ContentNegotiation) { gson() }
-        routing()
+        setupRouting()
     }
     server.start(wait = true)
 }
 
-fun Application.routing() = routing {
+fun Application.setupRouting() = routing {
     stationsEndpoints()
     summaryDataEndpoints()
 }
