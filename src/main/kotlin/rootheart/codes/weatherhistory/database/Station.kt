@@ -1,6 +1,10 @@
 package rootheart.codes.weatherhistory.database
 
 import org.jetbrains.exposed.dao.LongIdTable
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.transaction
 import rootheart.codes.weatherhistory.model.StationId
 import java.math.BigDecimal
 
@@ -22,7 +26,7 @@ object StationTableMapping : TableMapping<Station>(
     Station::longitude to StationsTable.longitude
 )
 
-class Station(
+data class Station(
     val stationId: StationId,
     val name: String,
     val federalState: String,
@@ -31,6 +35,27 @@ class Station(
     val longitude: BigDecimal
 ) {
     val stationIdInt get() = stationId.stationId
+}
 
+object StationDao {
+    fun findAll() = transaction {
+        StationsTable.selectAll().map(StationDao::fromResultRow)
+    }
 
+    fun findStationByStationId(stationId: Int): Station? {
+        return transaction {
+            StationsTable.select { StationsTable.stationId eq stationId }
+                .map(::fromResultRow)
+                .firstOrNull()
+        }
+    }
+
+    private fun fromResultRow(row: ResultRow) = Station(
+        stationId = StationId.of(row[StationsTable.stationId]),
+        name = row[StationsTable.name],
+        federalState = row[StationsTable.federalState],
+        height = row[StationsTable.height],
+        latitude = row[StationsTable.latitude],
+        longitude = row[StationsTable.longitude]
+    )
 }

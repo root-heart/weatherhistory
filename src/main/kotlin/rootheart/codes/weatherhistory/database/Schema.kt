@@ -15,7 +15,7 @@ fun main() {
     WeatherDb.createTables()
 }
 
-abstract class TableMapping<POKO>(vararg mappings: Pair<KProperty1<POKO, Any?>, Column<out Any?>>) {
+abstract class TableMapping<POKO>(vararg val mappings: Pair<KProperty1<POKO, Any?>, Column<out Any?>>) {
     val values = mappings.map { it.second }
     val keys = mappings.map { it.first }
 }
