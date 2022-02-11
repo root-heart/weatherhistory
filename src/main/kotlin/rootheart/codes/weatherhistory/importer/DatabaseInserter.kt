@@ -97,12 +97,15 @@ open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<P
         val parameterQuestionMarks = tableMapping.values.joinToString(", ") { "?" }
         return ("INSERT INTO " + tableName + " (" + databaseColumnNames + " ) "
                 + "VALUES (" + parameterQuestionMarks + ") "
-                + "ON CONFLICT DO NOTHING")
+                + "ON CONFLICT UPDATE")
     }
 }
 
+@DelicateCoroutinesApi
 object SummarizedMeasurementImporter : DatabaseInserter<SummarizedMeasurement>(SummarizedMeasurementTableMapping)
 
+@DelicateCoroutinesApi
 object StationsImporter : DatabaseInserter<Station>(StationTableMapping)
 
+@DelicateCoroutinesApi
 object HourlyMeasurementsImporter : DatabaseInserter<HourlyMeasurement>(HourlyMeasurementTableMapping)
