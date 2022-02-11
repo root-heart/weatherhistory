@@ -40,8 +40,11 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val maxWindSpeedMetersPerSecond = decimal("MAX_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
     val avgWindSpeedMetersPerSecond = decimal("AVG_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
     val avgAirPressureHectopascals = decimal("AVG_AIR_PRESSURE_HECTOPASCALS", 4, 1).nullable()
-}
 
+    init {
+        index(isUnique = true, stationId, firstDay, lastDay)
+    }
+}
 
 object SummarizedMeasurementTableMapping : TableMapping<SummarizedMeasurement>(
     SummarizedMeasurement::stationIdInt to SummarizedMeasurementsTable.stationId,
@@ -66,6 +69,11 @@ object SummarizedMeasurementTableMapping : TableMapping<SummarizedMeasurement>(
     SummarizedMeasurement::avgAirTemperatureCentigrade to SummarizedMeasurementsTable.avgAirTemperatureCentigrade,
     SummarizedMeasurement::maxAirTemperatureCentigrade to SummarizedMeasurementsTable.maxAirTemperatureCentigrade,
     SummarizedMeasurement::sumSunshineDurationHours to SummarizedMeasurementsTable.sumSunshineDurationHours,
+    SummarizedMeasurement::sumRainfallMillimeters to SummarizedMeasurementsTable.sumRainfallMillimeters,
+    SummarizedMeasurement::sumSnowfallMillimeters to SummarizedMeasurementsTable.sumSnowfallMillimeters,
+    SummarizedMeasurement::maxWindSpeedMetersPerSecond to SummarizedMeasurementsTable.maxWindSpeedMetersPerSecond,
+    SummarizedMeasurement::avgWindSpeedMetersPerSecond to SummarizedMeasurementsTable.avgWindSpeedMetersPerSecond,
+    SummarizedMeasurement::avgAirPressureHectopascals to SummarizedMeasurementsTable.avgAirPressureHectopascals,
 )
 
 class SummarizedMeasurement(
