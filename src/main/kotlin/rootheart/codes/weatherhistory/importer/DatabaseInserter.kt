@@ -25,7 +25,7 @@ private const val BATCH_SIZE = 100_000
 private val insertThreadPool = newFixedThreadPoolContext(10, "database-inserter")
 
 @DelicateCoroutinesApi
-open class RecordsImporter<POKO : Any>(private val tableMapping: TableMapping<POKO>) {
+open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<POKO>) {
     private val tableName = determineTableName()
     private val insertSql = buildInsertSql()
     private val log = KotlinLogging.logger {}
@@ -101,8 +101,8 @@ open class RecordsImporter<POKO : Any>(private val tableMapping: TableMapping<PO
     }
 }
 
-object SummarizedMeasurementImporter : RecordsImporter<SummarizedMeasurement>(SummarizedMeasurementTableMapping)
+object SummarizedMeasurementImporter : DatabaseInserter<SummarizedMeasurement>(SummarizedMeasurementTableMapping)
 
-object StationsImporter : RecordsImporter<Station>(StationTableMapping)
+object StationsImporter : DatabaseInserter<Station>(StationTableMapping)
 
-object HourlyMeasurementsImporter : RecordsImporter<HourlyMeasurement>(HourlyMeasurementTableMapping)
+object HourlyMeasurementsImporter : DatabaseInserter<HourlyMeasurement>(HourlyMeasurementTableMapping)
