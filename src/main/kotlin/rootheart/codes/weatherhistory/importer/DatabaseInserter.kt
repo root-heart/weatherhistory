@@ -60,8 +60,13 @@ open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<P
         WeatherDb.dataSource.connection.use { connection ->
             connection.prepareStatement(insertSql).use { statement ->
                 createInsertBatch(entities, statement)
-                val affectedRows = statement.executeBatch()
-                log.info { "Batch executed, ${affectedRows.sum()} records affected" }
+                try {
+                    val affectedRows = statement.executeBatch()
+                    log.info { "Batch executed, ${affectedRows.sum()} records affected" }
+                } catch (e: SQLException) {
+                    log.error("importEntities($tableName, ${entities.size} entities) error during batch insert", e)
+                    throw e
+                }
             }
         }
     }
