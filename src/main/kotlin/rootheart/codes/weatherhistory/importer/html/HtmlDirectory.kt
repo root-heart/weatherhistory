@@ -42,7 +42,7 @@ data class HtmlDirectory(
 
 data class ZippedDataFile(
     val fileName: String,
-    val stationId: StationId,
+    val stationId: String,
     val measurementType: MeasurementType,
     val historical: Boolean,
     val url: URL
@@ -69,7 +69,7 @@ object HtmlDirectoryParser {
                 val fileName = it["fileName"]!!.value
                 ZippedDataFile(
                     fileName = fileName,
-                    stationId = StationId.of(it["stationId"]!!.value),
+                    stationId = it["stationId"]!!.value,
                     measurementType = MeasurementType.of(it["key"]!!.value),
                     historical = it["recentness"]!!.value == "hist",
                     url = URL("${url.toExternalForm()}$fileName")

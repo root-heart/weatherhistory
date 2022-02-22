@@ -3,6 +3,7 @@ package rootheart.codes.weatherhistory.database
 import org.jetbrains.exposed.dao.LongIdTable
 import org.joda.time.DateTime
 import rootheart.codes.weatherhistory.model.PrecipitationType
+import rootheart.codes.weatherhistory.model.StationId
 import java.math.BigDecimal
 
 object HourlyMeasurementsTable : LongIdTable("HOURLY_MEASUREMENTS") {
@@ -27,6 +28,7 @@ object HourlyMeasurementsTable : LongIdTable("HOURLY_MEASUREMENTS") {
 }
 
 object HourlyMeasurementTableMapping : TableMapping<HourlyMeasurement>(
+    HourlyMeasurement::stationIdLong to HourlyMeasurementsTable.stationId,
     HourlyMeasurement::measurementTime to HourlyMeasurementsTable.measurementTime,
     HourlyMeasurement::airTemperatureAtTwoMetersHeightCentigrade to HourlyMeasurementsTable.airTemperatureAtTwoMetersHeightCentigrade,
     HourlyMeasurement::relativeHumidityPercent to HourlyMeasurementsTable.relativeHumidityPercent,
@@ -43,6 +45,8 @@ object HourlyMeasurementTableMapping : TableMapping<HourlyMeasurement>(
 )
 
 class HourlyMeasurement(
+    val id: Long? = null,
+    val station: Station,
     val measurementTime: DateTime,
     var airTemperatureAtTwoMetersHeightCentigrade: BigDecimal? = null,
     var relativeHumidityPercent: BigDecimal? = null,
@@ -58,6 +62,7 @@ class HourlyMeasurement(
     var visibilityInMeters: BigDecimal? = null
 ) {
     val precipitationTypeName get() = precipitationType?.name
+    val stationIdLong get() = station.id
 }
 
-typealias HourlyMeasurements = Collection<HourlyMeasurement>
+

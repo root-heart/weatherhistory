@@ -1,6 +1,8 @@
 package rootheart.codes.weatherhistory.importer
 
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
@@ -9,7 +11,7 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import rootheart.codes.weatherhistory.database.DateInterval
 import rootheart.codes.weatherhistory.database.HourlyMeasurement
-import rootheart.codes.weatherhistory.database.HourlyMeasurements
+import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.SummarizedMeasurement
 import rootheart.codes.weatherhistory.model.MeasurementType
 import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
@@ -31,14 +33,15 @@ object DataFileForStationImporter {
     fun import(zippedDataFiles: List<ZippedDataFile>) {
         log.info { "import(${zippedDataFiles.size} zipped data files)" }
         val stationId = getStationId(zippedDataFiles)
-        val measurements = Downloader.download(zippedDataFiles)
-        HourlyMeasurementsImporter.importEntities(measurements)
-        val summarizedMeasurements = Summarizer.summarizeMeasurements(stationId, measurements)
-        SummarizedMeasurementImporter.importEntities(summarizedMeasurements)
+//        zippedDataFiles.forEach { Downloader.input.send(it) }
+//        val measurements = Downloader.download(zippedDataFiles)
+//        HourlyMeasurementsImporter.importEntities(measurements)
+//        val summarizedMeasurements = Summarizer.summarizeMeasurements(stationId, measurements)
+//        SummarizedMeasurementImporter.importEntities(summarizedMeasurements)
         log.info { "import(${zippedDataFiles.size} zipped data files) finished" }
     }
 
-    private fun getStationId(zippedDataFiles: List<ZippedDataFile>): StationId {
+    private fun getStationId(zippedDataFiles: List<ZippedDataFile>): String {
         val stationIds = zippedDataFiles.map { it.stationId }.distinct()
         if (stationIds.size != 1) {
             throw IllegalArgumentException()
@@ -47,19 +50,26 @@ object DataFileForStationImporter {
     }
 }
 
+data class DownloadResult(val zippedDataFile: ZippedDataFile, val content: ByteArray)
+
 @DelicateCoroutinesApi
 object Downloader {
     private val log = KotlinLogging.logger {}
     private val downloadThreadPool = newFixedThreadPoolContext(2, "downloader")
 
+    val input = Channel<ZippedDataFile>()
+    val output = Channel<DownloadResult>()
+
     fun download(zippedDataFiles: List<ZippedDataFile>): Collection<HourlyMeasurement> {
         val measurementsByTime = ConcurrentHashMap<DateTime, HourlyMeasurement>()
         runBlocking {
-            for (dataFile in zippedDataFiles) {
+            for (zippedDataFile in input) {
                 launch(downloadThreadPool) {
-                    downloadBytes(dataFile.url)
-                        ?.let { findAndUnzipMeasurementFile(it) }
-                        ?.let { convertToHourlyMeasurements(it, dataFile.measurementType, measurementsByTime) }
+                    val content = downloadBytes(zippedDataFile.url)
+                    if (content != null) {
+                        val downloadResult = DownloadResult(zippedDataFile, content)
+                        output.send(downloadResult)
+                    }
                 }
             }
         }
@@ -71,6 +81,23 @@ object Downloader {
         val bytes = url.openStream().use { it.readAllBytes() }
         log.info { "downloadBytes(${url}) finished, ${bytes.size} bytes" }
         return bytes
+    }
+
+
+}
+
+data class UnzipResult(val zippedDataFile: ZippedDataFile, val unzippedContent: ByteArray)
+
+@DelicateCoroutinesApi
+object Unzipper {
+    private val log = KotlinLogging.logger {}
+
+    suspend fun x() {
+        coroutineScope {
+            for (downloadResult in Downloader.output) {
+                launch { findAndUnzipMeasurementFile(downloadResult.content) }
+            }
+        }
     }
 
     private fun findAndUnzipMeasurementFile(zippedBytes: ByteArray): SemicolonSeparatedValues? {
@@ -87,61 +114,63 @@ object Downloader {
         return bytes
     }
 
-    private fun convertToHourlyMeasurements(
-        values: SemicolonSeparatedValues,
-        measurementType: MeasurementType,
-        measurementByTime: HourlyMeasurementByTime
-    ) {
-        log.info { "convertToHourlyMeasurements(${values.rows.size} rows, ${measurementType}, ${measurementByTime.size} measurements by time)" }
-        val indexMeasurementTime = values.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
-        val columnMappingByIndex = measurementType.columnNameMapping.mapKeys { values.columnNames.indexOf(it.key) }
-        for (row in values.rows) {
-            val measurementTimeString = row[indexMeasurementTime]
-            val measurementTime = DATE_TIME_FORMATTER.parseDateTime(measurementTimeString)
-            val record = measurementByTime.getOrPut(measurementTime) { HourlyMeasurement(measurementTime) }
-            for (columnIndex in columnMappingByIndex) {
-                val stringValue = row[columnIndex.key]
-                if (stringValue != null) {
-                    columnIndex.value.setValue(record, stringValue)
-                }
-            }
-        }
-        log.info { "convertToHourlyMeasurements(${values.rows.size} rows, ${measurementType}, ${measurementByTime.size} measurements by time) finished" }
-    }
+//    private fun convertToHourlyMeasurements(
+//        values: SemicolonSeparatedValues,
+//        measurementType: MeasurementType,
+//        measurementByTime: HourlyMeasurementByTime
+//    ) {
+//        log.info { "convertToHourlyMeasurements(${values.rows.size} rows, ${measurementType}, ${measurementByTime.size} measurements by time)" }
+//        val indexMeasurementTime = values.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
+//        val columnMappingByIndex = measurementType.columnNameMapping.mapKeys { values.columnNames.indexOf(it.key) }
+//        for (row in values.rows) {
+//            val measurementTimeString = row[indexMeasurementTime]
+//            val measurementTime = DATE_TIME_FORMATTER.parseDateTime(measurementTimeString)
+//            val record = measurementByTime.getOrPut(measurementTime) { HourlyMeasurement(measurementTime) }
+//            for (columnIndex in columnMappingByIndex) {
+//                val stringValue = row[columnIndex.key]
+//                if (stringValue != null) {
+//                    columnIndex.value.setValue(record, stringValue)
+//                }
+//            }
+//        }
+//        log.info { "convertToHourlyMeasurements(${values.rows.size} rows, ${measurementType}, ${measurementByTime.size} measurements by time) finished" }
+//    }
 
     private fun fileIsMeasurementFile(filename: String) = filename.startsWith("produkt_") && filename.endsWith(".txt")
 }
 
+data class ParseResult(val zippedDataFile: ZippedDataFile, val semicolonSeparatedValues: SemicolonSeparatedValues)
+
 @DelicateCoroutinesApi
 object Summarizer {
-    private val log = KotlinLogging.logger {}
-    private val summarizeThreadPool = newFixedThreadPoolContext(10, "summarizer")
-
-    private val groupByFunctions =
+    //    private val log = KotlinLogging.logger {}
+//    private val summarizeThreadPool = newFixedThreadPoolContext(10, "summarizer")
+//
+    val groupByFunctions =
         listOf(DateInterval::day, DateInterval::month, DateInterval::season, DateInterval::year, DateInterval::decade)
+//
+//    fun summarizeMeasurements(stationId: StationId, measurements: HourlyMeasurements): SummarizedMeasurements {
+//        log.info { "summarizeMeasurements(${stationId}, ${measurements.size} measurements)" }
+//        val summarizedMeasurements = ArrayList<SummarizedMeasurement>()
+//        runBlocking {
+//            for (groupByFunction in groupByFunctions) {
+//                val measurementsGroupedByInterval = measurements.groupBy { groupByFunction(it.measurementTime) }
+//                measurementsGroupedByInterval.forEach { (interval, measurements) ->
+//                    launch(summarizeThreadPool) {
+//                        val summarized = summarizeHourlyRecords(stationId, interval, measurements)
+//                        synchronized(summarizedMeasurements) {
+//                            summarizedMeasurements.add(summarized)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        log.info { "summarizeMeasurements(${stationId}, ${measurements.size} measurements) finished, ${summarizedMeasurements.size} summarized measurements" }
+//        return summarizedMeasurements
+//    }
 
-    fun summarizeMeasurements(stationId: StationId, measurements: HourlyMeasurements): SummarizedMeasurements {
-        log.info { "summarizeMeasurements(${stationId}, ${measurements.size} measurements)" }
-        val summarizedMeasurements = ArrayList<SummarizedMeasurement>()
-        runBlocking {
-            for (groupByFunction in groupByFunctions) {
-                val measurementsGroupedByInterval = measurements.groupBy { groupByFunction(it.measurementTime) }
-                measurementsGroupedByInterval.forEach { (interval, measurements) ->
-                    launch(summarizeThreadPool) {
-                        val summarized = summarizeHourlyRecords(stationId, interval, measurements)
-                        synchronized(summarizedMeasurements) {
-                            summarizedMeasurements.add(summarized)
-                        }
-                    }
-                }
-            }
-        }
-        log.info { "summarizeMeasurements(${stationId}, ${measurements.size} measurements) finished, ${summarizedMeasurements.size} summarized measurements" }
-        return summarizedMeasurements
-    }
-
-    private fun summarizeHourlyRecords(stationId: StationId, interval: DateInterval, measurements: HourlyMeasurements) =
-        SummarizedMeasurement(stationId = stationId,
+    fun summarizeHourlyRecords(station: Station, interval: DateInterval, measurements: Collection<HourlyMeasurement>) =
+        SummarizedMeasurement(station = station,
             interval = interval,
             countCloudCoverage0 = measurements.count { it.cloudCoverage == 0 },
             countCloudCoverage1 = measurements.count { it.cloudCoverage == 1 },
