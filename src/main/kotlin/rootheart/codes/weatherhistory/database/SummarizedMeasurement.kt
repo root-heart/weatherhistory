@@ -40,6 +40,7 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val maxWindSpeedMetersPerSecond = decimal("MAX_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
     val avgWindSpeedMetersPerSecond = decimal("AVG_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
     val avgAirPressureHectopascals = decimal("AVG_AIR_PRESSURE_HECTOPASCALS", 4, 1).nullable()
+    val details = text("DETAILS").nullable()
 
     init {
         index(isUnique = true, stationId, firstDay, lastDay)
@@ -74,6 +75,7 @@ object SummarizedMeasurementTableMapping : TableMapping<SummarizedMeasurement>(
     SummarizedMeasurement::maxWindSpeedMetersPerSecond to SummarizedMeasurementsTable.maxWindSpeedMetersPerSecond,
     SummarizedMeasurement::avgWindSpeedMetersPerSecond to SummarizedMeasurementsTable.avgWindSpeedMetersPerSecond,
     SummarizedMeasurement::avgAirPressureHectopascals to SummarizedMeasurementsTable.avgAirPressureHectopascals,
+    SummarizedMeasurement::details to SummarizedMeasurementsTable.details,
 )
 
 class SummarizedMeasurement(
@@ -102,6 +104,7 @@ class SummarizedMeasurement(
     var maxWindSpeedMetersPerSecond: BigDecimal? = null,
     var avgWindSpeedMetersPerSecond: BigDecimal? = null,
     var avgAirPressureHectopascals: BigDecimal? = null,
+    var details: String? = null
 ) {
     val stationIdLong get() = station.id
     val firstDay get() = interval.firstDay

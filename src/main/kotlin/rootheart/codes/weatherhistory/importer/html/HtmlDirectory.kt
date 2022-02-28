@@ -2,7 +2,6 @@ package rootheart.codes.weatherhistory.importer.html
 
 import mu.KotlinLogging
 import rootheart.codes.weatherhistory.model.MeasurementType
-import rootheart.codes.weatherhistory.model.StationId
 import java.net.URL
 
 private val log = KotlinLogging.logger {}
@@ -42,7 +41,7 @@ data class HtmlDirectory(
 
 data class ZippedDataFile(
     val fileName: String,
-    val stationId: String,
+    val externalId: String,
     val measurementType: MeasurementType,
     val historical: Boolean,
     val url: URL
@@ -69,7 +68,7 @@ object HtmlDirectoryParser {
                 val fileName = it["fileName"]!!.value
                 ZippedDataFile(
                     fileName = fileName,
-                    stationId = it["stationId"]!!.value,
+                    externalId = it["stationId"]!!.value,
                     measurementType = MeasurementType.of(it["key"]!!.value),
                     historical = it["recentness"]!!.value == "hist",
                     url = URL("${url.toExternalForm()}$fileName")

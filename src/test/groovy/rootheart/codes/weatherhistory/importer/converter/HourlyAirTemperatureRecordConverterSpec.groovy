@@ -25,7 +25,7 @@ class HourlyAirTemperatureRecordConverterSpec extends Specification implements S
         def records = converter.convert(ssvData).collect(Collectors.toList())
 
         then: 'the values of each record matches the parsed values of each input line'
-        records*.stationId == values.collect { StationId.of(it[0]) }
+        records*.externalId == values.collect { StationId.of(it[0]) }
         records*.measurementTime == values.collect { LocalDateTime.parse(it[1], DateTimeFormatter.ofPattern('yyyyMMddHH')) }
         records*.qualityLevel == allQualityLevelsOf(values, 2)
         records*.airTemperatureAtTwoMetersHeightCentigrade == allBigDecimalsOf(values, 3)

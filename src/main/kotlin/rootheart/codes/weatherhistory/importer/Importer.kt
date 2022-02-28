@@ -4,7 +4,6 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
@@ -17,17 +16,16 @@ import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Database
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import rootheart.codes.weatherhistory.database.DateInterval
 import rootheart.codes.weatherhistory.database.HourlyMeasurement
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationDao
-import rootheart.codes.weatherhistory.database.SummarizedMeasurement
 import rootheart.codes.weatherhistory.database.WeatherDb
 import rootheart.codes.weatherhistory.importer.html.HtmlDirectory
 import rootheart.codes.weatherhistory.importer.html.HtmlDirectoryParser
 import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
 import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValues
 import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValuesParser
-import rootheart.codes.weatherhistory.model.MeasurementType
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.math.BigDecimal
@@ -35,7 +33,6 @@ import java.net.URL
 import java.nio.charset.Charset
 import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.ZipInputStream
-import kotlin.coroutines.coroutineContext
 import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
@@ -55,73 +52,96 @@ fun main(args: Array<String>) {
     val baseUrl = URL(baseUrlString)
     val rootDirectory = HtmlDirectoryParser.parseHtml(baseUrl)
 
-    importStations(rootDirectory)
+//    importStations(rootDirectory)
     Database.connect(WeatherDb.dataSource)
 
-    val stationByStationId = StationDao.findAll().associateBy(Station::externalId)
-
-
-    val zippedDataFiles = rootDirectory.getAllZippedDataFiles()
+    val stationByExternalId = StationDao.findAll().associateBy(Station::externalId)
+    val zippedDataFilesByExternalId = rootDirectory
+        .getAllZippedDataFiles()
+        .groupBy { it.externalId }
+        .mapKeys { stationByExternalId[it.key]!! }
+        .filter { it.key.externalId.toInt() == 691 }
 
     val duration = measureTimeMillis {
         runBlocking(Dispatchers.Default) {
-            zippedDataFiles.groupBy { it.stationId }
-                .filter { it.key.toInt() <= 691 }
-                .forEach { (stationId, zippedDataFiles) ->
-                    val station = stationByStationId[stationId]!!
-
-                    val downloaded = Channel<Pair<ZippedDataFile, ByteArray>>(zippedDataFiles.size)
-                    launch(CoroutineName("process-zipped-data-file")) {
-                        val measurementByTime = ConcurrentHashMap<DateTime, HourlyMeasurement>()
-                        coroutineScope {
-                            for (x in downloaded) {
-                                launch(CoroutineName("convert-zipped-data-file")) {
-                                    currentCoroutineContext().job
-                                    val zippedDataFile = x.first
-                                    val content = x.second
-                                    val unzippedContent = unzip(station, zippedDataFile, content)
-                                    val semicolonSeparatedValues = parse(station, zippedDataFile, unzippedContent)
-                                    convert(station, zippedDataFile, semicolonSeparatedValues, measurementByTime)
-                                }
-                            }
-                        }
-//                        HourlyMeasurementsImporter.importEntities(measurementByTime.values)
-
-                        val summarizedMeasurements = ArrayList<SummarizedMeasurement>()
-                        coroutineScope {
-                            for (groupByFunction in Summarizer.groupByFunctions) {
-                                launch(CoroutineName("group-measurements")) {
-                                    log.info { "Grouping values by ${groupByFunction.name}..." }
-                                    val measurementsGroupedByInterval =
-                                        measurementByTime.values.groupBy { groupByFunction(it.measurementTime) }
-                                    measurementsGroupedByInterval.forEach { (interval, measurements) ->
-                                        val summarized =
-                                            Summarizer.summarizeHourlyRecords(station, interval, measurements)
-                                        synchronized(summarizedMeasurements) {
-                                            summarizedMeasurements.add(summarized)
-                                        }
-                                    }
-                                    log.info { "Grouping values by ${groupByFunction.name} finished" }
-                                }
-                            }
-                        }
-                        SummarizedMeasurementImporter.importEntities(summarizedMeasurements)
-                        log.info { "Station ${station.id} - Converted: ${measurementByTime.size}" }
-                    }
-
-                    zippedDataFiles.forEach { zippedDataFile ->
-                        log.info { "Station ${station.id} - Downloading from ${zippedDataFile.url}" }
-                        val content = zippedDataFile.url.readBytes()
-                        log.info { "Station ${station.id} - Downloaded from ${zippedDataFile.url}, ${content.size} bytes" }
-                        downloaded.send(Pair(zippedDataFile, content))
-                    }
-                    downloaded.close()
-                    log.info { "Station ${station.id} - Downloaded from ${zippedDataFiles.size} files" }
-                }
+            zippedDataFilesByExternalId.forEach { (station, zippedDataFiles) ->
+                val downloaded = Channel<Pair<ZippedDataFile, ByteArray>>(zippedDataFiles.size)
+                launchUnzipper(station, downloaded)
+                download(zippedDataFiles, station, downloaded)
+                log.info { "Station ${station.id} - Downloaded from ${zippedDataFiles.size} files" }
+            }
         }
     }
     log.info { "Finished import in $duration milliseconds, exiting program" }
     exitProcess(0)
+}
+
+@DelicateCoroutinesApi
+private fun CoroutineScope.launchUnzipper(
+    station: Station,
+    downloaded: Channel<Pair<ZippedDataFile, ByteArray>>
+) = launch(CoroutineName("process-zipped-data-file")) {
+    val measurements = abc(downloaded, station)
+//                        HourlyMeasurementsImporter.importEntities(measurementByTime.values)
+
+    val groupedByDay = measurements.groupBy { DateInterval.day(it.measurementTime) }
+    val summarizedByDay = groupedByDay.map { (day, measurements) ->
+        Summarizer.summarizeHourlyRecords(station, day, measurements)
+    }
+
+    val groupedByMonth = summarizedByDay.groupBy { DateInterval.month(it.firstDay) }
+    val summarizedByMonth = groupedByMonth.map { (month, measurements) ->
+        Summarizer.summarizeSummarizedRecords(station, month, measurements)
+    }
+
+    val groupedByYear = summarizedByMonth.groupBy { DateInterval.year(it.firstDay) }
+    val summarizedByYear = groupedByYear.map { (year, measurements) ->
+        Summarizer.summarizeSummarizedRecords(station, year, measurements)
+    }
+
+    val groupedByDecade = summarizedByYear.groupBy { DateInterval.decade(it.firstDay) }
+    val summarizedByDecade = groupedByDecade.map { (decade, measurements) ->
+        Summarizer.summarizeSummarizedRecords(station, decade, measurements)
+    }
+
+    val summarizedMeasurements =
+        summarizedByDay + summarizedByMonth + summarizedByYear + summarizedByDecade;
+
+    log.info { "Station ${station.id} - Converted: ${measurements.size}" }
+}
+
+private suspend fun download(
+    zippedDataFiles: Collection<ZippedDataFile>,
+    station: Station,
+    downloaded: Channel<Pair<ZippedDataFile, ByteArray>>
+) {
+    zippedDataFiles.forEach { zippedDataFile ->
+        log.info { "Station ${station.id} - Downloading from ${zippedDataFile.url}" }
+        val content = zippedDataFile.url.readBytes()
+        log.info { "Station ${station.id} - Downloaded from ${zippedDataFile.url}, ${content.size} bytes" }
+        downloaded.send(Pair(zippedDataFile, content))
+    }
+    downloaded.close()
+}
+
+private suspend fun abc(
+    downloaded: Channel<Pair<ZippedDataFile, ByteArray>>,
+    station: Station
+): Collection<HourlyMeasurement> {
+    val measurementByTime = ConcurrentHashMap<DateTime, HourlyMeasurement>()
+    coroutineScope {
+        for (x in downloaded) {
+            launch(CoroutineName("convert-zipped-data-file")) {
+                currentCoroutineContext().job
+                val zippedDataFile = x.first
+                val content = x.second
+                val unzippedContent = unzip(station, zippedDataFile, content)
+                val semicolonSeparatedValues = parse(station, zippedDataFile, unzippedContent)
+                convert(station, zippedDataFile, semicolonSeparatedValues, measurementByTime)
+            }
+        }
+    }
+    return measurementByTime.values
 }
 
 @DelicateCoroutinesApi

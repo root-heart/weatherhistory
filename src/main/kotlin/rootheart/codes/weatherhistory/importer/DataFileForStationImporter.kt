@@ -13,11 +13,9 @@ import rootheart.codes.weatherhistory.database.DateInterval
 import rootheart.codes.weatherhistory.database.HourlyMeasurement
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.SummarizedMeasurement
-import rootheart.codes.weatherhistory.model.MeasurementType
 import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
 import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValues
 import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValuesParser
-import rootheart.codes.weatherhistory.model.StationId
 import java.io.ByteArrayInputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -42,7 +40,7 @@ object DataFileForStationImporter {
     }
 
     private fun getStationId(zippedDataFiles: List<ZippedDataFile>): String {
-        val stationIds = zippedDataFiles.map { it.stationId }.distinct()
+        val stationIds = zippedDataFiles.map { it.externalId }.distinct()
         if (stationIds.size != 1) {
             throw IllegalArgumentException()
         }
@@ -168,6 +166,36 @@ object Summarizer {
 //        log.info { "summarizeMeasurements(${stationId}, ${measurements.size} measurements) finished, ${summarizedMeasurements.size} summarized measurements" }
 //        return summarizedMeasurements
 //    }
+
+    fun summarizeSummarizedRecords(
+        station: Station,
+        interval: DateInterval,
+        measurements: Collection<SummarizedMeasurement>
+    ) =
+        SummarizedMeasurement(
+            station = station,
+            interval = interval,
+            countCloudCoverage0 = measurements.sumOf { it.countCloudCoverage0 },
+            countCloudCoverage1 = measurements.sumOf { it.countCloudCoverage1 },
+            countCloudCoverage2 = measurements.sumOf { it.countCloudCoverage2 },
+            countCloudCoverage3 = measurements.sumOf { it.countCloudCoverage3 },
+            countCloudCoverage4 = measurements.sumOf { it.countCloudCoverage4 },
+            countCloudCoverage5 = measurements.sumOf { it.countCloudCoverage5 },
+            countCloudCoverage6 = measurements.sumOf { it.countCloudCoverage6 },
+            countCloudCoverage7 = measurements.sumOf { it.countCloudCoverage7 },
+            countCloudCoverage8 = measurements.sumOf { it.countCloudCoverage8 },
+            countCloudCoverageNotVisible = measurements.sumOf { it.countCloudCoverageNotVisible },
+            countCloudCoverageNotMeasured = measurements.sumOf { it.countCloudCoverageNotMeasured },
+            minDewPointTemperatureCentigrade = measurements.minDecimal { it.minDewPointTemperatureCentigrade },
+            avgDewPointTemperatureCentigrade = measurements.avgDecimal { it.avgDewPointTemperatureCentigrade },
+            maxDewPointTemperatureCentigrade = measurements.maxDecimal { it.maxDewPointTemperatureCentigrade },
+            minAirTemperatureCentigrade = measurements.minDecimal { it.minAirTemperatureCentigrade },
+            avgAirTemperatureCentigrade = measurements.avgDecimal { it.avgAirTemperatureCentigrade },
+            maxAirTemperatureCentigrade = measurements.maxDecimal { it.maxAirTemperatureCentigrade },
+            sumSunshineDurationHours = measurements.sumDecimal { it.sumSunshineDurationHours }
+                ?.divide(SIXTY, RoundingMode.HALF_UP),
+            details = ""
+        )
 
     fun summarizeHourlyRecords(station: Station, interval: DateInterval, measurements: Collection<HourlyMeasurement>) =
         SummarizedMeasurement(station = station,
