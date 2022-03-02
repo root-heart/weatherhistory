@@ -102,7 +102,7 @@ open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<P
         val parameterQuestionMarks = tableMapping.values.joinToString(", ") { "?" }
         return ("INSERT INTO " + tableName + " (" + databaseColumnNames + " ) "
                 + "VALUES (" + parameterQuestionMarks + ") "
-                + "ON CONFLICT UPDATE")
+                /*+ "ON CONFLICT DO NOTHING"*/)
     }
 }
 

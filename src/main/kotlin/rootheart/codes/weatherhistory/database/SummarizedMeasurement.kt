@@ -40,7 +40,6 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val maxWindSpeedMetersPerSecond = decimal("MAX_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
     val avgWindSpeedMetersPerSecond = decimal("AVG_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
     val avgAirPressureHectopascals = decimal("AVG_AIR_PRESSURE_HECTOPASCALS", 4, 1).nullable()
-    val details = text("DETAILS").nullable()
 
     init {
         index(isUnique = true, stationId, firstDay, lastDay)
@@ -75,7 +74,6 @@ object SummarizedMeasurementTableMapping : TableMapping<SummarizedMeasurement>(
     SummarizedMeasurement::maxWindSpeedMetersPerSecond to SummarizedMeasurementsTable.maxWindSpeedMetersPerSecond,
     SummarizedMeasurement::avgWindSpeedMetersPerSecond to SummarizedMeasurementsTable.avgWindSpeedMetersPerSecond,
     SummarizedMeasurement::avgAirPressureHectopascals to SummarizedMeasurementsTable.avgAirPressureHectopascals,
-    SummarizedMeasurement::details to SummarizedMeasurementsTable.details,
 )
 
 class SummarizedMeasurement(
@@ -113,21 +111,18 @@ class SummarizedMeasurement(
 }
 
 object SummarizedMeasurementDao {
-    fun findByStationIdAndYear(stationId: Long, year: Int): List<SummarizedMeasurement> {
-        return transaction {
-            val start = DateTime(year, 1, 1, 0, 0)
-            val end = DateTime(year + 1, 1, 1, 0, 0)
-            return@transaction selectAll(stationId, start, end, DateIntervalType.MONTH)
-        }
+    fun findByStationIdAndYear(stationId: Long, year: Int): List<SummarizedMeasurement> = transaction {
+        val start = DateTime(year, 1, 1, 0, 0)
+        val end = DateTime(year + 1, 1, 1, 0, 0)
+        return@transaction selectAll(stationId, start, end, DateIntervalType.MONTH)
     }
 
-    fun findByStationIdAndYearAndMonth(stationId: Long, year: Int, month: Int): List<SummarizedMeasurement> {
-        return transaction {
+    fun findByStationIdAndYearAndMonth(stationId: Long, year: Int, month: Int): List<SummarizedMeasurement> =
+        transaction {
             val start = DateTime(year, month, 1, 0, 0)
             val end = DateTime(year, month + 1, 1, 0, 0)
             return@transaction selectAll(stationId, start, end, DateIntervalType.DAY)
         }
-    }
 
     private fun selectAll(stationId: Long, start: DateTime, end: DateTime, intervalType: DateIntervalType) =
         SummarizedMeasurementsTable.select {
