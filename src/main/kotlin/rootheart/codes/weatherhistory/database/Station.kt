@@ -5,11 +5,10 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import rootheart.codes.weatherhistory.model.StationId
 import java.math.BigDecimal
 
 object StationsTable : LongIdTable("STATIONS") {
-    val stationId = integer("STATION_ID").uniqueIndex()
+    val externalId = varchar("EXTERNAL_ID", 10).uniqueIndex()
     val name = varchar("NAME", 50)
     val federalState = varchar("FEDERAL_STATE", 50)
     val height = integer("HEIGHT")
@@ -18,7 +17,7 @@ object StationsTable : LongIdTable("STATIONS") {
 }
 
 object StationTableMapping : TableMapping<Station>(
-    Station::stationIdInt to StationsTable.stationId,
+    Station::externalId to StationsTable.externalId,
     Station::name to StationsTable.name,
     Station::federalState to StationsTable.federalState,
     Station::height to StationsTable.height,
@@ -27,31 +26,39 @@ object StationTableMapping : TableMapping<Station>(
 )
 
 data class Station(
-    val stationId: StationId,
+    val id: Long? = null,
+    val externalId: String,
     val name: String,
     val federalState: String,
     val height: Int,
     val latitude: BigDecimal,
-    val longitude: BigDecimal
-) {
-    val stationIdInt get() = stationId.stationId
-}
+    val longitude: BigDecimal,
+)
 
 object StationDao {
     fun findAll() = transaction {
         StationsTable.selectAll().map(StationDao::fromResultRow)
     }
 
-    fun findStationByStationId(stationId: Int): Station? {
-        return transaction {
-            StationsTable.select { StationsTable.stationId eq stationId }
-                .map(::fromResultRow)
-                .firstOrNull()
-        }
+    fun findById(id: Long) = transaction {
+        StationsTable.select { StationsTable.id eq id }
+            .map(::fromResultRow)
+            .firstOrNull()
+    }
+
+    fun findStationByExternalId(stationId: String): Station? = transaction {
+        StationsTable.select { StationsTable.externalId eq stationId }
+            .map(::fromResultRow)
+            .firstOrNull()
+    }
+
+    fun findAllMappedById() = transaction {
+        StationsTable.selectAll().associateBy({ it[StationsTable.id].value }, { fromResultRow(it) })
     }
 
     private fun fromResultRow(row: ResultRow) = Station(
-        stationId = StationId.of(row[StationsTable.stationId]),
+        id = row[StationsTable.id].value,
+        externalId = row[StationsTable.externalId],
         name = row[StationsTable.name],
         federalState = row[StationsTable.federalState],
         height = row[StationsTable.height],

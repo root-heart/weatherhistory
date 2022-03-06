@@ -119,7 +119,7 @@ class DataFileForStationImporterSpec extends Specification implements SpecUtils 
     private static measurementToSsvString(ZippedDataFile zippedDataFile, List<String> columnNames, Map<String, Object> valuesByColumnName) {
         def values = columnNames.collect {
             switch (it) {
-                case "STATIONS_ID": return zippedDataFile.stationId.stationId as String
+                case "STATIONS_ID": return zippedDataFile.externalId.stationId as String
                 case "eor": return "eor"
                 default: return valuesByColumnName[it]
             }

@@ -13,7 +13,7 @@ import java.math.BigDecimal
 import kotlin.reflect.KMutableProperty1
 
 object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
-    val stationId = reference("STATION_ID", StationsTable.stationId).index("FK_IDX_MEASUREMENT_STATION")
+    val stationId = reference("STATION_ID", StationsTable.id).index("FK_IDX_MEASUREMENT_STATION")
     val firstDay = date("FIRST_DAY")
     val lastDay = date("LAST_DAY")
     val intervalType = varchar("INTERVAL_TYPE", 6)
@@ -47,7 +47,7 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
 }
 
 object SummarizedMeasurementTableMapping : TableMapping<SummarizedMeasurement>(
-    SummarizedMeasurement::stationIdInt to SummarizedMeasurementsTable.stationId,
+    SummarizedMeasurement::stationIdLong to SummarizedMeasurementsTable.stationId,
     SummarizedMeasurement::firstDay to SummarizedMeasurementsTable.firstDay,
     SummarizedMeasurement::lastDay to SummarizedMeasurementsTable.lastDay,
     SummarizedMeasurement::intervalType to SummarizedMeasurementsTable.intervalType,
@@ -77,7 +77,7 @@ object SummarizedMeasurementTableMapping : TableMapping<SummarizedMeasurement>(
 )
 
 class SummarizedMeasurement(
-    val stationId: StationId,
+    val station: Station,
     private val interval: DateInterval,
     var minAirTemperatureCentigrade: BigDecimal? = null,
     var avgAirTemperatureCentigrade: BigDecimal? = null,
@@ -102,31 +102,29 @@ class SummarizedMeasurement(
     var maxWindSpeedMetersPerSecond: BigDecimal? = null,
     var avgWindSpeedMetersPerSecond: BigDecimal? = null,
     var avgAirPressureHectopascals: BigDecimal? = null,
+    var details: String? = null
 ) {
-    val stationIdInt get() = stationId.stationId
+    val stationIdLong get() = station.id
     val firstDay get() = interval.firstDay
     val lastDay get() = interval.lastDay
     val intervalType get() = interval.type.name
 }
 
 object SummarizedMeasurementDao {
-    fun findByStationIdAndYear(stationId: Int, year: Int): List<SummarizedMeasurement> {
-        return transaction {
-            val start = DateTime(year, 1, 1, 0, 0)
-            val end = DateTime(year + 1, 1, 1, 0, 0)
-            return@transaction selectAll(stationId, start, end, DateIntervalType.MONTH)
-        }
+    fun findByStationIdAndYear(stationId: Long, year: Int): List<SummarizedMeasurement> = transaction {
+        val start = DateTime(year, 1, 1, 0, 0)
+        val end = DateTime(year + 1, 1, 1, 0, 0)
+        return@transaction selectAll(stationId, start, end, DateIntervalType.MONTH)
     }
 
-    fun findByStationIdAndYearAndMonth(stationId: Int, year: Int, month: Int): List<SummarizedMeasurement> {
-        return transaction {
+    fun findByStationIdAndYearAndMonth(stationId: Long, year: Int, month: Int): List<SummarizedMeasurement> =
+        transaction {
             val start = DateTime(year, month, 1, 0, 0)
             val end = DateTime(year, month + 1, 1, 0, 0)
             return@transaction selectAll(stationId, start, end, DateIntervalType.DAY)
         }
-    }
 
-    private fun selectAll(stationId: Int, start: DateTime, end: DateTime, intervalType: DateIntervalType) =
+    private fun selectAll(stationId: Long, start: DateTime, end: DateTime, intervalType: DateIntervalType) =
         SummarizedMeasurementsTable.select {
             SummarizedMeasurementsTable.stationId.eq(stationId)
                 .and(SummarizedMeasurementsTable.intervalType eq intervalType.name)
@@ -141,7 +139,7 @@ object SummarizedMeasurementDao {
     }
 
     private fun createSummarizedMeasurement(row: ResultRow) = SummarizedMeasurement(
-        stationId = StationId.of(row[SummarizedMeasurementsTable.stationId]),
+        station = StationDao.findById(row[SummarizedMeasurementsTable.stationId].value)!!,
         interval = DateInterval(
             row[SummarizedMeasurementsTable.firstDay],
             row[SummarizedMeasurementsTable.lastDay],
