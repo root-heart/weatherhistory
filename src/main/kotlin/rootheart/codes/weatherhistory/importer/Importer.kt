@@ -44,7 +44,6 @@ fun main(args: Array<String>) {
         .getAllZippedDataFiles()
         .groupBy { it.externalId }
         .mapKeys { stationByExternalId[it.key]!! }
-        .filter { it.key.externalId.toInt() == 691 }
 
     val duration = measureTimeMillis {
         runBlocking(Dispatchers.Default) {

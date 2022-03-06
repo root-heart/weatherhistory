@@ -44,7 +44,7 @@ object DataFileForStationImporter {
         downloaded: Channel<Pair<ZippedDataFile, ByteArray>>
     ) = scope.launch(CoroutineName("process-zipped-data-file")) {
         val measurements = convertToHourlyMeasurements(downloaded, station)
-//        HourlyMeasurementsImporter.importEntities(measurements)
+        HourlyMeasurementsImporter.importEntities(measurements)
 
         val groupedByDay = measurements.groupBy { DateInterval.day(it.measurementTime) }
         val summarizedByDay = groupedByDay.map { (day, measurements) ->
