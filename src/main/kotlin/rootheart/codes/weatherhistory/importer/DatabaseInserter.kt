@@ -5,38 +5,35 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import org.joda.time.DateTime
-import rootheart.codes.weatherhistory.database.HourlyMeasurement
-import rootheart.codes.weatherhistory.database.HourlyMeasurementTableMapping
-import rootheart.codes.weatherhistory.database.Station
-import rootheart.codes.weatherhistory.database.StationTableMapping
-import rootheart.codes.weatherhistory.database.SummarizedMeasurement
-import rootheart.codes.weatherhistory.database.SummarizedMeasurementTableMapping
-import rootheart.codes.weatherhistory.database.TableMapping
-import rootheart.codes.weatherhistory.database.WeatherDb
-import java.math.BigDecimal
-import java.sql.PreparedStatement
+import org.apache.tools.ant.filters.StringInputStream
+import org.postgresql.copy.CopyManager
+import org.postgresql.core.BaseConnection
+import rootheart.codes.weatherhistory.database.*
 import java.sql.SQLException
-import java.sql.Timestamp
+import kotlin.system.measureTimeMillis
 
-private const val BATCH_SIZE = 100_000
+private const val BATCH_SIZE = 128 * 1024
 
 @DelicateCoroutinesApi
-private val insertThreadPool = newFixedThreadPoolContext(10, "database-inserter")
+private val insertThreadPool = newFixedThreadPoolContext(16, "database-inserter")
 
 @DelicateCoroutinesApi
 open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<POKO>) {
     private val tableName = determineTableName()
-    private val insertSql = buildInsertSql()
+    private val copyFromSql = buildCopyFromSql()
     private val log = KotlinLogging.logger {}
 
     fun importEntities(entities: Collection<POKO>) {
+
         log.info { "importEntities($tableName, ${entities.size} entities)" }
         try {
-            if (entities.size < BATCH_SIZE) {
-                executeInsert(entities)
-            } else {
-                insertChunked(entities)
+            val chunks = entities.chunked(BATCH_SIZE)
+            runBlocking {
+                chunks.forEach { chunk ->
+                    launch(insertThreadPool) {
+                        copyIntoTable(chunk)
+                    }
+                }
             }
         } catch (e: SQLException) {
             log.error("importEntities($tableName, ${entities.size} entities) error during batch insert", e)
@@ -45,48 +42,21 @@ open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<P
         log.info { "importEntities($tableName, ${entities.size} entities) finished" }
     }
 
-    private fun insertChunked(entities: Collection<POKO>) {
-        val chunks = entities.chunked(BATCH_SIZE)
-        runBlocking {
-            chunks.forEach { chunk ->
-                launch(insertThreadPool) {
-                    executeInsert(chunk)
-                }
-            }
-        }
-    }
-
-    private fun executeInsert(entities: Collection<POKO>) {
+    private fun copyIntoTable(entities: Collection<POKO>) {
         WeatherDb.dataSource.connection.use { connection ->
-            connection.prepareStatement(insertSql).use { statement ->
-                createInsertBatch(entities, statement)
-                try {
-                    val affectedRows = statement.executeBatch()
-                    log.info { "Batch executed, ${affectedRows.sum()} records affected" }
-                } catch (e: SQLException) {
-                    log.error("importEntities($tableName, ${entities.size} entities) error during batch insert", e)
-                    throw e
-                }
-            }
-        }
-    }
+            val pgConnection = connection.unwrap(BaseConnection::class.java)
+            val copyManager = CopyManager(pgConnection)
 
-    private fun createInsertBatch(entities: Collection<POKO>, statement: PreparedStatement) {
-        log.info { "createInsertBatch(${entities.size})" }
-        for (entity in entities) {
-            var parameterIndex = 1
-            for (property in tableMapping.keys) {
-                when (val value = property.get(entity)) {
-                    is BigDecimal -> statement.setBigDecimal(parameterIndex, value)
-                    is DateTime -> statement.setTimestamp(parameterIndex, Timestamp(value.millis))
-                    is String -> statement.setString(parameterIndex, value)
-                    else -> statement.setObject(parameterIndex, value)
+            var csv: String
+            val timeCreatingStrings = measureTimeMillis {
+                csv = entities.joinToString("\n") { entity ->
+                    tableMapping.keys.map { it.get(entity) ?: "\\N" }.joinToString("|")
                 }
-                parameterIndex++
             }
-            statement.addBatch()
+            log.info { "Creating the CSV for ${entities.size} rows took $timeCreatingStrings millis" }
+            val timeCopying = measureTimeMillis { copyManager.copyIn(copyFromSql, StringInputStream(csv)) }
+            log.info { "Copying ${entities.size} records took $timeCopying millis" }
         }
-        log.info { "createInsertBatch(${entities.size}) finished" }
     }
 
     private fun determineTableName(): String {
@@ -97,12 +67,9 @@ open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<P
         return distinctTables[0].tableName
     }
 
-    private fun buildInsertSql(): String {
+    private fun buildCopyFromSql(): String {
         val databaseColumnNames = tableMapping.values.joinToString(", ") { it.name }
-        val parameterQuestionMarks = tableMapping.values.joinToString(", ") { "?" }
-        return ("INSERT INTO " + tableName + " (" + databaseColumnNames + " ) "
-                + "VALUES (" + parameterQuestionMarks + ") "
-                /*+ "ON CONFLICT DO NOTHING"*/)
+        return "COPY $tableName ($databaseColumnNames) FROM STDIN WITH DELIMITER '|'"
     }
 }
 
