@@ -28,14 +28,14 @@ object WeatherDb {
         properties.load(javaClass.getResourceAsStream("/application.properties"))
 
         val config = HikariConfig()
-        config.jdbcUrl = properties.getProperty("config.jdbcUrl")
-        config.username = properties.getProperty("config.username")
-        config.password = properties.getProperty("config.password")
-        config.driverClassName = properties.getProperty("config.driverClassName")
+        config.jdbcUrl = properties.getProperty("jdbc.url")
+        config.username = properties.getProperty("jdbc.username")
+        config.password = properties.getProperty("jdbc.password")
+        config.driverClassName = properties.getProperty("jdbc.driverClassName")
         config.dataSourceProperties = Properties()
         config.dataSourceProperties["reWriteBatchedInserts"] = "true"
-        config.minimumIdle = 10
-        config.maximumPoolSize = 20
+        config.minimumIdle = properties.getProperty("jdbc.minimumIdlePoolSize", "10").toInt()
+        config.maximumPoolSize = properties.getProperty("jdbc.maximumPoolSize", "30").toInt()
 //        config.dataSourceProperties["loggerLevel"] = "TRACE"
         return HikariDataSource(config)
     }
