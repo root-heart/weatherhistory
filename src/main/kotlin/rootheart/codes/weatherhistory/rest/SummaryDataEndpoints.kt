@@ -10,30 +10,32 @@ import rootheart.codes.weatherhistory.database.SummarizedMeasurementDao
 fun Routing.summaryDataEndpoints() = route("summary/{stationId}") {
     getYearlySummary()
     getMonthlySummary()
-//    getDailySummary()
+    getDailySummary()
 }
 
-fun Route.getYearlySummary() = get("{year}") {
-    val stationId = call.parameters["stationId"]!!
-    val station = StationDao.findStationByExternalId(stationId)
+fun Route.getYearlySummary() = get("{stationId}/{year}") {
+    val stationId = call.parameters["stationId"]!!.toLong()
+    val station = StationDao.findById(stationId)
     val year = call.parameters["year"]!!.toInt()
     val summarizedMeasurements = SummarizedMeasurementDao.findByStationIdAndYear(station!!.id!!, year)
     call.respond(summarizedMeasurements)
 }
 
-fun Route.getMonthlySummary() = get("{year}/{month}") {
-    val stationId = call.parameters["stationId"]!!
-    val station = StationDao.findStationByExternalId(stationId)
+fun Route.getMonthlySummary() = get("{stationId}/{year}/{month}") {
+    val stationId = call.parameters["stationId"]!!.toLong()
+    val station = StationDao.findById(stationId)
     val year = call.parameters["year"]!!.toInt()
     val month = call.parameters["month"]!!.toInt()
     val summarizedMeasurements = SummarizedMeasurementDao.findByStationIdAndYearAndMonth(station!!.id!!, year, month)
     call.respond(summarizedMeasurements)
 }
 
-//fun Route.getDailySummary() = get("{year}") {
-//    val stationId = call.parameters["stationId"]!!.toInt()
-//    val year = call.parameters["year"]!!.toInt()
-//    val summarizedMeasurements = SummarizedMeasurementDao.findByStationIdAndYear(stationId, year)
-//    call.respond(summarizedMeasurements)
-//}
+fun Route.getDailySummary() = get("{stationId}/{year}/{month}/{day}") {
+    val stationId = call.parameters["stationId"]!!.toLong()
+    val year = call.parameters["year"]!!.toInt()
+    val month = call.parameters["month"]!!.toInt()
+    val day = call.parameters["day"]!!.toInt()
+    val summarizedMeasurements = SummarizedMeasurementDao.findByStationIdAndDate(stationId, year, month, day)
+    call.respond(summarizedMeasurements)
+}
 

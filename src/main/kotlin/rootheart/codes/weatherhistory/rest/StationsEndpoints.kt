@@ -8,17 +8,17 @@ import rootheart.codes.weatherhistory.database.StationDao
 
 fun Routing.stationsEndpoints() = route("stations") {
     getAllStations()
-//    getStationByStationId()
+    getStationByStationId()
 }
 
 fun Route.getAllStations() = get {
     call.respond(StationDao.findAll())
 }
 
-//fun Route.getStationByStationId() = get("{stationId}") {
-//    val stationId = call.parameters["stationId"]!!.toInt()
-//    StationDao.findStationByStationId(stationId)
-//        ?.let { call.respond(it) }
-//        ?: call.respond(HttpStatusCode.NotFound, "Not Found")
-//}
-//
+fun Route.getStationByStationId() = get("{stationId}") {
+    val stationId = call.parameters["stationId"]!!
+    StationDao.findStationByExternalId(stationId)
+        ?.let { call.respond(it) }
+        ?: call.respond(HttpStatusCode.NotFound, "Not Found")
+}
+

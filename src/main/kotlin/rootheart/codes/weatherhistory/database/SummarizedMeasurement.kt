@@ -8,7 +8,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalDate
-import rootheart.codes.weatherhistory.model.StationId
 import java.math.BigDecimal
 import kotlin.reflect.KMutableProperty1
 
@@ -124,12 +123,19 @@ object SummarizedMeasurementDao {
             return@transaction selectAll(stationId, start, end, DateIntervalType.DAY)
         }
 
-    private fun selectAll(stationId: Long, start: DateTime, end: DateTime, intervalType: DateIntervalType) =
+    fun findByStationIdAndDate(stationId: Long, year: Int, month: Int, day: Int): List<SummarizedMeasurement> =
+        transaction {
+            val start = DateTime(year, month, day, 0, 0)
+            val end = start.plusDays(1)
+            return@transaction selectAll(stationId, start, end, DateIntervalType.DAY)
+        }
+
+    private fun selectAll(stationId: Long, startInclusive: DateTime, endExclusive: DateTime, intervalType: DateIntervalType) =
         SummarizedMeasurementsTable.select {
             SummarizedMeasurementsTable.stationId.eq(stationId)
                 .and(SummarizedMeasurementsTable.intervalType eq intervalType.name)
-                .and(SummarizedMeasurementsTable.firstDay greaterEq start)
-                .and(SummarizedMeasurementsTable.lastDay less end)
+                .and(SummarizedMeasurementsTable.firstDay greaterEq startInclusive)
+                .and(SummarizedMeasurementsTable.lastDay less endExclusive)
         }.map(::toSummarizedMeasurement)
 
     private fun toSummarizedMeasurement(row: ResultRow): SummarizedMeasurement {
