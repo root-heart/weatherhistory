@@ -12,7 +12,7 @@ import java.math.BigDecimal
 import kotlin.reflect.KMutableProperty1
 
 object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
-    val stationId = reference("STATION_ID", StationsTable.id).index("FK_IDX_MEASUREMENT_STATION")
+    val stationId = reference("STATION_ID", StationsTable).index("FK_IDX_MEASUREMENT_STATION")
     val firstDay = date("FIRST_DAY")
     val lastDay = date("LAST_DAY")
     val intervalType = varchar("INTERVAL_TYPE", 6)
@@ -144,14 +144,16 @@ object SummarizedMeasurementDao {
         return summarizedMeasurement
     }
 
-    private fun createSummarizedMeasurement(row: ResultRow) = SummarizedMeasurement(
-        station = StationDao.findById(row[SummarizedMeasurementsTable.stationId].value)!!,
-        interval = DateInterval(
+    private fun createSummarizedMeasurement(row: ResultRow): SummarizedMeasurement {
+        val stationId = row[SummarizedMeasurementsTable.stationId].value
+        val station = StationDao.findById(stationId)!!
+        val interval = DateInterval(
             row[SummarizedMeasurementsTable.firstDay],
             row[SummarizedMeasurementsTable.lastDay],
             DateIntervalType.valueOf(row[SummarizedMeasurementsTable.intervalType])
         )
-    )
+        return SummarizedMeasurement(station, interval)
+    }
 
     private fun setValuesFromResultRow(row: ResultRow, summarizedMeasurement: SummarizedMeasurement) {
         for (mapping in SummarizedMeasurementTableMapping.mappings) {
