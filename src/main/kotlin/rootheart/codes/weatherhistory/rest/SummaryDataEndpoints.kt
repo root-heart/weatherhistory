@@ -13,7 +13,7 @@ fun Routing.summaryDataEndpoints() = route("summary/{stationId}") {
     getDailySummary()
 }
 
-fun Route.getYearlySummary() = get("{stationId}/{year}") {
+fun Route.getYearlySummary() = get("{year}") {
     val stationId = call.parameters["stationId"]!!.toLong()
     val station = StationDao.findById(stationId)
     val year = call.parameters["year"]!!.toInt()
@@ -21,7 +21,7 @@ fun Route.getYearlySummary() = get("{stationId}/{year}") {
     call.respond(summarizedMeasurements)
 }
 
-fun Route.getMonthlySummary() = get("{stationId}/{year}/{month}") {
+fun Route.getMonthlySummary() = get("{year}/{month}") {
     val stationId = call.parameters["stationId"]!!.toLong()
     val station = StationDao.findById(stationId)
     val year = call.parameters["year"]!!.toInt()
@@ -30,7 +30,7 @@ fun Route.getMonthlySummary() = get("{stationId}/{year}/{month}") {
     call.respond(summarizedMeasurements)
 }
 
-fun Route.getDailySummary() = get("{stationId}/{year}/{month}/{day}") {
+fun Route.getDailySummary() = get("{year}/{month}/{day}") {
     val stationId = call.parameters["stationId"]!!.toLong()
     val year = call.parameters["year"]!!.toInt()
     val month = call.parameters["month"]!!.toInt()
