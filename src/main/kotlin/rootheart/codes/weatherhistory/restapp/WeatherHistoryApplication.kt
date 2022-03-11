@@ -1,4 +1,4 @@
-package rootheart.codes.weatherhistory.rest
+package rootheart.codes.weatherhistory.restapp
 
 import io.ktor.application.*
 import io.ktor.features.*

@@ -1,7 +1,6 @@
-package rootheart.codes.weatherhistory.rest
+package rootheart.codes.weatherhistory.restapp
 
 import io.ktor.application.*
-import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import rootheart.codes.weatherhistory.database.StationDao

@@ -8,7 +8,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalDate
-import rootheart.codes.weatherhistory.model.StationId
 import java.math.BigDecimal
 import kotlin.reflect.KMutableProperty1
 
