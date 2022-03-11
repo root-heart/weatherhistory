@@ -9,7 +9,6 @@ import rootheart.codes.weatherhistory.importer.converter.BigDecimalProperty
 import rootheart.codes.weatherhistory.importer.converter.IntProperty
 import rootheart.codes.weatherhistory.model.MeasurementType
 import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
-import rootheart.codes.weatherhistory.model.StationId
 import spock.genesis.Gen
 import spock.lang.Specification
 
@@ -64,10 +63,10 @@ class DataFileForStationImporterSpec extends Specification implements SpecUtils 
         def mockServer = new MockServerClient("127.0.0.1", randomPort)
 
         and: "Some randomized test data"
-        def stationId = StationId.of(randomInt(1, 99999))
+        def externalId = randomInt(1, 99999)
         def recordType = MeasurementType.AIR_TEMPERATURE
-        def fileName = generateDataFileName(stationId)
-        def file = new ZippedDataFile(fileName, stationId, recordType, false, new URL("http://localhost:$randomPort/$fileName"))
+        def fileName = generateDataFileName(externalId)
+        def file = new ZippedDataFile(fileName, externalId, recordType, false, new URL("http://localhost:$randomPort/$fileName"))
         def measurementStrings = [
                 ['MESS_DATUM': '1990010101', 'TT_TU': '12.3', 'RF_TU': '23.4'],
                 ['MESS_DATUM': '1990010102', 'TT_TU': '12.3', 'RF_TU': '23.4'],
@@ -98,8 +97,8 @@ class DataFileForStationImporterSpec extends Specification implements SpecUtils 
         records.findAll { it['INTERVAL_TYPE'] == 'DECADE' }.size() == 2
     }
 
-    private static String generateDataFileName(StationId stationId) {
-        def stationIdString = String.format("%05d", stationId.stationId)
+    private static String generateDataFileName(int stationId) {
+        def stationIdString = String.format("%05d", stationId)
         def dataFilenamePattern = Pattern.compile("(stunden|tages)werte_([A-Z]{2})_${stationIdString}_\\w{5}(akt|hist)\\.zip")
         Gen.string(dataFilenamePattern).first()
     }
