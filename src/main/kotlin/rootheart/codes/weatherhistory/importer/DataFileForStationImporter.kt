@@ -11,13 +11,14 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import rootheart.codes.weatherhistory.database.DateInterval
+import rootheart.codes.weatherhistory.summary.DateInterval
 import rootheart.codes.weatherhistory.database.HourlyMeasurement
 import rootheart.codes.weatherhistory.database.Station
-import rootheart.codes.weatherhistory.database.SummarizedMeasurement
+import rootheart.codes.weatherhistory.summary.SummarizedMeasurement
 import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
 import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValues
 import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValuesParser
+import rootheart.codes.weatherhistory.summary.SummarizedMeasurementsTable
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.math.BigDecimal
@@ -44,7 +45,7 @@ object DataFileForStationImporter {
         downloaded: Channel<Pair<ZippedDataFile, ByteArray>>
     ) = scope.launch(CoroutineName("process-zipped-data-file")) {
         val measurements = convertToHourlyMeasurements(downloaded, station)
-        HourlyMeasurementsImporter.importEntities(measurements)
+//        HourlyMeasurementsImporter.importEntities(measurements)
 
         val groupedByDay = measurements.groupBy { DateInterval.day(it.measurementTime) }
         val summarizedByDay = groupedByDay.map { (day, measurements) ->
@@ -135,7 +136,9 @@ object DataFileForStationImporter {
     }
 
     private fun convert(
-        station: Station, zippedDataFile: ZippedDataFile, semicolonSeparatedValues: SemicolonSeparatedValues,
+        station: Station,
+        zippedDataFile: ZippedDataFile,
+        semicolonSeparatedValues: SemicolonSeparatedValues,
         measurementByTime: MutableMap<DateTime, HourlyMeasurement>
     ) {
         log.info { "Station ${station.id} - Converting ${zippedDataFile.url}" }
@@ -182,14 +185,25 @@ object Summarizer {
         countCloudCoverage8 = measurements.sumOf { it.countCloudCoverage8 },
         countCloudCoverageNotVisible = measurements.sumOf { it.countCloudCoverageNotVisible },
         countCloudCoverageNotMeasured = measurements.sumOf { it.countCloudCoverageNotMeasured },
+
         minDewPointTemperatureCentigrade = measurements.minDecimal { it.minDewPointTemperatureCentigrade },
         avgDewPointTemperatureCentigrade = measurements.avgDecimal { it.avgDewPointTemperatureCentigrade },
         maxDewPointTemperatureCentigrade = measurements.maxDecimal { it.maxDewPointTemperatureCentigrade },
+
         minAirTemperatureCentigrade = measurements.minDecimal { it.minAirTemperatureCentigrade },
         avgAirTemperatureCentigrade = measurements.avgDecimal { it.avgAirTemperatureCentigrade },
         maxAirTemperatureCentigrade = measurements.maxDecimal { it.maxAirTemperatureCentigrade },
-        sumSunshineDurationHours = measurements.sumDecimal { it.sumSunshineDurationHours }
-            ?.divide(SIXTY, RoundingMode.HALF_UP),
+
+        minHumidityPercent = measurements.minDecimal { it.minHumidityPercent },
+        avgHumidityPercent = measurements.avgDecimal { it.avgHumidityPercent },
+        maxHumidityPercent = measurements.maxDecimal { it.maxHumidityPercent },
+
+        minAirPressureHectopascals = measurements.minDecimal { it.minAirPressureHectopascals },
+        avgAirPressureHectopascals = measurements.avgDecimal { it.avgAirPressureHectopascals },
+        maxAirPressureHectopascals = measurements.maxDecimal { it.maxAirPressureHectopascals },
+
+        sumSunshineDurationHours = measurements.sumDecimal { it.sumSunshineDurationHours },
+
         details = ""
     )
 
@@ -207,12 +221,23 @@ object Summarizer {
             countCloudCoverage8 = measurements.count { it.cloudCoverage == 8 },
             countCloudCoverageNotVisible = measurements.count { it.cloudCoverage == -1 },
             countCloudCoverageNotMeasured = measurements.count { it.cloudCoverage == null },
+
             minDewPointTemperatureCentigrade = measurements.minDecimal { it.dewPointTemperatureCentigrade },
             avgDewPointTemperatureCentigrade = measurements.avgDecimal { it.dewPointTemperatureCentigrade },
             maxDewPointTemperatureCentigrade = measurements.maxDecimal { it.dewPointTemperatureCentigrade },
+
             minAirTemperatureCentigrade = measurements.minDecimal { it.airTemperatureAtTwoMetersHeightCentigrade },
             avgAirTemperatureCentigrade = measurements.avgDecimal { it.airTemperatureAtTwoMetersHeightCentigrade },
             maxAirTemperatureCentigrade = measurements.maxDecimal { it.airTemperatureAtTwoMetersHeightCentigrade },
+
+            minHumidityPercent = measurements.minDecimal { it.relativeHumidityPercent },
+            avgHumidityPercent = measurements.avgDecimal { it.relativeHumidityPercent },
+            maxHumidityPercent = measurements.maxDecimal { it.relativeHumidityPercent },
+
+            minAirPressureHectopascals = measurements.minDecimal { it.airPressureHectopascals },
+            avgAirPressureHectopascals = measurements.avgDecimal { it.airPressureHectopascals },
+            maxAirPressureHectopascals = measurements.maxDecimal { it.airPressureHectopascals },
+
             sumSunshineDurationHours = measurements.sumDecimal { it.sunshineDurationMinutes }
                 ?.divide(SIXTY, RoundingMode.HALF_UP)
         )
