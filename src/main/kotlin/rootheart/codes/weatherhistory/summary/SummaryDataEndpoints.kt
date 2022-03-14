@@ -1,10 +1,9 @@
-package rootheart.codes.weatherhistory.restapp
+package rootheart.codes.weatherhistory.summary
 
 import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import rootheart.codes.weatherhistory.database.StationDao
-import rootheart.codes.weatherhistory.database.SummarizedMeasurementDao
 
 
 fun Routing.summaryDataEndpoints() = route("summary/{stationId}") {
@@ -14,10 +13,10 @@ fun Routing.summaryDataEndpoints() = route("summary/{stationId}") {
 }
 
 fun Route.getYearlySummary() = get("{year}") {
-    val stationId = call.parameters["stationId"]!!
-    val station = StationDao.findStationByExternalId(stationId)
+    val stationId = call.parameters["stationId"]!!.toLong()
+    val station = StationDao.findById(stationId)
     val year = call.parameters["year"]!!.toInt()
-    val summarizedMeasurements = SummarizedMeasurementDao.findByStationIdAndYear(station!!.id!!, year)
+    val summarizedMeasurements = SummarizedMeasurementDao.findByStationIdAndYear(station!!.id!!, year).map { it.toJson() }
     call.respond(summarizedMeasurements)
 }
 
