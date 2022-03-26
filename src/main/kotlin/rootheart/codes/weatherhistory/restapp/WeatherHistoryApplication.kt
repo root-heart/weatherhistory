@@ -8,6 +8,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import org.jetbrains.exposed.sql.Database
 import rootheart.codes.weatherhistory.database.WeatherDb
+import rootheart.codes.weatherhistory.summary.summaryDataEndpoints
 
 
 fun main() {
