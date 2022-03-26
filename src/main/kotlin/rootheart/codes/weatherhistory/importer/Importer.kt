@@ -36,39 +36,12 @@ fun main(args: Array<String>) {
     val baseUrl = URL(baseUrlString)
     val rootDirectory = HtmlDirectoryParser.parseHtml(baseUrl)
 
-    importStations(rootDirectory)
     Database.connect(WeatherDb.dataSource)
 
-    val stationByExternalId = StationDao.findAll().associateBy(Station::externalId)
-    val zippedDataFilesByExternalId = rootDirectory
-        .getAllZippedDataFiles()
-        .groupBy { it.externalId }
-        .mapKeys { stationByExternalId[it.key]!! }
+    importStations(rootDirectory)
+    importMeasurements(rootDirectory)
 
-    val duration = measureTimeMillis {
-        runBlocking(Dispatchers.Default) {
-            zippedDataFilesByExternalId.forEach { (station, zippedDataFiles) ->
-                DataFileForStationImporter.import(this, station, zippedDataFiles)
-            }
-        }
-    }
-    log.info { "Finished import in $duration milliseconds, exiting program" }
     exitProcess(0)
-}
-
-@DelicateCoroutinesApi
-class SingleThreadedDownloader {
-    private val singleThreadedContext = newSingleThreadContext("download")
-    suspend fun download(url: URL): ByteArray {
-        var content: ByteArray? = null
-        coroutineScope {
-            val job = launch(singleThreadedContext) {
-                content = url.readBytes()
-            }
-            job.join()
-        }
-        return content!!
-    }
 }
 
 @DelicateCoroutinesApi
@@ -92,6 +65,26 @@ private fun importStations(rootDirectory: HtmlDirectory) {
     }
 
     StationsImporter.importEntities(stations.values)
+}
+
+@DelicateCoroutinesApi
+private fun importMeasurements(rootDirectory: HtmlDirectory) {
+    val stationIds = setOf("00848", "13776", "01993", "04371", "00662", "02014", "00850", "00691", "01443")
+    val stationByExternalId = StationDao.findAll().associateBy(Station::externalId)
+    val zippedDataFilesByExternalId = rootDirectory
+        .getAllZippedDataFiles()
+        .groupBy { it.externalId }
+        .filter { stationIds.contains(it.key) }
+        .mapKeys { stationByExternalId[it.key]!! }
+
+    val duration = measureTimeMillis {
+        runBlocking(Dispatchers.Default) {
+            zippedDataFilesByExternalId.forEach { (station, zippedDataFiles) ->
+                DataFileForStationImporter.import(this, station, zippedDataFiles)
+            }
+        }
+    }
+    log.info { "Finished import in $duration milliseconds, exiting program" }
 }
 
 private fun createStation(line: String) = Station(
