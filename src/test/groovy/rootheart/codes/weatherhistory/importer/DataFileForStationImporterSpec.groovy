@@ -82,7 +82,7 @@ class DataFileForStationImporterSpec extends Specification implements SpecUtils 
                 .respond(respond(200, getZippedDataFileBytes(file, measurementStrings)))
 
         when:
-        DataFileForStationImporter.INSTANCE.import([file])
+        DataFileForStationImporter.INSTANCE.importDataFilesForStation([file])
 
         then: "The downloaded data equals the data specified before"
         noExceptionThrown()
