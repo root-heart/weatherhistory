@@ -9,30 +9,36 @@ import rootheart.codes.weatherhistory.database.StationDao
 fun Routing.summaryDataEndpoints() = route("summary/{stationId}") {
     getYearlySummary()
     getMonthlySummary()
-//    getDailySummary()
+    getDailySummary()
 }
 
 fun Route.getYearlySummary() = get("{year}") {
-    val stationId = call.parameters["stationId"]!!.toLong()
-    val station = StationDao.findById(stationId)
+    val stationId = call.parameters["stationId"]!!
     val year = call.parameters["year"]!!.toInt()
-    val summarizedMeasurements = SummarizedMeasurementDao.findByStationIdAndYear(station!!.id!!, year).map { it.toJson() }
-    call.respond(summarizedMeasurements)
+    StationDao.findById(stationId.toLong())
+        ?.let { station -> SummarizedMeasurementDao.findByStationIdAndYear(station.id!!, year) }
+        ?.let { summarizedMeasurements -> summarizedMeasurements.map { it.toJson() } }
+        ?.let { json -> call.respond(json) }
 }
 
 fun Route.getMonthlySummary() = get("{year}/{month}") {
     val stationId = call.parameters["stationId"]!!
-    val station = StationDao.findStationByExternalId(stationId)
     val year = call.parameters["year"]!!.toInt()
     val month = call.parameters["month"]!!.toInt()
-    val summarizedMeasurements = SummarizedMeasurementDao.findByStationIdAndYearAndMonth(station!!.id!!, year, month)
-    call.respond(summarizedMeasurements)
+    StationDao.findById(stationId.toLong())
+        ?.let { station -> SummarizedMeasurementDao.findByStationIdAndYearAndMonth(station.id!!, year, month) }
+        ?.let { summarizedMeasurements -> summarizedMeasurements.map { it.toJson() } }
+        ?.let { json -> call.respond(json) }
 }
 
-//fun Route.getDailySummary() = get("{year}") {
+fun Route.getDailySummary() = get("{year}/{month}/{day}") {
+    call.respond("not working yet!")
 //    val stationId = call.parameters["stationId"]!!.toInt()
 //    val year = call.parameters["year"]!!.toInt()
-//    val summarizedMeasurements = SummarizedMeasurementDao.findByStationIdAndYear(stationId, year)
-//    call.respond(summarizedMeasurements)
-//}
-
+//    val month = call.parameters["month"]!!.toInt()
+//    val day = call.parameters["day"]!!.toInt()
+//    StationDao.findById(stationId.toLong())
+//        ?.let { station -> SummarizedMeasurementDao.findByStationIdAndYearAndMonth(station.id!!, year, month, day) }
+//        ?.let { summarizedMeasurements -> summarizedMeasurements.map { it.toJson() } }
+//        ?.let { json -> call.respond(json) }
+}
