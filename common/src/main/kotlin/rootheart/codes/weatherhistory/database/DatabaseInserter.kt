@@ -5,7 +5,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import org.apache.tools.ant.filters.StringInputStream
+//import org.apache.tools.ant.filters.StringInputStream
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
 import rootheart.codes.weatherhistory.database.*
@@ -56,7 +56,7 @@ open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<P
                 }
             }
             log.info { "Creating the CSV for ${entities.size} rows took $timeCreatingStrings millis" }
-            val timeCopying = measureTimeMillis { copyManager.copyIn(copyFromSql, StringInputStream(csv)) }
+            val timeCopying = measureTimeMillis { copyManager.copyIn(copyFromSql, csv.byteInputStream()) }
             log.info { "Copying ${entities.size} records took $timeCopying millis" }
         }
     }

@@ -4,7 +4,6 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import org.jetbrains.exposed.sql.Database
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationDao
 import rootheart.codes.weatherhistory.database.WeatherDb
@@ -29,7 +28,7 @@ fun main(args: Array<String>) {
     val baseUrl = URL(baseUrlString)
     val rootDirectory = HtmlDirectoryParser.parseHtml(baseUrl)
 
-    Database.connect(WeatherDb.dataSource)
+    WeatherDb.connect()
 
     importStations(rootDirectory)
     importMeasurements(rootDirectory)

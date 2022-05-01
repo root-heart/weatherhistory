@@ -24,6 +24,10 @@ abstract class TableMapping<POKO>(vararg val mappings: Pair<KProperty1<POKO, Any
 object WeatherDb {
     val dataSource: DataSource = createDataSource()
 
+    fun connect() {
+        Database.connect(dataSource)
+    }
+
     private fun createDataSource(): DataSource {
         val properties = Properties()
         properties.load(javaClass.getResourceAsStream("/application.properties"))
