@@ -11,7 +11,6 @@ import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
 import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValues
 import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValuesParser
 import rootheart.codes.weatherhistory.summary.DateInterval
-import rootheart.codes.weatherhistory.summary.SummarizedMeasurement
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.math.BigDecimal
@@ -20,25 +19,22 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.ZipInputStream
 
 
+private val log = KotlinLogging.logger {}
+
 @DelicateCoroutinesApi
-object DataFileForStationImporter {
-    private val log = KotlinLogging.logger {}
+fun CoroutineScope.importDataFilesForStation(station: Station, zippedDataFiles: List<ZippedDataFile>) {
+    log.info { "import(${station.id}, ${zippedDataFiles.size} zipped data files)" }
+    val downloaded = Channel<Pair<ZippedDataFile, ByteArray>>(zippedDataFiles.size)
+    launchUnzipper(station, downloaded)
+    launchDownloader(zippedDataFiles, station, downloaded)
+    log.info { "Station ${station.id} - Downloaded from ${zippedDataFiles.size} files" }
+}
 
-    suspend fun import(scope: CoroutineScope, station: Station, zippedDataFiles: List<ZippedDataFile>) {
-        log.info { "import(${station.id}, ${zippedDataFiles.size} zipped data files)" }
-        val downloaded = Channel<Pair<ZippedDataFile, ByteArray>>(zippedDataFiles.size)
-        launchUnzipper(scope, station, downloaded)
-        download(zippedDataFiles, station, downloaded)
-        log.info { "Station ${station.id} - Downloaded from ${zippedDataFiles.size} files" }
-    }
-
-    private fun launchUnzipper(
-        scope: CoroutineScope,
-        station: Station,
-        downloaded: Channel<Pair<ZippedDataFile, ByteArray>>
-    ) = scope.launch(CoroutineName("process-zipped-data-file")) {
+@DelicateCoroutinesApi
+private fun CoroutineScope.launchUnzipper(station: Station, downloaded: Channel<Pair<ZippedDataFile, ByteArray>>) =
+    launch(CoroutineName("process-zipped-data-file")) {
         val measurements = convertToHourlyMeasurements(downloaded, station)
-//        HourlyMeasurementsImporter.importEntities(measurements)
+        HourlyMeasurementsImporter.importEntities(measurements)
 
         val groupedByDay = measurements.groupBy { DateInterval.day(it.measurementTime) }
         val summarizedByDay = groupedByDay.map { (day, measurements) ->
@@ -67,96 +63,92 @@ object DataFileForStationImporter {
         log.info { "Station ${station.id} - Converted: ${measurements.size}" }
     }
 
-    private suspend fun download(
-        zippedDataFiles: Collection<ZippedDataFile>,
-        station: Station,
-        downloaded: Channel<Pair<ZippedDataFile, ByteArray>>
-    ) {
-        zippedDataFiles.forEach { zippedDataFile ->
-            log.info { "Station ${station.id} - Downloading from ${zippedDataFile.url}" }
-            val content = zippedDataFile.url.readBytes()
-            log.info { "Station ${station.id} - Downloaded from ${zippedDataFile.url}, ${content.size} bytes" }
-            downloaded.send(Pair(zippedDataFile, content))
-        }
-        downloaded.close()
+private fun CoroutineScope.launchDownloader(
+    zippedDataFiles: Collection<ZippedDataFile>,
+    station: Station,
+    downloaded: Channel<Pair<ZippedDataFile, ByteArray>>
+) = launch(CoroutineName("download-zipped-data-file")) {
+    zippedDataFiles.forEach { zippedDataFile ->
+        log.info { "Station ${station.id} - Downloading from ${zippedDataFile.url}" }
+        val content = zippedDataFile.url.readBytes()
+        log.info { "Station ${station.id} - Downloaded from ${zippedDataFile.url}, ${content.size} bytes" }
+        downloaded.send(Pair(zippedDataFile, content))
     }
-
-    private suspend fun convertToHourlyMeasurements(
-        downloaded: Channel<Pair<ZippedDataFile, ByteArray>>,
-        station: Station
-    ): Collection<HourlyMeasurement> {
-        val measurementByTime = ConcurrentHashMap<DateTime, HourlyMeasurement>()
-        coroutineScope {
-            for (x in downloaded) {
-                launch(CoroutineName("convert-zipped-data-file")) {
-                    currentCoroutineContext().job
-                    val zippedDataFile = x.first
-                    val content = x.second
-                    val unzippedContent = unzip(station, zippedDataFile, content)
-                    val semicolonSeparatedValues = parse(station, zippedDataFile, unzippedContent)
-                    convert(station, zippedDataFile, semicolonSeparatedValues, measurementByTime)
-                }
-            }
-        }
-        return measurementByTime.values
-    }
-
-    private fun unzip(station: Station, zippedDataFile: ZippedDataFile, zippedBytes: ByteArray): ByteArray? {
-        log.info { "Station ${station.id} - Unzipping ${zippedDataFile.url}" }
-        val unzippedContent = ZipInputStream(ByteArrayInputStream(zippedBytes))
-            .use { zipInputStream ->
-                val entries = generateSequence { zipInputStream.nextEntry }
-                if (entries.any { fileIsMeasurementFile(it.name) }) {
-                    return@use zipInputStream.readBytes()
-                } else {
-                    return@use null
-                }
-            }
-        log.info { "Station ${station.id} - Unzipped ${zippedDataFile.url}, ${unzippedContent!!.size} bytes" }
-        return unzippedContent
-    }
-
-    private fun parse(
-        station: Station,
-        zippedDataFile: ZippedDataFile,
-        unzippedContent: ByteArray?
-    ): SemicolonSeparatedValues {
-        log.info { "Station ${station.id} - Parsing ${zippedDataFile.url}" }
-        val inputStream = unzippedContent?.let(::ByteArrayInputStream) ?: InputStream.nullInputStream()
-        val semicolonSeparatedValues = inputStream.bufferedReader().use(SemicolonSeparatedValuesParser::parse)
-        log.info { "Station ${station.id} - Parsed ${zippedDataFile.url}, ${semicolonSeparatedValues.rows.size} rows" }
-        return semicolonSeparatedValues
-    }
-
-    private fun convert(
-        station: Station,
-        zippedDataFile: ZippedDataFile,
-        semicolonSeparatedValues: SemicolonSeparatedValues,
-        measurementByTime: MutableMap<DateTime, HourlyMeasurement>
-    ) {
-        log.info { "Station ${station.id} - Converting ${zippedDataFile.url}" }
-        val indexMeasurementTime = semicolonSeparatedValues.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
-        val columnMappingByIndex = zippedDataFile.measurementType.columnNameMapping.mapKeys {
-            semicolonSeparatedValues.columnNames.indexOf(it.key)
-        }
-        for (row in semicolonSeparatedValues.rows) {
-            val measurementTimeString = row[indexMeasurementTime]
-            val measurementTime = DATE_TIME_FORMATTER.parseDateTime(measurementTimeString)
-            val record = measurementByTime.getOrPut(measurementTime) {
-                HourlyMeasurement(station = station, measurementTime = measurementTime)
-            }
-            for (columnIndex in columnMappingByIndex) {
-                val stringValue = row[columnIndex.key]
-                if (stringValue != null) {
-                    columnIndex.value.setValue(record, stringValue)
-                }
-            }
-        }
-        log.info { "Station ${station.id} - Converted ${zippedDataFile.url}" }
-    }
-
-    private fun fileIsMeasurementFile(filename: String) = filename.startsWith("produkt_") && filename.endsWith(".txt")
+    downloaded.close()
 }
+
+private suspend fun convertToHourlyMeasurements(downloaded: Channel<Pair<ZippedDataFile, ByteArray>>, station: Station): Collection<HourlyMeasurement> {
+    val measurementByTime = ConcurrentHashMap<DateTime, HourlyMeasurement>()
+    coroutineScope {
+        for (x in downloaded) {
+            launch(CoroutineName("convert-zipped-data-file")) {
+                currentCoroutineContext().job
+                val zippedDataFile = x.first
+                val content = x.second
+                val unzippedContent = unzip(station, zippedDataFile, content)
+                val semicolonSeparatedValues = parse(station, zippedDataFile, unzippedContent)
+                convert(station, zippedDataFile, semicolonSeparatedValues, measurementByTime)
+            }
+        }
+    }
+    return measurementByTime.values
+}
+
+private fun unzip(station: Station, zippedDataFile: ZippedDataFile, zippedBytes: ByteArray): ByteArray? {
+    log.info { "Station ${station.id} - Unzipping ${zippedDataFile.url}" }
+    val unzippedContent = ZipInputStream(ByteArrayInputStream(zippedBytes))
+        .use { zipInputStream ->
+            val entries = generateSequence { zipInputStream.nextEntry }
+            if (entries.any { fileIsMeasurementFile(it.name) }) {
+                return@use zipInputStream.readBytes()
+            } else {
+                return@use null
+            }
+        }
+    log.info { "Station ${station.id} - Unzipped ${zippedDataFile.url}, ${unzippedContent!!.size} bytes" }
+    return unzippedContent
+}
+
+private fun parse(
+    station: Station,
+    zippedDataFile: ZippedDataFile,
+    unzippedContent: ByteArray?
+): SemicolonSeparatedValues {
+    log.info { "Station ${station.id} - Parsing ${zippedDataFile.url}" }
+    val inputStream = unzippedContent?.let(::ByteArrayInputStream) ?: InputStream.nullInputStream()
+    val semicolonSeparatedValues = inputStream.bufferedReader().use(SemicolonSeparatedValuesParser::parse)
+    log.info { "Station ${station.id} - Parsed ${zippedDataFile.url}, ${semicolonSeparatedValues.rows.size} rows" }
+    return semicolonSeparatedValues
+}
+
+private fun convert(
+    station: Station,
+    zippedDataFile: ZippedDataFile,
+    semicolonSeparatedValues: SemicolonSeparatedValues,
+    measurementByTime: MutableMap<DateTime, HourlyMeasurement>
+) {
+    log.info { "Station ${station.id} - Converting ${zippedDataFile.url}" }
+    val indexMeasurementTime = semicolonSeparatedValues.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
+    val columnMappingByIndex = zippedDataFile.measurementType.columnNameMapping.mapKeys {
+        semicolonSeparatedValues.columnNames.indexOf(it.key)
+    }
+    for (row in semicolonSeparatedValues.rows) {
+        val measurementTimeString = row[indexMeasurementTime]
+        val measurementTime = DATE_TIME_FORMATTER.parseDateTime(measurementTimeString)
+        val record = measurementByTime.getOrPut(measurementTime) {
+            HourlyMeasurement(station = station, measurementTime = measurementTime)
+        }
+        for (columnIndex in columnMappingByIndex) {
+            val stringValue = row[columnIndex.key]
+            if (stringValue != null) {
+                columnIndex.value.setValue(record, stringValue)
+            }
+        }
+    }
+    log.info { "Station ${station.id} - Converted ${zippedDataFile.url}" }
+}
+
+private fun fileIsMeasurementFile(filename: String) = filename.startsWith("produkt_") && filename.endsWith(".txt")
 
 inline fun <T> Iterable<T>.minDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
     val iterator = iterator()

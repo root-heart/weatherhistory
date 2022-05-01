@@ -2,10 +2,6 @@ package rootheart.codes.weatherhistory.importer
 
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.newFixedThreadPoolContext
-import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Database
@@ -21,9 +17,6 @@ import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
 private val log = KotlinLogging.logger {}
-
-@DelicateCoroutinesApi
-private val importThreadPool = newFixedThreadPoolContext(8, "importer")
 
 @DelicateCoroutinesApi
 fun main(args: Array<String>) {
@@ -69,18 +62,18 @@ private fun importStations(rootDirectory: HtmlDirectory) {
 
 @DelicateCoroutinesApi
 private fun importMeasurements(rootDirectory: HtmlDirectory) {
-    val stationIds = setOf("00848", "13776", "01993", "04371", "00662", "02014", "00850", "00691", "01443")
+//    val stationIds = setOf("00848", "13776", "01993", "04371", "00662", "02014", "00850", "00691", "01443")
     val stationByExternalId = StationDao.findAll().associateBy(Station::externalId)
     val zippedDataFilesByExternalId = rootDirectory
         .getAllZippedDataFiles()
         .groupBy { it.externalId }
-        .filter { stationIds.contains(it.key) }
+//        .filter { stationIds.contains(it.key) }
         .mapKeys { stationByExternalId[it.key]!! }
 
     val duration = measureTimeMillis {
         runBlocking(Dispatchers.Default) {
             zippedDataFilesByExternalId.forEach { (station, zippedDataFiles) ->
-                DataFileForStationImporter.import(this, station, zippedDataFiles)
+                importDataFilesForStation(station, zippedDataFiles)
             }
         }
     }
