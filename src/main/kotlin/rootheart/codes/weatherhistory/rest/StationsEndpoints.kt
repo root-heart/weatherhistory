@@ -17,7 +17,7 @@ fun Route.getAllStations() = get {
 
 fun Route.getStationByStationId() = get("{stationId}") {
     val stationId = call.parameters["stationId"]!!
-    StationDao.findStationByExternalId(stationId)
+    StationDao.findById(stationId.toLong())
         ?.let { call.respond(it) }
         ?: call.respond(HttpStatusCode.NotFound, "Not Found")
 }
