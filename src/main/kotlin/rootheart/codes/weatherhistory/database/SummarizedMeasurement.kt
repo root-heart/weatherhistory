@@ -110,43 +110,48 @@ class SummarizedMeasurement(
 }
 
 object SummarizedMeasurementDao {
-    fun findByStationIdAndYear(stationId: Long, year: Int): List<SummarizedMeasurement> = transaction {
+    fun findByStationIdAndYear(station: Station, year: Int): List<SummarizedMeasurement> = transaction {
         val start = DateTime(year, 1, 1, 0, 0)
-        val end = DateTime(year + 1, 1, 1, 0, 0)
-        return@transaction selectAll(stationId, start, end, DateIntervalType.MONTH)
+        val end = start.plusYears(1)
+        return@transaction selectAll(station, start, end, DateIntervalType.MONTH)
     }
 
-    fun findByStationIdAndYearAndMonth(stationId: Long, year: Int, month: Int): List<SummarizedMeasurement> =
+    fun findByStationIdAndYearAndMonth(station: Station, year: Int, month: Int): List<SummarizedMeasurement> =
         transaction {
             val start = DateTime(year, month, 1, 0, 0)
-            val end = DateTime(year, month + 1, 1, 0, 0)
-            return@transaction selectAll(stationId, start, end, DateIntervalType.DAY)
+            val end = start.plusMonths(1)
+            return@transaction selectAll(station, start, end, DateIntervalType.DAY)
         }
 
-    fun findByStationIdAndDate(stationId: Long, year: Int, month: Int, day: Int): List<SummarizedMeasurement> =
+    fun findByStationIdAndDate(station: Station, year: Int, month: Int, day: Int): List<SummarizedMeasurement> =
         transaction {
             val start = DateTime(year, month, day, 0, 0)
             val end = start.plusDays(1)
-            return@transaction selectAll(stationId, start, end, DateIntervalType.DAY)
+            return@transaction selectAll(station, start, end, DateIntervalType.DAY)
         }
 
-    private fun selectAll(stationId: Long, startInclusive: DateTime, endExclusive: DateTime, intervalType: DateIntervalType) =
-        SummarizedMeasurementsTable.select {
-            SummarizedMeasurementsTable.stationId.eq(stationId)
-                .and(SummarizedMeasurementsTable.intervalType eq intervalType.name)
-                .and(SummarizedMeasurementsTable.firstDay greaterEq startInclusive)
-                .and(SummarizedMeasurementsTable.lastDay less endExclusive)
-        }.map(::toSummarizedMeasurement)
+    private fun selectAll(
+        station: Station,
+        startInclusive: DateTime,
+        endExclusive: DateTime,
+        intervalType: DateIntervalType
+    ) =
+        SummarizedMeasurementsTable
+            .select {
+                SummarizedMeasurementsTable.stationId.eq(station.id!!)
+                    .and(SummarizedMeasurementsTable.intervalType eq intervalType.name)
+                    .and(SummarizedMeasurementsTable.firstDay greaterEq startInclusive)
+                    .and(SummarizedMeasurementsTable.lastDay less endExclusive)
+            }
+            .map { toSummarizedMeasurement(station, it) }
 
-    private fun toSummarizedMeasurement(row: ResultRow): SummarizedMeasurement {
-        val summarizedMeasurement = createSummarizedMeasurement(row)
+    private fun toSummarizedMeasurement(station: Station, row: ResultRow): SummarizedMeasurement {
+        val summarizedMeasurement = createSummarizedMeasurement(station, row)
         setValuesFromResultRow(row, summarizedMeasurement)
         return summarizedMeasurement
     }
 
-    private fun createSummarizedMeasurement(row: ResultRow): SummarizedMeasurement {
-        val stationId = row[SummarizedMeasurementsTable.stationId].value
-        val station = StationDao.findById(stationId)!!
+    private fun createSummarizedMeasurement(station: Station, row: ResultRow): SummarizedMeasurement {
         val interval = DateInterval(
             row[SummarizedMeasurementsTable.firstDay],
             row[SummarizedMeasurementsTable.lastDay],
