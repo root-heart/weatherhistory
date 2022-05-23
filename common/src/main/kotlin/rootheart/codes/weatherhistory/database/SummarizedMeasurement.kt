@@ -1,4 +1,4 @@
-package rootheart.codes.weatherhistory.database
+package rootheart.codes.weatherhistory.summary
 
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.ResultRow
@@ -10,6 +10,7 @@ import org.joda.time.DateTimeZone
 import org.joda.time.LocalDate
 import java.math.BigDecimal
 import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.full.memberProperties
 
 object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val stationId = reference("STATION_ID", StationsTable).index("FK_IDX_MEASUREMENT_STATION")
@@ -22,6 +23,12 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val minDewPointTemperatureCentigrade = decimal("MIN_DEW_POINT_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val avgDewPointTemperatureCentigrade = decimal("AVG_DEW_POINT_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val maxDewPointTemperatureCentigrade = decimal("MAX_DEW_POINT_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
+    val minHumidityPercent = decimal("MIN_HUMIDITY_PERCENT", 4, 1).nullable()
+    val avgHumidityPercent = decimal("AVG_HUMIDITY_PERCENT", 4, 1).nullable()
+    val maxHumidityPercent = decimal("MAX_HUMIDITY_PERCENT", 4, 1).nullable()
+    val minAirPressureHectopascals = decimal("MIN_AIR_PRESSURE_HECTOPASCALS", 5, 1).nullable()
+    val avgAirPressureHectopascals = decimal("AVG_AIR_PRESSURE_HECTOPASCALS", 5, 1).nullable()
+    val maxAirPressureHectopascals = decimal("MAX_AIR_PRESSURE_HECTOPASCALS", 5, 1).nullable()
     val countCloudCoverage0 = integer("COUNT_CLOUD_COVERAGE0").nullable()
     val countCloudCoverage1 = integer("COUNT_CLOUD_COVERAGE1").nullable()
     val countCloudCoverage2 = integer("COUNT_CLOUD_COVERAGE2").nullable()
@@ -38,7 +45,6 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val sumSnowfallMillimeters = decimal("SUM_SNOWFALL_MILLIMETERS", 6, 1).nullable()
     val maxWindSpeedMetersPerSecond = decimal("MAX_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
     val avgWindSpeedMetersPerSecond = decimal("AVG_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
-    val avgAirPressureHectopascals = decimal("AVG_AIR_PRESSURE_HECTOPASCALS", 4, 1).nullable()
 
     init {
         index(isUnique = true, stationId, firstDay, lastDay)
@@ -49,7 +55,8 @@ object SummarizedMeasurementTableMapping : TableMapping<SummarizedMeasurement>(
     SummarizedMeasurement::stationIdLong to SummarizedMeasurementsTable.stationId,
     SummarizedMeasurement::firstDay to SummarizedMeasurementsTable.firstDay,
     SummarizedMeasurement::lastDay to SummarizedMeasurementsTable.lastDay,
-    SummarizedMeasurement::intervalType to SummarizedMeasurementsTable.intervalType,
+    SummarizedMeasurement::intervalTypeName to SummarizedMeasurementsTable.intervalType,
+
     SummarizedMeasurement::countCloudCoverage0 to SummarizedMeasurementsTable.countCloudCoverage0,
     SummarizedMeasurement::countCloudCoverage1 to SummarizedMeasurementsTable.countCloudCoverage1,
     SummarizedMeasurement::countCloudCoverage2 to SummarizedMeasurementsTable.countCloudCoverage2,
@@ -61,29 +68,85 @@ object SummarizedMeasurementTableMapping : TableMapping<SummarizedMeasurement>(
     SummarizedMeasurement::countCloudCoverage8 to SummarizedMeasurementsTable.countCloudCoverage8,
     SummarizedMeasurement::countCloudCoverageNotMeasured to SummarizedMeasurementsTable.countCloudCoverageNotMeasured,
     SummarizedMeasurement::countCloudCoverageNotVisible to SummarizedMeasurementsTable.countCloudCoverageNotVisible,
+
     SummarizedMeasurement::minDewPointTemperatureCentigrade to SummarizedMeasurementsTable.minDewPointTemperatureCentigrade,
     SummarizedMeasurement::avgDewPointTemperatureCentigrade to SummarizedMeasurementsTable.avgDewPointTemperatureCentigrade,
     SummarizedMeasurement::maxDewPointTemperatureCentigrade to SummarizedMeasurementsTable.maxDewPointTemperatureCentigrade,
+
+    SummarizedMeasurement::minHumidityPercent to SummarizedMeasurementsTable.minHumidityPercent,
+    SummarizedMeasurement::avgHumidityPercent to SummarizedMeasurementsTable.avgHumidityPercent,
+    SummarizedMeasurement::maxHumidityPercent to SummarizedMeasurementsTable.maxHumidityPercent,
+
     SummarizedMeasurement::minAirTemperatureCentigrade to SummarizedMeasurementsTable.minAirTemperatureCentigrade,
     SummarizedMeasurement::avgAirTemperatureCentigrade to SummarizedMeasurementsTable.avgAirTemperatureCentigrade,
     SummarizedMeasurement::maxAirTemperatureCentigrade to SummarizedMeasurementsTable.maxAirTemperatureCentigrade,
+
     SummarizedMeasurement::sumSunshineDurationHours to SummarizedMeasurementsTable.sumSunshineDurationHours,
     SummarizedMeasurement::sumRainfallMillimeters to SummarizedMeasurementsTable.sumRainfallMillimeters,
     SummarizedMeasurement::sumSnowfallMillimeters to SummarizedMeasurementsTable.sumSnowfallMillimeters,
+
     SummarizedMeasurement::maxWindSpeedMetersPerSecond to SummarizedMeasurementsTable.maxWindSpeedMetersPerSecond,
     SummarizedMeasurement::avgWindSpeedMetersPerSecond to SummarizedMeasurementsTable.avgWindSpeedMetersPerSecond,
+
+    SummarizedMeasurement::minAirPressureHectopascals to SummarizedMeasurementsTable.minAirPressureHectopascals,
     SummarizedMeasurement::avgAirPressureHectopascals to SummarizedMeasurementsTable.avgAirPressureHectopascals,
+    SummarizedMeasurement::maxAirPressureHectopascals to SummarizedMeasurementsTable.maxAirPressureHectopascals,
 )
 
 class SummarizedMeasurement(
     val station: Station,
-    private val interval: DateInterval,
+    val interval: DateInterval,
     var minAirTemperatureCentigrade: BigDecimal? = null,
     var avgAirTemperatureCentigrade: BigDecimal? = null,
     var maxAirTemperatureCentigrade: BigDecimal? = null,
     var minDewPointTemperatureCentigrade: BigDecimal? = null,
     var maxDewPointTemperatureCentigrade: BigDecimal? = null,
     var avgDewPointTemperatureCentigrade: BigDecimal? = null,
+    var minHumidityPercent: BigDecimal? = null,
+    var maxHumidityPercent: BigDecimal? = null,
+    var avgHumidityPercent: BigDecimal? = null,
+    var countCloudCoverage0: Int = 0,
+    var countCloudCoverage1: Int = 0,
+    var countCloudCoverage2: Int = 0,
+    var countCloudCoverage3: Int = 0,
+    var countCloudCoverage4: Int = 0,
+    var countCloudCoverage5: Int = 0,
+    var countCloudCoverage6: Int = 0,
+    var countCloudCoverage7: Int = 0,
+    var countCloudCoverage8: Int = 0,
+    var countCloudCoverageNotVisible: Int = 0,
+    var countCloudCoverageNotMeasured: Int = 0,
+    var sumSunshineDurationHours: BigDecimal? = null,
+    var sumRainfallMillimeters: BigDecimal = BigDecimal.ZERO,
+    var sumSnowfallMillimeters: BigDecimal = BigDecimal.ZERO,
+    var maxWindSpeedMetersPerSecond: BigDecimal? = null,
+    var avgWindSpeedMetersPerSecond: BigDecimal? = null,
+    var minAirPressureHectopascals: BigDecimal? = null,
+    var avgAirPressureHectopascals: BigDecimal? = null,
+    var maxAirPressureHectopascals: BigDecimal? = null,
+    var details: String? = null
+) {
+    val stationIdLong get() = station.id
+    val firstDay get() = interval.firstDay
+    val firstDayMillis get() = interval.firstDay.millis
+    val lastDay get() = interval.lastDay
+    val lastDayMillis get() = interval.lastDay.millis
+    val intervalTypeName get() = interval.type.name
+}
+
+data class SummarizedMeasurementJson(
+    val firstDayMillis: Long,
+    val lastDayMillis: Long,
+    val intervalTypeName: String,
+    var minAirTemperatureCentigrade: BigDecimal? = null,
+    var avgAirTemperatureCentigrade: BigDecimal? = null,
+    var maxAirTemperatureCentigrade: BigDecimal? = null,
+    var minDewPointTemperatureCentigrade: BigDecimal? = null,
+    var maxDewPointTemperatureCentigrade: BigDecimal? = null,
+    var avgDewPointTemperatureCentigrade: BigDecimal? = null,
+    var minHumidityPercent: BigDecimal? = null,
+    var maxHumidityPercent: BigDecimal? = null,
+    var avgHumidityPercent: BigDecimal? = null,
     var countCloudCoverage0: Int = 0,
     var countCloudCoverage1: Int = 0,
     var countCloudCoverage2: Int = 0,
@@ -102,12 +165,14 @@ class SummarizedMeasurement(
     var avgWindSpeedMetersPerSecond: BigDecimal? = null,
     var avgAirPressureHectopascals: BigDecimal? = null,
     var details: String? = null
-) {
-    val stationIdLong get() = station.id
-    val firstDay get() = interval.firstDay
-    val lastDay get() = interval.lastDay
-    val intervalType get() = interval.type.name
-}
+)
+
+fun SummarizedMeasurement.toJson(): SummarizedMeasurementJson =
+    with(::SummarizedMeasurementJson) {
+        val propertiesByName = SummarizedMeasurement::class.memberProperties.associateBy { it.name }
+        val args = parameters.associateWith { parameter -> propertiesByName[parameter.name]?.get(this@toJson) }
+        callBy(args)
+    }
 
 object SummarizedMeasurementDao {
     fun findByStationIdAndYear(station: Station, year: Int): List<SummarizedMeasurement> = transaction {

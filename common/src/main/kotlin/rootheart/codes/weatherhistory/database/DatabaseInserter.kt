@@ -5,17 +5,19 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import org.apache.tools.ant.filters.StringInputStream
+//import org.apache.tools.ant.filters.StringInputStream
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
 import rootheart.codes.weatherhistory.database.*
+import rootheart.codes.weatherhistory.summary.SummarizedMeasurement
+import rootheart.codes.weatherhistory.summary.SummarizedMeasurementTableMapping
 import java.sql.SQLException
 import kotlin.system.measureTimeMillis
 
 private const val BATCH_SIZE = 128 * 1024
 
 @DelicateCoroutinesApi
-private val insertThreadPool = newFixedThreadPoolContext(16, "database-inserter")
+private val insertThreadPool = newFixedThreadPoolContext(32, "database-inserter")
 
 @DelicateCoroutinesApi
 open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<POKO>) {
@@ -54,7 +56,7 @@ open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<P
                 }
             }
             log.info { "Creating the CSV for ${entities.size} rows took $timeCreatingStrings millis" }
-            val timeCopying = measureTimeMillis { copyManager.copyIn(copyFromSql, StringInputStream(csv)) }
+            val timeCopying = measureTimeMillis { copyManager.copyIn(copyFromSql, csv.byteInputStream()) }
             log.info { "Copying ${entities.size} records took $timeCopying millis" }
         }
     }

@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import rootheart.codes.weatherhistory.summary.SummarizedMeasurementsTable
 import java.util.*
 import javax.sql.DataSource
 import kotlin.reflect.KProperty1
@@ -22,6 +23,10 @@ abstract class TableMapping<POKO>(vararg val mappings: Pair<KProperty1<POKO, Any
 
 object WeatherDb {
     val dataSource: DataSource = createDataSource()
+
+    fun connect() {
+        Database.connect(dataSource)
+    }
 
     private fun createDataSource(): DataSource {
         val properties = Properties()

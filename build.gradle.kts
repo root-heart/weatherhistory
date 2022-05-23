@@ -16,21 +16,19 @@ repositories {
     }
 }
 
-val ktorVersion = "1.6.7"
+
+subprojects {
+    apply(plugin = "org.jetbrains.kotlin.jvm")
+
+    dependencies {
+        implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
+        implementation("ch.qos.logback:logback-classic:1.2.10")
+    }
+}
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.6.0")
-    implementation("org.jetbrains.exposed:exposed:0.17.14")
     implementation("org.codehaus.groovy:groovy-all:3.0.8")
-    implementation("org.postgresql:postgresql:42.3.1")
-    implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
-    implementation("ch.qos.logback:logback-classic:1.2.10")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
-
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-gson:$ktorVersion")
 
     testImplementation("org.spockframework:spock-core:2.0-groovy-3.0")
     testImplementation("com.nagternal:spock-genesis:0.6.0")

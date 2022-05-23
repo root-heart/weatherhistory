@@ -2,10 +2,7 @@ package rootheart.codes.weatherhistory.importer
 
 import org.mockserver.model.HttpRequest
 import org.mockserver.model.HttpResponse
-import rootheart.codes.weatherhistory.importer.converter.BigDecimalProperty
-import rootheart.codes.weatherhistory.model.MeasurementOrObservation
-import rootheart.codes.weatherhistory.model.PrecipitationType
-import rootheart.codes.weatherhistory.model.QualityLevel
+import rootheart.codes.weatherhistory.hourly.PrecipitationType
 import spock.genesis.Gen
 
 import java.util.regex.Pattern
@@ -22,16 +19,8 @@ trait SpecUtils {
         values.collect { it[index] != null ? Integer.parseInt(it[index]) : null }
     }
 
-    List<QualityLevel> allQualityLevelsOf(List<List<String>> values, int index) {
-        values.collect { it[index] != null ? QualityLevel.of(it[index]) : null }
-    }
-
     List<PrecipitationType> allPrecipitationTypesOf(List<List<String>> values, int index) {
         values.collect { it[index] != null ? PrecipitationType.of(it[index]) : null }
-    }
-
-    List<MeasurementOrObservation> allMeasurementOrObservationsOf(List<List<String>> values, int index) {
-        values.collect { it[index] != null ? MeasurementOrObservation.of(it[index]) : null }
     }
 
     static HttpRequest request(String method, String path) {

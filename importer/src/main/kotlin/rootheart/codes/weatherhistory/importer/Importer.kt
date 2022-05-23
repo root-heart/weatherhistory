@@ -2,13 +2,8 @@ package rootheart.codes.weatherhistory.importer
 
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.newFixedThreadPoolContext
-import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import org.jetbrains.exposed.sql.Database
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationDao
 import rootheart.codes.weatherhistory.database.WeatherDb
@@ -23,9 +18,6 @@ import kotlin.system.measureTimeMillis
 private val log = KotlinLogging.logger {}
 
 @DelicateCoroutinesApi
-private val importThreadPool = newFixedThreadPoolContext(8, "importer")
-
-@DelicateCoroutinesApi
 fun main(args: Array<String>) {
     var baseUrlString =
         if (args.size == 1) args[0]
@@ -36,39 +28,12 @@ fun main(args: Array<String>) {
     val baseUrl = URL(baseUrlString)
     val rootDirectory = HtmlDirectoryParser.parseHtml(baseUrl)
 
+    WeatherDb.connect()
+
     importStations(rootDirectory)
-    Database.connect(WeatherDb.dataSource)
+    importMeasurements(rootDirectory)
 
-    val stationByExternalId = StationDao.findAll().associateBy(Station::externalId)
-    val zippedDataFilesByExternalId = rootDirectory
-        .getAllZippedDataFiles()
-        .groupBy { it.externalId }
-        .mapKeys { stationByExternalId[it.key]!! }
-
-    val duration = measureTimeMillis {
-        runBlocking(Dispatchers.Default) {
-            zippedDataFilesByExternalId.forEach { (station, zippedDataFiles) ->
-                DataFileForStationImporter.import(this, station, zippedDataFiles)
-            }
-        }
-    }
-    log.info { "Finished import in $duration milliseconds, exiting program" }
     exitProcess(0)
-}
-
-@DelicateCoroutinesApi
-class SingleThreadedDownloader {
-    private val singleThreadedContext = newSingleThreadContext("download")
-    suspend fun download(url: URL): ByteArray {
-        var content: ByteArray? = null
-        coroutineScope {
-            val job = launch(singleThreadedContext) {
-                content = url.readBytes()
-            }
-            job.join()
-        }
-        return content!!
-    }
 }
 
 @DelicateCoroutinesApi
@@ -92,6 +57,26 @@ private fun importStations(rootDirectory: HtmlDirectory) {
     }
 
     StationsImporter.importEntities(stations.values)
+}
+
+@DelicateCoroutinesApi
+private fun importMeasurements(rootDirectory: HtmlDirectory) {
+//    val stationIds = setOf("00848", "13776", "01993", "04371", "00662", "02014", "00850", "00691", "01443")
+    val stationByExternalId = StationDao.findAll().associateBy(Station::externalId)
+    val zippedDataFilesByExternalId = rootDirectory
+        .getAllZippedDataFiles()
+        .groupBy { it.externalId }
+//        .filter { stationIds.contains(it.key) }
+        .mapKeys { stationByExternalId[it.key]!! }
+
+    val duration = measureTimeMillis {
+        runBlocking(Dispatchers.Default) {
+            zippedDataFilesByExternalId.forEach { (station, zippedDataFiles) ->
+                importDataFilesForStation(station, zippedDataFiles)
+            }
+        }
+    }
+    log.info { "Finished import in $duration milliseconds, exiting program" }
 }
 
 private fun createStation(line: String) = Station(

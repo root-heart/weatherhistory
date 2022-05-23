@@ -1,4 +1,4 @@
-package rootheart.codes.weatherhistory.rest
+package rootheart.codes.weatherhistory.restapp
 
 import io.ktor.application.*
 import io.ktor.features.*
@@ -6,12 +6,12 @@ import io.ktor.gson.*
 import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import org.jetbrains.exposed.sql.Database
 import rootheart.codes.weatherhistory.database.WeatherDb
+import rootheart.codes.weatherhistory.summary.summaryDataEndpoints
 
 
 fun main() {
-    Database.connect(WeatherDb.dataSource)
+    WeatherDb.connect()
     val server = embeddedServer(Netty, port = 8080) {
         install(IgnoreTrailingSlash)
         install(ContentNegotiation) { gson() }

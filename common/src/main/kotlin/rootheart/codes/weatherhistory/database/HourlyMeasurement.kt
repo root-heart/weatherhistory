@@ -2,8 +2,6 @@ package rootheart.codes.weatherhistory.database
 
 import org.jetbrains.exposed.dao.LongIdTable
 import org.joda.time.DateTime
-import rootheart.codes.weatherhistory.model.PrecipitationType
-import rootheart.codes.weatherhistory.model.StationId
 import java.math.BigDecimal
 
 object HourlyMeasurementsTable : LongIdTable("HOURLY_MEASUREMENTS") {
