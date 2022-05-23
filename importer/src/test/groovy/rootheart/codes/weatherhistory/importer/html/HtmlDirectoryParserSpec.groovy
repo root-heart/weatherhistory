@@ -1,9 +1,9 @@
 package rootheart.codes.weatherhistory.importer.html
 
+import com.sun.tools.javac.jvm.Gen
 import org.mockserver.client.MockServerClient
 import org.mockserver.integration.ClientAndServer
 import rootheart.codes.weatherhistory.importer.SpecUtils
-import spock.genesis.Gen
 import spock.lang.Specification
 
 import java.util.regex.Pattern

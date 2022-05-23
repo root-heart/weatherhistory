@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    groovy
 }
 
 group = "rootheart.codes.weatherhistory"
@@ -18,4 +19,11 @@ dependencies {
     implementation(project(":common")) {
         isTransitive = true
     }
+
+    testImplementation("org.spockframework:spock-core:2.0-groovy-3.0")
+    testImplementation("com.nagternal:spock-genesis:0.6.0")
+    testImplementation("org.mock-server:mockserver-netty:5.11.2")
+    testImplementation("org.codehaus.groovy.modules.http-builder:http-builder:0.7.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+
 }

@@ -2,7 +2,6 @@ package rootheart.codes.weatherhistory.importer
 
 import org.mockserver.model.HttpRequest
 import org.mockserver.model.HttpResponse
-import rootheart.codes.weatherhistory.hourly.PrecipitationType
 import spock.genesis.Gen
 
 import java.util.regex.Pattern
@@ -17,10 +16,6 @@ trait SpecUtils {
 
     List<Integer> allIntsOf(List<List<String>> values, int index) {
         values.collect { it[index] != null ? Integer.parseInt(it[index]) : null }
-    }
-
-    List<PrecipitationType> allPrecipitationTypesOf(List<List<String>> values, int index) {
-        values.collect { it[index] != null ? PrecipitationType.of(it[index]) : null }
     }
 
     static HttpRequest request(String method, String path) {
