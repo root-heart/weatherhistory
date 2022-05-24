@@ -1,6 +1,7 @@
 package rootheart.codes.weatherhistory.restapp
 
 import io.ktor.application.*
+import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import rootheart.codes.weatherhistory.database.StationDao
@@ -17,21 +18,29 @@ fun Routing.summaryDataEndpoints() = route("summary/{stationId}") {
 fun Route.getYearlySummary() = get("{year}") {
     val stationId = call.parameters["stationId"]!!
     val year = call.parameters["year"]!!.toInt()
-    StationDao.findById(stationId.toLong())
-        ?.let { station -> SummarizedMeasurementDao.findByStationIdAndYear(station, year) }
-        ?.let { summarizedMeasurements -> summarizedMeasurements.map { it.toJson() } }
-        ?.let { json -> call.respond(json) }
+    val station = StationDao.findById(stationId.toLong())
+    if (station != null) {
+        val measurements = SummarizedMeasurementDao.findByStationIdAndYear(station, year)
+        val response = toResponse(measurements)
+        call.respond(response)
+    } else {
+        call.respond(HttpStatusCode.NotFound)
+    }
+
 }
 
 fun Route.getMonthlySummary() = get("{year}/{month}") {
     val stationId = call.parameters["stationId"]!!
     val year = call.parameters["year"]!!.toInt()
     val month = call.parameters["month"]!!.toInt()
-    StationDao.findById(stationId.toLong())
-        ?.let { station -> SummarizedMeasurementDao.findByStationIdAndYearAndMonth(station, year, month) }
-        ?.let { summarizedMeasurements -> summarizedMeasurements.map { it.toJson() } }
-//        ?.map {  }
-        ?.let { json -> call.respond(json) }
+    val station = StationDao.findById(stationId.toLong())
+    if (station != null) {
+        val measurements = SummarizedMeasurementDao.findByStationIdAndYearAndMonth(station, year, month)
+        val response = toResponse(measurements)
+        call.respond(response)
+    } else {
+        call.respond(HttpStatusCode.NotFound)
+    }
 }
 
 fun Route.getDailySummary() = get("{year}/{month}/{day}") {
