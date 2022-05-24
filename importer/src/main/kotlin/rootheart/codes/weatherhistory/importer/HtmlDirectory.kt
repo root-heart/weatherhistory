@@ -1,5 +1,5 @@
-package rootheart.codes.weatherhistory.importer.html
-
+package rootheart.codes.weatherhistory.importer
+s
 import mu.KotlinLogging
 import rootheart.codes.weatherhistory.model.MeasurementType
 import java.net.URL
