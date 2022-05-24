@@ -1,8 +1,7 @@
-package rootheart.codes.weatherhistory.importer.html
+package rootheart.codes.weatherhistory.importer
 
 import org.mockserver.client.MockServerClient
 import org.mockserver.integration.ClientAndServer
-import rootheart.codes.weatherhistory.importer.SpecUtils
 import spock.genesis.Gen
 import spock.lang.Specification
 

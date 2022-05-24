@@ -7,8 +7,6 @@ import mu.KotlinLogging
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationDao
 import rootheart.codes.weatherhistory.database.WeatherDb
-import rootheart.codes.weatherhistory.importer.html.HtmlDirectory
-import rootheart.codes.weatherhistory.importer.html.HtmlDirectoryParser
 import java.math.BigDecimal
 import java.net.URL
 import java.nio.charset.Charset

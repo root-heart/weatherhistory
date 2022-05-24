@@ -1,10 +1,6 @@
-package rootheart.codes.weatherhistory.model
+package rootheart.codes.weatherhistory.importer
 
 import rootheart.codes.weatherhistory.database.HourlyMeasurement
-import rootheart.codes.weatherhistory.importer.BigDecimalProperty
-import rootheart.codes.weatherhistory.importer.IntProperty
-import rootheart.codes.weatherhistory.importer.PrecipitationTypeProperty
-import rootheart.codes.weatherhistory.importer.SimpleMeasurementProperty
 
 enum class MeasurementType(
     val abbreviation: String,

@@ -1,4 +1,4 @@
-package rootheart.codes.weatherhistory.rest
+package rootheart.codes.weatherhistory.restapp
 
 import java.math.BigDecimal
 

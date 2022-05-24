@@ -1,4 +1,4 @@
-spackage rootheart.codes.weatherhistory.importer
+package rootheart.codes.weatherhistory.importer
 
 import rootheart.codes.weatherhistory.database.PrecipitationType
 import java.math.BigDecimal

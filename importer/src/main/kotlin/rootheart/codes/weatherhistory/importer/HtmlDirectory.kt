@@ -1,7 +1,6 @@
 package rootheart.codes.weatherhistory.importer
-s
+
 import mu.KotlinLogging
-import rootheart.codes.weatherhistory.model.MeasurementType
 import java.net.URL
 
 private val log = KotlinLogging.logger {}

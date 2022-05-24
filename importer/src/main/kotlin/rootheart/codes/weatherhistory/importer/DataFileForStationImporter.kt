@@ -7,9 +7,6 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import rootheart.codes.weatherhistory.database.HourlyMeasurement
 import rootheart.codes.weatherhistory.database.Station
-import rootheart.codes.weatherhistory.importer.html.ZippedDataFile
-import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValues
-import rootheart.codes.weatherhistory.importer.ssv.SemicolonSeparatedValuesParser
 import rootheart.codes.weatherhistory.summary.DateInterval
 import java.io.ByteArrayInputStream
 import java.io.InputStream
