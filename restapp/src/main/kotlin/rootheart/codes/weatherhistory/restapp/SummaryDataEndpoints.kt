@@ -5,8 +5,8 @@ import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import rootheart.codes.weatherhistory.database.StationDao
-import rootheart.codes.weatherhistory.summary.SummarizedMeasurement
-import rootheart.codes.weatherhistory.summary.SummarizedMeasurementDao
+import rootheart.codes.weatherhistory.database.SummarizedMeasurement
+import rootheart.codes.weatherhistory.database.SummarizedMeasurementDao
 
 
 fun Routing.summaryDataEndpoints() = route("summary/{stationId}") {

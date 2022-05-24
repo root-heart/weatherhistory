@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationDao
+import rootheart.codes.weatherhistory.database.StationsImporter
 import rootheart.codes.weatherhistory.database.WeatherDb
 import java.math.BigDecimal
 import java.net.URL

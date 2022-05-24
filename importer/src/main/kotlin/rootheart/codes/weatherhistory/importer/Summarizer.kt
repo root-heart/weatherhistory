@@ -3,8 +3,8 @@ package rootheart.codes.weatherhistory.importer
 import kotlinx.coroutines.DelicateCoroutinesApi
 import rootheart.codes.weatherhistory.database.HourlyMeasurement
 import rootheart.codes.weatherhistory.database.Station
-import rootheart.codes.weatherhistory.summary.DateInterval
-import rootheart.codes.weatherhistory.summary.SummarizedMeasurement
+import rootheart.codes.weatherhistory.database.DateInterval
+import rootheart.codes.weatherhistory.database.SummarizedMeasurement
 import java.math.BigDecimal
 import java.math.RoundingMode
 

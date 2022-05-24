@@ -1,4 +1,4 @@
-package rootheart.codes.weatherhistory.summary
+package rootheart.codes.weatherhistory.database
 
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.ResultRow
@@ -8,12 +8,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalDate
-import rootheart.codes.weatherhistory.database.Station
-import rootheart.codes.weatherhistory.database.StationsTable
-import rootheart.codes.weatherhistory.database.TableMapping
 import java.math.BigDecimal
 import kotlin.reflect.KMutableProperty1
-import kotlin.reflect.full.memberProperties
 
 object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val stationId = reference("STATION_ID", StationsTable).index("FK_IDX_MEASUREMENT_STATION")

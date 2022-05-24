@@ -1,4 +1,4 @@
-package rootheart.codes.weatherhistory.importer
+package rootheart.codes.weatherhistory.database
 
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
@@ -8,9 +8,6 @@ import mu.KotlinLogging
 //import org.apache.tools.ant.filters.StringInputStream
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
-import rootheart.codes.weatherhistory.database.*
-import rootheart.codes.weatherhistory.summary.SummarizedMeasurement
-import rootheart.codes.weatherhistory.summary.SummarizedMeasurementTableMapping
 import java.sql.SQLException
 import kotlin.system.measureTimeMillis
 
@@ -38,7 +35,7 @@ open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<P
                 }
             }
         } catch (e: SQLException) {
-            log.error("importEntities($tableName, ${entities.size} entities) error during batch insert", e)
+            log.error(e) { "importEntities($tableName, ${entities.size} entities) error during batch insert" }
             throw e
         }
         log.info { "importEntities($tableName, ${entities.size} entities) finished" }

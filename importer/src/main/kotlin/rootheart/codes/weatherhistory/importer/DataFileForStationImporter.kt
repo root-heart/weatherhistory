@@ -6,8 +6,10 @@ import mu.KotlinLogging
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import rootheart.codes.weatherhistory.database.HourlyMeasurement
+import rootheart.codes.weatherhistory.database.HourlyMeasurementsImporter
 import rootheart.codes.weatherhistory.database.Station
-import rootheart.codes.weatherhistory.summary.DateInterval
+import rootheart.codes.weatherhistory.database.SummarizedMeasurementImporter
+import rootheart.codes.weatherhistory.database.DateInterval
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.math.BigDecimal

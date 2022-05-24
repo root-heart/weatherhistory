@@ -6,7 +6,6 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
-import rootheart.codes.weatherhistory.summary.SummarizedMeasurementsTable
 import java.util.*
 import javax.sql.DataSource
 import kotlin.reflect.KProperty1
