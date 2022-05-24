@@ -1,9 +1,9 @@
 package rootheart.codes.weatherhistory.importer.html
 
-import com.sun.tools.javac.jvm.Gen
 import org.mockserver.client.MockServerClient
 import org.mockserver.integration.ClientAndServer
 import rootheart.codes.weatherhistory.importer.SpecUtils
+import spock.genesis.Gen
 import spock.lang.Specification
 
 import java.util.regex.Pattern
@@ -106,8 +106,8 @@ class HtmlDirectoryParserSpec extends Specification implements SpecUtils {
 
 
     private static String directoryListing(String stationDataFileName,
-                                           List<String> dataFilenames,
-                                           List<String> directoryNames) {
+                                           Collection<String> dataFilenames,
+                                           Collection<String> directoryNames) {
         def lines = [
                 "<html>",
                 "<head><title>Index of /some/directory/containing/zipped/files</title></head>",
