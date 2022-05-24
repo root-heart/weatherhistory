@@ -7,7 +7,6 @@ import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import rootheart.codes.weatherhistory.database.WeatherDb
-import rootheart.codes.weatherhistory.summary.summaryDataEndpoints
 
 
 fun main() {

@@ -1,10 +1,11 @@
-package rootheart.codes.weatherhistory.summary
+package rootheart.codes.weatherhistory.restapp
 
 import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import rootheart.codes.weatherhistory.database.StationDao
-import rootheart.codes.weatherhistory.rest.SummarizedMeasurementJson
+import rootheart.codes.weatherhistory.summary.SummarizedMeasurement
+import rootheart.codes.weatherhistory.summary.SummarizedMeasurementDao
 
 
 fun Routing.summaryDataEndpoints() = route("summary/{stationId}") {
