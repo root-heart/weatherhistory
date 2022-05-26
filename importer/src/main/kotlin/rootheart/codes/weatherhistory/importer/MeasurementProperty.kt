@@ -1,5 +1,6 @@
 package rootheart.codes.weatherhistory.importer
 
+import rootheart.codes.weatherhistory.database.HourlyMeasurement
 import rootheart.codes.weatherhistory.database.PrecipitationType
 import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
@@ -10,22 +11,22 @@ fun interface MeasurementProperty<R> {
     fun setValue(record: R, value: String)
 }
 
-open class SimpleMeasurementProperty<R, T>(
-    private val property: KMutableProperty1<R, T>,
+open class SimpleMeasurementProperty< T>(
+    private val property: KMutableProperty1<HourlyMeasurement, T>,
     private val parseValue: (String) -> T
-) : MeasurementProperty<R> {
-    override fun setValue(record: R, value: String) = property.set(record, parseValue(value))
+) : MeasurementProperty<HourlyMeasurement> {
+    override fun setValue(record: HourlyMeasurement, value: String) = property.set(record, parseValue(value))
 }
 
 private val intObjectPool: MutableMap<String, Int> = ConcurrentHashMap()
 
-class IntProperty<R>(property: KMutableProperty1<R, Int?>) :
-    SimpleMeasurementProperty<R, Int?>(property, { intObjectPool.computeIfAbsent(it, Integer::parseInt) })
+class IntProperty(property: KMutableProperty1<HourlyMeasurement, Int?>) :
+    SimpleMeasurementProperty<Int?>(property, { intObjectPool.computeIfAbsent(it, Integer::parseInt) })
 
 private val bigDecimalObjectPool: MutableMap<String, BigDecimal> = ConcurrentHashMap()
 
-class BigDecimalProperty<R>(property: KMutableProperty1<R, BigDecimal?>) :
-    SimpleMeasurementProperty<R, BigDecimal?>(property, { bigDecimalObjectPool.computeIfAbsent(it, ::BigDecimal) })
+class BigDecimalProperty(property: KMutableProperty1<HourlyMeasurement, BigDecimal?>) :
+    SimpleMeasurementProperty<BigDecimal?>(property, { bigDecimalObjectPool.computeIfAbsent(it, ::BigDecimal) })
 
-class PrecipitationTypeProperty<R>(property: KMutableProperty1<R, PrecipitationType?>) :
-    SimpleMeasurementProperty<R, PrecipitationType?>(property, PrecipitationType::of)
+class PrecipitationTypeProperty(property: KMutableProperty1<HourlyMeasurement, PrecipitationType?>) :
+    SimpleMeasurementProperty<PrecipitationType?>(property, PrecipitationType::of)

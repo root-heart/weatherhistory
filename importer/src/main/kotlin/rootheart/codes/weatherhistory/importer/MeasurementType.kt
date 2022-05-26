@@ -4,7 +4,7 @@ import rootheart.codes.weatherhistory.database.HourlyMeasurement
 
 enum class MeasurementType(
     val abbreviation: String,
-    val columnNameMapping: Map<String, SimpleMeasurementProperty<HourlyMeasurement, *>>
+    val columnNameMapping: Map<String, SimpleMeasurementProperty<*>>
 ) {
     AIR_TEMPERATURE(
         "TU", mapOf(
