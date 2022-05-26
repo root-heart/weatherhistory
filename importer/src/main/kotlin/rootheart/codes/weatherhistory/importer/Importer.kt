@@ -2,15 +2,26 @@ package rootheart.codes.weatherhistory.importer
 
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import org.joda.time.DateTime
+import rootheart.codes.weatherhistory.database.DateInterval
+import rootheart.codes.weatherhistory.database.HourlyMeasurement
+import rootheart.codes.weatherhistory.database.HourlyMeasurementsImporter
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationDao
 import rootheart.codes.weatherhistory.database.StationsImporter
+import rootheart.codes.weatherhistory.database.SummarizedMeasurementImporter
 import rootheart.codes.weatherhistory.database.WeatherDb
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 import java.math.BigDecimal
 import java.net.URL
 import java.nio.charset.Charset
+import java.util.concurrent.ConcurrentHashMap
+import java.util.zip.ZipInputStream
 import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
@@ -58,6 +69,8 @@ private fun importStations(rootDirectory: HtmlDirectory) {
     StationsImporter.importEntities(stations.values)
 }
 
+private val unzipContext = newFixedThreadPoolContext(40, "unzip")
+
 @DelicateCoroutinesApi
 private fun importMeasurements(rootDirectory: HtmlDirectory) {
 //    val stationIds = setOf("00848", "13776", "01993", "04371", "00662", "02014", "00850", "00691", "01443")
@@ -71,11 +84,99 @@ private fun importMeasurements(rootDirectory: HtmlDirectory) {
     val duration = measureTimeMillis {
         runBlocking(Dispatchers.Default) {
             zippedDataFilesByExternalId.forEach { (station, zippedDataFiles) ->
-                importDataFilesForStation(station, zippedDataFiles)
+                val measurements = downloadAndConvert(station, zippedDataFiles)
+                log.info { "Station ${station.id} - Converted: ${measurements.size}" }
+
+                launch {
+                    log.info { "Import hourly measurements" }
+                    HourlyMeasurementsImporter.importEntities(measurements)
+                    log.info { "Import hourly measurements done" }
+                }
+
+                launch {
+                    log.info { "Summarize hourly measurements" }
+                    val groupedByDay = measurements.groupBy { DateInterval.day(it.measurementTime) }
+                    val summarizedByDay = groupedByDay.map { (day, measurements) ->
+                        Summarizer.summarizeHourlyRecords(station, day, measurements)
+                    }
+
+                    val groupedByMonth = summarizedByDay.groupBy { DateInterval.month(it.firstDay) }
+                    val summarizedByMonth = groupedByMonth.map { (month, measurements) ->
+                        Summarizer.summarizeSummarizedRecords(station, month, measurements)
+                    }
+
+                    val groupedByYear = summarizedByMonth.groupBy { DateInterval.year(it.firstDay) }
+                    val summarizedByYear = groupedByYear.map { (year, measurements) ->
+                        Summarizer.summarizeSummarizedRecords(station, year, measurements)
+                    }
+
+                    val groupedByDecade = summarizedByYear.groupBy { DateInterval.decade(it.firstDay) }
+                    val summarizedByDecade = groupedByDecade.map { (decade, measurements) ->
+                        Summarizer.summarizeSummarizedRecords(station, decade, measurements)
+                    }
+                    log.info { "Summarize hourly measurements done, summing" }
+
+                    val summarizedMeasurements =
+                        summarizedByDay + summarizedByMonth + summarizedByYear + summarizedByDecade
+                    log.info { "Summing summarized measurements done" }
+
+                    log.info { "Importing summarized measurements" }
+                    SummarizedMeasurementImporter.importEntities(summarizedMeasurements)
+                    log.info { "Importing summarized measurements done" }
+                }
+                log.info { "Station ${station.id} - Converted and saved: ${measurements.size}" }
             }
         }
     }
     log.info { "Finished import in $duration milliseconds, exiting program" }
+}
+
+private fun downloadAndConvert(station: Station, zippedDataFiles: Collection<ZippedDataFile>): Collection<HourlyMeasurement> = runBlocking {
+    val measurementByTime = ConcurrentHashMap<DateTime, HourlyMeasurement>()
+    zippedDataFiles.forEach { zippedDataFile ->
+        log.info { "Station ${station.id} - Downloading: ${zippedDataFile.url}" }
+        val zippedBytes = zippedDataFile.url.readBytes()
+        log.info { "Station ${station.id} - Downloaded: ${zippedDataFile.url}, converting" }
+
+        launch(unzipContext) {
+            log.info { "Station ${station.id} - Unzipping: ${zippedBytes.size}" }
+            val unzippedContent = ZipInputStream(ByteArrayInputStream(zippedBytes))
+                .use { zipInputStream ->
+                    val entries = generateSequence { zipInputStream.nextEntry }
+                    if (entries.any { fileIsMeasurementFile(it.name) }) {
+                        return@use zipInputStream.readBytes()
+                    } else {
+                        return@use null
+                    }
+                }
+            log.info { "Station ${station.id} - Unzipped: ${unzippedContent?.size}" }
+            val inputStream =
+                unzippedContent?.let(::ByteArrayInputStream) ?: InputStream.nullInputStream()
+            val semicolonSeparatedValues =
+                inputStream.bufferedReader().use(SemicolonSeparatedValuesParser::parse)
+            log.info { "Station ${station.id} - Parsed: ${semicolonSeparatedValues.rows.size}" }
+            val indexMeasurementTime =
+                semicolonSeparatedValues.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
+            val columnMappingByIndex = zippedDataFile.measurementType.columnNameMapping.mapKeys {
+                semicolonSeparatedValues.columnNames.indexOf(it.key)
+            }
+            for (row in semicolonSeparatedValues.rows) {
+                val measurementTimeString = row[indexMeasurementTime]
+                val measurementTime = DATE_TIME_FORMATTER.parseDateTime(measurementTimeString)
+                val record = measurementByTime.getOrPut(measurementTime) {
+                    HourlyMeasurement(station = station, measurementTime = measurementTime)
+                }
+                for (columnIndex in columnMappingByIndex) {
+                    val stringValue = row[columnIndex.key]
+                    if (stringValue != null) {
+                        columnIndex.value.setValue(record, stringValue)
+                    }
+                }
+            }
+        }
+    }
+    log.info { "Waiting for unzip-parse-converters to finish their job" }
+    return@runBlocking measurementByTime.values
 }
 
 private fun createStation(line: String) = Station(
