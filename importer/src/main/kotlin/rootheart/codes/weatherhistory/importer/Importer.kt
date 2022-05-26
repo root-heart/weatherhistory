@@ -85,7 +85,7 @@ private fun importMeasurements(rootDirectory: HtmlDirectory) {
         runBlocking(Dispatchers.Default) {
             zippedDataFilesByExternalId.forEach { (station, zippedDataFiles) ->
                 val measurements = downloadAndConvert(station, zippedDataFiles)
-                log.info { "Station ${station.id} - Converted: ${measurements.size}" }
+                log.info { "${station.id} - Converted: ${measurements.size}" }
 
                 launch {
                     log.info { "Import hourly measurements" }
@@ -131,51 +131,56 @@ private fun importMeasurements(rootDirectory: HtmlDirectory) {
     log.info { "Finished import in $duration milliseconds, exiting program" }
 }
 
-private fun downloadAndConvert(station: Station, zippedDataFiles: Collection<ZippedDataFile>): Collection<HourlyMeasurement> = runBlocking {
+private fun downloadAndConvert(
+    station: Station,
+    zippedDataFiles: Collection<ZippedDataFile>
+): Collection<HourlyMeasurement> = runBlocking {
     val measurementByTime = ConcurrentHashMap<DateTime, HourlyMeasurement>()
-    zippedDataFiles.forEach { zippedDataFile ->
-        log.info { "Station ${station.id} - Downloading: ${zippedDataFile.url}" }
-        val zippedBytes = zippedDataFile.url.readBytes()
-        log.info { "Station ${station.id} - Downloaded: ${zippedDataFile.url}, converting" }
+    zippedDataFiles
+        .sortedByDescending { it.size }
+        .forEach { zippedDataFile ->
+            log.info { "Station ${station.id}, file ${zippedDataFile.fileName} - Downloading" }
+            val zippedBytes = zippedDataFile.url.readBytes()
+            log.info { "Station ${station.id}, file ${zippedDataFile.fileName} - Downloaded" }
 
-        launch(unzipContext) {
-            log.info { "Station ${station.id} - Unzipping: ${zippedBytes.size}" }
-            val unzippedContent = ZipInputStream(ByteArrayInputStream(zippedBytes))
-                .use { zipInputStream ->
-                    val entries = generateSequence { zipInputStream.nextEntry }
-                    if (entries.any { fileIsMeasurementFile(it.name) }) {
-                        return@use zipInputStream.readBytes()
-                    } else {
-                        return@use null
+            launch(unzipContext) {
+                log.info { "Station ${station.id}, file ${zippedDataFile.fileName} - Unzipping ${zippedBytes.size} bytes" }
+                val unzippedContent = ZipInputStream(ByteArrayInputStream(zippedBytes))
+                    .use { zipInputStream ->
+                        val entries = generateSequence { zipInputStream.nextEntry }
+                        if (entries.any { fileIsMeasurementFile(it.name) }) {
+                            return@use zipInputStream.readBytes()
+                        } else {
+                            return@use null
+                        }
                     }
+                log.info { "Station ${station.id}, file ${zippedDataFile.fileName} - Unzipped to ${unzippedContent?.size} bytes" }
+                val inputStream =
+                    unzippedContent?.let(::ByteArrayInputStream) ?: InputStream.nullInputStream()
+                val semicolonSeparatedValues =
+                    inputStream.bufferedReader().use(SemicolonSeparatedValuesParser::parse)
+                log.info { "Station ${station.id}, file ${zippedDataFile.fileName} - Parsed to ${semicolonSeparatedValues.rows.size} rows" }
+                val indexMeasurementTime =
+                    semicolonSeparatedValues.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
+                val columnMappingByIndex = zippedDataFile.measurementType.columnNameMapping.mapKeys {
+                    semicolonSeparatedValues.columnNames.indexOf(it.key)
                 }
-            log.info { "Station ${station.id} - Unzipped: ${unzippedContent?.size}" }
-            val inputStream =
-                unzippedContent?.let(::ByteArrayInputStream) ?: InputStream.nullInputStream()
-            val semicolonSeparatedValues =
-                inputStream.bufferedReader().use(SemicolonSeparatedValuesParser::parse)
-            log.info { "Station ${station.id} - Parsed: ${semicolonSeparatedValues.rows.size}" }
-            val indexMeasurementTime =
-                semicolonSeparatedValues.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
-            val columnMappingByIndex = zippedDataFile.measurementType.columnNameMapping.mapKeys {
-                semicolonSeparatedValues.columnNames.indexOf(it.key)
-            }
-            for (row in semicolonSeparatedValues.rows) {
-                val measurementTimeString = row[indexMeasurementTime]
-                val measurementTime = DATE_TIME_FORMATTER.parseDateTime(measurementTimeString)
-                val record = measurementByTime.getOrPut(measurementTime) {
-                    HourlyMeasurement(station = station, measurementTime = measurementTime)
-                }
-                for (columnIndex in columnMappingByIndex) {
-                    val stringValue = row[columnIndex.key]
-                    if (stringValue != null) {
-                        columnIndex.value.setValue(record, stringValue)
+                for (row in semicolonSeparatedValues.rows) {
+                    val measurementTimeString = row[indexMeasurementTime]
+                    val measurementTime = DATE_TIME_FORMATTER.parseDateTime(measurementTimeString)
+                    val record = measurementByTime.getOrPut(measurementTime) {
+                        HourlyMeasurement(station = station, measurementTime = measurementTime)
+                    }
+                    for (columnIndex in columnMappingByIndex) {
+                        val stringValue = row[columnIndex.key]
+                        if (stringValue != null) {
+                            columnIndex.value.setValue(record, stringValue)
+                        }
                     }
                 }
             }
         }
-    }
-    log.info { "Waiting for unzip-parse-converters to finish their job" }
+    log.info { "Station ${station.id} - Waiting for unzip-parse-converters to finish their job" }
     return@runBlocking measurementByTime.values
 }
 

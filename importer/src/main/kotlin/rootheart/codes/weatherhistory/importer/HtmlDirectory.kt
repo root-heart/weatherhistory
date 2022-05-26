@@ -12,7 +12,7 @@ val STATIONS_FILE_NAME_REGEX =
     Regex("<a href=\"(?<fileName>(?<key>TU|N|TD|FX|TF|SD|VV|FF|RR)_(Stunden|Tages)werte_Beschreibung_Stationen.txt)\">")
 
 val DATA_FILE_NAME_REGEX =
-    Regex("<a href=\"(?<fileName>(stunden|tages)werte_(?<key>(TU|N|TD|FX|TF|SD|VV|FF|RR))_(?<stationId>\\d{5})_.*?(?<recentness>akt|hist)\\.zip)\">")
+    Regex("<a href=\"(?<fileName>(stunden|tages)werte_(?<key>(TU|N|TD|FX|TF|SD|VV|FF|RR))_(?<stationId>\\d{5})_.*?(?<recentness>akt|hist)\\.zip)\">.*\\s(?<size>\\d{1,10})")
 
 data class HtmlDirectory(
     val url: URL,
@@ -43,7 +43,8 @@ data class ZippedDataFile(
     val externalId: String,
     val measurementType: MeasurementType,
     val historical: Boolean,
-    val url: URL
+    val url: URL,
+    val size: Long
 )
 
 data class StationsFile(
@@ -70,7 +71,8 @@ object HtmlDirectoryParser {
                     externalId = it["stationId"]!!.value,
                     measurementType = MeasurementType.of(it["key"]!!.value),
                     historical = it["recentness"]!!.value == "hist",
-                    url = URL("${url.toExternalForm()}$fileName")
+                    url = URL("${url.toExternalForm()}$fileName"),
+                    size = it["size"]!!.value.toLong()
                 )
             }
             .toList()
