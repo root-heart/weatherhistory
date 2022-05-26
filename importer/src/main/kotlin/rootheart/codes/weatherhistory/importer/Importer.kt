@@ -16,7 +16,6 @@ import rootheart.codes.weatherhistory.database.StationsImporter
 import rootheart.codes.weatherhistory.database.SummarizedMeasurementImporter
 import rootheart.codes.weatherhistory.database.WeatherDb
 import java.io.ByteArrayInputStream
-import java.io.InputStream
 import java.math.BigDecimal
 import java.net.URL
 import java.nio.charset.Charset
@@ -87,11 +86,7 @@ private fun importMeasurements(rootDirectory: HtmlDirectory) {
                 val measurements = downloadAndConvert(station, zippedDataFiles)
                 log.info { "${station.id} - Converted: ${measurements.size}" }
 
-                launch {
-                    log.info { "Import hourly measurements" }
-                    HourlyMeasurementsImporter.importEntities(measurements)
-                    log.info { "Import hourly measurements done" }
-                }
+                launch { HourlyMeasurementsImporter.importEntities(measurements) }
 
                 launch {
                     log.info { "Summarize hourly measurements" }
@@ -144,45 +139,48 @@ private fun downloadAndConvert(
             log.info { "Station ${station.id}, file ${zippedDataFile.fileName} - Downloaded" }
 
             launch(unzipContext) {
-                log.info { "Station ${station.id}, file ${zippedDataFile.fileName} - Unzipping ${zippedBytes.size} bytes" }
-                val unzippedContent = ZipInputStream(ByteArrayInputStream(zippedBytes))
-                    .use { zipInputStream ->
-                        val entries = generateSequence { zipInputStream.nextEntry }
-                        if (entries.any { fileIsMeasurementFile(it.name) }) {
-                            return@use zipInputStream.readBytes()
-                        } else {
-                            return@use null
+                val duration = measureTimeMillis {
+                    log.debug { "Station ${station.id}, file ${zippedDataFile.fileName} - Unzipping ${zippedBytes.size} bytes" }
+                    val unzippedBytes = unzip(zippedBytes)
+                    log.debug { "Station ${station.id}, file ${zippedDataFile.fileName} - Unzipped to ${unzippedBytes.size} bytes" }
+                    val semicolonSeparatedValues = SemicolonSeparatedValuesParser.parse(unzippedBytes)
+                    log.debug { "Station ${station.id}, file ${zippedDataFile.fileName} - Parsed to ${semicolonSeparatedValues.rows.size} rows" }
+                    val indexMeasurementTime =
+                        semicolonSeparatedValues.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
+                    val columnMappingByIndex = zippedDataFile.measurementType.columnNameMapping.mapKeys {
+                        semicolonSeparatedValues.columnNames.indexOf(it.key)
+                    }
+                    for (row in semicolonSeparatedValues.rows) {
+                        val measurementTimeString = row[indexMeasurementTime]
+                        val measurementTime = DATE_TIME_FORMATTER.parseDateTime(measurementTimeString)
+                        val record = measurementByTime.getOrPut(measurementTime) {
+                            HourlyMeasurement(station = station, measurementTime = measurementTime)
                         }
-                    }
-                log.info { "Station ${station.id}, file ${zippedDataFile.fileName} - Unzipped to ${unzippedContent?.size} bytes" }
-                val inputStream =
-                    unzippedContent?.let(::ByteArrayInputStream) ?: InputStream.nullInputStream()
-                val semicolonSeparatedValues =
-                    inputStream.bufferedReader().use(SemicolonSeparatedValuesParser::parse)
-                log.info { "Station ${station.id}, file ${zippedDataFile.fileName} - Parsed to ${semicolonSeparatedValues.rows.size} rows" }
-                val indexMeasurementTime =
-                    semicolonSeparatedValues.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
-                val columnMappingByIndex = zippedDataFile.measurementType.columnNameMapping.mapKeys {
-                    semicolonSeparatedValues.columnNames.indexOf(it.key)
-                }
-                for (row in semicolonSeparatedValues.rows) {
-                    val measurementTimeString = row[indexMeasurementTime]
-                    val measurementTime = DATE_TIME_FORMATTER.parseDateTime(measurementTimeString)
-                    val record = measurementByTime.getOrPut(measurementTime) {
-                        HourlyMeasurement(station = station, measurementTime = measurementTime)
-                    }
-                    for (columnIndex in columnMappingByIndex) {
-                        val stringValue = row[columnIndex.key]
-                        if (stringValue != null) {
-                            columnIndex.value.setValue(record, stringValue)
+                        for (columnIndex in columnMappingByIndex) {
+                            val stringValue = row[columnIndex.key]
+                            if (stringValue != null) {
+                                columnIndex.value.setValue(record, stringValue)
+                            }
                         }
                     }
                 }
+                log.info { "Station ${station.id}, file ${zippedDataFile.fileName} - converting took $duration millis" }
             }
         }
     log.info { "Station ${station.id} - Waiting for unzip-parse-converters to finish their job" }
     return@runBlocking measurementByTime.values
 }
+
+private fun unzip(zippedBytes: ByteArray): ByteArray = ZipInputStream(ByteArrayInputStream(zippedBytes))
+    .use { zipInputStream ->
+        val entries = generateSequence { zipInputStream.nextEntry }
+        if (entries.any { fileIsMeasurementFile(it.name) }) {
+            return@use zipInputStream.readBytes()
+        } else {
+            return@use ByteArray(0)
+        }
+    }
+
 
 private fun createStation(line: String) = Station(
     externalId = line.substring(0, 5),

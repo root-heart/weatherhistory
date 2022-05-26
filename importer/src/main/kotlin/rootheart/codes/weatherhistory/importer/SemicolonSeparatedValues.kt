@@ -1,6 +1,6 @@
 package rootheart.codes.weatherhistory.importer
 
-import java.io.BufferedReader
+import java.io.ByteArrayInputStream
 import java.util.stream.Collectors
 
 data class SemicolonSeparatedValues(
@@ -9,10 +9,10 @@ data class SemicolonSeparatedValues(
 )
 
 object SemicolonSeparatedValuesParser {
-    fun parse(reader: BufferedReader): SemicolonSeparatedValues {
-        val header = reader.readLine() ?: ""
+    fun parse(bytes: ByteArray): SemicolonSeparatedValues = ByteArrayInputStream(bytes).bufferedReader().use {
+        val header = it.readLine() ?: ""
         val columnNames = splitAndTrimTokens(header).map { it!! }
-        val columnValues = reader.lines().map { splitAndTrimTokens(it) }.collect(Collectors.toList())
+        val columnValues = it.lines().map { splitAndTrimTokens(it) }.collect(Collectors.toList())
         return SemicolonSeparatedValues(columnNames, columnValues)
     }
 
