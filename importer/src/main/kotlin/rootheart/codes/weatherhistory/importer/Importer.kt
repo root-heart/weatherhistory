@@ -13,6 +13,7 @@ import rootheart.codes.weatherhistory.database.HourlyMeasurementsImporter
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationDao
 import rootheart.codes.weatherhistory.database.StationsImporter
+import rootheart.codes.weatherhistory.database.SummarizedMeasurement
 import rootheart.codes.weatherhistory.database.SummarizedMeasurementImporter
 import rootheart.codes.weatherhistory.database.WeatherDb
 import java.io.ByteArrayInputStream
@@ -89,41 +90,45 @@ private fun importMeasurements(rootDirectory: HtmlDirectory) {
                 launch { HourlyMeasurementsImporter.importEntities(measurements) }
 
                 launch {
-                    log.info { "Summarize hourly measurements" }
-                    val groupedByDay = measurements.groupBy { DateInterval.day(it.measurementTime) }
-                    val summarizedByDay = groupedByDay.map { (day, measurements) ->
-                        Summarizer.summarizeHourlyRecords(station, day, measurements)
-                    }
-
-                    val groupedByMonth = summarizedByDay.groupBy { DateInterval.month(it.firstDay) }
-                    val summarizedByMonth = groupedByMonth.map { (month, measurements) ->
-                        Summarizer.summarizeSummarizedRecords(station, month, measurements)
-                    }
-
-                    val groupedByYear = summarizedByMonth.groupBy { DateInterval.year(it.firstDay) }
-                    val summarizedByYear = groupedByYear.map { (year, measurements) ->
-                        Summarizer.summarizeSummarizedRecords(station, year, measurements)
-                    }
-
-                    val groupedByDecade = summarizedByYear.groupBy { DateInterval.decade(it.firstDay) }
-                    val summarizedByDecade = groupedByDecade.map { (decade, measurements) ->
-                        Summarizer.summarizeSummarizedRecords(station, decade, measurements)
-                    }
-                    log.info { "Summarize hourly measurements done, summing" }
-
-                    val summarizedMeasurements =
-                        summarizedByDay + summarizedByMonth + summarizedByYear + summarizedByDecade
-                    log.info { "Summing summarized measurements done" }
-
-                    log.info { "Importing summarized measurements" }
+                    val summarizedMeasurements = summarizeMeasurements(measurements, station)
                     SummarizedMeasurementImporter.importEntities(summarizedMeasurements)
-                    log.info { "Importing summarized measurements done" }
                 }
+
                 log.info { "Station ${station.id} - Converted and saved: ${measurements.size}" }
             }
         }
     }
     log.info { "Finished import in $duration milliseconds, exiting program" }
+}
+
+@DelicateCoroutinesApi
+private fun summarizeMeasurements(
+    measurements: Collection<HourlyMeasurement>,
+    station: Station
+): List<SummarizedMeasurement> {
+    log.info { "Summarize hourly measurements" }
+    val groupedByDay = measurements.groupBy { DateInterval.day(it.measurementTime) }
+    val summarizedByDay = groupedByDay.map { (day, measurements) ->
+        Summarizer.summarizeHourlyRecords(station, day, measurements)
+    }
+
+    val groupedByMonth = summarizedByDay.groupBy { DateInterval.month(it.firstDay) }
+    val summarizedByMonth = groupedByMonth.map { (month, measurements) ->
+        Summarizer.summarizeSummarizedRecords(station, month, measurements)
+    }
+
+    val groupedByYear = summarizedByMonth.groupBy { DateInterval.year(it.firstDay) }
+    val summarizedByYear = groupedByYear.map { (year, measurements) ->
+        Summarizer.summarizeSummarizedRecords(station, year, measurements)
+    }
+
+    val groupedByDecade = summarizedByYear.groupBy { DateInterval.decade(it.firstDay) }
+    val summarizedByDecade = groupedByDecade.map { (decade, measurements) ->
+        Summarizer.summarizeSummarizedRecords(station, decade, measurements)
+    }
+    log.info { "Summarize hourly measurements done, summing" }
+
+    return summarizedByDay + summarizedByMonth + summarizedByYear + summarizedByDecade
 }
 
 private fun downloadAndConvert(
