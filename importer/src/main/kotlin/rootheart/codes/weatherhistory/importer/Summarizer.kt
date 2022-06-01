@@ -1,6 +1,7 @@
 package rootheart.codes.weatherhistory.importer
 
 import kotlinx.coroutines.DelicateCoroutinesApi
+import org.joda.time.DateTime
 import rootheart.codes.common.collections.avgDecimal
 import rootheart.codes.common.collections.maxDecimal
 import rootheart.codes.common.collections.minDecimal
@@ -57,7 +58,18 @@ object Summarizer {
         details = ""
     )
 
-    fun summarizeHourlyRecords(station: Station, interval: DateInterval, measurements: Collection<HourlyMeasurement>) =
+    fun summarizeHourlyRecords(
+        station: Station,
+        intervalGetter: (DateTime) -> DateInterval,
+        measurements: Collection<HourlyMeasurement>
+    ): List<SummarizedMeasurement> {
+        val grouped = measurements.groupBy { intervalGetter(it.measurementTime) }
+        return grouped.map { (group, measurements) ->
+            summarizeHourlyRecords(station, group, measurements)
+        }
+    }
+
+    private fun summarizeHourlyRecords(station: Station, interval: DateInterval, measurements: Collection<HourlyMeasurement>) =
         SummarizedMeasurement(station = station,
             interval = interval,
             countCloudCoverage0 = measurements.count { it.cloudCoverage == 0 },
@@ -89,6 +101,9 @@ object Summarizer {
             maxAirPressureHectopascals = measurements.maxDecimal { it.airPressureHectopascals },
 
             sumSunshineDurationHours = measurements.sumDecimal { it.sunshineDurationMinutes }
-                ?.divide(SIXTY, RoundingMode.HALF_UP)
+                ?.divide(SIXTY, RoundingMode.HALF_UP),
+
+            maxWindSpeedMetersPerSecond = measurements.maxDecimal { it.maxWindSpeedMetersPerSecond },
+            avgWindSpeedMetersPerSecond = measurements.avgDecimal { it.windSpeedMetersPerSecond }
         )
 }

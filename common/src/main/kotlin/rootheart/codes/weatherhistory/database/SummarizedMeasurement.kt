@@ -211,6 +211,7 @@ data class DateInterval(
     val type: DateIntervalType
 ) {
     companion object {
+        @JvmStatic
         fun day(time: DateTime): DateInterval {
             return DateInterval(
                 time.withTimeAtStartOfDay(),
@@ -219,6 +220,7 @@ data class DateInterval(
             )
         }
 
+        @JvmStatic
         fun month(year: Int, month: Int): DateInterval {
             val fromDate = LocalDate(year, month, 1)
             val toDate = fromDate.plusMonths(1).minusDays(1)
@@ -231,8 +233,10 @@ data class DateInterval(
 
 //        fun month(day: Date) = month(day.year, day.monthOfYear)
 
+        @JvmStatic
         fun month(time: DateTime) = month(time.year, time.monthOfYear)
 
+        @JvmStatic
         fun season(time: DateTime): DateInterval {
             val startMonth: Int
             var startYear = time.year
@@ -255,6 +259,7 @@ data class DateInterval(
             )
         }
 
+        @JvmStatic
         fun year(time: DateTime): DateInterval {
             val fromDate = LocalDate(time.year, 1, 1)
             val toDate = fromDate.plusYears(1).minusDays(1)
@@ -265,6 +270,7 @@ data class DateInterval(
             )
         }
 
+        @JvmStatic
         fun decade(time: DateTime): DateInterval {
             val startYear = (time.year / 10) * 10
             val fromDate = LocalDate(startYear, 1, 1)

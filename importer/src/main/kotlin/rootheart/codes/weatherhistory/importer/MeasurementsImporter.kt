@@ -129,10 +129,7 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
         val summarizedMeasurements = ArrayList<SummarizedMeasurement>()
         val measurements = measurementByTime.values
         val duration = measureTimeMillis {
-            val groupedByDay = measurements.groupBy { DateInterval.day(it.measurementTime) }
-            val summarizedByDay = groupedByDay.map { (day, measurements) ->
-                Summarizer.summarizeHourlyRecords(station, day, measurements)
-            }
+            val summarizedByDay = Summarizer.summarizeHourlyRecords(station, DateInterval::day, measurements)
 
             val groupedByMonth = summarizedByDay.groupBy { DateInterval.month(it.firstDay) }
             val summarizedByMonth = groupedByMonth.map { (month, measurements) ->

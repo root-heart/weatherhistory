@@ -42,7 +42,7 @@ object HourlyMeasurementTableMapping : TableMapping<HourlyMeasurement>(
     HourlyMeasurement::visibilityInMeters to HourlyMeasurementsTable.visibilityInMeters,
 )
 
-class HourlyMeasurement(
+data class HourlyMeasurement(
     val id: Long? = null,
     val station: Station,
     val measurementTime: DateTime,
