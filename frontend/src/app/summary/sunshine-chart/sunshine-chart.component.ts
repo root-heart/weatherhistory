@@ -36,15 +36,15 @@ export class SunshineChart extends BaseChart implements OnInit {
 
     private readonly coverageColors = [
         'hsl(210, 80%, 80%)',
-        'hsl(210, 80%, 95%)',
-        'hsl(55, 80%, 95%)',
-        'hsl(55, 80%, 80%)',
-        'hsl(55, 65%, 70%)',
-        'hsl(55, 50%, 70%)',
-        'hsl(55, 35%, 70%)',
-        'hsl(55, 20%, 70%)',
-        'hsl(55, 5%, 60%)',
-        'hsl(55, 5%, 50%)',
+        'hsl(210, 90%, 95%)',
+        'hsl(55, 80%, 90%)',
+        'hsl(55, 65%, 80%)',
+        'hsl(55, 45%, 70%)',
+        'hsl(55, 25%, 70%)',
+        'hsl(55, 5%, 65%)',
+        'hsl(55, 5%, 55%)',
+        'hsl(55, 5%, 45%)',
+        'hsl(55, 5%, 35%)',
     ];
 
     constructor() {
@@ -67,9 +67,10 @@ export class SunshineChart extends BaseChart implements OnInit {
             backgroundColor: 'hsl(40, 100%, 50%)',
             data: summaryList.map(m => m['sumSunshineDurationHours']),
             yAxisID: 'yAxisHours',
+            xAxisID: 'x1',
             stack: 'sunshine',
-            categoryPercentage: 0.5,
-            barPercentage: 0.8,
+            categoryPercentage: 0.3,
+            barPercentage: 1,
             showTooltip: true,
             showLegend: true,
             tooltipValueFormatter: (value: number) => this.formatHours(value)
@@ -81,6 +82,9 @@ export class SunshineChart extends BaseChart implements OnInit {
                 borderColor: this.coverageColors[i],
                 backgroundColor: this.coverageColors[i],
                 data: summaryList.map(m => m[("countCloudCoverage" + i) as keyof SummaryJson]) as number[],
+                xAxisID: 'x2',
+                categoryPercentage: 0.8,
+                barPercentage: 1,
                 stack: 'cloudiness',
                 showTooltip: true,
                 showLegend: true,
@@ -94,6 +98,9 @@ export class SunshineChart extends BaseChart implements OnInit {
             backgroundColor: this.coverageColors[9],
             data: summaryList.map(m => m["countCloudCoverageNotVisible"]),
             stack: 'cloudiness',
+            xAxisID: 'x2',
+            categoryPercentage: 0.8,
+            barPercentage: 1,
             showTooltip: true,
             showLegend: true,
             tooltipValueFormatter: (value: number) => this.formatHours(value)
@@ -102,14 +109,18 @@ export class SunshineChart extends BaseChart implements OnInit {
         return dataSets;
     }
 
-    protected getYScales(): any {
+    protected getYScales() {
         return {
+            x1: {
+                stacked: true,
+            },
+            x2: {
+                stacked: true,
+                display: false,
+                offset: true,
+            },
             yAxisHours: {
                 display: true,
-            },
-            yAxisPercent: {
-                display: true,
-                position: 'right'
             }
         };
     }
