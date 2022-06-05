@@ -12,7 +12,7 @@ fun Routing.stationsEndpoints() = route("stations") {
 }
 
 fun Route.getAllStations() = get {
-    call.respond(StationDao.findAll())
+    call.respond(StationDao.findAll().sortedBy { it.federalState + it.name })
 }
 
 fun Route.getStationByStationId() = get("{stationId}") {

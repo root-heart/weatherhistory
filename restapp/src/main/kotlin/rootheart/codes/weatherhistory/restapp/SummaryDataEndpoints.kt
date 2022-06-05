@@ -9,8 +9,6 @@ import io.ktor.routing.Routing
 import io.ktor.routing.get
 import io.ktor.routing.route
 import mu.KotlinLogging
-import org.joda.time.DateTime
-import org.joda.time.Duration
 import org.joda.time.LocalDate
 import org.joda.time.Period
 import org.joda.time.format.DateTimeFormat
@@ -23,9 +21,6 @@ import rootheart.codes.weatherhistory.database.SummarizedMeasurementDao
 private val log = KotlinLogging.logger { }
 
 fun Routing.summaryDataEndpoints() = route("summary/{stationId}") {
-//    getYearlySummary()
-//    getMonthlySummary()
-//    getDailySummary()
     getSummary()
 }
 
@@ -44,7 +39,7 @@ fun Route.getSummary() = get() {
         intervalType = DateIntervalType.DECADE
     } else if (period.years > 30) {
         intervalType = DateIntervalType.YEAR
-    } else if (period.years > 10) {
+    } else if (period.years > 8) {
         intervalType = DateIntervalType.SEASON
     } else if (period.years > 0 || period.months > 3) {
         intervalType = DateIntervalType.MONTH
@@ -62,47 +57,6 @@ fun Route.getSummary() = get() {
     log.info("Fetched data for station id {} and date range {} - {}", stationId, from, to)
     call.respond(summaryJsonList)
 }
-
-//fun Route.getYearlySummary() = get("{year}") {
-//    val stationId = call.parameters["stationId"]!!
-//    val year = call.parameters["year"]!!.toInt()
-//    val station = StationDao.findById(stationId.toLong())
-//    if (station != null) {
-//        val measurements = SummarizedMeasurementDao.findByStationIdAndYear(station, year)
-//        val response = toResponse(station, measurements)
-//        call.respond(response)
-//    } else {
-//        call.respond(HttpStatusCode.NotFound)
-//    }
-//
-//}
-
-//fun Route.getMonthlySummary() = get("{year}/{month}") {
-//    val stationId = call.parameters["stationId"]!!
-//    val year = call.parameters["year"]!!.toInt()
-//    val month = call.parameters["month"]!!.toInt()
-//    val station = StationDao.findById(stationId.toLong())
-//    if (station != null) {
-//        val measurements = SummarizedMeasurementDao.findByStationIdAndYearAndMonth(station, year, month)
-//        val response = toResponse(station, measurements)
-//        call.respond(response)
-//    } else {
-//        call.respond(HttpStatusCode.NotFound)
-//    }
-//}
-
-//fun Route.getDailySummary() = get("{year}/{month}/{day}") {
-//    call.respond("not working yet!")
-////    val stationId = call.parameters["stationId"]!!.toInt()
-////    val year = call.parameters["year"]!!.toInt()
-////    val month = call.parameters["month"]!!.toInt()
-////    val day = call.parameters["day"]!!.toInt()
-////    StationDao.findById(stationId.toLong())
-////        ?.let { station -> SummarizedMeasurementDao.findByStationIdAndYearAndMonth(station.id!!, year, month, day) }
-////        ?.let { summarizedMeasurements -> summarizedMeasurements.map { it.toJson() } }
-////        ?.let { json -> call.respond(json) }
-//}
-
 
 data class SummarizedMeasurementResponse(
     val stationId: Long,

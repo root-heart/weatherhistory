@@ -133,48 +133,22 @@ class SummarizedMeasurement(
     val intervalTypeName get() = interval.type.name
 }
 
-//fun SummarizedMeasurement.toJson(): SummarizedMeasurementJson =
-//    with(::SummarizedMeasurementJson) {
-//        val propertiesByName = SummarizedMeasurement::class.memberProperties.associateBy { it.name }
-//        val args = parameters.associateWith { parameter -> propertiesByName[parameter.name]?.get(this@toJson) }
-//        callBy(args)
-//    }
-
 object SummarizedMeasurementDao {
-    fun findByStationIdAndYear(station: Station, year: Int): List<SummarizedMeasurement> = transaction {
-        val start = DateTime(year, 1, 1, 0, 0)
-        val end = start.plusYears(1)
-        return@transaction selectAll(station, start, end, DateIntervalType.MONTH)
-    }
-
-    fun findByStationIdAndYearAndMonth(station: Station, year: Int, month: Int): List<SummarizedMeasurement> =
-        transaction {
-            val start = DateTime(year, month, 1, 0, 0)
-            val end = start.plusMonths(1)
-            return@transaction selectAll(station, start, end, DateIntervalType.DAY)
-        }
-
-    fun findByStationIdAndDate(station: Station, year: Int, month: Int, day: Int): List<SummarizedMeasurement> =
-        transaction {
-            val start = DateTime(year, month, day, 0, 0)
-            val end = start.plusDays(1)
-            return@transaction selectAll(station, start, end, DateIntervalType.DAY)
-        }
-
-    private fun selectAll(
+    fun findByStationIdAndDateBetween(
         station: Station,
-        startInclusive: DateTime,
-        endExclusive: DateTime,
+        from: DateTime,
+        to: DateTime,
         intervalType: DateIntervalType
-    ) =
-        SummarizedMeasurementsTable
-            .select {
-                SummarizedMeasurementsTable.stationId.eq(station.id!!)
-                    .and(SummarizedMeasurementsTable.intervalType eq intervalType.name)
-                    .and(SummarizedMeasurementsTable.firstDay greaterEq startInclusive)
-                    .and(SummarizedMeasurementsTable.lastDay less endExclusive)
-            }
+    ): List<SummarizedMeasurement> = transaction {
+        SummarizedMeasurementsTable.select {
+            SummarizedMeasurementsTable.stationId.eq(station.id!!)
+                .and(SummarizedMeasurementsTable.intervalType eq intervalType.name)
+                .and(SummarizedMeasurementsTable.firstDay greaterEq from)
+                .and(SummarizedMeasurementsTable.firstDay lessEq to)
+        }
+            .orderBy(SummarizedMeasurementsTable.firstDay)
             .map { toSummarizedMeasurement(station, it) }
+    }
 
     private fun toSummarizedMeasurement(station: Station, row: ResultRow): SummarizedMeasurement {
         val summarizedMeasurement = createSummarizedMeasurement(station, row)
