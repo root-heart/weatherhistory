@@ -1,6 +1,7 @@
 package rootheart.codes.weatherhistory.importer
 
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.joda.time.DateTime
@@ -69,7 +70,7 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
     }
 
     private fun downloadAndStartConversion(zippedDataFile: ZippedDataFile) {
-        val durationAndZippedBytes  = measureTimedValue { zippedDataFile.url.readBytes() }
+        val durationAndZippedBytes = measureTimedValue { zippedDataFile.url.readBytes() }
         log.info { "Station ${station.id}, downloading ${durationAndZippedBytes.value.size} bytes from ${zippedDataFile.fileName} took ${durationAndZippedBytes.duration} millis" }
         unzipParseConvertExecutor.run { unzipAndConvert(zippedDataFile, durationAndZippedBytes.value) }
     }
@@ -130,26 +131,43 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
         val measurements = measurementByTime.values
         val duration = measureTimeMillis {
             val summarizedByDay = Summarizer.summarizeHourlyRecords(station, DateInterval::day, measurements)
-
-            val groupedByMonth = summarizedByDay.groupBy { DateInterval.month(it.firstDay) }
-            val summarizedByMonth = groupedByMonth.map { (month, measurements) ->
-                Summarizer.summarizeSummarizedRecords(station, month, measurements)
-            }
-
-            val groupedByYear = summarizedByMonth.groupBy { DateInterval.year(it.firstDay) }
-            val summarizedByYear = groupedByYear.map { (year, measurements) ->
-                Summarizer.summarizeSummarizedRecords(station, year, measurements)
-            }
-
-            val groupedByDecade = summarizedByYear.groupBy { DateInterval.decade(it.firstDay) }
-            val summarizedByDecade = groupedByDecade.map { (decade, measurements) ->
-                Summarizer.summarizeSummarizedRecords(station, decade, measurements)
-            }
-
             summarizedMeasurements += summarizedByDay
-            summarizedMeasurements += summarizedByMonth
-            summarizedMeasurements += summarizedByYear
-            summarizedMeasurements += summarizedByDecade
+
+            runBlocking {
+                launch {
+                    val groupedByMonth = summarizedByDay.groupBy { DateInterval.month(it.firstDay) }
+                    val summarizedByMonth = groupedByMonth.map { (month, measurements) ->
+                        Summarizer.summarizeSummarizedRecords(station, month, measurements)
+                    }
+
+                    val groupedByYear = summarizedByMonth.groupBy { DateInterval.year(it.firstDay) }
+                    val summarizedByYear = groupedByYear.map { (year, measurements) ->
+                        Summarizer.summarizeSummarizedRecords(station, year, measurements)
+                    }
+
+                    val groupedByDecade = summarizedByYear.groupBy { DateInterval.decade(it.firstDay) }
+                    val summarizedByDecade = groupedByDecade.map { (decade, measurements) ->
+                        Summarizer.summarizeSummarizedRecords(station, decade, measurements)
+                    }
+
+                    synchronized(summarizedMeasurements) {
+                        summarizedMeasurements += summarizedByMonth
+                        summarizedMeasurements += summarizedByYear
+                        summarizedMeasurements += summarizedByDecade
+                    }
+                }
+
+                launch {
+                    val groupedBySeason = summarizedByDay.groupBy { DateInterval.season(it.firstDay) }
+                    val summarizedBySeason = groupedBySeason.map { (season, measurements) ->
+                        Summarizer.summarizeSummarizedRecords(station, season, measurements)
+                    }
+                    synchronized(summarizedMeasurements) {
+                        summarizedMeasurements += summarizedBySeason
+                    }
+                }
+            }
+
         }
         log.info { "Summarizing measurements done in $duration millis" }
         return summarizedMeasurements
