@@ -1,0 +1,22 @@
+<main>
+
+    <div class="filterForm">
+        <select class="stationDropDown" [(ngModel)]="selectedStationId" (ngModelChange)="updateChart()">
+            <option *ngFor="let s of weatherStationList" [value]="s.id">{{s.federalState}} / {{s.name}}</option>
+        </select>
+        <input id='year' type="month" [(ngModel)]="from" (ngModelChange)="updateChart()">
+        <input type="month" [(ngModel)]="to" (ngModelChange)="updateChart()">
+    </div>
+
+    <div class="charts">
+        <h1>Temperatur und Niederschlag</h1>
+        <temperature-chart #temperatureChart></temperature-chart>
+
+        <h1>Sonnenschein und Bewölkung</h1>
+        <sunshine-chart #sunshineChart></sunshine-chart>
+
+        <h1>Wind</h1>
+    </div>
+
+
+</main>
