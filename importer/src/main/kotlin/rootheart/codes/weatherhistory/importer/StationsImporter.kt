@@ -33,6 +33,7 @@ fun importStations(rootDirectory: HtmlDirectory) {
 }
 
 private fun createStation(line: String) = Station(
+    externalSystem = "DWD",
     externalId = line.substring(0, 5),
     height = line.substring(24, 39).trim { it <= ' ' }.toInt(),
     latitude = BigDecimal(line.substring(41, 50).trim { it <= ' ' }),
