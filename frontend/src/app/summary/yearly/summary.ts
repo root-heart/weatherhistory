@@ -33,8 +33,8 @@ export class Summary {
 
     updateChart() {
         if (this.selectedStationId && this.from && this.to) {
-            this.summaryService.getSummary(this.selectedStationId, this.from, this.to)
-                .subscribe(data => this.updateAllCharts(data));
+            // this.summaryService.getSummary(this.selectedStationId, this.from, this.to)
+            //     .subscribe(data => this.updateAllCharts(data));
         }
     }
 
