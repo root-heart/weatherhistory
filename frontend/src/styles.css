@@ -1,6 +1,36 @@
 @import "~@ng-select/ng-select/themes/default.theme.css";
 
+
 body {
-    background-color: #333;
-    color: #e0e8ef;
+    /*background-color: #333;*/
+    /*color: #e0e8ef;*/
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    font-size: 1.3rem;
+}
+
+input, button, .textInputElement {
+    font-size: 1.3rem;
+    padding: 0.6rem 0.8rem;
+    margin: 0;
+    border: 1px solid gray;
+    border-radius: 0.4rem;
+}
+
+button:active {
+    background-color: red;
+}
+
+button:focus {
+    background-color: green;
+}
+
+input[type="text"] {
 }

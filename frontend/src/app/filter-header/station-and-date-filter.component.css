@@ -1,0 +1,40 @@
+:host {
+    display: grid;
+    grid-template-columns: 30rem 8rem 8rem;
+    grid-gap: 1rem;
+}
+
+div.filter {
+    border: 1px solid #777;
+    border-radius: 15px;
+    padding: 0.3em 1em;
+    background-color: #ddd;
+    /*font-size: 2rem;*/
+    color: #333;
+    /*display: inline-block;*/
+}
+
+#stationsSearch {
+    width: 20rem;
+    height: 2.5rem;
+    display: inline-block;
+}
+
+/*div.filter:after {*/
+/*    border-left: 1px solid red;*/
+/*}*/
+
+div.filter-attribute {
+    padding: 20px;
+    color: #333;
+    display: inline-block;
+}
+
+label {
+    display: block;
+    /*font-size: 1.2em;*/
+}
+
+#stationsSearch {
+    width: 30em;
+}

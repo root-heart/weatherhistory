@@ -1,3 +1,4 @@
+import { MbscModule } from '@mobiscroll/angular-lite';
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {HttpClientModule} from '@angular/common/http';
@@ -11,15 +12,25 @@ import { TemperatureChart } from './summary/temperature-chart/temperature-chart.
 import { SunshineChart } from './summary/sunshine-chart/sunshine-chart.component';
 import { CloudinessChartComponent } from './summary/cloudiness-chart/cloudiness-chart.component';
 import { StationAndDateFilterComponent } from './filter-header/station-and-date-filter.component';
+import { DatePartChooserComponent } from './date-part-chooser/date-part-chooser.component';
+import {MatCheckboxModule} from "@angular/material/checkbox";
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import {MatAutocompleteModule} from "@angular/material/autocomplete";
+import {MatInputModule} from "@angular/material/input";
+import {MatSelectModule} from "@angular/material/select";
+import {MatDividerModule} from "@angular/material/divider";
+import {MatDatepickerModule} from "@angular/material/datepicker";
+import {MAT_DATE_LOCALE, MatNativeDateModule} from '@angular/material/core';
 
 @NgModule({
     declarations: [
-        AppComponent, SummaryChart, Summary, TemperatureChart, SunshineChart, CloudinessChartComponent, StationAndDateFilterComponent
+        AppComponent, SummaryChart, Summary, TemperatureChart, SunshineChart, CloudinessChartComponent, StationAndDateFilterComponent, DatePartChooserComponent
     ],
     imports: [
-        BrowserModule, HttpClientModule, NgSelectModule, FormsModule, DpDatePickerModule, ReactiveFormsModule
+        MbscModule, MatNativeDateModule,
+        BrowserModule, HttpClientModule, NgSelectModule, FormsModule, DpDatePickerModule, ReactiveFormsModule, MatCheckboxModule, BrowserAnimationsModule, MatAutocompleteModule, MatInputModule, MatSelectModule, MatDividerModule, MatDatepickerModule
     ],
-  providers: [],
+  providers: [{provide: MAT_DATE_LOCALE, useValue: 'de-DE'},],
   bootstrap: [AppComponent]
 })
 export class AppModule {

@@ -1,6 +1,6 @@
 <h1>{{title}}</h1>
 
-<station-and-date-filter (filterChanged)="filterChanged($event)"></station-and-date-filter>
+<station-and-date-filter (onFilterChanged)="filterChanged($event)"></station-and-date-filter>
 
 <h2>Temperatur und Niederschlag</h2>
 <temperature-chart #temperatureChart></temperature-chart>

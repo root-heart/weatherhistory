@@ -24,7 +24,7 @@ export class AppComponent {
 
 
     filterChanged(event: FilterChangedEvent) {
-        this.summaryService.getSummary(event.station.id, event.fromYear, event.toYear)
+        this.summaryService.getSummary(event.station.id, event.start, event.end)
             .subscribe(data => this.updateAllCharts(data));
     }
 
