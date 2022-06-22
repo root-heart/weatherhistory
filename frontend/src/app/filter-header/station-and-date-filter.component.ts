@@ -22,10 +22,11 @@ export class FilterChangedEvent {
 export class StationAndDateFilterComponent implements OnInit {
     fromYear = new FormControl(2008)
     toYear = new FormControl(2022)
+    filterInput = new FormControl("")
 
     stations: WeatherStationList = []
-    station: WeatherStation | null = null
-    filteredStations?: WeatherStationList;
+    station?: WeatherStation
+    filteredStations?: WeatherStationList
 
     @ViewChild("stationsFilterInput") stationsFilterInput?: ElementRef<HTMLInputElement>
 
@@ -38,7 +39,14 @@ export class StationAndDateFilterComponent implements OnInit {
 
     private setStations(stations: Array<WeatherStation>) {
         console.log(stations)
+        stations.sort((a, b) => a.name.localeCompare(b.name))
         this.stations = stations
+        this.resetFilter()
+    }
+
+    resetFilter(): void {
+        this.filteredStations = this.stations
+        this.filterInput.setValue('')
     }
 
     ngOnInit(): void {
@@ -66,6 +74,7 @@ export class StationAndDateFilterComponent implements OnInit {
     selectStation(station: WeatherStation) {
         console.log("select station " + station)
         this.station = station
+        this.stationsPopupVisible = false
         this.fireFilterChangedEvent()
     }
 

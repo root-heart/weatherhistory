@@ -1,52 +1,21 @@
-<!--<mat-form-field appearance="fill">-->
-
-<!--    <mat-label>Wetterstation</mat-label>-->
-
-<!--<ng-select id="stationsSearch"-->
-<!--           [items]="stations"-->
-<!--           [(ngModel)]="station"-->
-<!--           groupBy="federalState"-->
-<!--           bindLabel="name"-->
-<!--           placeholder="Wetterstation"-->
-<!--           (change)="fireFilterChangedEvent()"></ng-select>-->
-
-<!--    <input type="text"-->
-<!--           placeholder="Filtern"-->
-<!--           matInput-->
-<!--           (change)="fireFilterChangedEvent()"-->
-<!--           [formControl]="weatherStationFilterInput"-->
-<!--           [matAutocomplete]="stationsAutocomplete">-->
-
-<!--    <mat-autocomplete #stationsAutocomplete="matAutocomplete" [displayWith]="stationToString">-->
-<!--        <mat-option *ngFor="let station of filteredStations | async"-->
-<!--                    [value]="station">-->
-<!--            {{station.name}}-->
-<!--        </mat-option>-->
-<!--    </mat-autocomplete>-->
-
-<!--</mat-form-field>-->
-<!--<div style="position: relative;">-->
-<!--    <input type="text" placeholder="Wetterstation" min="1900" max="2022" [formControl]="weatherStationFilterInput"-->
-<!--           (focusin)="openStationsPopup()" (focusout)="hideStationsPopup()">-->
-<!--    <div style="position: absolute; z-index: 1000; background-color: aliceblue" *ngIf="stationsPopupVisible">Blabla<br>fdsjk<br>fdgdg-->
-<!--    </div>-->
-<!--</div>-->
-<div class="textInputElement" style="position: relative" tabindex="1"
-     (click)="stationsPopupVisible = !stationsPopupVisible"
+<div style="position: relative" style="position: relative"
      (keydown.enter)="stationsPopupVisible = true"
      (keydown.arrowDown)="stationsPopupVisible = true"
-     (keydown.escape)="stationsPopupVisible = false; dropdown.focus()"
-     #dropdown>
-    <div *ngIf="station">{{station.federalState}} / {{station.name}}</div>
-    <div *ngIf="!station">Wetterstation</div>
-    <div style="position: absolute; z-index: 1000; background-color: aliceblue; width: 100%"
+     (keydown.escape)="stationsPopupVisible = false; dropdown.focus()">
+    <div class="textInputElement dropdownBox" tabindex="1"
+         (click)="stationsPopupVisible = !stationsPopupVisible"
+         #dropdown>
+        <div *ngIf="station">{{station.federalState}} / {{station.name}}</div>
+        <div *ngIf="!station">Wetterstation</div>
+    </div>
+    <div class="dropdownPanel"
          *ngIf="stationsPopupVisible">
         {{stationsFilterInput.focus()}}
         <input type="text" placeholder="Filtern" (input)="filterStations(stationsFilterInput.value)"
-                #stationsFilterInput>
-        <ul>
+               [formControl]="filterInput" #stationsFilterInput>
+        <ul class="selectionList">
             <li *ngFor="let station of filteredStations">
-                <button (click)="log('click'); selectStation(station)">{{station.name}}</button>
+                <div class="selectItem" (click)="log('click'); selectStation(station)"> {{station.name}}</div>
             </li>
         </ul>
     </div>
@@ -56,13 +25,3 @@
        (change)="fireFilterChangedEvent()">
 <input type="number" placeholder="Bis" min="1900" max="2022" [formControl]="toYear"
        (change)="fireFilterChangedEvent()">
-
-<!--<mat-form-field appearance="fill">-->
-<!--    <mat-label>Von</mat-label>-->
-<!--    <input matInput type="number" placeholder="Jahr" min="1900" max="2022" [formControl]="fromYear">-->
-<!--</mat-form-field>-->
-
-<!--<mat-form-field appearance="fill">-->
-<!--    <mat-label>Bis</mat-label>-->
-<!--    <input matInput type="number" placeholder="Jahr" min="1900" max="2022" [formControl]="toYear">-->
-<!--</mat-form-field>-->

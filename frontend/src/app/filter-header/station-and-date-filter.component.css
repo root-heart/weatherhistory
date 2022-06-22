@@ -38,3 +38,32 @@ label {
 #stationsSearch {
     width: 30em;
 }
+
+.dropdownBox {
+
+}
+
+.dropdownPanel {
+    position: absolute;
+    z-index: 1000;
+    background-color: aliceblue;
+    width: 100%;
+}
+
+.selectionList {
+    list-style-type: none;
+    padding-inline-start: 0;
+    margin-block-start: 0;
+    max-height: 50rem;
+    overflow-y: scroll;
+}
+
+.selectItem {
+    cursor: pointer;
+    margin: 0;
+    padding: 0.4rem 1rem;
+}
+
+.selectItem:hover {
+    background-color: #e80;
+}
