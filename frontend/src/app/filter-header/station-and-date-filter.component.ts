@@ -1,4 +1,4 @@
-import {Component, ElementRef, EventEmitter, OnInit, Output, ViewChild} from '@angular/core';
+import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {FormControl} from "@angular/forms";
 import {WeatherStation, WeatherStationList, WeatherStationService} from "../WeatherStationService";
 
@@ -20,18 +20,14 @@ export class FilterChangedEvent {
     styleUrls: ['./station-and-date-filter.component.css']
 })
 export class StationAndDateFilterComponent implements OnInit {
+    filterInput = new FormControl("")
     fromYear = new FormControl(2008)
     toYear = new FormControl(2022)
-    filterInput = new FormControl("")
 
     stations: WeatherStationList = []
-    station?: WeatherStation
-    filteredStations?: WeatherStationList
-
-    @ViewChild("stationsFilterInput") stationsFilterInput?: ElementRef<HTMLInputElement>
+    selectedStation?: WeatherStation
 
     @Output() onFilterChanged = new EventEmitter<FilterChangedEvent>()
-    stationsPopupVisible = false
 
     constructor(private weatherStationService: WeatherStationService) {
         weatherStationService.getWeatherStations().subscribe(data => this.setStations(data));
@@ -41,12 +37,6 @@ export class StationAndDateFilterComponent implements OnInit {
         console.log(stations)
         stations.sort((a, b) => a.name.localeCompare(b.name))
         this.stations = stations
-        this.resetFilter()
-    }
-
-    resetFilter(): void {
-        this.filteredStations = this.stations
-        this.filterInput.setValue('')
     }
 
     ngOnInit(): void {
@@ -54,28 +44,15 @@ export class StationAndDateFilterComponent implements OnInit {
 
     fireFilterChangedEvent(): void {
         // let station: WeatherStation = this.weatherStationFilterInput.value
-        console.log("filter changed? " + this.station?.name + " - " + this.fromYear.value + " - " + this.toYear.value)
-        if (this.station && this.fromYear.value && this.toYear.value) {
+        console.log("filter changed? " + this.selectedStation?.name + " - " + this.fromYear.value + " - " + this.toYear.value)
+        if (this.selectedStation && this.fromYear.value && this.toYear.value) {
             console.log("filter changed!")
             this.onFilterChanged.emit({
-                station: this.station,
+                station: this.selectedStation,
                 start: this.fromYear.value,
                 end: this.toYear.value
             })
         }
-    }
-
-    filterStations(value: string) {
-        const filterValue = value.toLowerCase();
-        console.log("filter for " + filterValue)
-        this.filteredStations = this.stations.filter(station => station.name.toLowerCase().includes(filterValue));
-    }
-
-    selectStation(station: WeatherStation) {
-        console.log("select station " + station)
-        this.station = station
-        this.stationsPopupVisible = false
-        this.fireFilterChangedEvent()
     }
 
     log(message: String) {

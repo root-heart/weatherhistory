@@ -1,25 +1,13 @@
-<div style="position: relative" style="position: relative"
-     (keydown.enter)="stationsPopupVisible = true"
-     (keydown.arrowDown)="stationsPopupVisible = true"
-     (keydown.escape)="stationsPopupVisible = false; dropdown.focus()">
-    <div class="textInputElement dropdownBox" tabindex="1"
-         (click)="stationsPopupVisible = !stationsPopupVisible"
-         #dropdown>
-        <div *ngIf="station">{{station.federalState}} / {{station.name}}</div>
-        <div *ngIf="!station">Wetterstation</div>
-    </div>
-    <div class="dropdownPanel"
-         *ngIf="stationsPopupVisible">
-        {{stationsFilterInput.focus()}}
-        <input type="text" placeholder="Filtern" (input)="filterStations(stationsFilterInput.value)"
-               [formControl]="filterInput" #stationsFilterInput>
-        <ul class="selectionList">
-            <li *ngFor="let station of filteredStations">
-                <div class="selectItem" (click)="log('click'); selectStation(station)"> {{station.name}}</div>
-            </li>
-        </ul>
-    </div>
-</div>
+<ng-select [(ngModel)]="selectedStation" [items]="stations" groupBy="federalState" bindLabel="name" (change)="fireFilterChangedEvent()">
+
+    <ng-template ng-optgroup-tmp let-currentGroup="item">
+        {{currentGroup.federalState || 'Unnamed group'}}
+    </ng-template>
+
+    <ng-template ng-option-tmp let-currentStation="item">
+        {{currentStation.name}}
+    </ng-template>
+</ng-select>
 
 <input type="number" placeholder="Von" min="1900" max="2022" [formControl]="fromYear"
        (change)="fireFilterChangedEvent()">
