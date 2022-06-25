@@ -16,6 +16,7 @@ import rootheart.codes.weatherhistory.database.StationDao
 import rootheart.codes.weatherhistory.database.SummarizedMeasurement
 import rootheart.codes.weatherhistory.database.SummarizedMeasurementImporter
 import java.io.ByteArrayInputStream
+import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 import java.util.zip.ZipInputStream
@@ -28,14 +29,25 @@ private val log = KotlinLogging.logger {}
 @DelicateCoroutinesApi
 private val databaseExecutor = ConcurrentExecutor(40, "database-operations")
 
+val stationIds = setOf("00848", "01757", "13776", "01993", "04371", "00662", "02014", "00850", "01443", "00691")
+
+val stationFilter: (Station) -> Boolean = {
+    it.latitude > BigDecimal("50.3") && it.latitude < BigDecimal(52) && it.longitude > BigDecimal(9) && it.longitude < BigDecimal(
+        10
+    )
+            || stationIds.contains(it.externalId)
+}
+
 @DelicateCoroutinesApi
 fun importMeasurements(rootDirectory: HtmlDirectory) {
-    val stationIds = setOf("00848", "13776", "01993", "04371", "00662", "02014", "00850", "01443", "00691")
     val stationByExternalId = StationDao.findAll().associateBy(Station::externalId)
     val duration = measureTimeMillis {
         runBlocking {
             rootDirectory.getAllZippedDataFiles()
-                .filter { stationIds.contains(it.externalId) }
+                .filter {
+                    val station = stationByExternalId[it.externalId]
+                    return@filter station?.let { s -> stationFilter.invoke(s) } ?: false
+                }
                 .groupBy { it.externalId }
                 .mapKeys { stationByExternalId[it.key]!! }
                 .map { MeasurementsImporter(it.key, it.value) }

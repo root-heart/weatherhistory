@@ -29,7 +29,8 @@ fun importStations(rootDirectory: HtmlDirectory) {
         }
     }
 
-    StationsImporter.importEntities(stations.values)
+    val filteredStations = stations.values.filter(stationFilter)
+    StationsImporter.importEntities(filteredStations)
 }
 
 private fun createStation(line: String) = Station(

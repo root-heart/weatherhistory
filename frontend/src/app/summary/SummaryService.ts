@@ -39,9 +39,8 @@ export class SummaryService {
         registerLocaleData(localeDe, 'de-DE', localeDeExtra);
     }
 
-    getSummary(stationId: bigint, from: Date, to: Date): Observable<SummaryList> {
+    getSummary(stationId: bigint, fromYear: number, toYear: number): Observable<SummaryList> {
         return this.http.get<SummaryList>('http://localhost:8080/summary/' + stationId +
-            '?from=' + formatDate(from, 'yyyy-MM-dd', 'de-DE') +
-            '&to=' + formatDate(to, 'yyyy-MM-dd', 'de-DE'));
+            '?from=' + fromYear + '-01-01&to=' + toYear + '-12-31');
     }
 }

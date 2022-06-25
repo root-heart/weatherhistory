@@ -20,7 +20,6 @@
     "@angular/router": "~12.2.0",
     "@ng-select/ng-select": "^7.2.0",
     "chart.js": "^3.5.1",
-    "ng2-date-picker": "^12.0.3",
     "rxjs": "~6.6.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.11.4"

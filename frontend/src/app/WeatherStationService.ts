@@ -3,7 +3,7 @@ import {Observable} from "rxjs";
 import {Injectable} from "@angular/core";
 
 export type WeatherStation = {
-    id: number,
+    id: bigint,
     name: string,
     federalState: string
 }

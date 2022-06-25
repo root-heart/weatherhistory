@@ -15,7 +15,6 @@ import {SummaryJson, SummaryList} from "../SummaryService";
 @Component({
     selector: 'sunshine-chart',
     template: '<div style="height: 30vw"><canvas #sunshineChart></canvas></div>',
-    styleUrls: ['./sunshine-chart.component.css']
 })
 export class SunshineChart extends BaseChart implements OnInit {
     @ViewChild("sunshineChart")
