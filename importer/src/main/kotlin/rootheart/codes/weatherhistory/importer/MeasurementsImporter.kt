@@ -38,6 +38,15 @@ val stationFilter: (Station) -> Boolean = {
             || stationIds.contains(it.externalId)
 }
 
+val stationIds = setOf("00848", "01757", "13776", "01993", "04371", "00662", "02014", "00850", "01443", "00691")
+
+val stationFilter: (Station) -> Boolean = {
+    it.latitude > BigDecimal("50.3") && it.latitude < BigDecimal(54) && it.longitude > BigDecimal(8) && it.longitude < BigDecimal(
+        11
+    )
+            || stationIds.contains(it.externalId)
+}
+
 @DelicateCoroutinesApi
 fun importMeasurements(rootDirectory: HtmlDirectory) {
     val stationByExternalId = StationDao.findAll().associateBy(Station::externalId)
