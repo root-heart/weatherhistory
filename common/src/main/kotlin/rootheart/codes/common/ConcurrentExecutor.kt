@@ -12,7 +12,7 @@ class ConcurrentExecutor(concurrency: Int, name: String) {
     private val scope = CoroutineScope(newFixedThreadPoolContext(concurrency, name))
     private val jobs = ArrayList<Job>()
 
-    fun run(block: () -> Unit) {
+    fun run(block: suspend () -> Unit) {
         jobs += scope.launch { block() }
     }
 

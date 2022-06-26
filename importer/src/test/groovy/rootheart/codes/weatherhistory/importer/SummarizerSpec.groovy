@@ -25,7 +25,7 @@ class SummarizerSpec extends Specification {
         def measurements = [measurement1, measurement2,]
 
         when:
-        def summarized = summarizer.summarizeHourlyRecords(station, DateInterval.&day, measurements)
+        def summarized = summarizer.summarize(station, DateInterval.&day, measurements)
 
         then:
         summarized.size() == 1
@@ -67,7 +67,7 @@ class SummarizerSpec extends Specification {
         }
 
         when:
-        def summarized = summarizer.summarizeHourlyRecords(station, DateInterval.&day, measurements)
+        def summarized = summarizer.summarize(station, DateInterval.&day, measurements)
 
         then:
         summarized[0].countCloudCoverage0 == measurements.findAll { it.cloudCoverage == 0 }.size()
@@ -94,7 +94,7 @@ class SummarizerSpec extends Specification {
         def measurements = [measurement1, measurement2,]
 
         when:
-        def summarized = summarizer.summarizeHourlyRecords(station, intervalCalculator, measurements)
+        def summarized = summarizer.summarize(station, intervalCalculator, measurements)
 
         then:
         summarized.size() == 2

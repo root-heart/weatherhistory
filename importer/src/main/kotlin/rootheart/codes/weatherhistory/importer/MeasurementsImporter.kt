@@ -28,24 +28,8 @@ private val log = KotlinLogging.logger {}
 
 @DelicateCoroutinesApi
 private val databaseExecutor = ConcurrentExecutor(40, "database-operations")
-
-val stationIds = setOf("00848", "01757", "13776", "01993", "04371", "00662", "02014", "00850", "01443", "00691")
-
-val stationFilter: (Station) -> Boolean = {
-    it.latitude > BigDecimal("50.3") && it.latitude < BigDecimal(52) && it.longitude > BigDecimal(9) && it.longitude < BigDecimal(
-        10
-    )
-            || stationIds.contains(it.externalId)
-}
-
-val stationIds = setOf("00848", "01757", "13776", "01993", "04371", "00662", "02014", "00850", "01443", "00691")
-
-val stationFilter: (Station) -> Boolean = {
-    it.latitude > BigDecimal("50.3") && it.latitude < BigDecimal(54) && it.longitude > BigDecimal(8) && it.longitude < BigDecimal(
-        11
-    )
-            || stationIds.contains(it.externalId)
-}
+@DelicateCoroutinesApi
+private val downloadExecutor = ConcurrentExecutor(2, "download-operations")
 
 @DelicateCoroutinesApi
 fun importMeasurements(rootDirectory: HtmlDirectory) {
@@ -53,15 +37,13 @@ fun importMeasurements(rootDirectory: HtmlDirectory) {
     val duration = measureTimeMillis {
         runBlocking {
             rootDirectory.getAllZippedDataFiles()
-                .filter {
-                    val station = stationByExternalId[it.externalId]
-                    return@filter station?.let { s -> stationFilter.invoke(s) } ?: false
-                }
                 .groupBy { it.externalId }
-                .mapKeys { stationByExternalId[it.key]!! }
-                .map { MeasurementsImporter(it.key, it.value) }
+                .mapKeys { stationByExternalId[it.key] }
+                .filter { it.key != null }
+                .map { MeasurementsImporter(it.key!!, it.value) }
                 .forEach { it.downloadAndConvert() }
             log.info { "Waiting for database jobs to complete ..." }
+//            downloadExecutor.awaitCompletion()
             databaseExecutor.awaitCompletion()
         }
     }
@@ -151,7 +133,7 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
         val summarizedMeasurements = ArrayList<SummarizedMeasurement>()
         val measurements = measurementByTime.values
         val duration = measureTimeMillis {
-            val summarizedByDay = Summarizer.summarizeHourlyRecords(station, DateInterval::day, measurements)
+            val summarizedByDay = Summarizer.summarize(station, DateInterval::day, measurements)
             summarizedMeasurements += summarizedByDay
 
             runBlocking {

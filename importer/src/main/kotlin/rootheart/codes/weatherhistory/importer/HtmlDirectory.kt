@@ -6,7 +6,7 @@ import java.net.URL
 private val log = KotlinLogging.logger {}
 
 val DIRECTORY_NAME_REGEX =
-    Regex("<a href=\"(?<directoryName>[A-Za-z0-9_]*)/\">")
+    Regex("<a href=\"(?<directoryName>\\w*)/\">")
 
 val STATIONS_FILE_NAME_REGEX =
     Regex("<a href=\"(?<fileName>(?<key>TU|N|TD|FX|TF|SD|VV|FF|RR)_(Stunden|Tages)werte_Beschreibung_Stationen.txt)\">")
@@ -48,6 +48,8 @@ data class ZippedDataFile(
 )
 
 data class StationsFile(
+    val filename: String,
+    val measurementType: MeasurementType,
     val url: URL
 )
 
@@ -78,9 +80,14 @@ object HtmlDirectoryParser {
             .toList()
         val stationsFile = STATIONS_FILE_NAME_REGEX.findAll(htmlSource)
             .map { it.groups as MatchNamedGroupCollection }
-            .map { it["fileName"]!!.value }
-            .map { URL("${url.toExternalForm()}$it") }
-            .map { StationsFile(it) }
+            .map {
+                val filename = it["fileName"]!!.value
+                StationsFile(
+                    filename = filename,
+                    url = URL("${url.toExternalForm()}$filename"),
+                    measurementType = MeasurementType.of(it["key"]!!.value)
+                )
+            }
             .firstOrNull()
         return HtmlDirectory(url, directories, zippedDataFiles, stationsFile)
     }
