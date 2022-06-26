@@ -40,6 +40,11 @@ data class Station(
     val height: Int,
     val latitude: BigDecimal,
     val longitude: BigDecimal,
+    val hasTemperatureData: Boolean,
+    val hasSunshineData: Boolean,
+    val hasCloudinessData: Boolean,
+    val hasWindData: Boolean,
+    val hasPrecipitationData: Boolean
 )
 
 object StationDao {
