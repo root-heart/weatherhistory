@@ -1,7 +1,9 @@
 package rootheart.codes.weatherhistory.importer
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.joda.time.DateTime
@@ -26,10 +28,11 @@ import kotlin.time.measureTimedValue
 
 private val log = KotlinLogging.logger {}
 
-@DelicateCoroutinesApi
-private val databaseExecutor = ConcurrentExecutor(40, "database-operations")
-@DelicateCoroutinesApi
-private val downloadExecutor = ConcurrentExecutor(2, "download-operations")
+//@DelicateCoroutinesApi
+//private val databaseExecutor = ConcurrentExecutor(2, "database-operations")
+
+//@DelicateCoroutinesApi
+//private val downloadExecutor = ConcurrentExecutor(2, "download-operations")
 
 @DelicateCoroutinesApi
 fun importMeasurements(rootDirectory: HtmlDirectory) {
@@ -44,45 +47,63 @@ fun importMeasurements(rootDirectory: HtmlDirectory) {
                 .forEach { it.downloadAndConvert() }
             log.info { "Waiting for database jobs to complete ..." }
 //            downloadExecutor.awaitCompletion()
-            databaseExecutor.awaitCompletion()
+//            databaseExecutor.awaitCompletion()
         }
     }
     log.info { "Finished import in $duration milliseconds, exiting program" }
 }
 
+private val unzipParseConvertExecutor = newFixedThreadPoolContext(5, "unzip")
+
 @OptIn(ExperimentalTime::class)
 @DelicateCoroutinesApi
 private class MeasurementsImporter(val station: Station, val zippedDataFiles: Collection<ZippedDataFile>) {
-    private val measurementByTime = ConcurrentHashMap<DateTime, HourlyMeasurement>()
-    private val unzipParseConvertExecutor = ConcurrentExecutor(40, "unzip")
+//    private val unzipParseConvertExecutor = ConcurrentExecutor(5, "unzip")
 
-    suspend fun downloadAndConvert() {
-        zippedDataFiles
-            .sortedByDescending(ZippedDataFile::size)
-            .forEach(::downloadAndStartConversion)
-        log.debug { "Station ${station.id} - Waiting for unzip-parse-convert jobs to complete" }
-        unzipParseConvertExecutor.awaitCompletion()
+    fun downloadAndConvert() {
+//        val measurements = ArrayList<HourlyMeasurement>()
+        val measurementByTime = ConcurrentHashMap<DateTime, HourlyMeasurement>()
+        runBlocking {
+            zippedDataFiles
+                .sortedByDescending(ZippedDataFile::size)
+                .forEach { zippedDataFile ->
+                    launch(unzipParseConvertExecutor) {
+                        val durationAndZippedBytes = measureTimedValue { zippedDataFile.url.readBytes() }
+                        log.info { "Station ${station.id}, downloading ${durationAndZippedBytes.value.size} bytes from ${zippedDataFile.fileName} took ${durationAndZippedBytes.duration} millis" }
+                        unzipAndConvert(zippedDataFile, durationAndZippedBytes.value, measurementByTime)
+                    }
+                }
+            log.debug { "Station ${station.id} - Waiting for unzip-parse-convert jobs to complete" }
+        }
+//        measurements.addAll(measurementByTime.values)
+//        unzipParseConvertExecutor.awaitCompletion()
 
-        databaseExecutor.run { HourlyMeasurementsImporter.importEntities(measurementByTime.values) }
-
-        databaseExecutor.run {
-            val summarizedMeasurements = summarizeMeasurements()
+        runBlocking {
+            HourlyMeasurementsImporter.importEntities(measurementByTime.values)
+            val summarizedMeasurements = summarizeMeasurements(measurementByTime.values)
             SummarizedMeasurementImporter.importEntities(summarizedMeasurements)
             log.info { "Station ${station.id} - Converted and saved: ${measurementByTime.size}" }
         }
+//        databaseExecutor.run { HourlyMeasurementsImporter.importEntities(measurementByTime.values) }
+//
+//        databaseExecutor.run {
+//            val summarizedMeasurements = summarizeMeasurements()
+//            SummarizedMeasurementImporter.importEntities(summarizedMeasurements)
+//            log.info { "Station ${station.id} - Converted and saved: ${measurementByTime.size}" }
+//        }
     }
 
-    private fun downloadAndStartConversion(zippedDataFile: ZippedDataFile) {
-        val durationAndZippedBytes = measureTimedValue { zippedDataFile.url.readBytes() }
-        log.info { "Station ${station.id}, downloading ${durationAndZippedBytes.value.size} bytes from ${zippedDataFile.fileName} took ${durationAndZippedBytes.duration} millis" }
-        unzipParseConvertExecutor.run { unzipAndConvert(zippedDataFile, durationAndZippedBytes.value) }
-    }
+//    private fun downloadAndStartConversion(zippedDataFile: ZippedDataFile) {
+//        val durationAndZippedBytes = measureTimedValue { zippedDataFile.url.readBytes() }
+//        log.info { "Station ${station.id}, downloading ${durationAndZippedBytes.value.size} bytes from ${zippedDataFile.fileName} took ${durationAndZippedBytes.duration} millis" }
+//        unzipParseConvertExecutor.run { unzipAndConvert(zippedDataFile, durationAndZippedBytes.value) }
+//    }
 
-    private fun unzipAndConvert(zippedDataFile: ZippedDataFile, zippedBytes: ByteArray) {
+    private fun unzipAndConvert(zippedDataFile: ZippedDataFile, zippedBytes: ByteArray, measurementByTime: MutableMap<DateTime, HourlyMeasurement>) {
         val durationAndRowCount = measureTimedValue {
             val unzippedBytes = unzip(zippedBytes)
             val parsed = parse(unzippedBytes)
-            convert(parsed, zippedDataFile.measurementType.propertyByName)
+            convert(parsed, zippedDataFile.measurementType.propertyByName, measurementByTime)
             return@measureTimedValue parsed.rows.size
         }
         log.debug { "Station ${station.id}, file ${zippedDataFile.fileName} - unzipping ${zippedBytes.size} bytes and converting them to ${durationAndRowCount.value} rows took ${durationAndRowCount.duration} millis" }
@@ -108,7 +129,8 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
 
     private fun convert(
         semicolonSeparatedValues: SemicolonSeparatedValues,
-        propertyByName: Map<String, MeasurementProperty<*>>
+        propertyByName: Map<String, MeasurementProperty<*>>,
+        measurementByTime: MutableMap<DateTime, HourlyMeasurement>
     ) {
         val indexMeasurementTime = semicolonSeparatedValues.columnNames.indexOf(COLUMN_NAME_MEASUREMENT_TIME)
         val propertyByIndex = propertyByName.mapKeys {
@@ -129,9 +151,8 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
         }
     }
 
-    private fun summarizeMeasurements(): List<SummarizedMeasurement> {
+    private fun summarizeMeasurements(measurements: Collection<HourlyMeasurement>): List<SummarizedMeasurement> {
         val summarizedMeasurements = ArrayList<SummarizedMeasurement>()
-        val measurements = measurementByTime.values
         val duration = measureTimeMillis {
             val summarizedByDay = Summarizer.summarize(station, DateInterval::day, measurements)
             summarizedMeasurements += summarizedByDay
