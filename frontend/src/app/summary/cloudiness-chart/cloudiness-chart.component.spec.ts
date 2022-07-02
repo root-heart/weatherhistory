@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CloudinessChartComponent } from './cloudiness-chart.component';
+import { CloudinessChart } from './cloudiness-chart.component';
 
 describe('CloudinessChartComponent', () => {
-  let component: CloudinessChartComponent;
-  let fixture: ComponentFixture<CloudinessChartComponent>;
+  let component: CloudinessChart;
+  let fixture: ComponentFixture<CloudinessChart>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ CloudinessChartComponent ]
+      declarations: [ CloudinessChart ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(CloudinessChartComponent);
+    fixture = TestBed.createComponent(CloudinessChart);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -3,6 +3,7 @@ import {TemperatureChart} from "./summary/temperature-chart/temperature-chart.co
 import {SunshineChart} from "./summary/sunshine-chart/sunshine-chart.component";
 import {FilterChangedEvent} from "./filter-header/station-and-date-filter.component";
 import {SummaryList, SummaryService} from "./summary/SummaryService";
+import {CloudinessChart} from "./summary/cloudiness-chart/cloudiness-chart.component";
 
 @Component({
     selector: 'app-root',
@@ -18,10 +19,12 @@ export class AppComponent {
     @ViewChild('sunshineChart')
     sunshineChart?: SunshineChart;
 
+    @ViewChild('cloudinessChart')
+    cloudinessChart?: CloudinessChart;
+
     constructor(private summaryService: SummaryService) {
 
     }
-
 
     filterChanged(event: FilterChangedEvent) {
         this.summaryService.getSummary(event.station.id, event.start, event.end)
@@ -32,6 +35,7 @@ export class AppComponent {
     private updateAllCharts(data: SummaryList) {
         this.temperatureChart?.setData(data);
         this.sunshineChart?.setData(data);
+        this.cloudinessChart?.setData(data);
     }
 }
 

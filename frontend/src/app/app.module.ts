@@ -8,12 +8,12 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {Summary} from "./summary/yearly/summary";
 import {TemperatureChart} from './summary/temperature-chart/temperature-chart.component';
 import {SunshineChart} from './summary/sunshine-chart/sunshine-chart.component';
-import {CloudinessChartComponent} from './summary/cloudiness-chart/cloudiness-chart.component';
+import {CloudinessChart} from './summary/cloudiness-chart/cloudiness-chart.component';
 import {StationAndDateFilterComponent} from './filter-header/station-and-date-filter.component';
 
 @NgModule({
     declarations: [
-        AppComponent, SummaryChart, Summary, TemperatureChart, SunshineChart, CloudinessChartComponent, StationAndDateFilterComponent
+        AppComponent, SummaryChart, Summary, TemperatureChart, SunshineChart, CloudinessChart, StationAndDateFilterComponent
     ],
     imports: [
         BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule

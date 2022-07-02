@@ -14,37 +14,11 @@ import {SummaryJson, SummaryList} from "../SummaryService";
 
 @Component({
     selector: 'sunshine-chart',
-    template: '<div style="height: 30vw"><canvas #sunshineChart></canvas></div>',
+    template: '<h1>Sonnenschein</h1><div style="height: 30vw"><canvas #sunshineChart></canvas></div>',
 })
 export class SunshineChart extends BaseChart implements OnInit {
     @ViewChild("sunshineChart")
     private canvas?: ElementRef;
-
-    private readonly coverageNames: Array<string> = [
-        'wolkenlos',
-        'vereinzelte Wolken',
-        'heiter',
-        'leicht bewölkt',
-        'wolkig',
-        'bewölkt',
-        'stark bewölkt',
-        'fast bedeckt',
-        'bedeckt',
-        'nicht erkennbar',
-    ];
-
-    private readonly coverageColors = [
-        'hsl(210, 80%, 80%)',
-        'hsl(210, 90%, 95%)',
-        'hsl(55, 80%, 90%)',
-        'hsl(55, 65%, 80%)',
-        'hsl(55, 45%, 70%)',
-        'hsl(55, 25%, 70%)',
-        'hsl(55, 5%, 65%)',
-        'hsl(55, 5%, 55%)',
-        'hsl(55, 5%, 45%)',
-        'hsl(55, 5%, 35%)',
-    ];
 
     constructor() {
         super();
@@ -68,43 +42,12 @@ export class SunshineChart extends BaseChart implements OnInit {
             yAxisID: 'yAxisHours',
             xAxisID: 'x1',
             stack: 'sunshine',
-            categoryPercentage: 0.3,
+            categoryPercentage: 0.7,
             barPercentage: 1,
             showTooltip: true,
-            showLegend: true,
+            showLegend: false,
             tooltipValueFormatter: (value: number) => this.formatHours(value)
         });
-
-        for (let i = 0; i <= 8; i++) {
-            dataSets.push({
-                label: this.coverageNames[i],
-                borderColor: this.coverageColors[i],
-                backgroundColor: this.coverageColors[i],
-                data: summaryList.map(m => m[("countCloudCoverage" + i) as keyof SummaryJson]) as number[],
-                xAxisID: 'x2',
-                categoryPercentage: 0.8,
-                barPercentage: 1,
-                stack: 'cloudiness',
-                showTooltip: true,
-                showLegend: true,
-                tooltipValueFormatter: (value: number) => this.formatHours(value)
-            });
-        }
-
-        dataSets.push({
-            label: this.coverageNames[9],
-            borderColor: this.coverageColors[9],
-            backgroundColor: this.coverageColors[9],
-            data: summaryList.map(m => m["countCloudCoverageNotVisible"]),
-            stack: 'cloudiness',
-            xAxisID: 'x2',
-            categoryPercentage: 0.8,
-            barPercentage: 1,
-            showTooltip: true,
-            showLegend: true,
-            tooltipValueFormatter: (value: number) => this.formatHours(value)
-        });
-
         return dataSets;
     }
 
