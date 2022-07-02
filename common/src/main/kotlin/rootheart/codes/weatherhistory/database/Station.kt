@@ -40,7 +40,16 @@ data class Station(
     val height: Int,
     val latitude: BigDecimal,
     val longitude: BigDecimal,
-)
+) {
+    var hasTemperatureData: Boolean = false
+    var hasSunshineData: Boolean = false
+    var hasCloudinessData: Boolean = false
+    var hasWindData: Boolean = false
+    var hasPrecipitationData: Boolean = false
+    var hasAirPressureData: Boolean = false
+    var hasVisibilityData: Boolean = false
+    var hasRecentData: Boolean = false
+}
 
 object StationDao {
     fun findAll() = transaction {

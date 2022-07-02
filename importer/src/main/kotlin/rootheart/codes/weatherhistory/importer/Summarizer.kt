@@ -58,18 +58,19 @@ object Summarizer {
         details = ""
     )
 
-    fun summarizeHourlyRecords(
+    fun summarize(
         station: Station,
         intervalGetter: (DateTime) -> DateInterval,
         measurements: Collection<HourlyMeasurement>
     ): List<SummarizedMeasurement> {
+        // TODO we are assuming that all measurements belong to the same station...
         val grouped = measurements.groupBy { intervalGetter(it.measurementTime) }
         return grouped.map { (group, measurements) ->
-            summarizeHourlyRecords(station, group, measurements)
+            summarize(station, group, measurements)
         }
     }
 
-    private fun summarizeHourlyRecords(station: Station, interval: DateInterval, measurements: Collection<HourlyMeasurement>) =
+    private fun summarize(station: Station, interval: DateInterval, measurements: Collection<HourlyMeasurement>) =
         SummarizedMeasurement(station = station,
             interval = interval,
             countCloudCoverage0 = measurements.count { it.cloudCoverage == 0 },
