@@ -97,25 +97,6 @@ export class TemperatureChart extends BaseChart implements OnInit {
         return dataSets;
     }
 
-    protected getYScales(): any {
-        return {
-            yAxisTemperature: {
-                display: true,
-                // title: {
-                //     display: true,
-                //     text: 'Grad Celsius'
-                // },
-                // position: 'right',
-                min: -30,
-                max: 50
-            },
-            // yAxisMillimeters: {
-            //     display: true,
-            //     position: 'right'
-            // }
-        };
-    }
-
     private formatCentigrade(value: number) {
         return this.numberFormat.format(value) + " °C";
     }

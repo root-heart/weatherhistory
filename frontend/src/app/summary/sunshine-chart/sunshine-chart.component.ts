@@ -51,26 +51,9 @@ export class SunshineChart extends BaseChart implements OnInit {
         return dataSets;
     }
 
-    protected getYScales() {
-        return {
-            x1: {
-                stacked: true,
-            },
-            x2: {
-                stacked: true,
-                display: false,
-                offset: true,
-            },
-            yAxisHours: {
-                display: true,
-            }
-        };
-    }
-
     private formatHours(value: number) {
         return this.numberFormat.format(value) + " h";
     }
-
 
     private formatPercent(value: number) {
         return this.numberFormat.format(value) + " %";

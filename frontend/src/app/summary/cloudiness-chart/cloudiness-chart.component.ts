@@ -50,7 +50,7 @@ export class CloudinessChart extends BaseChart implements OnInit {
 
     constructor() {
         super();
-        Chart.register( LineController, LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend, Filler);
+        Chart.register(LineController, LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend, Filler);
     }
 
     ngOnInit(): void {
@@ -62,16 +62,12 @@ export class CloudinessChart extends BaseChart implements OnInit {
 
     protected getDataSets(summaryList: SummaryList): Array<MeasurementDataSet> {
         let dataSets: Array<MeasurementDataSet> = [];
-        // let sums = summaryList.map(m => this.calculateSumOfCoverageMeasures(m));
-
         for (let i = 0; i <= 8; i++) {
             dataSets.push({
                 label: this.coverageNames[i],
                 borderColor: this.coverageColors[i],
-                // borderWidth: 0,
                 backgroundColor: this.coverageColors[i],
-                data: summaryList.map(m => m[("countCloudCoverage" + i) as keyof SummaryJson] as number / this.calculateSumOfCoverageMeasures(m)) as number[],
-                xAxisID: 'x1',
+                data: summaryList.map(m => m[("countCloudCoverage" + i) as keyof SummaryJson] as number) ,
                 categoryPercentage: 0.7,
                 stack: 'cloudiness',
                 showTooltip: true,
@@ -84,11 +80,9 @@ export class CloudinessChart extends BaseChart implements OnInit {
             label: this.coverageNames[9],
             borderColor: this.coverageColors[9],
             backgroundColor: this.coverageColors[9],
-            data: summaryList.map(m => m.countCloudCoverageNotVisible / this.calculateSumOfCoverageMeasures(m)),
+            data: summaryList.map(m => m.countCloudCoverageNotVisible),
             stack: 'cloudiness',
-            xAxisID: 'x1',
             categoryPercentage: 0.7,
-            // barPercentage: 1,
             showTooltip: true,
             showLegend: true,
             tooltipValueFormatter: (value: number) => this.formatHours(value)
@@ -96,37 +90,9 @@ export class CloudinessChart extends BaseChart implements OnInit {
         return dataSets;
     }
 
-    private calculateSumOfCoverageMeasures(m: SummaryJson) : number {
-        return m.countCloudCoverage0
-        + m.countCloudCoverage1
-        + m.countCloudCoverage2
-        + m.countCloudCoverage3
-        + m.countCloudCoverage4
-        + m.countCloudCoverage5
-        + m.countCloudCoverage6
-        + m.countCloudCoverage7
-        + m.countCloudCoverage8
-        + m.countCloudCoverageNotMeasured
-        + m.countCloudCoverageNotVisible
-    }
-
-    protected getYScales(): any {
-        return {
-            x1: {
-                stacked: true,
-            },
-            yAxisHours: {
-                display: true,
-                stacked: true
-            }
-        };
-    }
-
-
     private formatHours(value: number) {
         return this.numberFormat.format(value) + " h";
     }
-
 
     private formatPercent(value: number) {
         return this.numberFormat.format(value) + " %";

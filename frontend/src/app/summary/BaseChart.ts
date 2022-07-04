@@ -1,7 +1,17 @@
 import {Directive, ElementRef} from "@angular/core";
 import {SummaryList} from "./SummaryService";
 import {formatDate} from "@angular/common";
-import {Chart, ChartData, ChartDataset, LegendItem, TooltipItem} from "chart.js";
+import {
+    Chart,
+    ChartConfiguration,
+    ChartData,
+    ChartDataset,
+    ChartOptions,
+    ChartTypeRegistry,
+    LegendItem,
+    TooltipItem
+} from "chart.js";
+import ChartjsPluginStacked100 from "chartjs-plugin-stacked100";
 
 export type MeasurementDataSet = ChartDataset & {
     showTooltip?: boolean,
@@ -39,79 +49,40 @@ export abstract class BaseChart {
         }
         let context = <CanvasRenderingContext2D>canvas.nativeElement.getContext('2d');
 
-        this.chart = new Chart(context,
-            {
-                type: "bar",
-                options: {
-                    maintainAspectRatio: false,
-                    responsive: true,
-                    animation: false,
-                    scales: this.getYScales(),
-                    interaction: {
-                        mode: 'index'
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            align: 'center',
-                            labels: {filter: this.showLegend}
-                        },
-                        tooltip: {
-                            filter: this.showTooltip,
-                            callbacks: {label: this.formatTooltipLabel}
-                        }
-                    }
+        let options: ChartOptions = {
+            maintainAspectRatio: false,
+            responsive: true,
+            animation: false,
+            interaction: {
+                mode: 'index'
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'center',
+                    labels: {filter: this.showLegend}
                 },
-                data: {
-                    labels: labels,
-                    datasets: dataSets
+                tooltip: {
+                    filter: this.showTooltip,
+                    callbacks: {label: this.formatTooltipLabel}
                 }
-            });
-    }
-
-    protected abstract getYScales(): any;
-
-    private getScales() {
-        return {
-            // xAxisVisible: {
-            // stacked: true,
-            // },
-            // xAxisInvisible: {
-            //     display: false,
-            //     stacked: true
-            // },
-
-            // yAxisHours: {
-            //     //display: false,
-            //     title: {
-            //         display: true,
-            //         text: 'Stunden'
-            //     },
-            //     stacked: true,
-            //     min: 0,
-            //     max: 800,
-            //     stack: 'stack'
-            // },
-            // yAxisPercent: {
-            //     //display: false,
-            //     title: {},
-            //     stacked: true,
-            //     min: 0,
-            //     max: 100,
-            //     stack: 'stack'
-            // },
-            // yAxisMillimeters: {
-            //     //display: false,
-            //     title: {
-            //         display: true,
-            //         text: 'Millimeter'
-            //     },
-            //     min: 0,
-            //     max: 400,
-            //     stack: 'stack'
-            // }
+            }
         };
+
+        let config: ChartConfiguration = {
+            type: "bar",
+            options: options,
+            data: {
+                labels: labels,
+                datasets: dataSets
+            }
+        };
+
+        console.log(config)
+
+        this.chart = new Chart(context, config);
+
     }
 
     private getLabels(summaryList: SummaryList): string[] {
