@@ -5,6 +5,7 @@ import {WeatherStationList, WeatherStationService} from "../../WeatherStationSer
 import {SummaryList, SummaryService} from "../SummaryService";
 import {TemperatureChart} from "../temperature-chart/temperature-chart.component";
 import {SunshineChart} from "../sunshine-chart/sunshine-chart.component";
+import {CloudinessChart} from "../cloudiness-chart/cloudiness-chart.component";
 
 @Component({
     selector: 'yearly-summary',
@@ -21,6 +22,9 @@ export class Summary {
 
     @ViewChild('sunshineChart')
     sunshineChart?: SunshineChart;
+
+    @ViewChild('cloudinessChart')
+    cloudinessChart?: CloudinessChart;
 
     from: Date | null = null;
     to: Date | null = null;
@@ -41,5 +45,6 @@ export class Summary {
     private updateAllCharts(data: SummaryList) {
         this.temperatureChart?.setData(data);
         this.sunshineChart?.setData(data);
+        this.cloudinessChart?.setData(data);
     }
 }

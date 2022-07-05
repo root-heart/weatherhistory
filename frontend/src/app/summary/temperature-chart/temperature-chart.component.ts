@@ -17,8 +17,7 @@ import {
 
 @Component({
     selector: 'temperature-chart',
-    template: '<div style="height: 30vw"><canvas #temperatureChart></canvas></div>',
-    styleUrls: ['./temperature-chart.component.css']
+    template: '<h1>Temperatur</h1><div style="height: 30vw"><canvas #temperatureChart></canvas></div>'
 })
 export class TemperatureChart extends BaseChart implements OnInit {
     @ViewChild("temperatureChart")
@@ -81,40 +80,21 @@ export class TemperatureChart extends BaseChart implements OnInit {
             showTooltip: false
         });
 
-        dataSets.push({
-            label: 'Regen',
-            borderColor: 'hsl(240, 80%, 35%)',
-            backgroundColor: 'hsl(240, 80%, 35%)',
-            data: summaryList.map(m => m['sumRainfallMillimeters']),
-            // xAxisID: 'xAxisVisible',
-            yAxisID: 'yAxisMillimeters',
-            categoryPercentage: 0.5,
-            barPercentage: 0.8,
-            showTooltip: true,
-            showLegend: true,
-            tooltipValueFormatter: (value: number) => this.formatMillimeters(value)
-        });
+        // dataSets.push({
+        //     label: 'Regen',
+        //     borderColor: 'hsl(240, 80%, 35%)',
+        //     backgroundColor: 'hsl(240, 80%, 35%)',
+        //     data: summaryList.map(m => m['sumRainfallMillimeters']),
+        //     // xAxisID: 'xAxisVisible',
+        //     yAxisID: 'yAxisMillimeters',
+        //     categoryPercentage: 0.5,
+        //     barPercentage: 0.8,
+        //     showTooltip: true,
+        //     showLegend: true,
+        //     tooltipValueFormatter: (value: number) => this.formatMillimeters(value)
+        // });
 
         return dataSets;
-    }
-
-    protected getYScales(): any {
-        return {
-            yAxisTemperature: {
-                display: true,
-                // title: {
-                //     display: true,
-                //     text: 'Grad Celsius'
-                // },
-                // position: 'right',
-                min: -30,
-                max: 50
-            },
-            yAxisMillimeters: {
-                display: true,
-                position: 'right'
-            }
-        };
     }
 
     private formatCentigrade(value: number) {

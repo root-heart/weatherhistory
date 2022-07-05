@@ -21,7 +21,7 @@ export class FilterChangedEvent {
 })
 export class StationAndDateFilterComponent implements OnInit {
     filterInput = new FormControl("")
-    fromYear = new FormControl(2008)
+    fromYear = new FormControl(2017)
     toYear = new FormControl(2022)
 
     stations: WeatherStationList = []
