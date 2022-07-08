@@ -45,6 +45,6 @@ export class Summary {
     private updateAllCharts(data: SummaryList) {
         this.temperatureChart?.setData(data);
         this.sunshineChart?.setData(data);
-        this.cloudinessChart?.setData(data);
+        // this.cloudinessChart?.setData(data);
     }
 }

@@ -1,15 +1,15 @@
 :host {
     display: grid;
-    grid-template-columns: 49% 49%;
+    grid-template-columns: 100%;
     grid-gap: 2%;
 }
 
 h1 {
     grid-column-start: 1;
-    grid-column-end: 3;
+    grid-column-end: 2;
 }
 
 station-and-date-filter {
     grid-column-start: 1;
-    grid-column-end: 3;
+    grid-column-end: 2;
 }

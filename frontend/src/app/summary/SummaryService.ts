@@ -5,21 +5,16 @@ import {formatDate, registerLocaleData} from "@angular/common";
 import localeDe from '@angular/common/locales/de';
 import localeDeExtra from '@angular/common/locales/extra/de';
 
+export type CloudCoverageJson = {
+    measurementTime: Date,
+    cloudCoverage: number
+}
+
 export type SummaryJson = {
     firstDay: string,
     lastDay: string,
     intervalType: string,
-    countCloudCoverage0: number,
-    countCloudCoverage1: number,
-    countCloudCoverage2: number,
-    countCloudCoverage3: number,
-    countCloudCoverage4: number,
-    countCloudCoverage5: number,
-    countCloudCoverage6: number,
-    countCloudCoverage7: number,
-    countCloudCoverage8: number,
-    countCloudCoverageNotVisible: number,
-    countCloudCoverageNotMeasured: number,
+    coverages: Array<number>,
     minDewPointTemperatureCentigrade: number,
     maxDewPointTemperatureCentigrade: number,
     avgDewPointTemperatureCentigrade: number,
@@ -41,6 +36,6 @@ export class SummaryService {
 
     getSummary(stationId: bigint, fromYear: number, toYear: number): Observable<SummaryList> {
         return this.http.get<SummaryList>('http://localhost:8080/summary/' + stationId +
-            '?from=' + fromYear + '-01-01&to=' + toYear + '-12-31');
+            '?year=' + fromYear);
     }
 }

@@ -128,7 +128,7 @@ export abstract class BaseChart {
                 let lastDay = new Date(item.lastDay);
                 return firstDay.getFullYear().toString() + ' - ' + lastDay.getFullYear().toString();
             }
-            return item.intervalType
+            return item.firstDay
         });
     }
 

@@ -31,12 +31,12 @@ enum class MeasurementType(
 
     SUNSHINE_DURATION("SD", mapOf("SD_SO" to BigDecimalProperty(HourlyMeasurement::sunshineDurationMinutes))),
 
-    VISIBILITY("VV", mapOf("V_VV" to BigDecimalProperty(HourlyMeasurement::visibilityInMeters))),
+    VISIBILITY("VV", mapOf("V_VV" to IntProperty(HourlyMeasurement::visibilityInMeters))),
 
     WIND_SPEED(
         "FF", mapOf(
             "F" to BigDecimalProperty(HourlyMeasurement::windSpeedMetersPerSecond),
-            "D" to BigDecimalProperty(HourlyMeasurement::windDirectionDegrees)
+            "D" to IntProperty(HourlyMeasurement::windDirectionDegrees)
         )
     ),
 
