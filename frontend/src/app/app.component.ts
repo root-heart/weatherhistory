@@ -14,8 +14,8 @@ import {Meteogram} from "./meteogram/meteogram.component";
 export class AppComponent {
     title = 'Wie war das Wetter';
 
-    @ViewChild('temperatureChart')
-    temperatureChart?: TemperatureChart;
+    // @ViewChild('temperatureChart')
+    // temperatureChart?: TemperatureChart;
 
     // @ViewChild('sunshineChart')
     // sunshineChart?: SunshineChart;
@@ -40,8 +40,15 @@ export class AppComponent {
         // Yes, the member is defined as Date. Yes, the data send by the server comes in a format that typescript can
         // recognize as a Date. No, typescript does not automatically create a Date but rather puts a String into the
         // member that is a Date. So I have to do it on my own. Jeez...
-        data.forEach(summaryJson => summaryJson.firstDay = new Date(summaryJson.firstDay))
-        this.temperatureChart?.setData(data);
+        data.forEach(summaryJson => {
+            summaryJson.firstDay = new Date(summaryJson.firstDay)
+            summaryJson.lastDay = new Date(summaryJson.lastDay)
+            summaryJson.lastDay.setHours(23)
+            summaryJson.lastDay.setMinutes(59)
+            summaryJson.lastDay.setSeconds(59)
+            summaryJson.lastDay.setMilliseconds(999)
+        })
+        // this.temperatureChart?.setData(data);
         // this.sunshineChart?.setData(data);
         // this.cloudinessChart?.setData(data);
         this.meteogram?.setData(data)

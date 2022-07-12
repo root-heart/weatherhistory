@@ -9,7 +9,9 @@ import rootheart.codes.common.collections.sumDecimal
 import rootheart.codes.weatherhistory.database.HourlyMeasurement
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.DateInterval
+import rootheart.codes.weatherhistory.database.PrecipitationType
 import rootheart.codes.weatherhistory.database.SummarizedMeasurement
+import rootheart.codes.weatherhistory.database.SummarizedMeasurementsTable
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -54,6 +56,7 @@ object Summarizer {
         maxAirPressureHectopascals = measurements.maxDecimal { it.maxAirPressureHectopascals },
 
         sumSunshineDurationHours = measurements.sumDecimal { it.sumSunshineDurationHours },
+        sumRainfallMillimeters = measurements.sumDecimal { it.sumRainfallMillimeters },
 
         details = ""
     )
@@ -103,6 +106,12 @@ object Summarizer {
 
             sumSunshineDurationHours = measurements.sumDecimal { it.sunshineDurationMinutes }
                 ?.divide(SIXTY, RoundingMode.HALF_UP),
+
+            sumRainfallMillimeters = measurements.filter { it.precipitationType == PrecipitationType.LIQUID }
+                .sumDecimal { it.precipitationMillimeters },
+
+            sumSnowfallMillimeters = measurements.filter { it.precipitationType == PrecipitationType.SOLID }
+                .sumDecimal { it.precipitationMillimeters },
 
             maxWindSpeedMetersPerSecond = measurements.maxDecimal { it.maxWindSpeedMetersPerSecond },
             avgWindSpeedMetersPerSecond = measurements.avgDecimal { it.windSpeedMetersPerSecond }

@@ -37,7 +37,7 @@ fun Route.getSummary() = get() {
     val station = StationDao.findById(stationId)!!
 
     val start = DateTime(year, 1, 1, 0, 0)
-    val end = DateTime(year, 2, 1, 0, 0)
+    val end = DateTime(year + 1, 1, 1, 0, 0)
 
     val summaryData = SummarizedMeasurementDao
         .findByStationIdAndDateBetween(station, start, end, DateIntervalType.DAY)
@@ -54,10 +54,22 @@ fun Route.getSummary() = get() {
             firstDay = day.toString("yyyy-MM-dd"),
             lastDay = day.toString("yyyy-MM-dd"),
             intervalType = DateIntervalType.DAY,
+
             minAirTemperatureCentigrade = s?.minAirTemperatureCentigrade,
             avgAirTemperatureCentigrade = s?.avgAirTemperatureCentigrade,
             maxAirTemperatureCentigrade = s?.maxAirTemperatureCentigrade,
+
+            minDewPointTemperatureCentigrade = s?.minDewPointTemperatureCentigrade,
+            avgDewPointTemperatureCentigrade = s?.avgDewPointTemperatureCentigrade,
+            maxDewPointTemperatureCentigrade = s?.maxDewPointTemperatureCentigrade,
+
+            avgWindSpeedMetersPerSecond = s?.avgWindSpeedMetersPerSecond,
+            maxWindSpeedMetersPerSecond = s?.maxWindSpeedMetersPerSecond,
+
             sumSunshineDurationHours = s?.sumSunshineDurationHours,
+
+            sumRainfallMillimeters = s?.sumRainfallMillimeters,
+            sumSnowfallMillimeters = s?.sumSnowfallMillimeters
         )
 
         val h = measurements[day]?.sortedBy { it.measurementTime }

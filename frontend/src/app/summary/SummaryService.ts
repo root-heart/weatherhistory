@@ -12,7 +12,7 @@ export type CloudCoverageJson = {
 
 export type SummaryJson = {
     firstDay: Date,
-    lastDay: string,
+    lastDay: Date,
     intervalType: string,
     coverages: Array<number>,
     minDewPointTemperatureCentigrade: number,
@@ -22,7 +22,7 @@ export type SummaryJson = {
     maxAirTemperatureCentigrade: number,
     avgAirTemperatureCentigrade: number,
     sumRainfallMillimeters: number,
-    sumSnowfallCentimeters: number,
+    sumSnowfallMillimeters: number,
     sumSunshineDurationHours: number,
 };
 

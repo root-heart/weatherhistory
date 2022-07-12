@@ -4,7 +4,7 @@ import {formatDate} from "@angular/common";
 
 @Component({
     selector: 'meteogram',
-    template: '<div style="height: 20vw"><canvas style="background-color: bisque" #meteogram></canvas>\</div>'
+    template: '<div style="height: 70vw"><canvas style="background-color: #333" #meteogram></canvas>\</div>'
 })
 export class Meteogram implements OnInit {
     @ViewChild("meteogram")
@@ -25,7 +25,10 @@ export class Meteogram implements OnInit {
     private maxTemperature: number = NaN
     private temperatureChartZero: number = NaN
     private temperatureChartHeight: number = NaN
+    private temperatureChartBottom: number = NaN
     private temperatureYMultiplier: number = NaN
+
+    private precipitationChartZero: number = NaN
 
     private sortedMeasurements: Array<SummaryJson> = []
 
@@ -44,7 +47,10 @@ export class Meteogram implements OnInit {
         let ctx = this.initializeCanvasContext()
         this.calculateChartArea(ctx)
         this.calculateTicks()
+        this.drawPrecipitation(ctx)
         this.drawTemperatures(ctx)
+        this.drawDewPointTemperature(ctx)
+        this.drawCloudiness(ctx)
         // this.drawXScale(ctx, measurements)
         // this.drawYScale(ctx)
     }
@@ -63,16 +69,24 @@ export class Meteogram implements OnInit {
         this.chartLeft = textMetrics.width + 10
         this.chartRight = this.canvas!.nativeElement.clientWidth - 10
         this.chartWidth = this.chartRight - this.chartLeft
-        this.chartHeight = this.chartBottom - this.chartTop
 
         textMetrics = ctx.measureText("August")
         this.chartTop = textMetrics.actualBoundingBoxAscent
         this.chartBottom = this.canvas!.nativeElement.clientHeight - (textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent + 7)
-        let chartHeight = this.chartBottom - this.chartTop;
+        this.chartHeight = this.chartBottom - this.chartTop
 
+        console.log("Chart area: (" + this.chartLeft + "," + this.chartTop + ") - (" + this.chartRight + "," + this.chartBottom + ")")
 
-        this.temperatureChartZero = this.chartTop + chartHeight * 0.2
-        this.temperatureChartHeight = this.chartHeight * 0.4
+        this.temperatureChartHeight = this.chartHeight * 0.3
+        this.temperatureChartBottom = Math.floor(this.chartTop + this.temperatureChartHeight)
+        console.log("temperature chart bottom = " + (this.chartTop + this.temperatureChartHeight))
+
+        this.drawWhiteLine(ctx, this.temperatureChartBottom + 0.5)
+
+        ctx.rect(this.chartLeft, this.chartTop, this.chartWidth, this.chartHeight)
+        ctx.strokeStyle = "#fff"
+        ctx.lineWidth = 1
+        ctx.stroke()
     }
 
     private calculateTicks() {
@@ -86,57 +100,123 @@ export class Meteogram implements OnInit {
     }
 
     private calculateTemperatureY(temperature: number): number {
-        return this.temperatureChartZero
+        return -this.temperatureYMultiplier * temperature
+    }
+
+    private drawWhiteLine(ctx: CanvasRenderingContext2D, y: number) {
+        ctx.beginPath()
+        ctx.moveTo(this.chartLeft, y)
+        ctx.lineTo(this.chartRight, y)
+        ctx.strokeStyle = "#fff"
+        ctx.lineWidth = 1
+        ctx.stroke()
     }
 
     private drawTemperatures(ctx: CanvasRenderingContext2D) {
-        this.minTemperature = Math.min.apply(this.sortedMeasurements.map(m => m.minDewPointTemperatureCentigrade))
-        this.maxTemperature = Math.max.apply(this.sortedMeasurements.map(m => m.minAirTemperatureCentigrade))
+        let minAirTemperatures = this.sortedMeasurements.map(m => m.minDewPointTemperatureCentigrade).filter(v => v)
+        this.minTemperature = Math.min.apply(null, minAirTemperatures)
+        this.minTemperature = Math.floor(this.minTemperature / 5) * 5
+
+        let maxAirTemperatures = this.sortedMeasurements.map(m => m.maxAirTemperatureCentigrade).filter(v => v);
+        this.maxTemperature = Math.max.apply(null, maxAirTemperatures)
+        this.maxTemperature = Math.ceil(this.maxTemperature / 5) * 5
+
         let temperatureRange = this.maxTemperature - this.minTemperature
         this.temperatureYMultiplier = this.temperatureChartHeight / temperatureRange
+        this.temperatureChartZero = this.chartTop + this.temperatureYMultiplier * this.maxTemperature
+
+        this.drawWhiteLine(ctx, this.temperatureChartZero)
 
         ctx.strokeStyle = 'rgba(200, 0, 0, 1)'
-        ctx.lineWidth = 3
+        ctx.lineWidth = 2
         ctx.lineCap = "round"
         ctx.lineJoin = "round"
 
         ctx.translate(this.chartLeft, this.temperatureChartZero);
         ctx.beginPath()
-        ctx.moveTo(0, -this.sortedMeasurements[0].avgAirTemperatureCentigrade * 10)
+        ctx.moveTo(0, this.calculateTemperatureY(this.sortedMeasurements[0].avgAirTemperatureCentigrade))
         for (let i = 0; i < this.sortedMeasurements.length; i++) {
             let measurement = this.sortedMeasurements[i];
-            ctx.lineTo(this.calculateX(measurement.firstDay), -measurement.avgAirTemperatureCentigrade * 10)
+            ctx.lineTo(this.calculateX(measurement.firstDay), this.calculateTemperatureY(measurement.avgAirTemperatureCentigrade))
         }
         ctx.stroke()
         ctx.closePath()
 
         ctx.strokeStyle = 'rgba(200, 0,0, 50%)'
         ctx.fillStyle = 'rgba(200, 0,0, 20%)'
+        ctx.lineWidth = 1
 
         let path = new Path2D()
         let minAirTemps = this.sortedMeasurements.map(m => new MeasurementPoint(m.firstDay, m.minAirTemperatureCentigrade));
         this.addToPath(path, minAirTemps)
 
-        let reversedMeasurements = this.sortedMeasurements.reverse()
-        path.lineTo(this.calculateX(reversedMeasurements[0].firstDay), -reversedMeasurements[0].maxAirTemperatureCentigrade * 10)
-        let maxAirTempsReversed = reversedMeasurements.map(m => new MeasurementPoint(m.firstDay, m.maxAirTemperatureCentigrade));
+        this.sortedMeasurements.reverse()
+        path.lineTo(this.calculateX(this.sortedMeasurements[0].firstDay), this.calculateTemperatureY(this.sortedMeasurements[0].maxAirTemperatureCentigrade))
+        let maxAirTempsReversed = this.sortedMeasurements.map(m => new MeasurementPoint(m.firstDay, m.maxAirTemperatureCentigrade));
         this.addToPath(path, maxAirTempsReversed)
+        this.sortedMeasurements.reverse()
 
         ctx.fill(path)
 
-        ctx.strokeStyle = 'rgba(200, 0,0, 50%)'
-
-        path = new Path2D()
-        this.addToPath(path, minAirTemps)
-        ctx.stroke(path)
-
-        path = new Path2D()
-        this.addToPath(path, maxAirTempsReversed)
-        ctx.stroke(path)
         ctx.resetTransform()
     }
 
-    private drawCloudiness() {
+
+    private drawDewPointTemperature(ctx: CanvasRenderingContext2D) {
+        ctx.strokeStyle = 'rgba(0, 200, 250, 1)'
+        ctx.lineWidth = 1
+        // ctx.setLineDash([2, 2])
+        ctx.lineCap = "round"
+        ctx.lineJoin = "round"
+
+        ctx.translate(this.chartLeft, this.temperatureChartZero);
+        ctx.beginPath()
+        ctx.moveTo(0, this.calculateTemperatureY(this.sortedMeasurements[0].avgDewPointTemperatureCentigrade))
+        for (let i = 0; i < this.sortedMeasurements.length; i++) {
+            let measurement = this.sortedMeasurements[i];
+            ctx.lineTo(this.calculateX(measurement.firstDay), this.calculateTemperatureY(measurement.avgDewPointTemperatureCentigrade))
+        }
+        ctx.stroke()
+
+        ctx.beginPath()
+        ctx.strokeStyle = 'rgba(0, 200, 250, 50%)'
+        ctx.fillStyle = 'rgba(0, 200, 250, 10%)'
+        ctx.lineWidth = 1
+
+        let path = new Path2D()
+        let minTemps = this.sortedMeasurements.map(m => new MeasurementPoint(m.firstDay, m.minDewPointTemperatureCentigrade));
+        this.addToPath(path, minTemps)
+
+        this.sortedMeasurements.reverse()
+        path.lineTo(this.calculateX(this.sortedMeasurements[0].firstDay), this.calculateTemperatureY(this.sortedMeasurements[0].maxDewPointTemperatureCentigrade))
+        let maxTempsReversed = this.sortedMeasurements.map(m => new MeasurementPoint(m.firstDay, m.maxDewPointTemperatureCentigrade));
+        this.addToPath(path, maxTempsReversed)
+        this.sortedMeasurements.reverse()
+
+        ctx.fill(path)
+
+        ctx.resetTransform()
+    }
+
+    private drawPrecipitation(ctx: CanvasRenderingContext2D) {
+        ctx.translate(this.chartLeft, this.temperatureChartBottom)
+
+        ctx.beginPath()
+        for (let measurement of this.sortedMeasurements) {
+            let x = this.calculateX(measurement.firstDay)
+            let w = this.calculateX(measurement.lastDay) - x
+            ctx.fillStyle = '#eee'
+            ctx.fillRect(x, 0, w, -measurement.sumSnowfallMillimeters * 10)
+
+            let y = measurement.sumSnowfallMillimeters ? -measurement.sumSnowfallMillimeters * 10 : 0
+            ctx.fillStyle = '#00e'
+            ctx.fillRect(x, y, w, -measurement.sumRainfallMillimeters * 10)
+        }
+        ctx.fill()
+        ctx.resetTransform()
+    }
+
+    private drawCloudiness(ctx: CanvasRenderingContext2D) {
 
     }
 
@@ -159,7 +239,7 @@ export class Meteogram implements OnInit {
         path.moveTo(0, -measurements[0] * 10)
         for (let i = 0; i < measurements.length; i++) {
             let measurement = measurements[i]
-            path.lineTo(this.calculateX(measurement.measurementTime), -measurement.value * 10)
+            path.lineTo(this.calculateX(measurement.measurementTime), this.calculateTemperatureY(measurement.value))
         }
     }
 

@@ -99,7 +99,11 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
 //        unzipParseConvertExecutor.run { unzipAndConvert(zippedDataFile, durationAndZippedBytes.value) }
 //    }
 
-    private fun unzipAndConvert(zippedDataFile: ZippedDataFile, zippedBytes: ByteArray, measurementByTime: MutableMap<DateTime, HourlyMeasurement>) {
+    private fun unzipAndConvert(
+        zippedDataFile: ZippedDataFile,
+        zippedBytes: ByteArray,
+        measurementByTime: MutableMap<DateTime, HourlyMeasurement>
+    ) {
         val durationAndRowCount = measureTimedValue {
             val unzippedBytes = unzip(zippedBytes)
             val parsed = parse(unzippedBytes)
@@ -146,6 +150,23 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
                 val stringValue = row[indexAndProperty.key]
                 if (stringValue != null) {
                     indexAndProperty.value.setValue(record, stringValue)
+                }
+            }
+        }
+
+        // fix some data issues
+        val list = measurementByTime.values.sortedBy { it.measurementTime }
+        for ((index, measurement) in list.withIndex()) {
+            if (measurement.precipitationMillimeters != null
+                && measurement.precipitationMillimeters!! > BigDecimal.ZERO
+                && measurement.precipitationType == null
+            ) {
+                if (index > 0) {
+                    if (list[index - 1].precipitationType != null) {
+                        measurement.precipitationType = list[index - 1].precipitationType
+                    } else if (index < list.size - 1) {
+                        measurement.precipitationType = list[index + 1].precipitationType
+                    }
                 }
             }
         }

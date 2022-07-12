@@ -39,7 +39,7 @@ inline fun <T> Collection<T>.avgDecimal(selector: (T) -> BigDecimal?): BigDecima
 
 inline fun <T> Collection<T>.sumDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
     val iterator = iterator()
-    if (!iterator.hasNext()) throw NoSuchElementException()
+    if (!iterator.hasNext()) return null
     var sum = selector(iterator.next())
     while (iterator.hasNext()) {
         val v = selector(iterator.next())
