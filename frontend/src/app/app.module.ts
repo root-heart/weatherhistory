@@ -10,10 +10,11 @@ import {TemperatureChart} from './summary/temperature-chart/temperature-chart.co
 import {SunshineChart} from './summary/sunshine-chart/sunshine-chart.component';
 import {CloudinessChart} from './summary/cloudiness-chart/cloudiness-chart.component';
 import {StationAndDateFilterComponent} from './filter-header/station-and-date-filter.component';
+import { Meteogram } from './meteogram/meteogram.component';
 
 @NgModule({
     declarations: [
-        AppComponent, SummaryChart, Summary, TemperatureChart, SunshineChart, CloudinessChart, StationAndDateFilterComponent
+        AppComponent, SummaryChart, Summary, TemperatureChart, SunshineChart, CloudinessChart, StationAndDateFilterComponent, Meteogram
     ],
     imports: [
         BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule

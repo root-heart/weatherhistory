@@ -4,6 +4,7 @@ import {SunshineChart} from "./summary/sunshine-chart/sunshine-chart.component";
 import {FilterChangedEvent} from "./filter-header/station-and-date-filter.component";
 import {SummaryList, SummaryService} from "./summary/SummaryService";
 import {CloudinessChart} from "./summary/cloudiness-chart/cloudiness-chart.component";
+import {Meteogram} from "./meteogram/meteogram.component";
 
 @Component({
     selector: 'app-root',
@@ -16,11 +17,14 @@ export class AppComponent {
     @ViewChild('temperatureChart')
     temperatureChart?: TemperatureChart;
 
-    @ViewChild('sunshineChart')
-    sunshineChart?: SunshineChart;
+    // @ViewChild('sunshineChart')
+    // sunshineChart?: SunshineChart;
+    //
+    // @ViewChild('cloudinessChart')
+    // cloudinessChart?: CloudinessChart;
 
-    @ViewChild('cloudinessChart')
-    cloudinessChart?: CloudinessChart;
+    @ViewChild('meteogram')
+    meteogram?: Meteogram;
 
     constructor(private summaryService: SummaryService) {
 
@@ -33,9 +37,14 @@ export class AppComponent {
 
 
     private updateAllCharts(data: SummaryList) {
+        // Yes, the member is defined as Date. Yes, the data send by the server comes in a format that typescript can
+        // recognize as a Date. No, typescript does not automatically create a Date but rather puts a String into the
+        // member that is a Date. So I have to do it on my own. Jeez...
+        data.forEach(summaryJson => summaryJson.firstDay = new Date(summaryJson.firstDay))
         this.temperatureChart?.setData(data);
-        this.sunshineChart?.setData(data);
-        this.cloudinessChart?.setData(data);
+        // this.sunshineChart?.setData(data);
+        // this.cloudinessChart?.setData(data);
+        this.meteogram?.setData(data)
     }
 }
 

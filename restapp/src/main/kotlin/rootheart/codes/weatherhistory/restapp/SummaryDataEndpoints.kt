@@ -37,7 +37,7 @@ fun Route.getSummary() = get() {
     val station = StationDao.findById(stationId)!!
 
     val start = DateTime(year, 1, 1, 0, 0)
-    val end = DateTime(year + 1, 1, 1, 0, 0)
+    val end = DateTime(year, 2, 1, 0, 0)
 
     val summaryData = SummarizedMeasurementDao
         .findByStationIdAndDateBetween(station, start, end, DateIntervalType.DAY)

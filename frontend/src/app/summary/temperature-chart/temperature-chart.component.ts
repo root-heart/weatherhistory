@@ -11,7 +11,7 @@ import {
     LinearScale, LinearScaleOptions,
     LineController,
     LineElement,
-    PointElement,
+    PointElement, TimeScale,
     Tooltip
 } from "chart.js";
 
@@ -25,7 +25,7 @@ export class TemperatureChart extends BaseChart implements OnInit {
 
     constructor() {
         super();
-        Chart.register(BarController, BarElement, LineController, LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend, Filler);
+        Chart.register(TimeScale, BarController, BarElement, LineController, LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend, Filler);
     }
 
     ngOnInit(): void {

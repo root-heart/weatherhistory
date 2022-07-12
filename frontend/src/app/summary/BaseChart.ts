@@ -7,11 +7,9 @@ import {
     ChartData,
     ChartDataset,
     ChartOptions,
-    ChartTypeRegistry,
     LegendItem,
     TooltipItem
 } from "chart.js";
-import ChartjsPluginStacked100 from "chartjs-plugin-stacked100";
 
 export type MeasurementDataSet = ChartDataset & {
     showTooltip?: boolean,
@@ -38,7 +36,7 @@ export abstract class BaseChart {
 
     protected abstract getCanvas(): ElementRef | undefined;
 
-    protected drawChart(labels: string[], dataSets: Array<MeasurementDataSet>): void {
+    protected drawChart(labels: Date[], dataSets: Array<MeasurementDataSet>): void {
         if (this.chart) {
             this.chart.destroy();
         }
@@ -56,6 +54,18 @@ export abstract class BaseChart {
             interaction: {
                 mode: 'index'
             },
+            scales: {
+                x: {
+                    type: "time",
+                    time: {
+                        unit: "day",
+                        displayFormats: {
+                            month: "MMMM",
+                            locale: "de-DE"
+                        },
+                    },
+                }
+            },
             plugins: {
                 legend: {
                     display: true,
@@ -71,7 +81,7 @@ export abstract class BaseChart {
         };
 
         let config: ChartConfiguration = {
-            type: "bar",
+            type: "line",
             options: options,
             data: {
                 labels: labels,
@@ -85,51 +95,61 @@ export abstract class BaseChart {
 
     }
 
-    private getLabels(summaryList: SummaryList): string[] {
+    private getLabels(summaryList: SummaryList): Array<Date> {
         let lastYear: number | null = null;
         return summaryList.map((item, index) => {
-            if (item.intervalType == 'MONTH') {
-                let firstDay = new Date(item.firstDay);
-                if (lastYear == null || firstDay.getFullYear() != lastYear) {
-                    lastYear = firstDay.getFullYear();
-                    return formatDate(firstDay, 'MMMM yyyy', 'de-DE');
-                } else {
-                    return formatDate(firstDay, 'MMMM', 'de-DE');
-                }
-            } else if (item.intervalType == 'SEASON') {
-                let firstDay = new Date(item.firstDay);
-                let firstMonth = firstDay.getMonth();
-                let seasonName = 'unknown';
-                switch (firstMonth) {
-                    case 2:
-                    case 3:
-                    case 4:
-                        seasonName = 'Spring ' + firstDay.getFullYear();
-                        break;
-                    case 5:
-                    case 6:
-                    case 7:
-                        seasonName = 'Summer ' + firstDay.getFullYear();
-                        break;
-                    case 8:
-                    case 9:
-                    case 10:
-                        seasonName = 'Fall ' + firstDay.getFullYear();
-                        break
-                    default:
-                        seasonName = 'Winter ' + firstDay.getFullYear() + '/' + (firstDay.getFullYear() + 1);
-                }
-                return seasonName;
-            } else if (item.intervalType == 'YEAR') {
-                let firstDay = new Date(item.firstDay);
-                return firstDay.getFullYear().toString();
-            } else if (item.intervalType == 'DECADE') {
-                let firstDay = new Date(item.firstDay);
-                let lastDay = new Date(item.lastDay);
-                return firstDay.getFullYear().toString() + ' - ' + lastDay.getFullYear().toString();
-            }
-            return item.firstDay
-        });
+            // if (item.intervalType == 'MONTH') {
+            //     let firstDay = new Date(item.firstDay);
+            //     if (lastYear == null || firstDay.getFullYear() != lastYear) {
+            //         lastYear = firstDay.getFullYear();
+            //         return formatDate(firstDay, 'MMMM yyyy', 'de-DE');
+            //     } else {
+            //         return formatDate(firstDay, 'MMMM', 'de-DE');
+            //     }
+            // } else if (item.intervalType == 'SEASON') {
+            //     let firstDay = new Date(item.firstDay);
+            //     let firstMonth = firstDay.getMonth();
+            //     let seasonName = 'unknown';
+            //     switch (firstMonth) {
+            //         case 2:
+            //         case 3:
+            //         case 4:
+            //             seasonName = 'Spring ' + firstDay.getFullYear();
+            //             break;
+            //         case 5:
+            //         case 6:
+            //         case 7:
+            //             seasonName = 'Summer ' + firstDay.getFullYear();
+            //             break;
+            //         case 8:
+            //         case 9:
+            //         case 10:
+            //             seasonName = 'Fall ' + firstDay.getFullYear();
+            //             break
+            //         default:
+            //             seasonName = 'Winter ' + firstDay.getFullYear() + '/' + (firstDay.getFullYear() + 1);
+            //     }
+            //     return seasonName;
+            // } else if (item.intervalType == 'YEAR') {
+            //     let firstDay = new Date(item.firstDay);
+            //     return firstDay.getFullYear().toString();
+            // } else if (item.intervalType == 'DECADE') {
+            //     let firstDay = new Date(item.firstDay);
+            //     let lastDay = new Date(item.lastDay);
+            //     return firstDay.getFullYear().toString() + ' - ' + lastDay.getFullYear().toString();
+            // }
+            let date = new Date(item.firstDay);
+            // if (date.getDate() == 15) {
+                return date
+            // } else {
+            //     return null
+            // }
+        }).filter(value => value !== null)
+            .map(value => value!);
+    }
+
+    protected getScales(): any {
+
     }
 
     private showLegend(legendItem: LegendItem, chartData: ChartData): boolean {

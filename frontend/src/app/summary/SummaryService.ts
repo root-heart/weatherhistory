@@ -11,7 +11,7 @@ export type CloudCoverageJson = {
 }
 
 export type SummaryJson = {
-    firstDay: string,
+    firstDay: Date,
     lastDay: string,
     intervalType: string,
     coverages: Array<number>,
@@ -35,7 +35,8 @@ export class SummaryService {
     }
 
     getSummary(stationId: bigint, fromYear: number, toYear: number): Observable<SummaryList> {
-        return this.http.get<SummaryList>('http://localhost:8080/summary/' + stationId +
+        let summaryListObservable = this.http.get<SummaryList>('http://localhost:8080/summary/' + stationId +
             '?year=' + fromYear);
+        return summaryListObservable;
     }
 }

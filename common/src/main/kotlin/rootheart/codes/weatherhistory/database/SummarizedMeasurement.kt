@@ -144,7 +144,7 @@ object SummarizedMeasurementDao {
             SummarizedMeasurementsTable.stationId.eq(station.id!!)
                 .and(SummarizedMeasurementsTable.intervalType eq intervalType.name)
                 .and(SummarizedMeasurementsTable.firstDay greaterEq from)
-                .and(SummarizedMeasurementsTable.firstDay lessEq to)
+                .and(SummarizedMeasurementsTable.firstDay less to)
         }
             .orderBy(SummarizedMeasurementsTable.firstDay)
             .map { toSummarizedMeasurement(station, it) }

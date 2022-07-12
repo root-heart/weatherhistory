@@ -71,7 +71,7 @@ data class HourlyMeasurement(
 object HourlyMeasurementDao {
     fun findByStationIdAndYear(station: Station, year: Int): List<HourlyMeasurement> = transaction {
         val start = DateTime(year, 1, 1, 0, 0)
-        val end = DateTime(year + 1, 1, 1, 0, 0)
+        val end = DateTime(year , 2, 1, 0, 0)
         HourlyMeasurementsTable.select {
             HourlyMeasurementsTable.stationId.eq(station.id!!)
                 .and(HourlyMeasurementsTable.measurementTime.greaterEq(start))

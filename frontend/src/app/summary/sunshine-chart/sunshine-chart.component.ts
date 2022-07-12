@@ -8,9 +8,10 @@ import {
     LinearScale,
     LineController,
     LineElement,
-    PointElement, Tooltip
+    PointElement, Tooltip, TimeScale
 } from "chart.js";
 import {SummaryJson, SummaryList} from "../SummaryService";
+import 'chartjs-adapter-moment';
 
 @Component({
     selector: 'sunshine-chart',
@@ -22,7 +23,7 @@ export class SunshineChart extends BaseChart implements OnInit {
 
     constructor() {
         super();
-        Chart.register(BarController, BarElement, LineController, LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend, Filler);
+        Chart.register(TimeScale, BarController, BarElement, LineController, LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend, Filler);
     }
 
     ngOnInit(): void {
@@ -39,8 +40,6 @@ export class SunshineChart extends BaseChart implements OnInit {
             borderColor: 'hsl(40, 100%, 50%)',
             backgroundColor: 'hsl(40, 100%, 50%)',
             data: summaryList.map(m => m['sumSunshineDurationHours']),
-            yAxisID: 'yAxisHours',
-            xAxisID: 'x1',
             stack: 'sunshine',
             categoryPercentage: 0.7,
             barPercentage: 1,
@@ -49,6 +48,11 @@ export class SunshineChart extends BaseChart implements OnInit {
             tooltipValueFormatter: (value: number) => this.formatHours(value)
         });
         return dataSets;
+    }
+
+    protected getScales(): any {
+        return {
+        }
     }
 
     private formatHours(value: number) {
