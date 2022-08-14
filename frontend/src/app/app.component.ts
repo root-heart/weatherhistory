@@ -14,15 +14,6 @@ import {Meteogram} from "./meteogram/meteogram.component";
 export class AppComponent {
     title = 'Wie war das Wetter';
 
-    // @ViewChild('temperatureChart')
-    // temperatureChart?: TemperatureChart;
-
-    // @ViewChild('sunshineChart')
-    // sunshineChart?: SunshineChart;
-    //
-    // @ViewChild('cloudinessChart')
-    // cloudinessChart?: CloudinessChart;
-
     @ViewChild('meteogram')
     meteogram?: Meteogram;
 
@@ -48,9 +39,6 @@ export class AppComponent {
             summaryJson.lastDay.setSeconds(59)
             summaryJson.lastDay.setMilliseconds(999)
         })
-        // this.temperatureChart?.setData(data);
-        // this.sunshineChart?.setData(data);
-        // this.cloudinessChart?.setData(data);
         this.meteogram?.setData(data)
     }
 }
