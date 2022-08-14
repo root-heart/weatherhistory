@@ -4,14 +4,20 @@ import {formatDate} from "@angular/common";
 
 @Component({
     selector: 'meteogram',
-    template: '<div style="height: 70vw"><canvas style="background-color: #333" #meteogram></canvas>\</div>'
+    template: '<div style="height: 30vw"><canvas #meteogram></canvas>\</div>'
 })
 export class Meteogram implements OnInit {
     @ViewChild("meteogram")
     private canvas?: ElementRef
 
-    private chartRight: number = NaN
+
+    private chartInsets: number = 10
+    private mainTickColor = "#888a"
+    private subTickColor = "#8884"
+    private textColor = "#ccc"
+
     private chartLeft: number = NaN
+    private chartRight: number = NaN
     private chartTop: number = NaN
     private chartBottom: number = NaN
     private chartWidth: number = NaN
@@ -30,6 +36,14 @@ export class Meteogram implements OnInit {
 
     private precipitationChartZero: number = NaN
 
+    private cloudinessChartTop: number = NaN
+    private cloudinessChartBottom: number = NaN
+    private cloudinessChartHeight: number = NaN
+
+    private sunshineDurationChartTop: number = NaN;
+    private sunshineDurationChartBottom: number = NaN;
+    private sunshineDurationChartHeight: number = NaN;
+
     private sortedMeasurements: Array<SummaryJson> = []
 
     constructor() {
@@ -42,16 +56,20 @@ export class Meteogram implements OnInit {
         if (this.canvas === undefined) {
             return
         }
+
         this.sortedMeasurements = measurements.sort((m1, m2) => m1.firstDay.valueOf() - m2.firstDay.valueOf())
 
         let ctx = this.initializeCanvasContext()
         this.calculateChartArea(ctx)
+        this.calculateTemperatureChartValues()
         this.calculateTicks()
+
+        this.drawChartBoundingRect(ctx)
         this.drawPrecipitation(ctx)
         this.drawTemperatures(ctx)
-        this.drawDewPointTemperature(ctx)
+        this.drawSunshineDuration(ctx)
         this.drawCloudiness(ctx)
-        // this.drawXScale(ctx, measurements)
+        this.drawXScale(ctx, measurements)
         // this.drawYScale(ctx)
     }
 
@@ -65,9 +83,10 @@ export class Meteogram implements OnInit {
     }
 
     private calculateChartArea(ctx: CanvasRenderingContext2D) {
+        // TODO generate all labels for y axis, measure all texts and take the measurement of the widest one
         let textMetrics: TextMetrics = ctx.measureText("22:00")
-        this.chartLeft = textMetrics.width + 10
-        this.chartRight = this.canvas!.nativeElement.clientWidth - 10
+        this.chartLeft = Math.ceil(textMetrics.width) + this.chartInsets
+        this.chartRight = this.canvas!.nativeElement.clientWidth - Math.ceil(textMetrics.width) - this.chartInsets
         this.chartWidth = this.chartRight - this.chartLeft
 
         textMetrics = ctx.measureText("August")
@@ -83,16 +102,27 @@ export class Meteogram implements OnInit {
 
         this.drawWhiteLine(ctx, this.temperatureChartBottom + 0.5)
 
-        ctx.rect(this.chartLeft, this.chartTop, this.chartWidth, this.chartHeight)
-        ctx.strokeStyle = "#fff"
+        this.sunshineDurationChartTop = this.temperatureChartBottom + 5
+        this.sunshineDurationChartHeight = this.chartHeight * 0.2
+        this.sunshineDurationChartBottom = this.sunshineDurationChartTop + this.sunshineDurationChartHeight
+
+        this.cloudinessChartTop = this.sunshineDurationChartBottom + 5
+        this.cloudinessChartHeight = this.chartHeight * 0.2
+        this.cloudinessChartBottom = this.cloudinessChartTop + this.cloudinessChartHeight
+    }
+
+    private drawChartBoundingRect(ctx: CanvasRenderingContext2D) {
+        ctx.rect(this.chartLeft - 0.5, this.chartTop - 0.5, this.chartWidth + 1, this.chartHeight + 1)
+        ctx.strokeStyle = this.mainTickColor
         ctx.lineWidth = 1
         ctx.stroke()
     }
 
     private calculateTicks() {
         this.minDate = this.sortedMeasurements[0].firstDay
-        this.maxDate = this.sortedMeasurements[this.sortedMeasurements.length - 1].firstDay
+        this.maxDate = this.sortedMeasurements[this.sortedMeasurements.length - 1].lastDay
         this.dx = this.chartWidth / (this.maxDate.valueOf() - this.minDate.valueOf())
+        console.log("minDate = " + this.minDate + "   maxDate = " + this.maxDate + "   dx = " + this.dx)
     }
 
     private calculateX(date: Date): number {
@@ -107,12 +137,13 @@ export class Meteogram implements OnInit {
         ctx.beginPath()
         ctx.moveTo(this.chartLeft, y)
         ctx.lineTo(this.chartRight, y)
-        ctx.strokeStyle = "#fff"
+        ctx.strokeStyle = this.mainTickColor
         ctx.lineWidth = 1
         ctx.stroke()
     }
 
-    private drawTemperatures(ctx: CanvasRenderingContext2D) {
+    private calculateTemperatureChartValues() {
+        // TODO align temperature ticks on whole pixels
         let minAirTemperatures = this.sortedMeasurements.map(m => m.minDewPointTemperatureCentigrade).filter(v => v)
         this.minTemperature = Math.min.apply(null, minAirTemperatures)
         this.minTemperature = Math.floor(this.minTemperature / 5) * 5
@@ -123,16 +154,27 @@ export class Meteogram implements OnInit {
 
         let temperatureRange = this.maxTemperature - this.minTemperature
         this.temperatureYMultiplier = this.temperatureChartHeight / temperatureRange
-        this.temperatureChartZero = this.chartTop + this.temperatureYMultiplier * this.maxTemperature
+        this.temperatureChartZero = Math.ceil(this.chartTop + this.temperatureYMultiplier * this.maxTemperature) + 0.5
 
+    }
+
+    private drawTemperatures(ctx: CanvasRenderingContext2D) {
         this.drawWhiteLine(ctx, this.temperatureChartZero)
+        let number = this.sortedMeasurements[0].lastDay.valueOf() - this.sortedMeasurements[0].firstDay.valueOf();
+        let offset = this.chartLeft + this.dx * number / 2
 
-        ctx.strokeStyle = 'rgba(200, 0, 0, 1)'
+        ctx.translate(offset, this.temperatureChartZero);
+        this.drawDewPointTemperature(ctx)
+        this.drawAirTemperature(ctx)
+        ctx.resetTransform()
+    }
+
+    private drawAirTemperature(ctx: CanvasRenderingContext2D) {
+        ctx.strokeStyle = '#c00'
         ctx.lineWidth = 2
         ctx.lineCap = "round"
         ctx.lineJoin = "round"
 
-        ctx.translate(this.chartLeft, this.temperatureChartZero);
         ctx.beginPath()
         ctx.moveTo(0, this.calculateTemperatureY(this.sortedMeasurements[0].avgAirTemperatureCentigrade))
         for (let i = 0; i < this.sortedMeasurements.length; i++) {
@@ -142,8 +184,7 @@ export class Meteogram implements OnInit {
         ctx.stroke()
         ctx.closePath()
 
-        ctx.strokeStyle = 'rgba(200, 0,0, 50%)'
-        ctx.fillStyle = 'rgba(200, 0,0, 20%)'
+        ctx.fillStyle = '#c004'
         ctx.lineWidth = 1
 
         let path = new Path2D()
@@ -157,19 +198,12 @@ export class Meteogram implements OnInit {
         this.sortedMeasurements.reverse()
 
         ctx.fill(path)
-
-        ctx.resetTransform()
     }
 
-
     private drawDewPointTemperature(ctx: CanvasRenderingContext2D) {
-        ctx.strokeStyle = 'rgba(0, 200, 250, 1)'
+        ctx.strokeStyle = '#0c8'
         ctx.lineWidth = 1
-        // ctx.setLineDash([2, 2])
-        ctx.lineCap = "round"
-        ctx.lineJoin = "round"
 
-        ctx.translate(this.chartLeft, this.temperatureChartZero);
         ctx.beginPath()
         ctx.moveTo(0, this.calculateTemperatureY(this.sortedMeasurements[0].avgDewPointTemperatureCentigrade))
         for (let i = 0; i < this.sortedMeasurements.length; i++) {
@@ -179,8 +213,7 @@ export class Meteogram implements OnInit {
         ctx.stroke()
 
         ctx.beginPath()
-        ctx.strokeStyle = 'rgba(0, 200, 250, 50%)'
-        ctx.fillStyle = 'rgba(0, 200, 250, 10%)'
+        ctx.fillStyle = '#0c84'
         ctx.lineWidth = 1
 
         let path = new Path2D()
@@ -194,8 +227,6 @@ export class Meteogram implements OnInit {
         this.sortedMeasurements.reverse()
 
         ctx.fill(path)
-
-        ctx.resetTransform()
     }
 
     private drawPrecipitation(ctx: CanvasRenderingContext2D) {
@@ -216,24 +247,60 @@ export class Meteogram implements OnInit {
         ctx.resetTransform()
     }
 
-    private drawCloudiness(ctx: CanvasRenderingContext2D) {
+    private readonly coverageColors = [
+        'hsl(210, 80%, 80%)',
+        'hsl(210, 90%, 95%)',
+        'hsl(55, 80%, 90%)',
+        'hsl(55, 65%, 80%)',
+        'hsl(55, 45%, 70%)',
+        'hsl(55, 25%, 70%)',
+        'hsl(55, 5%, 65%)',
+        'hsl(55, 5%, 55%)',
+        'hsl(55, 5%, 45%)',
+        'hsl(55, 5%, 35%)',
+    ];
 
+    private drawCloudiness(ctx: CanvasRenderingContext2D) {
+        ctx.translate(this.chartLeft, this.cloudinessChartBottom)
+        let oneHourHeight = this.cloudinessChartHeight / 24
+        ctx.beginPath()
+        for (let measurement of this.sortedMeasurements) {
+            let x = this.calculateX(measurement.firstDay)
+            let w = this.calculateX(measurement.lastDay) - x
+            measurement.coverages.forEach((coverage, index) => {
+                let t = -index * oneHourHeight - oneHourHeight
+                if (coverage === null) {
+                    ctx.fillStyle = "#400"
+                } else {
+                    ctx.fillStyle = this.coverageColors[coverage]
+                }
+                ctx.fillRect(x, t, w, oneHourHeight)
+            })
+        }
+        ctx.fill()
+        ctx.resetTransform()
     }
 
-    // private drawMeasurements(ctx: CanvasRenderingContext2D, measurements: Array<SummaryJson>) {
-    //     ctx.translate(this.chartLeft, this.chartBottom)
-    //     measurements.forEach((summary, day) => {
-    //         summary.coverages.forEach((coverage, hour) => {
-    //             if (coverage !== undefined && coverage !== null && coverage >= 0) {
-    //                 ctx.fillStyle = this.coverageColors[coverage]
-    //             } else {
-    //                 ctx.fillStyle = "hsl(0, 50%, 30%)"
-    //             }
-    //             ctx.fillRect(day * this.tickWidth, -hour * this.tickHeight, this.tickWidth + 1, -(this.tickHeight + 1))
-    //         })
-    //     })
-    //     ctx.resetTransform()
-    // }
+    private drawSunshineDuration(ctx: CanvasRenderingContext2D) {
+        let maxSunshineDuration = this.sortedMeasurements.map(m => m.sumSunshineDurationHours).filter(v => v);
+        this.maxTemperature = Math.max.apply(null, maxSunshineDuration)
+
+        ctx.translate(this.chartLeft, this.sunshineDurationChartBottom)
+        ctx.beginPath()
+        for (let measurement of this.sortedMeasurements) {
+            let x = this.calculateX(measurement.firstDay)
+            let w = this.calculateX(measurement.lastDay) - x
+            if (measurement.sumSunshineDurationHours === null || measurement.sumSunshineDurationHours === undefined) {
+                ctx.fillStyle = '#400'
+                ctx.fillRect(x, 0, w, -40)
+            } else {
+                ctx.fillStyle = '#e80'
+                ctx.fillRect(x, 0, w, -measurement.sumSunshineDurationHours * 10)
+            }
+        }
+        ctx.fill()
+        ctx.resetTransform()
+    }
 
     private addToPath(path: Path2D, measurements: Array<MeasurementPoint>) {
         path.moveTo(0, -measurements[0] * 10)
@@ -247,6 +314,10 @@ export class Meteogram implements OnInit {
         return new Date(year, month, 0).getDate();
     }
 
+    private static firstDayInMonth(month: number, year: number): number {
+        return new Date(year, month, 0).getDate();
+    }
+
     private getMonthNames(): string[] {
         return Array.from(Array(12).keys())
             .map(month => formatDate(new Date(2022, month, 1), "MMMM", "de-DE"))
@@ -254,33 +325,33 @@ export class Meteogram implements OnInit {
 
     private drawXScale(ctx: CanvasRenderingContext2D, measurements: Array<SummaryJson>) {
 
-        ctx.translate(0, 0.5);
-        ctx.beginPath()
-        ctx.lineWidth = 1
-        ctx.moveTo(this.chartLeft, this.chartBottom)
-        ctx.lineTo(this.chartLeft, this.chartBottom)
-        ctx.lineTo(this.chartRight, this.chartBottom)
-        ctx.stroke()
-        ctx.resetTransform()
+        // ctx.translate(0, 0.5);
+        // ctx.beginPath()
+        // ctx.lineWidth = 1
+        // ctx.moveTo(this.chartLeft, this.chartBottom)
+        // ctx.lineTo(this.chartLeft, this.chartBottom)
+        // ctx.lineTo(this.chartRight, this.chartBottom)
+        // ctx.stroke()
+        // ctx.resetTransform()
 
         let year = measurements[0].firstDay.getFullYear()
 
         // draw month separator lines
-        ctx.moveTo(0.5, 10)
-        ctx.lineTo(0.5, this.chartTop - this.chartBottom + 10)
-        ctx.stroke()
+        ctx.strokeStyle = this.mainTickColor
+        // ctx.moveTo(0.5, 10)
+        // ctx.lineTo(0.5, this.chartTop - this.chartBottom + 10)
+        // ctx.stroke()
 
         ctx.textAlign = "center"
         ctx.textBaseline = "top"
-        ctx.fillStyle = "#222"
+        ctx.fillStyle = this.textColor
 
         ctx.translate(this.chartLeft, this.chartBottom)
         this.getMonthNames().forEach((monthName, index) => {
             let dayCountPerMonth = Meteogram.daysInMonth(index + 1, year)
             console.log("Drawing " + monthName + " with " + dayCountPerMonth + " days")
-            ctx.fillText(monthName, dayCountPerMonth * 45 /* TODO calculate x value correctly */ / 2, 3)
-            ctx.translate(dayCountPerMonth * 45 /* TODO calculate x value correctly */, 0)
-
+            let x = this.calculateX(new Date(year, index, 15))
+            ctx.fillText(monthName, x, 3)
         })
         ctx.resetTransform()
 
@@ -291,8 +362,8 @@ export class Meteogram implements OnInit {
                 dayCountPerMonth += Meteogram.daysInMonth(v + 1, year)
             })
             console.log("Drawing month separator for " + monthName + " with " + dayCountPerMonth + " days")
-            let x = Math.floor(dayCountPerMonth * 45 /* TODO calculate x value correctly */) + 0.5
-            ctx.strokeStyle = "#222"
+            let x = Math.floor(this.calculateX(new Date(year, index, 1))) + 0.5
+            ctx.strokeStyle = this.mainTickColor
             ctx.translate(x, 0)
             ctx.beginPath()
             ctx.moveTo(0, 0)
