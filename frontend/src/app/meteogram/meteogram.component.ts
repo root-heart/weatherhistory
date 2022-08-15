@@ -226,7 +226,7 @@ export class Meteogram implements OnInit {
     }
 
     private drawDewPointTemperature(ctx: CanvasRenderingContext2D) {
-        ctx.strokeStyle = '#0c8'
+        ctx.strokeStyle = '#84c'
         ctx.lineWidth = 1
 
         ctx.beginPath()
@@ -238,7 +238,7 @@ export class Meteogram implements OnInit {
         ctx.stroke()
 
         ctx.beginPath()
-        ctx.fillStyle = '#0c84'
+        ctx.fillStyle = '#84c4'
         ctx.lineWidth = 1
 
         let path = new Path2D()
