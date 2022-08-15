@@ -6,12 +6,11 @@ import rootheart.codes.common.collections.avgDecimal
 import rootheart.codes.common.collections.maxDecimal
 import rootheart.codes.common.collections.minDecimal
 import rootheart.codes.common.collections.sumDecimal
-import rootheart.codes.weatherhistory.database.HourlyMeasurement
-import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.DateInterval
+import rootheart.codes.weatherhistory.database.HourlyMeasurement
 import rootheart.codes.weatherhistory.database.PrecipitationType
+import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.SummarizedMeasurement
-import rootheart.codes.weatherhistory.database.SummarizedMeasurementsTable
 import java.math.BigDecimal
 import java.math.RoundingMode
 

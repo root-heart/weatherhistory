@@ -51,7 +51,7 @@ fun importStations(rootDirectory: HtmlDirectory) {
                     MeasurementType.WIND_SPEED -> station.hasWindData = true
                     MeasurementType.PRECIPITATION -> station.hasPrecipitationData = true
                 }
-                station.hasRecentData = lastDay.startsWith("202207")
+                station.hasRecentData = lastDay.startsWith("202208")
             }
         }
     }

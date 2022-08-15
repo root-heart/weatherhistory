@@ -16,18 +16,23 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val firstDay = date("FIRST_DAY")
     val lastDay = date("LAST_DAY")
     val intervalType = varchar("INTERVAL_TYPE", 6)
+
     val minAirTemperatureCentigrade = decimal("MIN_AIR_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val avgAirTemperatureCentigrade = decimal("AVG_AIR_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val maxAirTemperatureCentigrade = decimal("MAX_AIR_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
+
     val minDewPointTemperatureCentigrade = decimal("MIN_DEW_POINT_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val avgDewPointTemperatureCentigrade = decimal("AVG_DEW_POINT_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val maxDewPointTemperatureCentigrade = decimal("MAX_DEW_POINT_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
+
     val minHumidityPercent = decimal("MIN_HUMIDITY_PERCENT", 4, 1).nullable()
     val avgHumidityPercent = decimal("AVG_HUMIDITY_PERCENT", 4, 1).nullable()
     val maxHumidityPercent = decimal("MAX_HUMIDITY_PERCENT", 4, 1).nullable()
+
     val minAirPressureHectopascals = decimal("MIN_AIR_PRESSURE_HECTOPASCALS", 5, 1).nullable()
     val avgAirPressureHectopascals = decimal("AVG_AIR_PRESSURE_HECTOPASCALS", 5, 1).nullable()
     val maxAirPressureHectopascals = decimal("MAX_AIR_PRESSURE_HECTOPASCALS", 5, 1).nullable()
+
     val countCloudCoverage0 = integer("COUNT_CLOUD_COVERAGE0").nullable()
     val countCloudCoverage1 = integer("COUNT_CLOUD_COVERAGE1").nullable()
     val countCloudCoverage2 = integer("COUNT_CLOUD_COVERAGE2").nullable()
@@ -39,9 +44,12 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val countCloudCoverage8 = integer("COUNT_CLOUD_COVERAGE8").nullable()
     val countCloudCoverageNotVisible = integer("COUNT_CLOUD_COVERAGE_NOT_VISIBLE").nullable()
     val countCloudCoverageNotMeasured = integer("COUNT_CLOUD_COVERAGE_NOT_MEASURED").nullable()
+
     val sumSunshineDurationHours = decimal("SUM_SUNSHINE_DURATION_HOURS", 8, 1).nullable()
+
     val sumRainfallMillimeters = decimal("SUM_RAINFALL_MILLIMETERS", 6, 1).nullable()
     val sumSnowfallMillimeters = decimal("SUM_SNOWFALL_MILLIMETERS", 6, 1).nullable()
+
     val maxWindSpeedMetersPerSecond = decimal("MAX_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
     val avgWindSpeedMetersPerSecond = decimal("AVG_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
 
