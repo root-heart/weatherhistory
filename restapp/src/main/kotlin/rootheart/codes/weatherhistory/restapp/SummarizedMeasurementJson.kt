@@ -19,9 +19,13 @@ data class SummarizedMeasurementJson(
     var sumSunshineDurationHours: BigDecimal? = null,
     var sumRainfallMillimeters: BigDecimal? = null,
     var sumSnowfallMillimeters: BigDecimal? = null,
-    var maxWindSpeedMetersPerSecond: BigDecimal? = null,
+
     var avgWindSpeedMetersPerSecond: BigDecimal? = null,
+    var maxWindSpeedMetersPerSecond: BigDecimal? = null,
+
+    var minAirPressureHectopascals: BigDecimal? = null,
     var avgAirPressureHectopascals: BigDecimal? = null,
+    var maxAirPressureHectopascals: BigDecimal? = null,
     var details: String? = null
 )
 

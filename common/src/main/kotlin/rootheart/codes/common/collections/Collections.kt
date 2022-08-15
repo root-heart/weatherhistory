@@ -34,7 +34,7 @@ inline fun <T> Iterable<T>.maxDecimal(selector: (T) -> BigDecimal?): BigDecimal?
 }
 
 inline fun <T> Collection<T>.avgDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
-    val countNonNull = count { it != null }.toLong()
+    val countNonNull = count { selector(it) != null }.toLong()
     return sumDecimal(selector)?.divide(BigDecimal.valueOf(countNonNull), RoundingMode.HALF_UP)
 }
 

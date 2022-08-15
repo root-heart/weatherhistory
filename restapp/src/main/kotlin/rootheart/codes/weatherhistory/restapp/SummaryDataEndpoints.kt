@@ -69,7 +69,11 @@ fun Route.getSummary() = get() {
             sumSunshineDurationHours = s?.sumSunshineDurationHours,
 
             sumRainfallMillimeters = s?.sumRainfallMillimeters,
-            sumSnowfallMillimeters = s?.sumSnowfallMillimeters
+            sumSnowfallMillimeters = s?.sumSnowfallMillimeters,
+
+            minAirPressureHectopascals = s?.minAirPressureHectopascals,
+            avgAirPressureHectopascals = s?.avgAirPressureHectopascals,
+            maxAirPressureHectopascals = s?.maxAirPressureHectopascals
         )
 
         val h = measurements[day]?.sortedBy { it.measurementTime }

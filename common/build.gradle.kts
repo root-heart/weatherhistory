@@ -17,4 +17,6 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
 
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.5.2")
 }

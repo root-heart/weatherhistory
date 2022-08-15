@@ -24,6 +24,9 @@ export type SummaryJson = {
     sumRainfallMillimeters: number,
     sumSnowfallMillimeters: number,
     sumSunshineDurationHours: number,
+    minAirPressureHectopascals: number,
+    avgAirPressureHectopascals: number,
+    maxAirPressureHectopascals: number,
 };
 
 export type SummaryList = Array<SummaryJson>
