@@ -36,13 +36,13 @@ export class Meteogram implements OnInit {
 
     private precipitationChartZero: number = NaN
 
-    private cloudinessChartTop: number = NaN
-    private cloudinessChartBottom: number = NaN
-    private cloudinessChartHeight: number = NaN
-
     private sunshineDurationChartTop: number = NaN
     private sunshineDurationChartBottom: number = NaN
     private sunshineDurationChartHeight: number = NaN
+
+    private cloudinessChartTop: number = NaN
+    private cloudinessChartBottom: number = NaN
+    private cloudinessChartHeight: number = NaN
 
     private airPressureChartTop: number = NaN
     private airPressureChartBottom: number = NaN
@@ -226,7 +226,7 @@ export class Meteogram implements OnInit {
     }
 
     private drawDewPointTemperature(ctx: CanvasRenderingContext2D) {
-        ctx.strokeStyle = '#84c'
+        ctx.strokeStyle = '#c8c'
         ctx.lineWidth = 1
 
         ctx.beginPath()
@@ -238,7 +238,7 @@ export class Meteogram implements OnInit {
         ctx.stroke()
 
         ctx.beginPath()
-        ctx.fillStyle = '#84c4'
+        ctx.fillStyle = '#c8c4'
         ctx.lineWidth = 1
 
         let path = new Path2D()
@@ -255,21 +255,31 @@ export class Meteogram implements OnInit {
     }
 
     private drawPrecipitation(ctx: CanvasRenderingContext2D) {
+        let precipitations = this.sortedMeasurements.map(m => this.sumPrecipitations(m)).filter(v => v)
+        let maxPrecipitation = Math.max.apply(null, precipitations)
+        let precipitationYMultiplier = this.temperatureChartHeight / maxPrecipitation
         ctx.translate(this.chartLeft, this.temperatureChartBottom)
 
         ctx.beginPath()
         for (let measurement of this.sortedMeasurements) {
             let x = this.calculateX(measurement.firstDay)
             let w = this.calculateX(measurement.lastDay) - x
-            ctx.fillStyle = '#aee'
-            ctx.fillRect(x, 0, w, -measurement.sumSnowfallMillimeters * 10)
+            ctx.fillStyle = '#eee'
+            ctx.fillRect(x, 0, w, -measurement.sumSnowfallMillimeters * precipitationYMultiplier)
 
-            let y = measurement.sumSnowfallMillimeters ? -measurement.sumSnowfallMillimeters * 10 : 0
+            let y = measurement.sumSnowfallMillimeters ? -measurement.sumSnowfallMillimeters * precipitationYMultiplier : 0
             ctx.fillStyle = '#04e'
-            ctx.fillRect(x, y, w, -measurement.sumRainfallMillimeters * 10)
+            ctx.fillRect(x, y, w, -measurement.sumRainfallMillimeters * precipitationYMultiplier)
         }
         ctx.fill()
         ctx.resetTransform()
+    }
+
+    private sumPrecipitations(m: SummaryJson): number {
+        let result = 0
+        if (m.sumRainfallMillimeters) result += m.sumRainfallMillimeters
+        if (m.sumSnowfallMillimeters) result += m.sumSnowfallMillimeters
+        return result
     }
 
     private readonly coverageColors = [
@@ -284,6 +294,28 @@ export class Meteogram implements OnInit {
         'hsl(55, 5%, 45%)',
         'hsl(55, 5%, 35%)',
     ];
+
+    private drawSunshineDuration(ctx: CanvasRenderingContext2D) {
+        let sunshineDurations = this.sortedMeasurements.map(m => m.sumSunshineDurationHours).filter(v => v);
+        let maxSunshineDuration = Math.max.apply(null, sunshineDurations)
+        let sunshineYMultiplier = this.sunshineDurationChartHeight / maxSunshineDuration
+
+        ctx.translate(this.chartLeft, this.sunshineDurationChartBottom)
+        ctx.beginPath()
+        for (let measurement of this.sortedMeasurements) {
+            let x = this.calculateX(measurement.firstDay)
+            let w = this.calculateX(measurement.lastDay) - x
+            if (measurement.sumSunshineDurationHours === null || measurement.sumSunshineDurationHours === undefined) {
+                ctx.fillStyle = '#400'
+                ctx.fillRect(x, 0, w, -40)
+            } else {
+                ctx.fillStyle = '#e70'
+                ctx.fillRect(x, 0, w, -measurement.sumSunshineDurationHours * sunshineYMultiplier)
+            }
+        }
+        ctx.fill()
+        ctx.resetTransform()
+    }
 
     private drawCloudiness(ctx: CanvasRenderingContext2D) {
         ctx.translate(this.chartLeft, this.cloudinessChartBottom)
@@ -301,27 +333,6 @@ export class Meteogram implements OnInit {
                 }
                 ctx.fillRect(x, t, w, oneHourHeight)
             })
-        }
-        ctx.fill()
-        ctx.resetTransform()
-    }
-
-    private drawSunshineDuration(ctx: CanvasRenderingContext2D) {
-        let maxSunshineDuration = this.sortedMeasurements.map(m => m.sumSunshineDurationHours).filter(v => v);
-        this.maxTemperature = Math.max.apply(null, maxSunshineDuration)
-
-        ctx.translate(this.chartLeft, this.sunshineDurationChartBottom)
-        ctx.beginPath()
-        for (let measurement of this.sortedMeasurements) {
-            let x = this.calculateX(measurement.firstDay)
-            let w = this.calculateX(measurement.lastDay) - x
-            if (measurement.sumSunshineDurationHours === null || measurement.sumSunshineDurationHours === undefined) {
-                ctx.fillStyle = '#400'
-                ctx.fillRect(x, 0, w, -40)
-            } else {
-                ctx.fillStyle = '#ec8'
-                ctx.fillRect(x, 0, w, -measurement.sumSunshineDurationHours * 10)
-            }
         }
         ctx.fill()
         ctx.resetTransform()
