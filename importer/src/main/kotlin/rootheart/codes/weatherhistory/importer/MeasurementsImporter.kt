@@ -10,7 +10,6 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import rootheart.codes.common.ConcurrentExecutor
 import rootheart.codes.common.strings.splitAndTrimTokens
 import rootheart.codes.weatherhistory.database.DateInterval
 import rootheart.codes.weatherhistory.database.HourlyMeasurement
