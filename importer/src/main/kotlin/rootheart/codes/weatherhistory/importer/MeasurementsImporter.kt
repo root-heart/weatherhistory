@@ -36,7 +36,7 @@ private val databaseExecutor = CoroutineScope(newFixedThreadPoolContext(2, "data
 private val unzipParseConvertExecutor = CoroutineScope(newFixedThreadPoolContext(8, "download-unzip-parse-convert"))
 
 @DelicateCoroutinesApi
-private val downloadThreads = CoroutineScope(newFixedThreadPoolContext(2, "download"))
+private val downloadThreads = CoroutineScope(newFixedThreadPoolContext(8, "download"))
 
 private val jobs = ArrayList<Job>()
 
