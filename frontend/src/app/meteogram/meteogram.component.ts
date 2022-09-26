@@ -4,7 +4,7 @@ import {formatDate} from "@angular/common";
 
 @Component({
     selector: 'meteogram',
-    template: '<div style="height: 30vw"><canvas #meteogram></canvas>\</div>'
+    template: '<div style="height: 80vh"><canvas #meteogram></canvas>\</div>'
 })
 export class Meteogram implements OnInit {
     @ViewChild("meteogram")
@@ -68,9 +68,16 @@ export class Meteogram implements OnInit {
 
         this.sortedMeasurements = measurements.sort((m1, m2) => m1.firstDay.valueOf() - m2.firstDay.valueOf())
 
+        let chartAreas = [
+            // new TemperatureChartArea(),
+            // new PrecipitationChartArea(),
+            // new SunshineDurationChartArea(),
+            // new CloudinessChartArea(),
+            // new AirPressureChartArea(),
+        ]
+
         let ctx = this.initializeCanvasContext()
         this.calculateChartArea(ctx)
-        this.calculateTemperatureChartValues()
         this.calculateTicks()
 
         this.drawChartBoundingRect(ctx)
@@ -187,6 +194,8 @@ export class Meteogram implements OnInit {
         this.drawWhiteLine(ctx, this.temperatureChartZero)
         let number = this.sortedMeasurements[0].lastDay.valueOf() - this.sortedMeasurements[0].firstDay.valueOf();
         let offset = this.chartLeft + this.dx * number / 2
+
+        this.calculateTemperatureChartValues()
 
         ctx.translate(offset, this.temperatureChartZero);
         this.drawDewPointTemperature(ctx)
@@ -340,7 +349,7 @@ export class Meteogram implements OnInit {
 
     private drawAirPressure(ctx: CanvasRenderingContext2D) {
         let minAirPressures = this.sortedMeasurements.map(m => m.minAirPressureHectopascals).filter(v => v)
-        let maxAirPressures = this.sortedMeasurements.map(m => m.minAirPressureHectopascals).filter(v => v)
+        let maxAirPressures = this.sortedMeasurements.map(m => m.maxAirPressureHectopascals).filter(v => v)
         let minAirPressure = Math.min.apply(null, minAirPressures)
         let maxAirPressure = Math.max.apply(null, maxAirPressures)
         let pressureRange = maxAirPressure - minAirPressure
@@ -351,7 +360,7 @@ export class Meteogram implements OnInit {
         let offset = this.chartLeft + this.dx * number / 2
 
         ctx.translate(offset, this.airPressureChartBottom);
-        ctx.strokeStyle = '#e80'
+        ctx.strokeStyle = '#8c0'
         ctx.lineWidth = 1
 
         ctx.beginPath()
@@ -363,7 +372,7 @@ export class Meteogram implements OnInit {
         ctx.stroke()
 
         ctx.beginPath()
-        ctx.fillStyle = '#e804'
+        ctx.fillStyle = '#8c04'
         ctx.lineWidth = 1
 
         let path = new Path2D()
@@ -503,3 +512,9 @@ class MeasurementPoint {
 
 }
 
+class ChartArea {
+    private top: number = NaN
+    private bottom: number = NaN
+    private height: number = NaN
+
+}
