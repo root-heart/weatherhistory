@@ -15,7 +15,8 @@ import 'chartjs-adapter-moment';
 
 @Component({
     selector: 'sunshine-chart',
-    template: '<h1>Sonnenschein</h1><div style="height: 30vw"><canvas #sunshineChart></canvas></div>',
+    template: '<canvas #sunshineChart></canvas>',
+    styles: [':host {height: 25rem; display: block;}']
 })
 export class SunshineChart extends BaseChart implements OnInit {
     @ViewChild("sunshineChart")
@@ -36,23 +37,46 @@ export class SunshineChart extends BaseChart implements OnInit {
     protected getDataSets(summaryList: SummaryList): Array<MeasurementDataSet> {
         let dataSets: Array<MeasurementDataSet> = [];
         dataSets.push({
+            type: 'bar',
             label: 'Sonnenschein',
             borderColor: 'hsl(40, 100%, 50%)',
             backgroundColor: 'hsl(40, 100%, 50%)',
-            data: summaryList.map(m => m['sumSunshineDurationHours']),
+            data: summaryList.map(m => m.sumSunshineDurationHours),
             stack: 'sunshine',
-            categoryPercentage: 0.7,
+            categoryPercentage: 1,
             barPercentage: 1,
             showTooltip: true,
             showLegend: false,
             tooltipValueFormatter: (value: number) => this.formatHours(value)
         });
+
+        dataSets.push({
+            type: 'bar',
+            label: 'Sonnenschein',
+            borderColor: 'hsl(0, 100%, 20%)',
+            backgroundColor: 'hsl(0, 100%, 20%)',
+            data: summaryList.map(m => {
+                if (m.sumSunshineDurationHours === null || m.sumSunshineDurationHours === undefined) {
+                    return 2
+                } else {
+                    return 0
+                }
+            }),
+            stack: 'sunshine',
+            categoryPercentage: 1,
+            barPercentage: 1,
+            showTooltip: true,
+            showLegend: false,
+            tooltipValueFormatter: (value: number) => this.formatHours(-1)
+        });
+
+        console.log(summaryList.map(m => m.sumSunshineDurationHours))
+
         return dataSets;
     }
 
     protected getScales(): any {
-        return {
-        }
+        return {}
     }
 
     private formatHours(value: number) {

@@ -3,21 +3,23 @@ import {BaseChart, MeasurementDataSet} from "../BaseChart";
 import {SummaryList} from "../SummaryService";
 import {
     BarController,
-    BarElement, CartesianScaleOptions,
+    BarElement,
     CategoryScale,
     Chart,
     Filler,
     Legend,
-    LinearScale, LinearScaleOptions,
+    LinearScale,
     LineController,
     LineElement,
-    PointElement, TimeScale,
+    PointElement,
+    TimeScale,
     Tooltip
 } from "chart.js";
 
 @Component({
     selector: 'temperature-chart',
-    template: '<h1>Temperatur</h1><div style="height: 30vw"><canvas #temperatureChart></canvas></div>'
+    template: '<canvas #temperatureChart></canvas>',
+    styles: [':host {height: 25rem; display: block;}']
 })
 export class TemperatureChart extends BaseChart implements OnInit {
     @ViewChild("temperatureChart")
@@ -42,12 +44,14 @@ export class TemperatureChart extends BaseChart implements OnInit {
             type: 'line',
             label: 'Temperatur',
             borderColor: 'hsl(0, 80%, 45%)',
+            borderWidth: 2,
             backgroundColor: 'hsl(0, 80%, 45%)',
-            data: summaryList.map(m => m['avgAirTemperatureCentigrade']),
+            data: summaryList.map(m => m.avgAirTemperatureCentigrade),
             // xAxisID: 'xAxisVisible',
             yAxisID: 'yAxisTemperature',
             pointRadius: 0,
             pointHitRadius: 20,
+
             showTooltip: true,
             showLegend: true,
             tooltipValueFormatter: (value: number) => this.formatCentigrade(value)
@@ -56,9 +60,9 @@ export class TemperatureChart extends BaseChart implements OnInit {
         dataSets.push({
             type: 'line',
             label: 'Minimum Temperatur',
-            borderColor: 'hsla(0, 80%, 45%, 0.3)',
+            borderColor: 'hsla(0, 80%, 45%, 0)',
             backgroundColor: 'hsla(0, 80%, 45%, 0.15)',
-            data: summaryList.map(m => m['minAirTemperatureCentigrade']),
+            data: summaryList.map(m => m.minAirTemperatureCentigrade),
             // xAxisID: 'xAxisVisible',
             yAxisID: 'yAxisTemperature',
             pointRadius: 0,
@@ -69,9 +73,9 @@ export class TemperatureChart extends BaseChart implements OnInit {
         dataSets.push({
             type: 'line',
             label: 'Maximum Temperatur',
-            borderColor: 'hsla(0, 80%, 45%, 0.3)',
+            borderColor: 'hsla(0, 80%, 45%, 0)',
             backgroundColor: 'hsla(0, 80%, 45%, 0.15)',
-            data: summaryList.map(m => m['maxAirTemperatureCentigrade']),
+            data: summaryList.map(m => m.maxAirTemperatureCentigrade),
             // xAxisID: 'xAxisVisible',
             yAxisID: 'yAxisTemperature',
             fill: '-1',
@@ -80,19 +84,6 @@ export class TemperatureChart extends BaseChart implements OnInit {
             showTooltip: false
         });
 
-        // dataSets.push({
-        //     label: 'Regen',
-        //     borderColor: 'hsl(240, 80%, 35%)',
-        //     backgroundColor: 'hsl(240, 80%, 35%)',
-        //     data: summaryList.map(m => m['sumRainfallMillimeters']),
-        //     // xAxisID: 'xAxisVisible',
-        //     yAxisID: 'yAxisMillimeters',
-        //     categoryPercentage: 0.5,
-        //     barPercentage: 0.8,
-        //     showTooltip: true,
-        //     showLegend: true,
-        //     tooltipValueFormatter: (value: number) => this.formatMillimeters(value)
-        // });
 
         return dataSets;
     }

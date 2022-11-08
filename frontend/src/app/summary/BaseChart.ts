@@ -7,9 +7,10 @@ import {
     ChartData,
     ChartDataset,
     ChartOptions,
-    LegendItem,
+    LegendItem, Scale,
     TooltipItem
 } from "chart.js";
+import {tick} from "@angular/core/testing";
 
 export type MeasurementDataSet = ChartDataset & {
     showTooltip?: boolean,
@@ -56,27 +57,53 @@ export abstract class BaseChart {
             },
             scales: {
                 x: {
-                    type: "time",
+                    type: 'time',
                     time: {
-                        unit: "day",
+                        unit: 'day',
                         displayFormats: {
+                            day: "MMMM",
+                            locale: "de-DE",
                             month: "MMMM",
-                            locale: "de-DE"
                         },
+                        round: 'day',
+
                     },
+                    ticks: {
+                        autoSkip: false,
+                        // source: 'labels',
+                        // callback: (tickValue, index, ticks) => {
+                        //     console.log(ticks[index])
+                        //     let date = new Date(ticks[index].value)
+                        //     if (date.getDate() === 1) {
+                        //         ticks[index].major = true
+                        //         // return tickValue
+                        //     // } else {
+                        //         // return undefined
+                        //     }
+                        //     return "12"
+                        // },
+                        // labelOffset: 20,
+                        major: {enabled: true}
+                    },
+                    grid: {
+                        offset: true,
+                        display: false,
+                        drawTicks: true
+                    },
+                    afterBuildTicks: (axis) => {
+                        axis.ticks = axis.ticks.filter(t => new Date(t.value).getDate() === 15)
+                    }
                 }
             },
             plugins: {
                 legend: {
-                    display: true,
-                    position: 'top',
-                    align: 'center',
-                    labels: {filter: this.showLegend}
+                    display: false,
                 },
                 tooltip: {
                     filter: this.showTooltip,
                     callbacks: {label: this.formatTooltipLabel}
-                }
+                },
+
             }
         };
 
@@ -96,56 +123,13 @@ export abstract class BaseChart {
     }
 
     private getLabels(summaryList: SummaryList): Array<Date> {
-        let lastYear: number | null = null;
         return summaryList.map((item, index) => {
-            // if (item.intervalType == 'MONTH') {
-            //     let firstDay = new Date(item.firstDay);
-            //     if (lastYear == null || firstDay.getFullYear() != lastYear) {
-            //         lastYear = firstDay.getFullYear();
-            //         return formatDate(firstDay, 'MMMM yyyy', 'de-DE');
-            //     } else {
-            //         return formatDate(firstDay, 'MMMM', 'de-DE');
-            //     }
-            // } else if (item.intervalType == 'SEASON') {
-            //     let firstDay = new Date(item.firstDay);
-            //     let firstMonth = firstDay.getMonth();
-            //     let seasonName = 'unknown';
-            //     switch (firstMonth) {
-            //         case 2:
-            //         case 3:
-            //         case 4:
-            //             seasonName = 'Spring ' + firstDay.getFullYear();
-            //             break;
-            //         case 5:
-            //         case 6:
-            //         case 7:
-            //             seasonName = 'Summer ' + firstDay.getFullYear();
-            //             break;
-            //         case 8:
-            //         case 9:
-            //         case 10:
-            //             seasonName = 'Fall ' + firstDay.getFullYear();
-            //             break
-            //         default:
-            //             seasonName = 'Winter ' + firstDay.getFullYear() + '/' + (firstDay.getFullYear() + 1);
-            //     }
-            //     return seasonName;
-            // } else if (item.intervalType == 'YEAR') {
-            //     let firstDay = new Date(item.firstDay);
-            //     return firstDay.getFullYear().toString();
-            // } else if (item.intervalType == 'DECADE') {
-            //     let firstDay = new Date(item.firstDay);
-            //     let lastDay = new Date(item.lastDay);
-            //     return firstDay.getFullYear().toString() + ' - ' + lastDay.getFullYear().toString();
-            // }
             let date = new Date(item.firstDay);
-            // if (date.getDate() == 15) {
-                return date
-            // } else {
-            //     return null
-            // }
+            // date.setDate(1)
+            return date
         }).filter(value => value !== null)
             .map(value => value!);
+
     }
 
     protected getScales(): any {

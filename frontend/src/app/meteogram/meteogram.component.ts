@@ -1,6 +1,8 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {SummaryJson} from "../summary/SummaryService";
 import {formatDate} from "@angular/common";
+import {Chart} from "chart.js";
+import {ChartArea} from "./chart-area";
 
 @Component({
     selector: 'meteogram',
@@ -68,7 +70,11 @@ export class Meteogram implements OnInit {
 
         this.sortedMeasurements = measurements.sort((m1, m2) => m1.firstDay.valueOf() - m2.firstDay.valueOf())
 
+        let temperatureChartArea = new ChartArea()
+        temperatureChartArea.dataPoints = []
+
         let chartAreas = [
+            temperatureChartArea
             // new TemperatureChartArea(),
             // new PrecipitationChartArea(),
             // new SunshineDurationChartArea(),
@@ -509,12 +515,5 @@ class MeasurementPoint {
     constructor(public measurementTime: Date, public value: number) {
 
     }
-
-}
-
-class ChartArea {
-    private top: number = NaN
-    private bottom: number = NaN
-    private height: number = NaN
 
 }
