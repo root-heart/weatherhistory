@@ -32,8 +32,6 @@ export class AirPressureChart extends BaseChart implements OnInit {
             borderWidth: 2,
             backgroundColor: 'hsl(120, 80%, 45%)',
             data: summaryList.map(m => m.avgAirPressureHectopascals),
-            // xAxisID: 'xAxisVisible',
-            yAxisID: 'yAxisTemperature',
             pointRadius: 0,
             pointHitRadius: 20,
 
@@ -48,8 +46,6 @@ export class AirPressureChart extends BaseChart implements OnInit {
             borderColor: 'hsla(120, 80%, 45%, 0)',
             backgroundColor: 'hsla(120, 80%, 45%, 0.15)',
             data: summaryList.map(m => m.minAirPressureHectopascals),
-            // xAxisID: 'xAxisVisible',
-            yAxisID: 'yAxisTemperature',
             pointRadius: 0,
             pointHitRadius: 20,
             showTooltip: false
@@ -61,8 +57,6 @@ export class AirPressureChart extends BaseChart implements OnInit {
             borderColor: 'hsla(120, 80%, 45%, 0)',
             backgroundColor: 'hsla(120, 80%, 45%, 0.15)',
             data: summaryList.map(m => m.maxAirPressureHectopascals),
-            // xAxisID: 'xAxisVisible',
-            yAxisID: 'yAxisTemperature',
             fill: '-1',
             pointRadius: 0,
             pointHitRadius: 20,

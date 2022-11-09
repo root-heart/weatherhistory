@@ -70,7 +70,7 @@ export class SunshineChart extends BaseChart implements OnInit {
             tooltipValueFormatter: (value: number) => this.formatHours(-1)
         });
 
-        console.log(summaryList.map(m => m.sumSunshineDurationHours))
+        // console.log(summaryList.map(m => m.sumSunshineDurationHours))
 
         return dataSets;
     }

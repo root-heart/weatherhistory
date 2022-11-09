@@ -47,8 +47,6 @@ export class TemperatureChart extends BaseChart implements OnInit {
             borderWidth: 2,
             backgroundColor: 'hsl(0, 80%, 45%)',
             data: summaryList.map(m => m.avgAirTemperatureCentigrade),
-            // xAxisID: 'xAxisVisible',
-            yAxisID: 'yAxisTemperature',
             pointRadius: 0,
             pointHitRadius: 20,
 
@@ -63,8 +61,6 @@ export class TemperatureChart extends BaseChart implements OnInit {
             borderColor: 'hsla(0, 80%, 45%, 0)',
             backgroundColor: 'hsla(0, 80%, 45%, 0.15)',
             data: summaryList.map(m => m.minAirTemperatureCentigrade),
-            // xAxisID: 'xAxisVisible',
-            yAxisID: 'yAxisTemperature',
             pointRadius: 0,
             pointHitRadius: 20,
             showTooltip: false
@@ -76,8 +72,6 @@ export class TemperatureChart extends BaseChart implements OnInit {
             borderColor: 'hsla(0, 80%, 45%, 0)',
             backgroundColor: 'hsla(0, 80%, 45%, 0.15)',
             data: summaryList.map(m => m.maxAirTemperatureCentigrade),
-            // xAxisID: 'xAxisVisible',
-            yAxisID: 'yAxisTemperature',
             fill: '-1',
             pointRadius: 0,
             pointHitRadius: 20,

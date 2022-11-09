@@ -4,7 +4,6 @@ import {SunshineChart} from "./summary/sunshine-chart/sunshine-chart.component";
 import {FilterChangedEvent} from "./filter-header/station-and-date-filter.component";
 import {SummaryList, SummaryService} from "./summary/SummaryService";
 import {CloudinessChart} from "./summary/cloudiness-chart/cloudiness-chart.component";
-import {Meteogram} from "./meteogram/meteogram.component";
 import {PrecipitationChart} from "./summary/precipitation-chart/precipitation-chart.component";
 import {AirPressureChart} from "./summary/air-pressure-chart/air-pressure-chart.component";
 
@@ -15,9 +14,6 @@ import {AirPressureChart} from "./summary/air-pressure-chart/air-pressure-chart.
 })
 export class AppComponent {
     title = 'wetterchroniken.de/';
-
-    @ViewChild('meteogram')
-    meteogram?: Meteogram;
 
     @ViewChild('temperatureChart')
     temperatureChart?: TemperatureChart
@@ -30,6 +26,9 @@ export class AppComponent {
 
     @ViewChild('airPressureChart')
     airPresssurceChart?: AirPressureChart
+
+    @ViewChild('cloudinessChart')
+    cloudinessChart?: CloudinessChart
 
     minTemperature?: number
     avgTemperature?: number
@@ -60,12 +59,12 @@ export class AppComponent {
             summaryJson.lastDay.setSeconds(59)
             summaryJson.lastDay.setMilliseconds(999)
         })
-        this.meteogram?.setData(summaryList)
+        // this.meteogram?.setData(summaryList)
         this.temperatureChart?.setData(summaryList)
         this.sunshineChart?.setData(summaryList)
         this.precipitationChart?.setData(summaryList)
         this.airPresssurceChart?.setData(summaryList)
-
+        this.cloudinessChart?.setData(summaryList)
 
         this.minTemperature = Math.min.apply(Math, summaryList.map(s => s.minAirTemperatureCentigrade))
         this.maxTemperature = Math.max.apply(Math, summaryList.map(s => s.maxAirTemperatureCentigrade))

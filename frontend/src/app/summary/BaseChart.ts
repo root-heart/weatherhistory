@@ -1,16 +1,15 @@
 import {Directive, ElementRef} from "@angular/core";
 import {SummaryList} from "./SummaryService";
-import {formatDate} from "@angular/common";
 import {
+    CartesianScaleOptions,
     Chart,
     ChartConfiguration,
     ChartData,
     ChartDataset,
-    ChartOptions,
-    LegendItem, Scale,
+    ChartOptions, CoreScaleOptions,
+    LegendItem,
     TooltipItem
 } from "chart.js";
-import {tick} from "@angular/core/testing";
 
 export type MeasurementDataSet = ChartDataset & {
     showTooltip?: boolean,
@@ -66,23 +65,9 @@ export abstract class BaseChart {
                             month: "MMMM",
                         },
                         round: 'day',
-
                     },
                     ticks: {
                         autoSkip: false,
-                        // source: 'labels',
-                        // callback: (tickValue, index, ticks) => {
-                        //     console.log(ticks[index])
-                        //     let date = new Date(ticks[index].value)
-                        //     if (date.getDate() === 1) {
-                        //         ticks[index].major = true
-                        //         // return tickValue
-                        //     // } else {
-                        //         // return undefined
-                        //     }
-                        //     return "12"
-                        // },
-                        // labelOffset: 20,
                         major: {enabled: true}
                     },
                     grid: {
@@ -93,6 +78,9 @@ export abstract class BaseChart {
                     afterBuildTicks: (axis) => {
                         axis.ticks = axis.ticks.filter(t => new Date(t.value).getDate() === 15)
                     }
+                },
+                y: {
+                    max: this.getMaxY()
                 }
             },
             plugins: {
@@ -103,7 +91,6 @@ export abstract class BaseChart {
                     filter: this.showTooltip,
                     callbacks: {label: this.formatTooltipLabel}
                 },
-
             }
         };
 
@@ -116,24 +103,22 @@ export abstract class BaseChart {
             }
         };
 
-        console.log(config)
+        // console.log(config)
 
         this.chart = new Chart(context, config);
 
     }
 
-    private getLabels(summaryList: SummaryList): Array<Date> {
-        return summaryList.map((item, index) => {
-            let date = new Date(item.firstDay);
-            // date.setDate(1)
-            return date
-        }).filter(value => value !== null)
-            .map(value => value!);
-
+    protected getLabels(summaryList: SummaryList): Array<any> {
+        return summaryList.map(item => new Date(item.firstDay));
     }
 
     protected getScales(): any {
 
+    }
+
+    protected getMaxY(): number | undefined {
+        return undefined
     }
 
     private showLegend(legendItem: LegendItem, chartData: ChartData): boolean {
