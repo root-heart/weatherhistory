@@ -103,18 +103,12 @@ export abstract class BaseChart {
             }
         };
 
-        // console.log(config)
-
         this.chart = new Chart(context, config);
 
     }
 
     protected getLabels(summaryList: SummaryList): Array<any> {
         return summaryList.map(item => new Date(item.firstDay));
-    }
-
-    protected getScales(): any {
-
     }
 
     protected getMaxY(): number | undefined {
