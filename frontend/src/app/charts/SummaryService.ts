@@ -27,6 +27,8 @@ export type SummaryJson = {
     minAirPressureHectopascals: number,
     avgAirPressureHectopascals: number,
     maxAirPressureHectopascals: number,
+    avgWindSpeedMetersPerSecond: number,
+    maxWindSpeedMetersPerSecond: number,
 };
 
 export type SummaryList = Array<SummaryJson>

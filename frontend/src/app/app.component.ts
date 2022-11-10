@@ -6,6 +6,7 @@ import {SummaryList, SummaryService} from "./charts/SummaryService";
 import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.component";
 import {PrecipitationChart} from "./charts/precipitation-chart/precipitation-chart.component";
 import {AirPressureChart} from "./charts/air-pressure-chart/air-pressure-chart.component";
+import {WindSpeedChart} from "./charts/wind-speed-chart/wind-speed-chart.component";
 
 @Component({
     selector: 'app-root',
@@ -29,6 +30,9 @@ export class AppComponent {
 
     @ViewChild('cloudinessChart')
     cloudinessChart?: CloudinessChart
+
+    @ViewChild('windSpeedChart')
+    windSpeedChart?: WindSpeedChart
 
     minTemperature?: number
     avgTemperature?: number
@@ -65,6 +69,7 @@ export class AppComponent {
         this.precipitationChart?.setData(summaryList)
         this.airPresssurceChart?.setData(summaryList)
         this.cloudinessChart?.setData(summaryList)
+        this.windSpeedChart?.setData(summaryList)
 
         this.minTemperature = Math.min.apply(Math, summaryList.map(s => s.minAirTemperatureCentigrade))
         this.maxTemperature = Math.max.apply(Math, summaryList.map(s => s.maxAirTemperatureCentigrade))

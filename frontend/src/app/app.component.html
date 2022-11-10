@@ -29,20 +29,12 @@
 
 <station-and-date-filter (onFilterChanged)="filterChanged($event)"></station-and-date-filter>
 
-<aside>
-    <h1>Zusammenfassung</h1>
-
-    min Temp: {{minTemperature}}
-    avg Temp: {{avgTemperature}}
-    max Temp: {{maxTemperature}}
-
-    Sonne: {{sumSunshineDuration}}
-</aside>
-
-
 <main>
     <section>
         <h1>Temperatur</h1>
+        min Temp: {{minTemperature}}
+        avg Temp: {{avgTemperature}}
+        max Temp: {{maxTemperature}}
         <temperature-chart #temperatureChart></temperature-chart>
     </section>
 
@@ -53,6 +45,7 @@
 
     <section>
         <h1>Sonnenschein</h1>
+        Sonne: {{sumSunshineDuration}}
         <sunshine-chart #sunshineChart></sunshine-chart>
     </section>
 
@@ -68,7 +61,7 @@
 
     <section>
         <h1>Wind</h1>
-        <temperature-chart class="chart"></temperature-chart>
+        <wind-speed-chart #windSpeedChart></wind-speed-chart>
     </section>
 
 </main>
