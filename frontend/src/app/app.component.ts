@@ -1,11 +1,11 @@
 import {Component, ViewChild} from '@angular/core';
-import {TemperatureChart} from "./summary/temperature-chart/temperature-chart.component";
-import {SunshineChart} from "./summary/sunshine-chart/sunshine-chart.component";
+import {TemperatureChart} from "./charts/temperature-chart/temperature-chart.component";
+import {SunshineChart} from "./charts/sunshine-chart/sunshine-chart.component";
 import {FilterChangedEvent} from "./filter-header/station-and-date-filter.component";
-import {SummaryList, SummaryService} from "./summary/SummaryService";
-import {CloudinessChart} from "./summary/cloudiness-chart/cloudiness-chart.component";
-import {PrecipitationChart} from "./summary/precipitation-chart/precipitation-chart.component";
-import {AirPressureChart} from "./summary/air-pressure-chart/air-pressure-chart.component";
+import {SummaryList, SummaryService} from "./charts/SummaryService";
+import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.component";
+import {PrecipitationChart} from "./charts/precipitation-chart/precipitation-chart.component";
+import {AirPressureChart} from "./charts/air-pressure-chart/air-pressure-chart.component";
 
 @Component({
     selector: 'app-root',

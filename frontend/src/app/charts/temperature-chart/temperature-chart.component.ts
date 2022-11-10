@@ -19,7 +19,7 @@ import {
 @Component({
     selector: 'temperature-chart',
     template: '<canvas #temperatureChart></canvas>',
-    styles: [':host {height: 25rem; display: block;}']
+    styleUrls: ['../charts.css']
 })
 export class TemperatureChart extends BaseChart implements OnInit {
     @ViewChild("temperatureChart")

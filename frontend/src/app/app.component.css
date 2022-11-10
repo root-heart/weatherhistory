@@ -1,7 +1,5 @@
 :host {
-    display: grid;
-    grid-template-columns: 100%;
-    grid-gap: 2%;
+    position: relative;
 }
 
 h1 {
@@ -11,44 +9,26 @@ h1 {
 
 station-and-date-filter {
     grid-column-start: 2;
-    grid-column-end: 1
+    grid-column-end: 1;
+    position: fixed;
 
 }
 
 aside {
-    position: absolute;
+    position: fixed;
     left: 2rem;
     top: 10rem;
     bottom: 5rem;
     width: 30rem;
-    border: 1px solid aquamarine;
 }
 
 main {
-    position: absolute;
-
-    left: 34rem;
-    top: 10rem;
-    bottom: 5rem;
-    right: 2rem;
-    overflow-y: scroll;
-
-    border: 1px solid aquamarine;
-
-    /*display: grid;*/
-    /*grid-template-columns: 1fr;*/
-    /*grid-template-rows: repeat(5, 20vw);*/
-    /*grid-column-gap: 1vw;*/
-    /*grid-row-gap: 1vh;*/
+    margin-left: 34rem;
+    margin-top: 10rem;
 }
-
-
 
 main > section {
     border: 1px solid aquamarine;
-    /*display: grid;*/
-    /*grid-template-columns: 2fr 1fr;*/
-    /*height: 24rem;*/
 }
 
 main > section > h1 {
@@ -59,5 +39,4 @@ main > section > h1 {
 main > section > article {
     border: 1px solid aquamarine;
     height: 100%;
-
 }

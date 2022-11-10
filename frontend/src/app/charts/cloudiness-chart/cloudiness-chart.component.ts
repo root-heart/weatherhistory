@@ -7,7 +7,7 @@ import {Chart, ScriptableContext} from "chart.js";
 @Component({
     selector: 'cloudiness-chart',
     template: '<canvas #cloudinessChart></canvas>',
-    styles: [':host {height: 25rem; display: block;}']
+    styleUrls: ['../charts.css']
 })
 export class CloudinessChart extends BaseChart implements OnInit {
 

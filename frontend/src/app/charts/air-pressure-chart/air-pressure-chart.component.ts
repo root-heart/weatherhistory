@@ -5,7 +5,7 @@ import {SummaryList} from "../SummaryService";
 @Component({
     selector: 'air-pressure-chart',
     template: '<canvas #airPressureChart></canvas>',
-    styles: [':host {height: 25rem; display: block;}']
+    styleUrls: ['../charts.css']
 })
 export class AirPressureChart extends BaseChart implements OnInit {
     @ViewChild("airPressureChart")

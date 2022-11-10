@@ -5,7 +5,7 @@ import {SummaryList} from "../SummaryService";
 @Component({
     selector: 'precipitation-chart',
     template: '<canvas #precipitationChart></canvas>',
-    styles: [':host {height: 25rem; display: block;}']
+    styleUrls: ['../charts.css']
 })
 export class PrecipitationChart extends BaseChart implements OnInit {
     @ViewChild("precipitationChart")

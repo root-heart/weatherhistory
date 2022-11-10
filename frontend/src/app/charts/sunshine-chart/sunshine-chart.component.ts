@@ -16,7 +16,7 @@ import 'chartjs-adapter-moment';
 @Component({
     selector: 'sunshine-chart',
     template: '<canvas #sunshineChart></canvas>',
-    styles: [':host {height: 25rem; display: block;}']
+    styleUrls: ['../charts.css']
 })
 export class SunshineChart extends BaseChart implements OnInit {
     @ViewChild("sunshineChart")
