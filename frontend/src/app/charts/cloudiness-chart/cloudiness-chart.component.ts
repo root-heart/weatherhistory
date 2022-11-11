@@ -1,5 +1,5 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {SummaryList} from "../SummaryService";
+import {DailyData, SummaryList} from "../SummaryService";
 import {BaseChart, MeasurementDataSet} from "../BaseChart";
 import {MatrixController, MatrixDataPoint, MatrixElement} from 'chartjs-chart-matrix';
 import {Chart, ScriptableContext} from "chart.js";
@@ -55,12 +55,12 @@ export class CloudinessChart extends BaseChart implements OnInit {
         return this.canvas;
     }
 
-    protected getDataSets(summaryList: SummaryList): Array<MeasurementDataSet> {
+    protected getDataSets(summaryList: Array<DailyData>): Array<MeasurementDataSet> {
         let coverageColors = this.coverageColors
         function getColor(context: ScriptableContext<'bar'>) {
             let hour = context.datasetIndex
             let data = summaryList[context.dataIndex]
-            let coverage = data.coverages[hour]
+            let coverage = data.cloudCoverages[hour]
             return coverage === undefined || coverage === null ? 'hsl(0, 50%, 30%)' : coverageColors[coverage];
         }
 

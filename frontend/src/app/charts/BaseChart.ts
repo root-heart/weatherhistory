@@ -1,5 +1,5 @@
 import {Directive, ElementRef} from "@angular/core";
-import {SummaryList} from "./SummaryService";
+import {DailyData, SummaryList} from "./SummaryService";
 import {
     CartesianScaleOptions,
     Chart,
@@ -25,14 +25,14 @@ export abstract class BaseChart {
     protected constructor() {
     }
 
-    public setData(summaryList: SummaryList): void {
+    public setData(summaryList: Array<DailyData>): void {
         let labels = this.getLabels(summaryList);
         let dataSets = this.getDataSets(summaryList);
         this.drawChart(labels, dataSets);
     }
 
 
-    protected abstract getDataSets(summaryList: SummaryList): Array<MeasurementDataSet>;
+    protected abstract getDataSets(summaryList: Array<DailyData>): Array<MeasurementDataSet>;
 
     protected abstract getCanvas(): ElementRef | undefined;
 
@@ -107,8 +107,8 @@ export abstract class BaseChart {
 
     }
 
-    protected getLabels(summaryList: SummaryList): Array<any> {
-        return summaryList.map(item => new Date(item.firstDay));
+    protected getLabels(summaryList: Array<DailyData>): Array<any> {
+        return summaryList.map(item => new Date(item.day));
     }
 
     protected getMaxY(): number | undefined {

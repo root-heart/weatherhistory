@@ -1,6 +1,6 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {BaseChart, MeasurementDataSet} from "../BaseChart";
-import {SummaryList} from "../SummaryService";
+import {DailyData, SummaryList} from "../SummaryService";
 import {
     BarController,
     BarElement,
@@ -37,7 +37,7 @@ export class TemperatureChart extends BaseChart implements OnInit {
         return this.canvas;
     }
 
-    protected getDataSets(summaryList: SummaryList): Array<MeasurementDataSet> {
+    protected getDataSets(summaryList: Array<DailyData>): Array<MeasurementDataSet> {
         let dataSets: Array<MeasurementDataSet> = [];
 
         dataSets.push({

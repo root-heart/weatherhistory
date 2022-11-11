@@ -1,24 +1,15 @@
 package rootheart.codes.weatherhistory.restapp
 
-import io.ktor.application.call
-import io.ktor.http.HttpStatusCode
-import io.ktor.request.queryString
-import io.ktor.response.respond
-import io.ktor.routing.Route
-import io.ktor.routing.Routing
-import io.ktor.routing.get
-import io.ktor.routing.route
+import io.ktor.application.*
+import io.ktor.response.*
+import io.ktor.routing.*
 import mu.KotlinLogging
 import org.joda.time.DateTime
 import org.joda.time.LocalDate
-import org.joda.time.Period
 import org.joda.time.format.DateTimeFormat
 import rootheart.codes.weatherhistory.database.DateIntervalType
-import rootheart.codes.weatherhistory.database.HourlyMeasurement
 import rootheart.codes.weatherhistory.database.HourlyMeasurementDao
-import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationDao
-import rootheart.codes.weatherhistory.database.SummarizedMeasurement
 import rootheart.codes.weatherhistory.database.SummarizedMeasurementDao
 
 private val log = KotlinLogging.logger { }
@@ -27,7 +18,7 @@ fun Routing.summaryDataEndpoints() = route("summary/{stationId}") {
     getSummary()
 }
 
-private val DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd").withZoneUTC()
+private const val DATE_TIME_PATTERN = "yyyy-MM-dd"
 
 fun Route.getSummary() = get() {
     val stationId = call.parameters["stationId"]!!.toLong()
@@ -39,52 +30,117 @@ fun Route.getSummary() = get() {
     val start = DateTime(year, 1, 1, 0, 0)
     val end = DateTime(year + 1, 1, 1, 0, 0)
 
-    val summaryData = SummarizedMeasurementDao
+    val dailyData = SummarizedMeasurementDao
         .findByStationIdAndDateBetween(station, start, end, DateIntervalType.DAY)
-        .groupBy { it.firstDay.toLocalDate() }
+        .associateBy { it.firstDay.toLocalDate() }
 
-    val measurements = HourlyMeasurementDao
+    val yearlyData = SummarizedMeasurementDao
+        .findByStationIdAndDateBetween(station, start, end, DateIntervalType.YEAR)
+        .first()
+
+    val hourlyData = HourlyMeasurementDao
         .findByStationIdAndYear(station, year)
         .groupBy { it.measurementTime.toLocalDate() }
 
-    val days = summaryData.keys + measurements.keys
-    val summaryJsonList = days.map { day ->
-        val s = summaryData[day]?.firstOrNull()
-        val json = SummarizedMeasurementJson(
-            firstDay = day.toString("yyyy-MM-dd"),
-            lastDay = day.toString("yyyy-MM-dd"),
-            intervalType = DateIntervalType.DAY,
+    val result = YearlyData(
+        year = year,
+        station = station,
 
-            minAirTemperatureCentigrade = s?.minAirTemperatureCentigrade,
-            avgAirTemperatureCentigrade = s?.avgAirTemperatureCentigrade,
-            maxAirTemperatureCentigrade = s?.maxAirTemperatureCentigrade,
+        minAirTemperature = yearlyData.minAirTemperatureCentigrade,
+        minAirTemperatureDay = LocalDate.now(),
 
-            minDewPointTemperatureCentigrade = s?.minDewPointTemperatureCentigrade,
-            avgDewPointTemperatureCentigrade = s?.avgDewPointTemperatureCentigrade,
-            maxDewPointTemperatureCentigrade = s?.maxDewPointTemperatureCentigrade,
+        avgAirTemperature = yearlyData.avgAirTemperatureCentigrade,
 
-            avgWindSpeedMetersPerSecond = s?.avgWindSpeedMetersPerSecond,
-            maxWindSpeedMetersPerSecond = s?.maxWindSpeedMetersPerSecond,
+        maxAirTemperature = yearlyData.maxAirTemperatureCentigrade,
+        maxAirTemperatureDay = LocalDate.now(),
 
-            sumSunshineDurationHours = s?.sumSunshineDurationHours,
+        minAirPressureHectopascals = yearlyData.minAirPressureHectopascals,
+        minAirPressureDay = LocalDate.now(),
 
-            sumRainfallMillimeters = s?.sumRainfallMillimeters,
-            sumSnowfallMillimeters = s?.sumSnowfallMillimeters,
+        avgAirPressureHectopascals = yearlyData.avgAirPressureHectopascals,
 
-            minAirPressureHectopascals = s?.minAirPressureHectopascals,
-            avgAirPressureHectopascals = s?.avgAirPressureHectopascals,
-            maxAirPressureHectopascals = s?.maxAirPressureHectopascals
-        )
+        maxAirPressureHectopascals = yearlyData.maxAirPressureHectopascals,
+        maxAirPressureDay = LocalDate.now(),
 
-        val h = measurements[day]?.sortedBy { it.measurementTime }
-        for (hour in (0..23)) {
-            json.coverages[hour] = h?.firstOrNull { it.measurementTime.hourOfDay == hour }?.cloudCoverage
-        }
-        return@map json
-    }
+        avgWindSpeedMetersPerSecond = yearlyData.avgWindSpeedMetersPerSecond,
+        maxWindSpeedMetersPerSecond = yearlyData.maxWindSpeedMetersPerSecond,
+        maxWindSpeedDay = LocalDate.now(),
+
+        sumRain = yearlyData.sumRainfallMillimeters,
+        sumSnow = yearlyData.sumSnowfallMillimeters,
+        sumSunshine = yearlyData.sumSunshineDurationHours,
+
+        dailyData = dailyData.map { (day, data) ->
+            val h = hourlyData[day]?.sortedBy { it.measurementTime }
+            val coverages = ArrayList<Int?>(24)
+            for (hour in (0..23)) {
+                coverages += h?.firstOrNull { it.measurementTime.hourOfDay == hour }?.cloudCoverage
+            }
+
+            DailyData(
+                day = day.toString(DATE_TIME_PATTERN),
+
+                minAirTemperatureCentigrade = data.minAirTemperatureCentigrade,
+                avgAirTemperatureCentigrade = data.avgAirTemperatureCentigrade,
+                maxAirTemperatureCentigrade = data.maxAirTemperatureCentigrade,
+
+                minDewPointTemperatureCentigrade = data.minDewPointTemperatureCentigrade,
+                maxDewPointTemperatureCentigrade = data.maxDewPointTemperatureCentigrade,
+                avgDewPointTemperatureCentigrade = data.avgDewPointTemperatureCentigrade,
+
+                minAirPressureHectopascals = data.minAirPressureHectopascals,
+                avgAirPressureHectopascals = data.avgAirPressureHectopascals,
+                maxAirPressureHectopascals = data.maxAirPressureHectopascals,
+
+                avgWindSpeedMetersPerSecond = data.avgWindSpeedMetersPerSecond,
+                maxWindSpeedMetersPerSecond = data.maxWindSpeedMetersPerSecond,
+
+                cloudCoverages = coverages,
+                sumSunshineDurationHours = data.sumSunshineDurationHours,
+                sumRainfallMillimeters = data.sumRainfallMillimeters,
+                sumSnowfallMillimeters = data.sumSnowfallMillimeters,
+            )
+        }.sortedBy { it.day }
+    )
+
+//    val days = dailyData.keys + hourlyData.keys
+//    val summaryJsonList = days.map { day ->
+//        val s = dailyData[day]?.firstOrNull()
+//        val json = SummarizedMeasurementJson(
+//            firstDay = day.toString("yyyy-MM-dd"),
+//            lastDay = day.toString("yyyy-MM-dd"),
+//            intervalType = DateIntervalType.DAY,
+//
+//            minAirTemperatureCentigrade = s?.minAirTemperatureCentigrade,
+//            avgAirTemperatureCentigrade = s?.avgAirTemperatureCentigrade,
+//            maxAirTemperatureCentigrade = s?.maxAirTemperatureCentigrade,
+//
+//            minDewPointTemperatureCentigrade = s?.minDewPointTemperatureCentigrade,
+//            avgDewPointTemperatureCentigrade = s?.avgDewPointTemperatureCentigrade,
+//            maxDewPointTemperatureCentigrade = s?.maxDewPointTemperatureCentigrade,
+//
+//            avgWindSpeedMetersPerSecond = s?.avgWindSpeedMetersPerSecond,
+//            maxWindSpeedMetersPerSecond = s?.maxWindSpeedMetersPerSecond,
+//
+//            sumSunshineDurationHours = s?.sumSunshineDurationHours,
+//
+//            sumRainfallMillimeters = s?.sumRainfallMillimeters,
+//            sumSnowfallMillimeters = s?.sumSnowfallMillimeters,
+//
+//            minAirPressureHectopascals = s?.minAirPressureHectopascals,
+//            avgAirPressureHectopascals = s?.avgAirPressureHectopascals,
+//            maxAirPressureHectopascals = s?.maxAirPressureHectopascals
+//        )
+//
+//        val h = hourlyData[day]?.sortedBy { it.measurementTime }
+//        for (hour in (0..23)) {
+//            json.coverages[hour] = h?.firstOrNull { it.measurementTime.hourOfDay == hour }?.cloudCoverage
+//        }
+//        return@map json
+//    }
 
     log.info { "Fetched data for station id $stationId and year $year" }
-    call.respond(summaryJsonList)
+    call.respond(result)
 }
 
 //data class SummarizedMeasurementResponse(

@@ -2,7 +2,7 @@ import {Component, ViewChild} from '@angular/core';
 import {TemperatureChart} from "./charts/temperature-chart/temperature-chart.component";
 import {SunshineChart} from "./charts/sunshine-chart/sunshine-chart.component";
 import {FilterChangedEvent} from "./filter-header/station-and-date-filter.component";
-import {SummaryList, SummaryService} from "./charts/SummaryService";
+import {SummaryList, SummaryService, YearlyData} from "./charts/SummaryService";
 import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.component";
 import {PrecipitationChart} from "./charts/precipitation-chart/precipitation-chart.component";
 import {AirPressureChart} from "./charts/air-pressure-chart/air-pressure-chart.component";
@@ -34,9 +34,9 @@ export class AppComponent {
     @ViewChild('windSpeedChart')
     windSpeedChart?: WindSpeedChart
 
-    minTemperature?: number
-    avgTemperature?: number
-    maxTemperature?: number
+    minTemperature: number | null= NaN
+    avgTemperature: number | null= NaN
+    maxTemperature: number | null = NaN
 
     sumSunshineDuration?: string
 
@@ -46,39 +46,36 @@ export class AppComponent {
     }
 
     filterChanged(event: FilterChangedEvent) {
-        this.summaryService.getSummary(event.station.id, event.start, event.end)
+        this.summaryService.getSummary(event.station.id, event.start)
             .subscribe(data => this.updateAllCharts(data));
     }
 
 
-    private updateAllCharts(summaryList: SummaryList) {
+    private updateAllCharts(yearlyData: YearlyData) {
         // Yes, the member is defined as Date. Yes, the data send by the server comes in a format that typescript can
         // recognize as a Date. No, typescript does not automatically create a Date but rather puts a String into the
         // member that is a Date. So I have to do it on my own. Jeez...
-        summaryList.forEach(summaryJson => {
-            summaryJson.firstDay = new Date(summaryJson.firstDay)
-            summaryJson.lastDay = new Date(summaryJson.lastDay)
-            summaryJson.lastDay.setHours(23)
-            summaryJson.lastDay.setMinutes(59)
-            summaryJson.lastDay.setSeconds(59)
-            summaryJson.lastDay.setMilliseconds(999)
+        yearlyData.dailyData.forEach(dailyData => {
+            dailyData.day = new Date(dailyData.day)
+            // summaryJson.lastDay = new Date(summaryJson.lastDay)
+            // summaryJson.lastDay.setHours(23)
+            // summaryJson.lastDay.setMinutes(59)
+            // summaryJson.lastDay.setSeconds(59)
+            // summaryJson.lastDay.setMilliseconds(999)
         })
         // this.meteogram?.setData(summaryList)
-        this.temperatureChart?.setData(summaryList)
-        this.sunshineChart?.setData(summaryList)
-        this.precipitationChart?.setData(summaryList)
-        this.airPresssurceChart?.setData(summaryList)
-        this.cloudinessChart?.setData(summaryList)
-        this.windSpeedChart?.setData(summaryList)
+        this.temperatureChart?.setData(yearlyData.dailyData)
+        this.sunshineChart?.setData(yearlyData.dailyData)
+        this.precipitationChart?.setData(yearlyData.dailyData)
+        this.airPresssurceChart?.setData(yearlyData.dailyData)
+        this.cloudinessChart?.setData(yearlyData.dailyData)
+        this.windSpeedChart?.setData(yearlyData.dailyData)
 
-        this.minTemperature = Math.min.apply(Math, summaryList.map(s => s.minAirTemperatureCentigrade))
-        this.maxTemperature = Math.max.apply(Math, summaryList.map(s => s.maxAirTemperatureCentigrade))
+        this.minTemperature = yearlyData.minAirTemperature
+        this.maxTemperature = yearlyData.maxAirTemperature
 
 
-        this.sumSunshineDuration = summaryList.map(s => s.sumSunshineDurationHours)
-            .filter(v => v)
-            .reduce((sum, sunshineDurationHours) => sum + sunshineDurationHours, 0)
-            .toFixed(1)
+        this.sumSunshineDuration = yearlyData.sumSunshine?.toFixed(1)
     }
 }
 

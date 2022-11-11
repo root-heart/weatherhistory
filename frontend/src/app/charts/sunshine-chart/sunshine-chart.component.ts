@@ -10,7 +10,7 @@ import {
     LineElement,
     PointElement, Tooltip, TimeScale
 } from "chart.js";
-import {SummaryJson, SummaryList} from "../SummaryService";
+import {DailyData, SummaryJson, SummaryList} from "../SummaryService";
 import 'chartjs-adapter-moment';
 
 @Component({
@@ -34,7 +34,7 @@ export class SunshineChart extends BaseChart implements OnInit {
         return this.canvas;
     }
 
-    protected getDataSets(summaryList: SummaryList): Array<MeasurementDataSet> {
+    protected getDataSets(summaryList: Array<DailyData>): Array<MeasurementDataSet> {
         let dataSets: Array<MeasurementDataSet> = [];
         dataSets.push({
             type: 'bar',

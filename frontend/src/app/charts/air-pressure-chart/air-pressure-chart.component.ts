@@ -1,6 +1,6 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {BaseChart, MeasurementDataSet} from "../BaseChart";
-import {SummaryList} from "../SummaryService";
+import {DailyData, SummaryList} from "../SummaryService";
 
 @Component({
     selector: 'air-pressure-chart',
@@ -23,7 +23,7 @@ export class AirPressureChart extends BaseChart implements OnInit {
         return this.canvas;
     }
 
-    protected getDataSets(summaryList: SummaryList): Array<MeasurementDataSet> {
+    protected getDataSets(summaryList: Array<DailyData>): Array<MeasurementDataSet> {
         let dataSets: Array<MeasurementDataSet> = [];
         dataSets.push({
             type: 'line',

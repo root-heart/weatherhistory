@@ -1,6 +1,6 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {BaseChart, MeasurementDataSet} from "../BaseChart";
-import {SummaryList} from "../SummaryService";
+import {DailyData, SummaryList} from "../SummaryService";
 
 @Component({
     selector: 'precipitation-chart',
@@ -22,7 +22,7 @@ export class PrecipitationChart extends BaseChart implements OnInit {
         return this.canvas;
     }
 
-    protected getDataSets(summaryList: SummaryList): Array<MeasurementDataSet> {
+    protected getDataSets(summaryList: Array<DailyData>): Array<MeasurementDataSet> {
         let dataSets: Array<MeasurementDataSet> = [];
         dataSets.push({
             type: 'bar',
@@ -42,7 +42,13 @@ export class PrecipitationChart extends BaseChart implements OnInit {
             label: 'Schnee',
             borderColor: 'hsl(40, 0%, 80%)',
             backgroundColor: 'hsl(40, 0%, 80%)',
-            data: summaryList.map(m => -m.sumSnowfallMillimeters),
+            data: summaryList.map(m => {
+                if (m.sumSnowfallMillimeters) {
+                    return -m.sumSnowfallMillimeters
+                } else {
+                    return null
+                }
+            }),
             categoryPercentage: 1,
             barPercentage: 1,
             showTooltip: true,
