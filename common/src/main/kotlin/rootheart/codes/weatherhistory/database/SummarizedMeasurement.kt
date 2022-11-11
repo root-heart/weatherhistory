@@ -1,5 +1,6 @@
 package rootheart.codes.weatherhistory.database
 
+import mu.KotlinLogging
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.and
@@ -10,6 +11,10 @@ import org.joda.time.DateTimeZone
 import org.joda.time.LocalDate
 import java.math.BigDecimal
 import kotlin.reflect.KMutableProperty1
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTimedValue
+
+private val log = KotlinLogging.logger { }
 
 object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val stationId = reference("STATION_ID", StationsTable).index("FK_IDX_MEASUREMENT_STATION")
@@ -54,7 +59,7 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val avgWindSpeedMetersPerSecond = decimal("AVG_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
 
     init {
-        index(isUnique = true, stationId, firstDay, lastDay)
+        index(isUnique = true, stationId, firstDay, intervalType);
     }
 }
 
@@ -141,21 +146,27 @@ class SummarizedMeasurement(
     val intervalTypeName get() = interval.type.name
 }
 
+@OptIn(ExperimentalTime::class)
 object SummarizedMeasurementDao {
+
     fun findByStationIdAndDateBetween(
         station: Station,
         from: DateTime,
         to: DateTime,
         intervalType: DateIntervalType
     ): List<SummarizedMeasurement> = transaction {
-        SummarizedMeasurementsTable.select {
-            SummarizedMeasurementsTable.stationId.eq(station.id!!)
-                .and(SummarizedMeasurementsTable.intervalType eq intervalType.name)
-                .and(SummarizedMeasurementsTable.firstDay greaterEq from)
-                .and(SummarizedMeasurementsTable.firstDay less to)
+        val timedValue = measureTimedValue {
+            SummarizedMeasurementsTable.select {
+                SummarizedMeasurementsTable.stationId.eq(station.id!!)
+                    .and(SummarizedMeasurementsTable.intervalType eq intervalType.name)
+                    .and(SummarizedMeasurementsTable.firstDay greaterEq from)
+                    .and(SummarizedMeasurementsTable.firstDay less to)
+            }
+                .orderBy(SummarizedMeasurementsTable.firstDay)
+                .map { toSummarizedMeasurement(station, it) }
         }
-            .orderBy(SummarizedMeasurementsTable.firstDay)
-            .map { toSummarizedMeasurement(station, it) }
+        log.info { "findByStationIdAndDateBetween(${station.id}, $from, $to, $intervalType) took ${timedValue.duration.inWholeMilliseconds} millis" }
+        timedValue.value
     }
 
     private fun toSummarizedMeasurement(station: Station, row: ResultRow): SummarizedMeasurement {

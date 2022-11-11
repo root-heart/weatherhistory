@@ -1,5 +1,6 @@
 package rootheart.codes.weatherhistory.database
 
+import mu.KotlinLogging
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.and
@@ -8,6 +9,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import kotlin.reflect.KMutableProperty1
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTimedValue
+
+private val log = KotlinLogging.logger { }
 
 object HourlyMeasurementsTable : LongIdTable("HOURLY_MEASUREMENTS") {
     val stationId = reference("STATION_ID", StationsTable.id).index("FK_IDX_HOURLY_MEASUREMENT_STATION")
@@ -68,16 +73,21 @@ data class HourlyMeasurement(
     val stationIdLong get() = station.id
 }
 
+@OptIn(ExperimentalTime::class)
 object HourlyMeasurementDao {
     fun findByStationIdAndYear(station: Station, year: Int): List<HourlyMeasurement> = transaction {
-        val start = DateTime(year, 1, 1, 0, 0)
-        val end = DateTime(year + 1, 1, 1, 0, 0)
-        HourlyMeasurementsTable.select {
-            HourlyMeasurementsTable.stationId.eq(station.id!!)
-                .and(HourlyMeasurementsTable.measurementTime.greaterEq(start))
-                .and(HourlyMeasurementsTable.measurementTime.less(end))
+        val timedValue = measureTimedValue {
+            val start = DateTime(year, 1, 1, 0, 0)
+            val end = DateTime(year + 1, 1, 1, 0, 0)
+            HourlyMeasurementsTable.select {
+                HourlyMeasurementsTable.stationId.eq(station.id!!)
+                    .and(HourlyMeasurementsTable.measurementTime.greaterEq(start))
+                    .and(HourlyMeasurementsTable.measurementTime.less(end))
+            }
+                .map { toHourlyMeasurement(station, it) }
         }
-            .map { toHourlyMeasurement(station, it) }
+        log.info { "findByStationIdAndYear(${station.id}, $year) took ${timedValue.duration.inWholeMilliseconds} millis" }
+        return@transaction timedValue.value
     }
 
     private fun toHourlyMeasurement(station: Station, row: ResultRow): HourlyMeasurement {
