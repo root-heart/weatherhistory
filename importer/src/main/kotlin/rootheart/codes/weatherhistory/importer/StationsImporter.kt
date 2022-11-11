@@ -2,6 +2,7 @@ package rootheart.codes.weatherhistory.importer
 
 import kotlinx.coroutines.DelicateCoroutinesApi
 import mu.KotlinLogging
+import org.joda.time.LocalDate
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationsImporter
 import java.math.BigDecimal
@@ -10,7 +11,7 @@ import java.nio.charset.Charset
 private val log = KotlinLogging.logger {}
 
 private val stationFilter: (Station) -> Boolean = {
-    it.hasRecentData && it.hasTemperatureData && it.hasSunshineData && it.hasCloudinessData && it.hasAirPressureData
+    it.hasRecentData && it.hasTemperatureData && it.hasSunshineData && it.hasCloudinessData && it.hasAirPressureData && it.hasWindData
 }
 
 @DelicateCoroutinesApi
@@ -51,7 +52,7 @@ fun importStations(rootDirectory: HtmlDirectory) {
                     MeasurementType.WIND_SPEED -> station.hasWindData = true
                     MeasurementType.PRECIPITATION -> station.hasPrecipitationData = true
                 }
-                station.hasRecentData = lastDay == "20220628"
+                station.hasRecentData = lastDay.startsWith(LocalDate.now().toString("yyyyMM"))
             }
         }
     }

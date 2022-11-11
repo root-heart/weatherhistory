@@ -1,23 +1,25 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {BaseChart, MeasurementDataSet} from "../BaseChart";
-import {SummaryList} from "../SummaryService";
+import {DailyData, SummaryList} from "../SummaryService";
 import {
     BarController,
-    BarElement, CartesianScaleOptions,
+    BarElement,
     CategoryScale,
     Chart,
     Filler,
     Legend,
-    LinearScale, LinearScaleOptions,
+    LinearScale,
     LineController,
     LineElement,
     PointElement,
+    TimeScale,
     Tooltip
 } from "chart.js";
 
 @Component({
     selector: 'temperature-chart',
-    template: '<h1>Temperatur</h1><div style="height: 30vw"><canvas #temperatureChart></canvas></div>'
+    template: '<canvas #temperatureChart></canvas>',
+    styleUrls: ['../charts.css']
 })
 export class TemperatureChart extends BaseChart implements OnInit {
     @ViewChild("temperatureChart")
@@ -25,7 +27,7 @@ export class TemperatureChart extends BaseChart implements OnInit {
 
     constructor() {
         super();
-        Chart.register(BarController, BarElement, LineController, LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend, Filler);
+        Chart.register(TimeScale, BarController, BarElement, LineController, LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend, Filler);
     }
 
     ngOnInit(): void {
@@ -35,19 +37,19 @@ export class TemperatureChart extends BaseChart implements OnInit {
         return this.canvas;
     }
 
-    protected getDataSets(summaryList: SummaryList): Array<MeasurementDataSet> {
+    protected getDataSets(summaryList: Array<DailyData>): Array<MeasurementDataSet> {
         let dataSets: Array<MeasurementDataSet> = [];
 
         dataSets.push({
             type: 'line',
             label: 'Temperatur',
             borderColor: 'hsl(0, 80%, 45%)',
+            borderWidth: 2,
             backgroundColor: 'hsl(0, 80%, 45%)',
-            data: summaryList.map(m => m['avgAirTemperatureCentigrade']),
-            // xAxisID: 'xAxisVisible',
-            yAxisID: 'yAxisTemperature',
+            data: summaryList.map(m => m.avgAirTemperatureCentigrade),
             pointRadius: 0,
             pointHitRadius: 20,
+
             showTooltip: true,
             showLegend: true,
             tooltipValueFormatter: (value: number) => this.formatCentigrade(value)
@@ -56,11 +58,9 @@ export class TemperatureChart extends BaseChart implements OnInit {
         dataSets.push({
             type: 'line',
             label: 'Minimum Temperatur',
-            borderColor: 'hsla(0, 80%, 45%, 0.3)',
+            borderColor: 'hsla(0, 80%, 45%, 0)',
             backgroundColor: 'hsla(0, 80%, 45%, 0.15)',
-            data: summaryList.map(m => m['minAirTemperatureCentigrade']),
-            // xAxisID: 'xAxisVisible',
-            yAxisID: 'yAxisTemperature',
+            data: summaryList.map(m => m.minAirTemperatureCentigrade),
             pointRadius: 0,
             pointHitRadius: 20,
             showTooltip: false
@@ -69,30 +69,15 @@ export class TemperatureChart extends BaseChart implements OnInit {
         dataSets.push({
             type: 'line',
             label: 'Maximum Temperatur',
-            borderColor: 'hsla(0, 80%, 45%, 0.3)',
+            borderColor: 'hsla(0, 80%, 45%, 0)',
             backgroundColor: 'hsla(0, 80%, 45%, 0.15)',
-            data: summaryList.map(m => m['maxAirTemperatureCentigrade']),
-            // xAxisID: 'xAxisVisible',
-            yAxisID: 'yAxisTemperature',
+            data: summaryList.map(m => m.maxAirTemperatureCentigrade),
             fill: '-1',
             pointRadius: 0,
             pointHitRadius: 20,
             showTooltip: false
         });
 
-        // dataSets.push({
-        //     label: 'Regen',
-        //     borderColor: 'hsl(240, 80%, 35%)',
-        //     backgroundColor: 'hsl(240, 80%, 35%)',
-        //     data: summaryList.map(m => m['sumRainfallMillimeters']),
-        //     // xAxisID: 'xAxisVisible',
-        //     yAxisID: 'yAxisMillimeters',
-        //     categoryPercentage: 0.5,
-        //     barPercentage: 0.8,
-        //     showTooltip: true,
-        //     showLegend: true,
-        //     tooltipValueFormatter: (value: number) => this.formatMillimeters(value)
-        // });
 
         return dataSets;
     }

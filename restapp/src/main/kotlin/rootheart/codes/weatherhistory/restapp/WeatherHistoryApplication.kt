@@ -33,4 +33,5 @@ fun Application.setupRouting() = routing {
     }
     stationsEndpoints()
     summaryDataEndpoints()
+    measurementEndpoints()
 }

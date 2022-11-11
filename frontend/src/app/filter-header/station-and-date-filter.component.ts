@@ -34,7 +34,7 @@ export class StationAndDateFilterComponent implements OnInit {
     }
 
     private setStations(stations: Array<WeatherStation>) {
-        console.log(stations)
+        // console.log(stations)
         stations.sort((a, b) => a.name.localeCompare(b.name))
         this.stations = stations
     }
@@ -44,9 +44,9 @@ export class StationAndDateFilterComponent implements OnInit {
 
     fireFilterChangedEvent(): void {
         // let station: WeatherStation = this.weatherStationFilterInput.value
-        console.log("filter changed? " + this.selectedStation?.name + " - " + this.fromYear.value + " - " + this.toYear.value)
+        // console.log("filter changed? " + this.selectedStation?.name + " - " + this.fromYear.value + " - " + this.toYear.value)
         if (this.selectedStation && this.fromYear.value && this.toYear.value) {
-            console.log("filter changed!")
+            // console.log("filter changed!")
             this.onFilterChanged.emit({
                 station: this.selectedStation,
                 start: this.fromYear.value,
@@ -55,7 +55,7 @@ export class StationAndDateFilterComponent implements OnInit {
         }
     }
 
-    log(message: String) {
-        console.log(message)
-    }
+    // log(message: String) {
+    //     console.log(message)
+    // }
 }

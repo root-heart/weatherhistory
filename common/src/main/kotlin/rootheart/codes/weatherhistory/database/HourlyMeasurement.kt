@@ -1,8 +1,18 @@
 package rootheart.codes.weatherhistory.database
 
+import mu.KotlinLogging
 import org.jetbrains.exposed.dao.LongIdTable
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.math.BigDecimal
+import kotlin.reflect.KMutableProperty1
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTimedValue
+
+private val log = KotlinLogging.logger { }
 
 object HourlyMeasurementsTable : LongIdTable("HOURLY_MEASUREMENTS") {
     val stationId = reference("STATION_ID", StationsTable.id).index("FK_IDX_HOURLY_MEASUREMENT_STATION")
@@ -56,11 +66,46 @@ data class HourlyMeasurement(
     var sunshineDurationMinutes: BigDecimal? = null,
     var windSpeedMetersPerSecond: BigDecimal? = null,
     var maxWindSpeedMetersPerSecond: BigDecimal? = null,
-    var windDirectionDegrees: BigDecimal? = null,
-    var visibilityInMeters: BigDecimal? = null
+    var windDirectionDegrees: Int? = null,
+    var visibilityInMeters: Int? = null
 ) {
     val precipitationTypeName get() = precipitationType?.name
     val stationIdLong get() = station.id
 }
 
+@OptIn(ExperimentalTime::class)
+object HourlyMeasurementDao {
+    fun findByStationIdAndYear(station: Station, year: Int): List<HourlyMeasurement> = transaction {
+        val timedValue = measureTimedValue {
+            val start = DateTime(year, 1, 1, 0, 0)
+            val end = DateTime(year + 1, 1, 1, 0, 0)
+            HourlyMeasurementsTable.select {
+                HourlyMeasurementsTable.stationId.eq(station.id!!)
+                    .and(HourlyMeasurementsTable.measurementTime.greaterEq(start))
+                    .and(HourlyMeasurementsTable.measurementTime.less(end))
+            }
+                .map { toHourlyMeasurement(station, it) }
+        }
+        log.info { "findByStationIdAndYear(${station.id}, $year) took ${timedValue.duration.inWholeMilliseconds} millis" }
+        return@transaction timedValue.value
+    }
 
+    private fun toHourlyMeasurement(station: Station, row: ResultRow): HourlyMeasurement {
+        val hourlyMeasurement = createHourlyMeasurement(station, row)
+        setValuesFromResultRow(row, hourlyMeasurement)
+        return hourlyMeasurement
+    }
+
+    private fun createHourlyMeasurement(station: Station, row: ResultRow): HourlyMeasurement {
+        return HourlyMeasurement(station = station, measurementTime = row[HourlyMeasurementsTable.measurementTime])
+    }
+
+    private fun setValuesFromResultRow(row: ResultRow, hourlyMeasurement: HourlyMeasurement) {
+        for (mapping in HourlyMeasurementTableMapping.mappings) {
+            val property = mapping.first
+            if (property is KMutableProperty1) {
+                property.set(hourlyMeasurement, row[mapping.second])
+            }
+        }
+    }
+}

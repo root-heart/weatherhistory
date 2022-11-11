@@ -34,12 +34,13 @@ inline fun <T> Iterable<T>.maxDecimal(selector: (T) -> BigDecimal?): BigDecimal?
 }
 
 inline fun <T> Collection<T>.avgDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
-    return sumDecimal(selector)?.divide(BigDecimal.valueOf(size.toLong()), RoundingMode.HALF_UP)
+    val countNonNull = count { selector(it) != null }.toLong()
+    return sumDecimal(selector)?.divide(BigDecimal.valueOf(countNonNull), RoundingMode.HALF_UP)
 }
 
 inline fun <T> Collection<T>.sumDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
     val iterator = iterator()
-    if (!iterator.hasNext()) throw NoSuchElementException()
+    if (!iterator.hasNext()) return null
     var sum = selector(iterator.next())
     while (iterator.hasNext()) {
         val v = selector(iterator.next())

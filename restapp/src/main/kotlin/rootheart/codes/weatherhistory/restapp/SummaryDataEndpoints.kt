@@ -1,22 +1,18 @@
 package rootheart.codes.weatherhistory.restapp
 
-import io.ktor.application.call
-import io.ktor.http.HttpStatusCode
-import io.ktor.request.queryString
-import io.ktor.response.respond
-import io.ktor.routing.Route
-import io.ktor.routing.Routing
-import io.ktor.routing.get
-import io.ktor.routing.route
+import io.ktor.application.*
+import io.ktor.response.*
+import io.ktor.routing.*
 import mu.KotlinLogging
+import org.joda.time.DateTime
 import org.joda.time.LocalDate
-import org.joda.time.Period
 import org.joda.time.format.DateTimeFormat
 import rootheart.codes.weatherhistory.database.DateIntervalType
-import rootheart.codes.weatherhistory.database.Station
+import rootheart.codes.weatherhistory.database.HourlyMeasurementDao
 import rootheart.codes.weatherhistory.database.StationDao
-import rootheart.codes.weatherhistory.database.SummarizedMeasurement
 import rootheart.codes.weatherhistory.database.SummarizedMeasurementDao
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTimedValue
 
 private val log = KotlinLogging.logger { }
 
@@ -24,50 +20,108 @@ fun Routing.summaryDataEndpoints() = route("summary/{stationId}") {
     getSummary()
 }
 
-private val DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd").withZoneUTC()
+private const val DATE_TIME_PATTERN = "yyyy-MM-dd"
 
+@OptIn(ExperimentalTime::class)
 fun Route.getSummary() = get() {
     val stationId = call.parameters["stationId"]!!.toLong()
-    val from = LocalDate.parse(call.request.queryParameters["from"]!!, DATE_TIME_FORMATTER)
-    val to = LocalDate.parse(call.request.queryParameters["to"]!!, DATE_TIME_FORMATTER)
+    val year = call.request.queryParameters["year"]!!.toInt()
+    val timedValue = measureTimedValue {
+        log.info { "Fetching data for station id $stationId and year $year from database" }
 
-    log.info { "Fetching data for station id $stationId and date range $from - $to from database" }
+        val station = StationDao.findById(stationId)!!
 
-    val period = Period.fieldDifference(from, to)
-    var intervalType = DateIntervalType.DAY
-    if (period.years > 100) {
-        intervalType = DateIntervalType.DECADE
-    } else if (period.years > 30) {
-        intervalType = DateIntervalType.YEAR
-    } else if (period.years > 8) {
-        intervalType = DateIntervalType.SEASON
-    } else if (period.years > 0 || period.months > 3) {
-        intervalType = DateIntervalType.MONTH
+        val start = DateTime(year, 1, 1, 0, 0)
+        val end = DateTime(year + 1, 1, 1, 0, 0)
+
+        val dailyData = SummarizedMeasurementDao
+            .findByStationIdAndDateBetween(station, start, end, DateIntervalType.DAY)
+            .associateBy { it.firstDay.toLocalDate() }
+
+        val yearlyData = SummarizedMeasurementDao
+            .findByStationIdAndDateBetween(station, start, end, DateIntervalType.YEAR)
+            .first()
+
+        val hourlyData = HourlyMeasurementDao
+            .findByStationIdAndYear(station, year)
+            .groupBy { it.measurementTime.toLocalDate() }
+
+        return@measureTimedValue YearlyData(
+            year = year,
+            station = station,
+
+            minAirTemperature = yearlyData.minAirTemperatureCentigrade,
+            minAirTemperatureDay = LocalDate.now(),
+
+            avgAirTemperature = yearlyData.avgAirTemperatureCentigrade,
+
+            maxAirTemperature = yearlyData.maxAirTemperatureCentigrade,
+            maxAirTemperatureDay = LocalDate.now(),
+
+            minAirPressureHectopascals = yearlyData.minAirPressureHectopascals,
+            minAirPressureDay = LocalDate.now(),
+
+            avgAirPressureHectopascals = yearlyData.avgAirPressureHectopascals,
+
+            maxAirPressureHectopascals = yearlyData.maxAirPressureHectopascals,
+            maxAirPressureDay = LocalDate.now(),
+
+            avgWindSpeedMetersPerSecond = yearlyData.avgWindSpeedMetersPerSecond,
+            maxWindSpeedMetersPerSecond = yearlyData.maxWindSpeedMetersPerSecond,
+            maxWindSpeedDay = LocalDate.now(),
+
+            sumRain = yearlyData.sumRainfallMillimeters,
+            sumSnow = yearlyData.sumSnowfallMillimeters,
+            sumSunshine = yearlyData.sumSunshineDurationHours,
+
+            dailyData = dailyData.map { (day, data) ->
+                val h = hourlyData[day]?.sortedBy { it.measurementTime }
+                val coverages = ArrayList<Int?>(24)
+                for (hour in (0..23)) {
+                    coverages += h?.firstOrNull { it.measurementTime.hourOfDay == hour }?.cloudCoverage
+                }
+
+                DailyData(
+                    day = day.toString(DATE_TIME_PATTERN),
+
+                    minAirTemperatureCentigrade = data.minAirTemperatureCentigrade,
+                    avgAirTemperatureCentigrade = data.avgAirTemperatureCentigrade,
+                    maxAirTemperatureCentigrade = data.maxAirTemperatureCentigrade,
+
+                    minDewPointTemperatureCentigrade = data.minDewPointTemperatureCentigrade,
+                    maxDewPointTemperatureCentigrade = data.maxDewPointTemperatureCentigrade,
+                    avgDewPointTemperatureCentigrade = data.avgDewPointTemperatureCentigrade,
+
+                    minAirPressureHectopascals = data.minAirPressureHectopascals,
+                    avgAirPressureHectopascals = data.avgAirPressureHectopascals,
+                    maxAirPressureHectopascals = data.maxAirPressureHectopascals,
+
+                    avgWindSpeedMetersPerSecond = data.avgWindSpeedMetersPerSecond,
+                    maxWindSpeedMetersPerSecond = data.maxWindSpeedMetersPerSecond,
+
+                    cloudCoverages = coverages,
+                    sumSunshineDurationHours = data.sumSunshineDurationHours,
+                    sumRainfallMillimeters = data.sumRainfallMillimeters,
+                    sumSnowfallMillimeters = data.sumSnowfallMillimeters,
+                )
+            }.sortedBy { it.day }
+        )
     }
 
-    val station = StationDao.findById(stationId)!!
-    val summaryData = SummarizedMeasurementDao.findByStationIdAndDateBetween(
-        station,
-        from.toDateTimeAtStartOfDay(),
-        to.toDateTimeAtStartOfDay(),
-        intervalType
-    )
-
-    val summaryJsonList = summaryData.map { it.toJson() }
-    log.info("Fetched data for station id {} and date range {} - {}", stationId, from, to)
-    call.respond(summaryJsonList)
+    log.info { "getSummary($stationId, $year) took ${timedValue.duration.inWholeMilliseconds} millis" }
+    call.respond(timedValue.value)
 }
 
-data class SummarizedMeasurementResponse(
-    val stationId: Long,
-    val stationName: String,
-    val measurements: List<SummarizedMeasurementJson>
-)
-
-private fun toResponse(station: Station, measurements: List<SummarizedMeasurement>): SummarizedMeasurementResponse {
-    val stations = measurements.map { it.station }.distinct()
-    return SummarizedMeasurementResponse(
-        stationId = station.id!!,
-        stationName = station.name,
-        measurements = measurements.map { it.toJson() })
-}
+//data class SummarizedMeasurementResponse(
+//    val stationId: Long,
+//    val stationName: String,
+//    val measurements: List<SummarizedMeasurementJson>
+//)
+//
+//private fun toResponse(station: Station, measurements: List<SummarizedMeasurement>): SummarizedMeasurementResponse {
+//    val stations = measurements.map { it.station }.distinct()
+//    return SummarizedMeasurementResponse(
+//        stationId = station.id!!,
+//        stationName = station.name,
+//        measurements = measurements.map { it.toJson() })
+//}

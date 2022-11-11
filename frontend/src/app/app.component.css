@@ -1,15 +1,35 @@
 :host {
-    display: grid;
-    grid-template-columns: 49% 49%;
-    grid-gap: 2%;
+    position: relative;
 }
 
 h1 {
     grid-column-start: 1;
-    grid-column-end: 3;
+    grid-column-end: 2;
 }
 
 station-and-date-filter {
+
+}
+
+aside {
+    position: fixed;
+    left: 2rem;
+    top: 10rem;
+    bottom: 5rem;
+    width: 30rem;
+}
+
+main {
+    margin: 0 10rem;
+    /*margin-top: 10rem;*/
+    /*padding-top: 10rem;*/
+}
+
+main > section > h1 {
     grid-column-start: 1;
     grid-column-end: 3;
+}
+
+main > section > article {
+    height: 100%;
 }

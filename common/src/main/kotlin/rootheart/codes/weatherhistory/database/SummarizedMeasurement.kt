@@ -1,5 +1,6 @@
 package rootheart.codes.weatherhistory.database
 
+import mu.KotlinLogging
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.and
@@ -10,24 +11,33 @@ import org.joda.time.DateTimeZone
 import org.joda.time.LocalDate
 import java.math.BigDecimal
 import kotlin.reflect.KMutableProperty1
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTimedValue
+
+private val log = KotlinLogging.logger { }
 
 object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val stationId = reference("STATION_ID", StationsTable).index("FK_IDX_MEASUREMENT_STATION")
     val firstDay = date("FIRST_DAY")
     val lastDay = date("LAST_DAY")
     val intervalType = varchar("INTERVAL_TYPE", 6)
+
     val minAirTemperatureCentigrade = decimal("MIN_AIR_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val avgAirTemperatureCentigrade = decimal("AVG_AIR_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val maxAirTemperatureCentigrade = decimal("MAX_AIR_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
+
     val minDewPointTemperatureCentigrade = decimal("MIN_DEW_POINT_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val avgDewPointTemperatureCentigrade = decimal("AVG_DEW_POINT_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val maxDewPointTemperatureCentigrade = decimal("MAX_DEW_POINT_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
+
     val minHumidityPercent = decimal("MIN_HUMIDITY_PERCENT", 4, 1).nullable()
     val avgHumidityPercent = decimal("AVG_HUMIDITY_PERCENT", 4, 1).nullable()
     val maxHumidityPercent = decimal("MAX_HUMIDITY_PERCENT", 4, 1).nullable()
+
     val minAirPressureHectopascals = decimal("MIN_AIR_PRESSURE_HECTOPASCALS", 5, 1).nullable()
     val avgAirPressureHectopascals = decimal("AVG_AIR_PRESSURE_HECTOPASCALS", 5, 1).nullable()
     val maxAirPressureHectopascals = decimal("MAX_AIR_PRESSURE_HECTOPASCALS", 5, 1).nullable()
+
     val countCloudCoverage0 = integer("COUNT_CLOUD_COVERAGE0").nullable()
     val countCloudCoverage1 = integer("COUNT_CLOUD_COVERAGE1").nullable()
     val countCloudCoverage2 = integer("COUNT_CLOUD_COVERAGE2").nullable()
@@ -39,14 +49,17 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val countCloudCoverage8 = integer("COUNT_CLOUD_COVERAGE8").nullable()
     val countCloudCoverageNotVisible = integer("COUNT_CLOUD_COVERAGE_NOT_VISIBLE").nullable()
     val countCloudCoverageNotMeasured = integer("COUNT_CLOUD_COVERAGE_NOT_MEASURED").nullable()
+
     val sumSunshineDurationHours = decimal("SUM_SUNSHINE_DURATION_HOURS", 8, 1).nullable()
+
     val sumRainfallMillimeters = decimal("SUM_RAINFALL_MILLIMETERS", 6, 1).nullable()
     val sumSnowfallMillimeters = decimal("SUM_SNOWFALL_MILLIMETERS", 6, 1).nullable()
+
     val maxWindSpeedMetersPerSecond = decimal("MAX_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
     val avgWindSpeedMetersPerSecond = decimal("AVG_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
 
     init {
-        index(isUnique = true, stationId, firstDay, lastDay)
+        index(isUnique = true, stationId, firstDay, intervalType);
     }
 }
 
@@ -116,8 +129,8 @@ class SummarizedMeasurement(
     var countCloudCoverageNotVisible: Int = 0,
     var countCloudCoverageNotMeasured: Int = 0,
     var sumSunshineDurationHours: BigDecimal? = null,
-    var sumRainfallMillimeters: BigDecimal = BigDecimal.ZERO,
-    var sumSnowfallMillimeters: BigDecimal = BigDecimal.ZERO,
+    var sumRainfallMillimeters: BigDecimal? = null,
+    var sumSnowfallMillimeters: BigDecimal? = null,
     var maxWindSpeedMetersPerSecond: BigDecimal? = null,
     var avgWindSpeedMetersPerSecond: BigDecimal? = null,
     var minAirPressureHectopascals: BigDecimal? = null,
@@ -133,21 +146,27 @@ class SummarizedMeasurement(
     val intervalTypeName get() = interval.type.name
 }
 
+@OptIn(ExperimentalTime::class)
 object SummarizedMeasurementDao {
+
     fun findByStationIdAndDateBetween(
         station: Station,
         from: DateTime,
         to: DateTime,
         intervalType: DateIntervalType
     ): List<SummarizedMeasurement> = transaction {
-        SummarizedMeasurementsTable.select {
-            SummarizedMeasurementsTable.stationId.eq(station.id!!)
-                .and(SummarizedMeasurementsTable.intervalType eq intervalType.name)
-                .and(SummarizedMeasurementsTable.firstDay greaterEq from)
-                .and(SummarizedMeasurementsTable.firstDay lessEq to)
+        val timedValue = measureTimedValue {
+            SummarizedMeasurementsTable.select {
+                SummarizedMeasurementsTable.stationId.eq(station.id!!)
+                    .and(SummarizedMeasurementsTable.intervalType eq intervalType.name)
+                    .and(SummarizedMeasurementsTable.firstDay greaterEq from)
+                    .and(SummarizedMeasurementsTable.firstDay less to)
+            }
+                .orderBy(SummarizedMeasurementsTable.firstDay)
+                .map { toSummarizedMeasurement(station, it) }
         }
-            .orderBy(SummarizedMeasurementsTable.firstDay)
-            .map { toSummarizedMeasurement(station, it) }
+        log.info { "findByStationIdAndDateBetween(${station.id}, $from, $to, $intervalType) took ${timedValue.duration.inWholeMilliseconds} millis" }
+        timedValue.value
     }
 
     private fun toSummarizedMeasurement(station: Station, row: ResultRow): SummarizedMeasurement {
