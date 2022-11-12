@@ -47,14 +47,14 @@ object WeatherDb {
     fun createTables() {
         Database.connect(dataSource)
         transaction {
-            SchemaUtils.create(HourlyMeasurementsTable, SummarizedMeasurementsTable, StationsTable)
+            SchemaUtils.create(/*HourlyMeasurementsTable, SummarizedMeasurementsTable,*/ MeasurementsTable, StationsTable)
         }
     }
 
     fun dropTables() {
         Database.connect(dataSource)
         transaction {
-            SchemaUtils.drop(HourlyMeasurementsTable, SummarizedMeasurementsTable, StationsTable)
+            SchemaUtils.drop(MeasurementsTable, StationsTable)
         }
     }
 }

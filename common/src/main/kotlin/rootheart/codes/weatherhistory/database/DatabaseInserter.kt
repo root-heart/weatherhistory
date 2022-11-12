@@ -50,9 +50,18 @@ open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<P
 
             var csv: ByteArrayInputStream
             val timeCreatingStrings = measureTimeMillis {
-                csv = entities.joinToString("\n") { entity ->
-                    tableMapping.keys.map { it.get(entity) ?: "\\N" }.joinToString("|")
-                }.byteInputStream()
+                val s = entities.joinToString("\n") { entity ->
+                    tableMapping.keys
+                        .map { property ->
+                            when (val value = property.get(entity)) {
+                                null -> return@map "\\N"
+                                is Array<*> -> return@map value.joinToString(",", "{", "}")
+                                else -> return@map value
+                            }
+                        }
+                        .joinToString("|")
+                }
+                csv = s.byteInputStream()
             }
             log.debug { "Creating the CSV for ${entities.size} rows took $timeCreatingStrings millis" }
             val timeCopying = measureTimeMillis { copyManager.copyIn(copyFromSql, csv) }
@@ -75,10 +84,7 @@ open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<P
 }
 
 @DelicateCoroutinesApi
-object SummarizedMeasurementImporter : DatabaseInserter<SummarizedMeasurement>(SummarizedMeasurementTableMapping)
+object MeasurementImporter : DatabaseInserter<Measurement>(MeasurementTableMapping)
 
 @DelicateCoroutinesApi
 object StationsImporter : DatabaseInserter<Station>(StationTableMapping)
-
-@DelicateCoroutinesApi
-object HourlyMeasurementsImporter : DatabaseInserter<HourlyMeasurement>(HourlyMeasurementTableMapping)

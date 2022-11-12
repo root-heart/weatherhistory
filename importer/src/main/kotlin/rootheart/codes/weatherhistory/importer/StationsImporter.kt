@@ -11,12 +11,12 @@ import java.nio.charset.Charset
 private val log = KotlinLogging.logger {}
 
 private val stationFilter: (Station) -> Boolean = {
+//    it.externalId == "00691"
     it.hasRecentData && it.hasTemperatureData && it.hasSunshineData && it.hasCloudinessData && it.hasAirPressureData && it.hasWindData
 }
 
 @DelicateCoroutinesApi
-fun importStations(rootDirectory: HtmlDirectory) {
-    val stationsFiles = rootDirectory.getAllStationsFiles()
+fun importStations(stationsFiles: Collection<StationsFile>) {
     val stations = HashMap<String, Station>()
     stationsFiles.forEach { stationsFile ->
         log.info { "Parsing stations from ${stationsFile.url}" }

@@ -9,10 +9,10 @@ val DIRECTORY_NAME_REGEX =
     Regex("<a href=\"(?<directoryName>\\w*)/\">")
 
 val STATIONS_FILE_NAME_REGEX =
-    Regex("<a href=\"(?<fileName>(?<key>TU|N|TD|FX|TF|SD|VV|FF|RR)_(Stunden|Tages)werte_Beschreibung_Stationen.txt)\">")
+    Regex("<a href=\"(?<fileName>(?<key>TU|N|TD|FX|TF|SD|VV|FF|RR|KL)_(Stunden|Tages)werte_Beschreibung_Stationen.txt)\">")
 
 val DATA_FILE_NAME_REGEX =
-    Regex("<a href=\"(?<fileName>(stunden|tages)werte_(?<key>(TU|N|TD|FX|TF|SD|VV|FF|RR))_(?<stationId>\\d{5})_.*?(?<recentness>akt|hist)\\.zip)\">.*\\s(?<size>\\d{1,10})")
+    Regex("<a href=\"(?<fileName>(stunden|tages)werte_(?<key>(TU|N|TD|FX|TF|SD|VV|FF|RR|KL))_(?<stationId>\\d{5})_.*?(?<recentness>akt|hist)\\.zip)\">.*\\s(?<size>\\d{1,10})")
 
 data class HtmlDirectory(
     val url: URL,

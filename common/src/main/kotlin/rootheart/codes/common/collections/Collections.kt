@@ -2,6 +2,7 @@ package rootheart.codes.common.collections
 
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlin.math.min
 
 inline fun <T> Iterable<T>.minDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
     val iterator = iterator()
@@ -44,7 +45,18 @@ inline fun <T> Collection<T>.sumDecimal(selector: (T) -> BigDecimal?): BigDecima
     var sum = selector(iterator.next())
     while (iterator.hasNext()) {
         val v = selector(iterator.next())
-        v?.let { sum = sum?.add(v) ?: v }
+        v?.let { sum = sum?.add(it) ?: it }
     }
     return sum
 }
+
+//inline fun <T> Collection<T>.minDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
+//    val iterator = iterator()
+//    if (!iterator.hasNext()) return null
+//    var min = selector(iterator.next())
+//    while (iterator.hasNext()) {
+//        val v = selector(iterator.next())
+//        v?.let { min = if (it < min) it else min }
+//    }
+//    return min
+//}

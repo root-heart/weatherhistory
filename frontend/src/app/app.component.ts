@@ -73,7 +73,7 @@ export class AppComponent {
 
         this.minTemperature = yearlyData.minAirTemperature
         this.maxTemperature = yearlyData.maxAirTemperature
-
+        this.avgTemperature = yearlyData.avgAirTemperature
 
         this.sumSunshineDuration = yearlyData.sumSunshine?.toFixed(1)
     }
