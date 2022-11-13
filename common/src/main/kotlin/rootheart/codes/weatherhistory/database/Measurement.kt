@@ -6,14 +6,17 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.DecimalColumnType
 import org.jetbrains.exposed.sql.IntegerColumnType
+import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.joda.time.LocalDate
+import rootheart.codes.common.measureAndLogDuration
 import java.math.BigDecimal
 import kotlin.reflect.KMutableProperty1
 import kotlin.time.ExperimentalTime
@@ -25,46 +28,47 @@ object MeasurementsTable : LongIdTable("MEASUREMENTS") {
     val stationId = reference("STATION_ID", StationsTable).index("FK_IDX_MEASUREMENT_STATION")
     val day = date("DAY")
 
-    val hourlyAirTemperatureCentigrade = array<BigDecimal>("HOURLY_AIR_TEMPERATURE_CENTIGRADE", DecimalColumnType(4, 1))
+    val hourlyAirTemperatureCentigrade =
+        array<BigDecimal?>("HOURLY_AIR_TEMPERATURE_CENTIGRADE", DecimalColumnType(4, 1))
     val minAirTemperatureCentigrade = decimal("MIN_AIR_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val avgAirTemperatureCentigrade = decimal("AVG_AIR_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val maxAirTemperatureCentigrade = decimal("MAX_AIR_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
 
     val hourlyDewPointTemperatureCentigrade =
-        array<BigDecimal>("HOURLY_DEW_POINT_TEMPERATURE_CENTIGRADE", DecimalColumnType(4, 1))
+        array<BigDecimal?>("HOURLY_DEW_POINT_TEMPERATURE_CENTIGRADE", DecimalColumnType(4, 1))
     val minDewPointTemperatureCentigrade = decimal("MIN_DEW_POINT_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val avgDewPointTemperatureCentigrade = decimal("AVG_DEW_POINT_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
     val maxDewPointTemperatureCentigrade = decimal("MAX_DEW_POINT_TEMPERATURE_CENTIGRADE", 4, 1).nullable()
 
-    val hourlyHumidityPercent = array<BigDecimal>("HOURLY_HUMIDITY_PERCENT", DecimalColumnType(4, 1))
+    val hourlyHumidityPercent = array<BigDecimal?>("HOURLY_HUMIDITY_PERCENT", DecimalColumnType(4, 1))
     val minHumidityPercent = decimal("MIN_HUMIDITY_PERCENT", 4, 1).nullable()
     val avgHumidityPercent = decimal("AVG_HUMIDITY_PERCENT", 4, 1).nullable()
     val maxHumidityPercent = decimal("MAX_HUMIDITY_PERCENT", 4, 1).nullable()
 
-    val hourlyAirPressureHectopascals = array<BigDecimal>("HOURLY_AIR_PRESSURE_HECTOPASCALS", DecimalColumnType(5, 1))
+    val hourlyAirPressureHectopascals = array<BigDecimal?>("HOURLY_AIR_PRESSURE_HECTOPASCALS", DecimalColumnType(5, 1))
     val minAirPressureHectopascals = decimal("MIN_AIR_PRESSURE_HECTOPASCALS", 5, 1).nullable()
     val avgAirPressureHectopascals = decimal("AVG_AIR_PRESSURE_HECTOPASCALS", 5, 1).nullable()
     val maxAirPressureHectopascals = decimal("MAX_AIR_PRESSURE_HECTOPASCALS", 5, 1).nullable()
 
-    val hourlyCloudCoverage = array<Int>("HOURLY_CLOUD_COVERAGE", IntegerColumnType())
+    val hourlyCloudCoverage = array<Int?>("HOURLY_CLOUD_COVERAGE", IntegerColumnType())
 
-    val hourlySunshineDurationMinutes = array<Int>("HOURLY_SUNSHINE_DURATION_MINUTES", IntegerColumnType())
+    val hourlySunshineDurationMinutes = array<Int?>("HOURLY_SUNSHINE_DURATION_MINUTES", IntegerColumnType())
     val sumSunshineDurationHours = decimal("SUM_SUNSHINE_DURATION_HOURS", 8, 1).nullable()
 
-    val hourlyRainfallMillimeters = array<BigDecimal>("HOURLY_RAINFALL_MILLIMETERS", DecimalColumnType(4, 1))
+    val hourlyRainfallMillimeters = array<BigDecimal?>("HOURLY_RAINFALL_MILLIMETERS", DecimalColumnType(4, 1))
     val sumRainfallMillimeters = decimal("SUM_RAINFALL_MILLIMETERS", 6, 1).nullable()
 
-    val hourlySnowfallMillimeters = array<BigDecimal>("HOURLY_SNOWFALL_MILLIMETERS", DecimalColumnType(4, 1))
+    val hourlySnowfallMillimeters = array<BigDecimal?>("HOURLY_SNOWFALL_MILLIMETERS", DecimalColumnType(4, 1))
     val sumSnowfallMillimeters = decimal("SUM_SNOWFALL_MILLIMETERS", 6, 1).nullable()
 
     val hourlyWindSpeedMetersPerSecond =
-        array<BigDecimal>("HOURLY_WIND_SPEED_METERS_PER_SECOND", DecimalColumnType(4, 1))
+        array<BigDecimal?>("HOURLY_WIND_SPEED_METERS_PER_SECOND", DecimalColumnType(4, 1))
     val maxWindSpeedMetersPerSecond = decimal("MAX_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
     val avgWindSpeedMetersPerSecond = decimal("AVG_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
 
-    val hourlyWindDirectionDegrees = array<Int>("HOURLY_WIND_DIRECTION_DEGREES", IntegerColumnType())
+    val hourlyWindDirectionDegrees = array<Int?>("HOURLY_WIND_DIRECTION_DEGREES", IntegerColumnType())
 
-    val hourlyVisibilityMeters = array<Int>("HOURLY_VISIBILITY_METERS", IntegerColumnType())
+    val hourlyVisibilityMeters = array<Int?>("HOURLY_VISIBILITY_METERS", IntegerColumnType())
 
     init {
         index(isUnique = true, stationId, day);
@@ -162,43 +166,93 @@ class Measurement(
     val dayDateTime get() = day.toDateTimeAtStartOfDay()!!
 }
 
-@OptIn(ExperimentalTime::class)
 object MeasurementDao {
     fun findByStationIdAndYear(station: Station, year: Int): List<Measurement> = transaction {
-        val timedValue = measureTimedValue {
+        measureAndLogDuration("MeasurementDao.findByStationIdAndYear(${station.id}, $year)") {
+            val resultRows = selectMeasurementsByYear(station, year)
+            map(station, resultRows)
+        }
+    }
+
+    private fun selectMeasurementsByYear(station: Station, year: Int): Iterable<ResultRow> =
+        measureAndLogDuration("MeasurementDao.selectMeasurementsByYear(${station.id}, $year)") {
             val start = DateTime(year, 1, 1, 0, 0)
             val end = DateTime(year + 1, 1, 1, 0, 0)
-            MeasurementsTable.select {
-                MeasurementsTable.stationId.eq(station.id!!)
-                    .and(MeasurementsTable.day.greaterEq(start))
-                    .and(MeasurementsTable.day.less(end))
-            }
-                .map { toMeasurement(station, it) }
+            MeasurementsTable
+                .select {
+                    MeasurementsTable.stationId.eq(station.id)
+                        .and(MeasurementsTable.day.greaterEq(start))
+                        .and(MeasurementsTable.day.less(end))
+                }
+                .fetchSize(500)
+                .toList()
         }
-        log.info { "findByStationIdAndYear(${station.id}, $year) took ${timedValue.duration.inWholeMilliseconds} millis" }
-        return@transaction timedValue.value
-    }
 
-    private fun toMeasurement(station: Station, row: ResultRow): Measurement {
-        val hourlyMeasurement = createMeasurement(station, row)
-        setValuesFromResultRow(row, hourlyMeasurement)
-        return hourlyMeasurement
-    }
-
-    private fun createMeasurement(station: Station, row: ResultRow): Measurement {
-        return Measurement(station = station, day = row[MeasurementsTable.day].toLocalDate())
-    }
-
-    private fun setValuesFromResultRow(row: ResultRow, hourlyMeasurement: Measurement) {
-        for (mapping in MeasurementTableMapping.mappings) {
-            val property = mapping.first
-            if (property is KMutableProperty1) {
-                property.set(hourlyMeasurement, row[mapping.second])
-            }
+    private fun map(station: Station, resultRows: Iterable<ResultRow>): List<Measurement> =
+        measureAndLogDuration("MeasurementDao.map(${station.id})") {
+            resultRows.map { toMeasurement(station, it) }
         }
-    }
+
+    // TODO mapping the arrays slows down the mapping speed by a factor of about ten
+    // perhaps do not use PG arrays for storing array values
+    private fun toMeasurement(station: Station, row: ResultRow) =
+        Measurement(
+            station = station,
+            day = row[MeasurementsTable.day].toLocalDate(),
+
+            // TODO find alternative solution
+            hourlyAirTemperatureCentigrade = row[MeasurementsTable.hourlyAirTemperatureCentigrade],
+            minAirTemperatureCentigrade = row[MeasurementsTable.minAirTemperatureCentigrade],
+            avgAirTemperatureCentigrade = row[MeasurementsTable.avgAirTemperatureCentigrade],
+            maxAirTemperatureCentigrade = row[MeasurementsTable.maxAirTemperatureCentigrade],
+
+            // TODO find alternative solution
+            hourlyDewPointTemperatureCentigrade = row[MeasurementsTable.hourlyDewPointTemperatureCentigrade],
+            minDewPointTemperatureCentigrade = row[MeasurementsTable.minDewPointTemperatureCentigrade],
+            avgDewPointTemperatureCentigrade = row[MeasurementsTable.avgDewPointTemperatureCentigrade],
+            maxDewPointTemperatureCentigrade = row[MeasurementsTable.maxDewPointTemperatureCentigrade],
+
+            // TODO find alternative solution
+            hourlyHumidityPercent = row[MeasurementsTable.hourlyHumidityPercent],
+            minHumidityPercent = row[MeasurementsTable.minHumidityPercent],
+            avgHumidityPercent = row[MeasurementsTable.avgHumidityPercent],
+            maxHumidityPercent = row[MeasurementsTable.maxHumidityPercent],
+
+            // TODO find alternative solution
+            hourlyAirPressureHectopascals = row[MeasurementsTable.hourlyAirPressureHectopascals],
+            minAirPressureHectopascals = row[MeasurementsTable.minAirPressureHectopascals],
+            avgAirPressureHectopascals = row[MeasurementsTable.avgAirPressureHectopascals],
+            maxAirPressureHectopascals = row[MeasurementsTable.maxAirPressureHectopascals],
+
+            // TODO find alternative solution
+            hourlyCloudCoverages = row[MeasurementsTable.hourlyCloudCoverage],
+
+            // TODO find alternative solution
+            hourlySunshineDurationMinutes = row[MeasurementsTable.hourlySunshineDurationMinutes],
+            sumSunshineDurationHours = row[MeasurementsTable.sumSunshineDurationHours],
+
+            // TODO find alternative solution
+            hourlyRainfallMillimeters = row[MeasurementsTable.hourlyRainfallMillimeters],
+            sumRainfallMillimeters = row[MeasurementsTable.sumRainfallMillimeters],
+
+            // TODO find alternative solution
+            hourlySnowfallMillimeters = row[MeasurementsTable.hourlySnowfallMillimeters],
+            sumSnowfallMillimeters = row[MeasurementsTable.sumSnowfallMillimeters],
+
+            // TODO find alternative solution
+            hourlyWindSpeedMetersPerSecond = row[MeasurementsTable.hourlyWindSpeedMetersPerSecond],
+            maxWindSpeedMetersPerSecond = row[MeasurementsTable.maxWindSpeedMetersPerSecond],
+            avgWindSpeedMetersPerSecond = row[MeasurementsTable.avgWindSpeedMetersPerSecond],
+
+            // TODO find alternative solution
+            hourlyWindDirectionDegrees = row[MeasurementsTable.hourlyWindDirectionDegrees],
+
+            // TODO find alternative solution
+            hourlyVisibilityMeters = row[MeasurementsTable.hourlyVisibilityMeters],
+        )
 }
 
+// TODO find another solution for storing array values that is faster than PGARRAY
 fun <T> Table.array(name: String, columnType: ColumnType): Column<Array<T>> =
     registerColumn(name, ArrayColumnType(columnType))
 

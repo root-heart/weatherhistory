@@ -6,12 +6,11 @@ import io.ktor.routing.*
 import mu.KotlinLogging
 import rootheart.codes.common.collections.avgDecimal
 import rootheart.codes.common.collections.sumDecimal
+import rootheart.codes.common.measureAndLogDuration
 import rootheart.codes.weatherhistory.database.Measurement
 import rootheart.codes.weatherhistory.database.MeasurementDao
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationDao
-import kotlin.time.ExperimentalTime
-import kotlin.time.measureTimedValue
 
 private val log = KotlinLogging.logger { }
 
@@ -21,71 +20,66 @@ fun Routing.summaryDataEndpoints() = route("summary/{stationId}") {
 
 private const val DATE_TIME_PATTERN = "yyyy-MM-dd"
 
-@OptIn(ExperimentalTime::class)
 fun Route.getSummary() = get() {
-    val stationId = call.parameters["stationId"]!!.toLong()
-    val year = call.request.queryParameters["year"]!!.toInt()
-    val timedValue = measureTimedValue { fetchDataFromDatabase(stationId, year) }
-
-    log.info { "getSummary($stationId, $year) took ${timedValue.duration.inWholeMilliseconds} millis" }
-    call.respond(timedValue.value)
+    val yearlyData = measureAndLogDuration("Route.getSummary()") {
+        val stationId = call.parameters["stationId"]!!.toLong()
+        val year = call.request.queryParameters["year"]!!.toInt()
+        return@measureAndLogDuration fetchDataFromDatabase(stationId, year)
+    }
+    call.respond(yearlyData)
 }
 
-@OptIn(ExperimentalTime::class)
-fun fetchDataFromDatabase(stationId: Long, year: Int): YearlyData {
-    log.info { "Fetching data for station id $stationId and year $year from database" }
-
-    val station = StationDao.findById(stationId)!!
-
-    val dailyData = measureTimedValue { MeasurementDao.findByStationIdAndYear(station, year) }
-        .also { log.info { "MeasurementDao.findByStationIdAndYear($stationId, $year) took ${it.duration}" } }
-        .value
-
-
-    val result = measureTimedValue { buildYearlyData(station, year, dailyData) }
-        .also { log.info { "buildYearlyData($stationId, $year) took ${it.duration}" } }
-        .value
-
-    return result
-}
+fun fetchDataFromDatabase(stationId: Long, year: Int): YearlyData =
+    measureAndLogDuration("fetchDataFromDatabase($stationId, $year)") {
+        val station = StationDao.findById(stationId)!!
+        val dailyData = MeasurementDao.findByStationIdAndYear(station, year)
+        return@measureAndLogDuration buildYearlyData(station, year, dailyData)
+    }
 
 private fun buildYearlyData(
     station: Station,
     year: Int,
     dailyData: List<Measurement>,
-): YearlyData {
-    val dayWithMinTemperature = dailyData.sortedBy { it.minAirTemperatureCentigrade }.first()
-    val dayWithMaxTemperature = dailyData.sortedByDescending { it.maxAirTemperatureCentigrade }.first()
+): YearlyData = measureAndLogDuration("buildYearlyData(${station.id}, $year)") {
+    // TODO perhaps there is a good way to reduce mapping from database result to this yearly data object
+    // would reduce boilerplate code and garbage collection
+    val dayWithMinTemperature =
+        dailyData.filter { it.minAirTemperatureCentigrade != null }.minByOrNull { it.minAirTemperatureCentigrade!! }
+    val dayWithMaxTemperature =
+        dailyData.filter { it.maxAirTemperatureCentigrade != null }.maxByOrNull { it.maxAirTemperatureCentigrade!! }
 
-    val dayWithMinAirPressure = dailyData.sortedBy { it.minAirPressureHectopascals }.first()
-    val dayWithMaxAirPressure = dailyData.sortedByDescending { it.maxAirPressureHectopascals }.first()
+    val dayWithMinAirPressure =
+        dailyData.filter { it.minAirPressureHectopascals != null }.minByOrNull { it.minAirPressureHectopascals!! }
+    val dayWithMaxAirPressure =
+        dailyData.filter { it.maxAirPressureHectopascals != null }.maxByOrNull { it.maxAirPressureHectopascals!! }
 
-    val dayWithMaxWindSpeed = dailyData.sortedByDescending { it.maxWindSpeedMetersPerSecond }.first()
+    val dayWithMaxWindSpeed =
+        dailyData.filter { it.maxWindSpeedMetersPerSecond != null }.maxByOrNull { it.maxWindSpeedMetersPerSecond!! }
 
-    return YearlyData(
+    return@measureAndLogDuration YearlyData(
         year = year,
         station = station,
 
-        minAirTemperature = dayWithMinTemperature.minAirTemperatureCentigrade,
-        minAirTemperatureDay = dayWithMinTemperature.day,
+        minAirTemperature = dayWithMinTemperature?.minAirTemperatureCentigrade,
+        minAirTemperatureDay = dayWithMinTemperature?.day,
 
         avgAirTemperature = dailyData.avgDecimal { it.avgAirTemperatureCentigrade },
 
-        maxAirTemperature = dayWithMaxTemperature.maxAirTemperatureCentigrade,
-        maxAirTemperatureDay = dayWithMaxTemperature.day,
+        maxAirTemperature = dayWithMaxTemperature?.maxAirTemperatureCentigrade,
+        maxAirTemperatureDay = dayWithMaxTemperature?.day,
 
-        minAirPressureHectopascals = dayWithMinAirPressure.minAirPressureHectopascals,
-        minAirPressureDay = dayWithMinAirPressure.day,
+        minAirPressureHectopascals = dayWithMinAirPressure?.minAirPressureHectopascals,
+        minAirPressureDay = dayWithMinAirPressure?.day,
 
         avgAirPressureHectopascals = dailyData.avgDecimal { it.avgAirPressureHectopascals },
 
-        maxAirPressureHectopascals = dayWithMaxAirPressure.maxAirPressureHectopascals,
-        maxAirPressureDay = dayWithMaxAirPressure.day,
+        maxAirPressureHectopascals = dayWithMaxAirPressure?.maxAirPressureHectopascals,
+        maxAirPressureDay = dayWithMaxAirPressure?.day,
 
         avgWindSpeedMetersPerSecond = dailyData.avgDecimal { it.avgWindSpeedMetersPerSecond },
 
-        maxWindSpeedMetersPerSecond = dayWithMaxWindSpeed.maxWindSpeedMetersPerSecond,
-        maxWindSpeedDay = dayWithMaxWindSpeed.day,
+        maxWindSpeedMetersPerSecond = dayWithMaxWindSpeed?.maxWindSpeedMetersPerSecond,
+        maxWindSpeedDay = dayWithMaxWindSpeed?.day,
 
         sumRain = dailyData.sumDecimal { it.sumRainfallMillimeters },
         sumSnow = dailyData.sumDecimal { it.sumSnowfallMillimeters },

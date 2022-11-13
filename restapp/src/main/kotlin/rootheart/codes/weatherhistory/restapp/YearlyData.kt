@@ -8,31 +8,31 @@ data class YearlyData(
     val year: Int,
     val station: Station,
 
-    val minAirTemperature: BigDecimal?,
-    val minAirTemperatureDay: LocalDate?,
+    val minAirTemperature: BigDecimal? = null,
+    val minAirTemperatureDay: LocalDate? = null,
 
-    val avgAirTemperature: BigDecimal?,
+    val avgAirTemperature: BigDecimal? = null,
 
-    val maxAirTemperature: BigDecimal?,
-    val maxAirTemperatureDay: LocalDate?,
+    val maxAirTemperature: BigDecimal? = null,
+    val maxAirTemperatureDay: LocalDate? = null,
 
-    val minAirPressureHectopascals: BigDecimal?,
-    val minAirPressureDay: LocalDate?,
+    val minAirPressureHectopascals: BigDecimal? = null,
+    val minAirPressureDay: LocalDate? = null,
 
-    val avgAirPressureHectopascals: BigDecimal?,
+    val avgAirPressureHectopascals: BigDecimal? = null,
 
-    val maxAirPressureHectopascals: BigDecimal?,
-    val maxAirPressureDay: LocalDate?,
+    val maxAirPressureHectopascals: BigDecimal? = null,
+    val maxAirPressureDay: LocalDate? = null,
 
-    val avgWindSpeedMetersPerSecond: BigDecimal?,
-    val maxWindSpeedMetersPerSecond: BigDecimal?,
-    val maxWindSpeedDay: LocalDate?,
+    val avgWindSpeedMetersPerSecond: BigDecimal? = null,
+    val maxWindSpeedMetersPerSecond: BigDecimal? = null,
+    val maxWindSpeedDay: LocalDate? = null,
 
-    val sumRain: BigDecimal?,
-    val sumSnow: BigDecimal?,
-    val sumSunshine: BigDecimal?,
+    val sumRain: BigDecimal? = null,
+    val sumSnow: BigDecimal? = null,
+    val sumSunshine: BigDecimal? = null,
 
-    val dailyData: List<DailyData>
+    val dailyData: List<DailyData> = emptyList()
 )
 
 data class DailyData(
