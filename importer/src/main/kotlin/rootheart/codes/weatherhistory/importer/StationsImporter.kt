@@ -11,8 +11,8 @@ import java.nio.charset.Charset
 private val log = KotlinLogging.logger {}
 
 private val stationFilter: (Station) -> Boolean = {
-//    it.externalId == "00691"
-    it.hasRecentData && it.hasTemperatureData && it.hasSunshineData && it.hasCloudinessData && it.hasAirPressureData && it.hasWindData
+    it.externalId == "00691"
+//    it.hasRecentData && it.hasTemperatureData && it.hasSunshineData && it.hasCloudinessData && it.hasAirPressureData && it.hasWindData
 }
 
 @DelicateCoroutinesApi

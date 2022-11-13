@@ -258,39 +258,35 @@ fun <T> Table.array(name: String, columnType: ColumnType): Column<Array<T>> =
 
 class ArrayColumnType(private val type: ColumnType) : ColumnType() {
 
-    override fun sqlType(): String = buildString {
-        append(type.sqlType())
-        append(" ARRAY")
-    }
+    override fun sqlType(): String = "VARCHAR(200)"
 
     override fun valueToDB(value: Any?): Any? {
         return if (value is Array<*>) {
-            val columnType = type.sqlType().split("(")[0]
-            val jdbcConnection = TransactionManager.current().connection
-            jdbcConnection.createArrayOf(columnType, value)
+            value.joinToString(",")
         } else {
             super.valueToDB(value)
         }
     }
 
     override fun valueFromDB(value: Any): Any {
-        if (value is java.sql.Array) {
-            return value.array
-        }
-        if (value is Array<*>) {
-            return value
+        if (value is String) {
+            if (type is DecimalColumnType) {
+//                return Array<BigDecimal?>(24) { null }
+                return value.split(',').map { if (it == "null") null else BigDecimal(it) }.toTypedArray()
+            } else if (type is IntegerColumnType) {
+//                return Array<Int?>(24) { null }
+                return value.split(',').map { if (it == "null") null else Integer.parseInt(it) }.toTypedArray()
+            }
         }
         error("Array does not support for this database")
     }
 
     override fun notNullValueToDB(value: Any): Any {
         if (value is Array<*>) {
-            if (value.isEmpty())
-                return "'{}'"
-
-            val columnType = type.sqlType().split("(")[0]
-            val jdbcConnection = TransactionManager.current().connection
-            return jdbcConnection.createArrayOf(columnType, value) ?: error("Can't create non null array for $value")
+            if (value.isEmpty()) {
+                return ""
+            }
+            return value.joinToString(",")
         } else {
             return super.notNullValueToDB(value)
         }

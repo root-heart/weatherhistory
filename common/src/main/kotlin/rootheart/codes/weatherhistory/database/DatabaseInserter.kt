@@ -55,7 +55,7 @@ open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<P
                         .map { property ->
                             when (val value = property.get(entity)) {
                                 null -> return@map "\\N"
-                                is Array<*> -> return@map value.joinToString(",", "{", "}")
+                                is Array<*> -> return@map value.joinToString(",")
                                 else -> return@map value
                             }
                         }
