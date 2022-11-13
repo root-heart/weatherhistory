@@ -2,7 +2,13 @@ package rootheart.codes.common.strings
 
 fun splitAndTrimTokens(line: String): List<String?> = splitAndTrimTokens(line, ';', "-999", { s -> s })
 
-fun <T> splitAndTrimTokens(line: String, separator: Char, nullString: String, constructor: (String) -> T, list: MutableList<T?> = ArrayList()): List<T?> {
+fun <T> splitAndTrimTokens(
+    line: String,
+    separator: Char,
+    nullString: String,
+    constructor: (String) -> T,
+    list: MutableList<T?> = ArrayList()
+): List<T?> {
     var pos = 0
     var end = line.indexOf(separator, pos)
     while (end >= 0) {

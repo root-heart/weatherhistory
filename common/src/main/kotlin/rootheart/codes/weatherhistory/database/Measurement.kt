@@ -18,6 +18,7 @@ import rootheart.codes.common.strings.splitAndTrimTokensToArrayWithLength24
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.ResultSet
+import java.util.concurrent.ConcurrentHashMap
 
 private val log = KotlinLogging.logger { }
 
@@ -60,10 +61,10 @@ object MeasurementsTable : LongIdTable("MEASUREMENTS") {
 
     val hourlyWindSpeedMetersPerSecond =
         array<BigDecimal?>("HOURLY_WIND_SPEED_METERS_PER_SECOND", DecimalColumnType(4, 1))
+    val hourlyWindDirectionDegrees = array<Int?>("HOURLY_WIND_DIRECTION_DEGREES", IntegerColumnType())
     val maxWindSpeedMetersPerSecond = decimal("MAX_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
     val avgWindSpeedMetersPerSecond = decimal("AVG_WIND_SPEED_METERS_PER_SECOND", 4, 1).nullable()
 
-    val hourlyWindDirectionDegrees = array<Int?>("HOURLY_WIND_DIRECTION_DEGREES", IntegerColumnType())
 
     val hourlyVisibilityMeters = array<Int?>("HOURLY_VISIBILITY_METERS", IntegerColumnType())
 
@@ -73,7 +74,7 @@ object MeasurementsTable : LongIdTable("MEASUREMENTS") {
 }
 
 object MeasurementTableMapping : TableMapping<Measurement>(
-    Measurement::stationIdLong to MeasurementsTable.stationId,
+    Measurement::stationId to MeasurementsTable.stationId,
     Measurement::dayDateTime to MeasurementsTable.day,
 
     Measurement::hourlyAirTemperatureCentigrade to MeasurementsTable.hourlyAirTemperatureCentigrade,
@@ -108,17 +109,17 @@ object MeasurementTableMapping : TableMapping<Measurement>(
     Measurement::sumSnowfallMillimeters to MeasurementsTable.sumSnowfallMillimeters,
 
     Measurement::hourlyWindSpeedMetersPerSecond to MeasurementsTable.hourlyWindSpeedMetersPerSecond,
+    Measurement::hourlyWindDirectionDegrees to MeasurementsTable.hourlyWindDirectionDegrees,
     Measurement::maxWindSpeedMetersPerSecond to MeasurementsTable.maxWindSpeedMetersPerSecond,
     Measurement::avgWindSpeedMetersPerSecond to MeasurementsTable.avgWindSpeedMetersPerSecond,
 
-    Measurement::hourlyWindDirectionDegrees to MeasurementsTable.hourlyWindDirectionDegrees,
 
     Measurement::hourlyVisibilityMeters to MeasurementsTable.hourlyVisibilityMeters,
 )
 
 class Measurement(
-    val station: Station,
-    var day: LocalDate,
+    @Transient var station: Station,
+    @Transient var day: LocalDate,
 
     var hourlyAirTemperatureCentigrade: Array<BigDecimal?> = Array(24) { null },
     var minAirTemperatureCentigrade: BigDecimal? = null,
@@ -152,15 +153,16 @@ class Measurement(
     var sumSnowfallMillimeters: BigDecimal? = null,
 
     var hourlyWindSpeedMetersPerSecond: Array<BigDecimal?> = Array(24) { null },
+    var hourlyWindDirectionDegrees: Array<Int?> = Array(24) { null },
     var maxWindSpeedMetersPerSecond: BigDecimal? = null,
     var avgWindSpeedMetersPerSecond: BigDecimal? = null,
 
-    var hourlyWindDirectionDegrees: Array<Int?> = Array(24) { null },
 
     var hourlyVisibilityMeters: Array<Int?> = Array(24) { null },
 ) {
-    val stationIdLong get() = station.id
+    val stationId get() = station.id
     val dayDateTime get() = day.toDateTimeAtStartOfDay()!!
+    val dayFormatted get() = day.toString("yyyy-MM-dd")
 }
 
 val MeasurementDao = MeasurementDaoJdbc
@@ -229,10 +231,9 @@ object MeasurementDaoExposed {
             sumSnowfallMillimeters = row[MeasurementsTable.sumSnowfallMillimeters],
 
             hourlyWindSpeedMetersPerSecond = row[MeasurementsTable.hourlyWindSpeedMetersPerSecond],
+            hourlyWindDirectionDegrees = row[MeasurementsTable.hourlyWindDirectionDegrees],
             maxWindSpeedMetersPerSecond = row[MeasurementsTable.maxWindSpeedMetersPerSecond],
             avgWindSpeedMetersPerSecond = row[MeasurementsTable.avgWindSpeedMetersPerSecond],
-
-            hourlyWindDirectionDegrees = row[MeasurementsTable.hourlyWindDirectionDegrees],
 
             hourlyVisibilityMeters = row[MeasurementsTable.hourlyVisibilityMeters],
         )
@@ -242,15 +243,22 @@ object MeasurementDaoJdbc {
     // takes 4 to 5 milliseconds most of the time, sometimes a bit over 6 milliseconds and sometimes a bit under 4
     fun findByStationIdAndYear(station: Station, year: Int): List<Measurement> = transaction {
         measureAndLogDuration("MeasurementDao.findByStationIdAndYear(${station.id}, $year)") {
-            selectMeasurementsByYear(station, year)
+            val start = DateTime(year, 1, 1, 0, 0)
+            val end = start.plusYears(1)
+            selectMeasurementsByDayBetween(station, start, end)
         }
     }
 
-    private fun selectMeasurementsByYear(station: Station, year: Int): List<Measurement> =
-        measureAndLogDuration("MeasurementDao.selectMeasurementsByYear(${station.id}, $year)") {
-            val start = DateTime(year, 1, 1, 0, 0)
-            val end = DateTime(year + 1, 1, 1, 0, 0)
+    fun findByStationIdAndYearAndMonth(station: Station, year: Int, month: Int): List<Measurement> = transaction {
+        measureAndLogDuration("MeasurementDao.findByStationIdAndYear(${station.id}, $year)") {
+            val start = DateTime(year, month, 1, 0, 0)
+            val end = start.plusMonths(1)
+            selectMeasurementsByDayBetween(station, start, end)
+        }
+    }
 
+    private fun selectMeasurementsByDayBetween(station: Station, start: DateTime, end: DateTime): List<Measurement> =
+        measureAndLogDuration("MeasurementDao.selectMeasurementsByYear(${station.id}, $start, $end)") {
             val sql = "select * from measurements where station_id = ? and \"day\" >= ? and \"day\" < ?"
             val measurements = ArrayList<Measurement>()
             WeatherDb.dataSource.connection.use { conn ->
@@ -315,14 +323,103 @@ object MeasurementDaoJdbc {
         hourlyVisibilityMeters = rs.getIntArray24(MeasurementsTable.hourlyVisibilityMeters.name),
     )
 
-    private fun ResultSet.getBigDecimalArray24(columnName: String): Array<BigDecimal?> {
-        val value = getString(columnName)
-        return splitAndTrimTokensToArrayWithLength24(value) { BigDecimal(it) }
+}
+
+
+data class TemperatureMeasurementJson(
+    val day: String,
+
+    var hourlyAirTemperatureCentigrade: Array<BigDecimal?> = Array(24) { null },
+    var minAirTemperatureCentigrade: BigDecimal? = null,
+    var avgAirTemperatureCentigrade: BigDecimal? = null,
+    var maxAirTemperatureCentigrade: BigDecimal? = null,
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as TemperatureMeasurementJson
+
+        if (day != other.day) return false
+        if (!hourlyAirTemperatureCentigrade.contentEquals(other.hourlyAirTemperatureCentigrade)) return false
+        if (minAirTemperatureCentigrade != other.minAirTemperatureCentigrade) return false
+        if (avgAirTemperatureCentigrade != other.avgAirTemperatureCentigrade) return false
+        if (maxAirTemperatureCentigrade != other.maxAirTemperatureCentigrade) return false
+
+        return true
     }
 
-    private fun ResultSet.getIntArray24(columnName: String): Array<Int?> {
-        val value = getString(columnName)
-        return splitAndTrimTokensToArrayWithLength24(value) { it.toInt() }
+    override fun hashCode(): Int {
+        var result = day.hashCode()
+        result = 31 * result + hourlyAirTemperatureCentigrade.contentHashCode()
+        result = 31 * result + (minAirTemperatureCentigrade?.hashCode() ?: 0)
+        result = 31 * result + (avgAirTemperatureCentigrade?.hashCode() ?: 0)
+        result = 31 * result + (maxAirTemperatureCentigrade?.hashCode() ?: 0)
+        return result
+    }
+}
+
+private val DATE_TIME_PATTERN = "yyyy-MM-dd"
+
+object TemperatureMeasurementDao {
+    private val columns = listOf(
+        MeasurementsTable.day,
+        MeasurementsTable.hourlyAirTemperatureCentigrade,
+        MeasurementsTable.minAirTemperatureCentigrade,
+        MeasurementsTable.avgAirTemperatureCentigrade,
+        MeasurementsTable.maxAirTemperatureCentigrade
+    ).joinToString(",") { it.name }
+
+    private val sql = "select $columns " +
+            "from measurements " +
+            "where ${MeasurementsTable.stationId.name} = ? " +
+            "and ${MeasurementsTable.day.name} >= ? " +
+            "and ${MeasurementsTable.day.name} < ?"
+
+    private val cache = ConcurrentHashMap<Pair<Long, Int>, List<TemperatureMeasurementJson>>()
+
+    fun findDailyByYear(station: Station, year: Int): List<TemperatureMeasurementJson> {
+        val pair = Pair(station.id!!, year)
+        var result = cache[pair]
+        if (result == null) {
+            result = fetchFromDb(station, year)
+            cache[pair] = result
+        }
+        return result
+    }
+
+    private fun fetchFromDb(station: Station, year: Int): List<TemperatureMeasurementJson> = transaction {
+        measureAndLogDuration("TemperatureMeasurementDao.findDailyByYear(${station.id}, $year)") {
+            val start = LocalDate(year, 1, 1)
+            val end = start.plusYears(1)
+            val measurements = WeatherDb.dataSource.connection.use { conn ->
+                conn.prepareStatement(sql).use { stmt ->
+                    stmt.setLong(1, station.id!!)
+                    stmt.setDate(2, Date(start.toDate().time))
+                    stmt.setDate(3, Date(end.toDate().time))
+                    stmt.executeQuery().use { rs ->
+                        measureAndLogDuration("toMeasurement(${station.id}, resultSet)") {
+                            iterateOverResultSetAndBuildResponse(rs)
+                        }
+                    }
+                }
+            }
+            return@measureAndLogDuration measurements
+        }
+    }
+
+    private fun iterateOverResultSetAndBuildResponse(rs: ResultSet): List<TemperatureMeasurementJson> {
+        val measurements = ArrayList<TemperatureMeasurementJson>()
+        while (rs.next()) {
+            measurements += TemperatureMeasurementJson(
+                day = LocalDate(rs.getDate(MeasurementsTable.day.name)).toString(DATE_TIME_PATTERN),
+                hourlyAirTemperatureCentigrade = rs.getBigDecimalArray24(MeasurementsTable.hourlyAirTemperatureCentigrade.name),
+                minAirTemperatureCentigrade = rs.getBigDecimal(MeasurementsTable.minAirTemperatureCentigrade.name),
+                avgAirTemperatureCentigrade = rs.getBigDecimal(MeasurementsTable.avgAirTemperatureCentigrade.name),
+                maxAirTemperatureCentigrade = rs.getBigDecimal(MeasurementsTable.maxAirTemperatureCentigrade.name),
+            )
+        }
+        return measurements
     }
 }
 
@@ -349,7 +446,7 @@ class ArrayColumnType(private val type: ColumnType) : ColumnType() {
                 return splitAndTrimTokensToArrayWithLength24(value) { it.toInt() }
             }
         }
-        error("Array does not support for this database")
+        error("Unexpected array component type")
     }
 
     override fun notNullValueToDB(value: Any): Any {
@@ -362,4 +459,15 @@ class ArrayColumnType(private val type: ColumnType) : ColumnType() {
             return super.notNullValueToDB(value)
         }
     }
+}
+
+
+private fun ResultSet.getBigDecimalArray24(columnName: String): Array<BigDecimal?> {
+    val value = getString(columnName)
+    return splitAndTrimTokensToArrayWithLength24(value) { BigDecimal(it) }
+}
+
+private fun ResultSet.getIntArray24(columnName: String): Array<Int?> {
+    val value = getString(columnName)
+    return splitAndTrimTokensToArrayWithLength24(value) { it.toInt() }
 }
