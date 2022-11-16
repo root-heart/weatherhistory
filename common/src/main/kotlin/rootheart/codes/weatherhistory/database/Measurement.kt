@@ -7,18 +7,22 @@ import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.DecimalColumnType
 import org.jetbrains.exposed.sql.IntegerColumnType
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.between
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.joda.time.LocalDate
+import org.joda.time.format.DateTimeFormat
 import rootheart.codes.common.measureAndLogDuration
 import rootheart.codes.common.strings.splitAndTrimTokensToArrayWithLength24
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.ResultSet
-import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KFunction2
+import kotlin.reflect.KMutableProperty1
 
 private val log = KotlinLogging.logger { }
 
@@ -71,6 +75,10 @@ object MeasurementsTable : LongIdTable("MEASUREMENTS") {
     init {
         index(isUnique = true, stationId, day)
     }
+
+    fun byStationIdAndDateBetween(stationId: Long, start: LocalDate, end: LocalDate) =
+        MeasurementsTable.stationId.eq(stationId)
+            .and(day.between(start.toDateTimeAtStartOfDay(), end.toDateTimeAtStartOfDay()))
 }
 
 object MeasurementTableMapping : TableMapping<Measurement>(
@@ -325,108 +333,128 @@ object MeasurementDaoJdbc {
 
 }
 
-
 data class TemperatureMeasurementJson(
-    val day: String,
-
-    var hourlyAirTemperatureCentigrade: Array<BigDecimal?> = Array(24) { null },
+    var day: String = "",
     var minAirTemperatureCentigrade: BigDecimal? = null,
     var avgAirTemperatureCentigrade: BigDecimal? = null,
     var maxAirTemperatureCentigrade: BigDecimal? = null,
 ) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as TemperatureMeasurementJson
-
-        if (day != other.day) return false
-        if (!hourlyAirTemperatureCentigrade.contentEquals(other.hourlyAirTemperatureCentigrade)) return false
-        if (minAirTemperatureCentigrade != other.minAirTemperatureCentigrade) return false
-        if (avgAirTemperatureCentigrade != other.avgAirTemperatureCentigrade) return false
-        if (maxAirTemperatureCentigrade != other.maxAirTemperatureCentigrade) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = day.hashCode()
-        result = 31 * result + hourlyAirTemperatureCentigrade.contentHashCode()
-        result = 31 * result + (minAirTemperatureCentigrade?.hashCode() ?: 0)
-        result = 31 * result + (avgAirTemperatureCentigrade?.hashCode() ?: 0)
-        result = 31 * result + (maxAirTemperatureCentigrade?.hashCode() ?: 0)
-        return result
-    }
+    var dayAsDateTime: DateTime
+        get() = DateTime.parse(day, DateTimeFormat.forPattern(DATE_TIME_PATTERN))
+        set(value) {
+            day = LocalDate(value).toString(DATE_TIME_PATTERN)
+        }
 }
 
 private val DATE_TIME_PATTERN = "yyyy-MM-dd"
 
-object TemperatureMeasurementDao {
-    private val columns = listOf(
-        MeasurementsTable.day,
-        MeasurementsTable.hourlyAirTemperatureCentigrade,
-        MeasurementsTable.minAirTemperatureCentigrade,
-        MeasurementsTable.avgAirTemperatureCentigrade,
-        MeasurementsTable.maxAirTemperatureCentigrade
-    ).joinToString(",") { it.name }
+data class PropertyColumnPair<O, D>(
+    val property: KMutableProperty1<O, in D>,
+    val column: Column<out D>,
+    val resultSetGetter: KFunction2<ResultSet, String, D>
+) {
+    fun setValueFromResultRow(r: ResultRow, o: O) = property.set(o, r[column])
+    fun setValueFromResultSet(r: ResultSet, o: O) {
+        property.set(o, resultSetGetter(r, column.name))
+    }
+}
 
-    private val sql = "select $columns " +
+fun ResultSet.getBigDecimalByName(columnName: String) = getBigDecimal(columnName)
+fun ResultSet.getDateTimeByName(columnName: String) = DateTime(getDate(columnName))
+
+
+abstract class Dao<JsonType>(
+    val jsonConstructor: () -> JsonType,
+    private vararg val columns: PropertyColumnPair<JsonType, *>
+) {
+    private val sql = "select ${columns.joinToString(",") { it.column.name }} " +
             "from measurements " +
             "where ${MeasurementsTable.stationId.name} = ? " +
             "and ${MeasurementsTable.day.name} >= ? " +
             "and ${MeasurementsTable.day.name} < ?"
 
-    private val cache = ConcurrentHashMap<Pair<Long, Int>, List<TemperatureMeasurementJson>>()
+    private val fieldSet = MeasurementsTable.slice(columns.map { it.column }.toList())
 
-    fun findDailyByYear(station: Station, year: Int): List<TemperatureMeasurementJson> {
-        val pair = Pair(station.id!!, year)
-        var result = cache[pair]
-        if (result == null) {
-            result = fetchFromDb(station, year)
-            cache[pair] = result
-        }
-        return result
-    }
-
-    private fun fetchFromDb(station: Station, year: Int): List<TemperatureMeasurementJson> = transaction {
+    fun findDailyByYear(station: Station, year: Int): List<JsonType> =
         measureAndLogDuration("TemperatureMeasurementDao.findDailyByYear(${station.id}, $year)") {
             val start = LocalDate(year, 1, 1)
             val end = start.plusYears(1)
-            val measurements = WeatherDb.dataSource.connection.use { conn ->
-                conn.prepareStatement(sql).use { stmt ->
-                    stmt.setLong(1, station.id!!)
-                    stmt.setDate(2, Date(start.toDate().time))
-                    stmt.setDate(3, Date(end.toDate().time))
-                    stmt.executeQuery().use { rs ->
-                        measureAndLogDuration("toMeasurement(${station.id}, resultSet)") {
-                            iterateOverResultSetAndBuildResponse(rs)
+            return@measureAndLogDuration fetchFromDb(station.id!!, start, end)
+        }
+
+    fun findDailyByYearAndMonth(station: Station, year: Int, month: Int): List<JsonType> =
+        measureAndLogDuration("TemperatureMeasurementDao.findDailyByYearAndMonth(${station.id}, $year, $month)") {
+            val start = LocalDate(year, month, 1)
+            val end = start.plusMonths(1)
+            return@measureAndLogDuration fetchFromDb(station.id!!, start, end)
+        }
+
+    private fun fetchFromDb(stationId: Long, start: LocalDate, end: LocalDate): List<JsonType> = transaction {
+//        val x = fieldSet
+//            .select { MeasurementsTable.byStationIdAndDateBetween(stationId, start, end) }
+//        return@transaction measureAndLogDuration("create json($stationId, resultSet)") {
+//            x.map(::buildJsonType)
+//        }
+        WeatherDb.dataSource.connection.use { conn ->
+            conn.prepareStatement(sql).use { stmt ->
+                stmt.setLong(1, stationId)
+                stmt.setDate(2, Date(start.toDate().time))
+                stmt.setDate(3, Date(end.toDate().time))
+                stmt.executeQuery().use { rs ->
+                    measureAndLogDuration("create json($stationId, resultSet)") {
+                        val measurements = ArrayList<JsonType>()
+                        while (rs.next()) {
+                            measurements += buildJsonType(rs)
                         }
+                        return@measureAndLogDuration measurements
                     }
                 }
             }
-            return@measureAndLogDuration measurements
         }
     }
 
-    private fun iterateOverResultSetAndBuildResponse(rs: ResultSet): List<TemperatureMeasurementJson> {
-        val measurements = ArrayList<TemperatureMeasurementJson>()
-        while (rs.next()) {
-            measurements += TemperatureMeasurementJson(
-                day = LocalDate(rs.getDate(MeasurementsTable.day.name)).toString(DATE_TIME_PATTERN),
-                hourlyAirTemperatureCentigrade = rs.getBigDecimalArray24(MeasurementsTable.hourlyAirTemperatureCentigrade.name),
-                minAirTemperatureCentigrade = rs.getBigDecimal(MeasurementsTable.minAirTemperatureCentigrade.name),
-                avgAirTemperatureCentigrade = rs.getBigDecimal(MeasurementsTable.avgAirTemperatureCentigrade.name),
-                maxAirTemperatureCentigrade = rs.getBigDecimal(MeasurementsTable.maxAirTemperatureCentigrade.name),
-            )
-        }
-        return measurements
+    private fun buildJsonType(resultRow: ResultRow): JsonType {
+        val json = jsonConstructor()
+        columns.forEach { it.setValueFromResultRow(resultRow, json) }
+        return json
+    }
+
+    private fun buildJsonType(rs: ResultSet): JsonType {
+        val json = jsonConstructor()
+        columns.forEach { it.setValueFromResultSet(rs, json) }
+        return json
     }
 }
+
+object TemperatureMeasurementDao : Dao<TemperatureMeasurementJson>(
+    ::TemperatureMeasurementJson,
+    PropertyColumnPair(
+        TemperatureMeasurementJson::dayAsDateTime, MeasurementsTable.day,
+        ResultSet::getDateTimeByName
+    ),
+    PropertyColumnPair(
+        TemperatureMeasurementJson::minAirTemperatureCentigrade,
+        MeasurementsTable.minAirTemperatureCentigrade,
+        ResultSet::getBigDecimalByName
+    ),
+    PropertyColumnPair(
+        TemperatureMeasurementJson::avgAirTemperatureCentigrade,
+        MeasurementsTable.avgAirTemperatureCentigrade, ResultSet::getBigDecimalByName
+
+    ),
+    PropertyColumnPair(
+        TemperatureMeasurementJson::maxAirTemperatureCentigrade,
+        MeasurementsTable.maxAirTemperatureCentigrade, ResultSet::getBigDecimalByName
+
+    )
+)
 
 fun <T> Table.array(name: String, columnType: ColumnType): Column<Array<T>> =
     registerColumn(name, ArrayColumnType(columnType))
 
-class ArrayColumnType(private val type: ColumnType) : ColumnType() {
+class ArrayColumnType(
+    private val type: ColumnType
+) : ColumnType() {
 
     override fun sqlType(): String = "VARCHAR(200)"
 

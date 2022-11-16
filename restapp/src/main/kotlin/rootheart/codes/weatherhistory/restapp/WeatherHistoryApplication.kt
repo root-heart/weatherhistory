@@ -11,6 +11,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.util.pipeline.PipelineContext
 import rootheart.codes.common.measureAndLogDuration
 import rootheart.codes.weatherhistory.database.Measurement
 import rootheart.codes.weatherhistory.database.MeasurementDao
@@ -79,13 +80,21 @@ fun Application.setupRouting() = routing {
             measureAndLogDuration("GET temperature/$stationId/daily/$year") {
                 StationDao.findById(stationId)
                     ?.let { station -> TemperatureMeasurementDao.findDailyByYear(station, year) }
-                    ?.let { call.respond(it) }
+                    ?.let { measureAndLogDuration("Responding to GET temperature/$stationId/daily/$year") { call.respond(it) }}
                     ?: call.respond(HttpStatusCode.NotFound)
             }
         }
 
         get("daily/{year}/{month}") {
-
+            val stationId = call.parameters["stationId"]!!.toLong()
+            val year = call.parameters["year"]!!.toInt()
+            val month = call.parameters["month"]!!.toInt()
+            measureAndLogDuration("GET temperature/$stationId/daily/$year/$month") {
+                StationDao.findById(stationId)
+                    ?.let { station -> TemperatureMeasurementDao.findDailyByYearAndMonth(station, year, month) }
+                    ?.let { measureAndLogDuration("Responding to GET temperature/$stationId/daily/$year/$month") { call.respond(it) }}
+                    ?: call.respond(HttpStatusCode.NotFound)
+            }
         }
 
         get("hourly/{year}/{month}/{day}") {
@@ -157,7 +166,6 @@ fun Application.setupRouting() = routing {
 //    summaryDataEndpoints()
 //    measurementEndpoints()
 }
-
 
 fun dailyMeasurements(stationId: Long, year: Int): List<MeasurementJson> {
     val station = StationDao.findById(stationId)!!
