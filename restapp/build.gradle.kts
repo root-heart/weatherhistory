@@ -14,6 +14,9 @@ val ktorVersion = "1.6.7"
 dependencies {
     implementation(kotlin("stdlib"))
 
+    // TODO I would like to not directly depend on exposed in the restapp
+    implementation("org.jetbrains.exposed:exposed:0.17.14")
+
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-gson:$ktorVersion")

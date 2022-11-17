@@ -1,22 +1,31 @@
 package rootheart.codes.weatherhistory.restapp
 
-import io.ktor.application.*
+import io.ktor.application.Application
+import io.ktor.application.ApplicationCall
+import io.ktor.application.call
+import io.ktor.application.install
 import io.ktor.features.CORS
 import io.ktor.features.ContentNegotiation
 import io.ktor.gson.gson
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.files
 import io.ktor.http.content.static
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.request.httpMethod
+import io.ktor.request.queryString
+import io.ktor.request.uri
+import io.ktor.response.respond
+import io.ktor.routing.IgnoreTrailingSlash
+import io.ktor.routing.Route
+import io.ktor.routing.get
+import io.ktor.routing.route
+import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.pipeline.PipelineContext
 import rootheart.codes.common.measureAndLogDuration
-import rootheart.codes.weatherhistory.database.Measurement
-import rootheart.codes.weatherhistory.database.MeasurementDao
+import rootheart.codes.weatherhistory.database.Dao
+import rootheart.codes.weatherhistory.database.ExposedDao
 import rootheart.codes.weatherhistory.database.StationDao
-import rootheart.codes.weatherhistory.database.TemperatureMeasurementDao
 import rootheart.codes.weatherhistory.database.WeatherDb
 
 private const val DATE_TIME_PATTERN = "yyyy-MM-dd"
@@ -54,8 +63,8 @@ fun Application.setupRouting() = routing {
         get("{year}") {
             val stationId = call.parameters["stationId"]!!.toLong()
             val year = call.parameters["year"]!!.toInt()
-            val summary = yearlySummary(stationId, year)
-            call.respond(summary)
+//            val summary = yearlySummary(stationId, year)
+            call.respond(HttpStatusCode.Gone)
         }
 
         get("{year}/{month}") {
@@ -66,40 +75,8 @@ fun Application.setupRouting() = routing {
     }
 
     route("temperature/{stationId}") {
-        get("yearly") {
-
-        }
-
-        get("monthly/{year}") {
-
-        }
-
-        get("daily/{year}") {
-            val stationId = call.parameters["stationId"]!!.toLong()
-            val year = call.parameters["year"]!!.toInt()
-            measureAndLogDuration("GET temperature/$stationId/daily/$year") {
-                StationDao.findById(stationId)
-                    ?.let { station -> TemperatureMeasurementDao.findDailyByYear(station, year) }
-                    ?.let { measureAndLogDuration("Responding to GET temperature/$stationId/daily/$year") { call.respond(it) }}
-                    ?: call.respond(HttpStatusCode.NotFound)
-            }
-        }
-
-        get("daily/{year}/{month}") {
-            val stationId = call.parameters["stationId"]!!.toLong()
-            val year = call.parameters["year"]!!.toInt()
-            val month = call.parameters["month"]!!.toInt()
-            measureAndLogDuration("GET temperature/$stationId/daily/$year/$month") {
-                StationDao.findById(stationId)
-                    ?.let { station -> TemperatureMeasurementDao.findDailyByYearAndMonth(station, year, month) }
-                    ?.let { measureAndLogDuration("Responding to GET temperature/$stationId/daily/$year/$month") { call.respond(it) }}
-                    ?: call.respond(HttpStatusCode.NotFound)
-            }
-        }
-
-        get("hourly/{year}/{month}/{day}") {
-
-        }
+        dailyEndpoints(DailyTemperatureDao)
+        hourlyEndpoints(HourlyTemperatureDao)
     }
 
     route("dewPointTemperature") {
@@ -114,12 +91,13 @@ fun Application.setupRouting() = routing {
         // see "temperature" route above
     }
 
-    route("cloudCoverage") {
-        // see "temperature" route above
+    route("cloudCoverage/{stationId}") {
+        hourlyEndpoints(HourlyCoverageDao)
     }
 
-    route("sunshine") {
-        // see "temperature" route above
+    route("sunshine/{stationId}") {
+        dailyEndpoints(DailySunshineDurationDao)
+        hourlyEndpoints(HourlySunshineDurationDao)
     }
 
     route("rainfall") {
@@ -138,87 +116,57 @@ fun Application.setupRouting() = routing {
         // see "temperature" route above
     }
 
-    get("monthly/{stationId}/{year}") {
-        // see "temperature" route above
-    }
-
-    route("daily/{stationId}") {
-        get("{year}") {
-            val stationId = call.parameters["stationId"]!!.toLong()
-            val year = call.parameters["year"]!!.toInt()
-            val dailyMeasurements = dailyMeasurements(stationId, year)
-            call.respond(dailyMeasurements)
-        }
-
-        get("{year}/{month}") {
-            val stationId = call.parameters["stationId"]!!.toLong()
-            val year = call.parameters["year"]!!.toInt()
-            val month = call.parameters["month"]!!.toInt()
-            val dailyMeasurements = dailyMeasurements(stationId, year, month)
-            call.respond(dailyMeasurements)
-        }
-    }
-
-    get("hourly/{stationId}/{year}/{month}/{day}") {
-    }
-
     stationsEndpoints()
 //    summaryDataEndpoints()
 //    measurementEndpoints()
 }
 
-fun dailyMeasurements(stationId: Long, year: Int): List<MeasurementJson> {
-    val station = StationDao.findById(stationId)!!
-    val dailyData = MeasurementDao.findByStationIdAndYear(station, year)
-    return dailyData.map(Measurement::toJson).sortedBy(MeasurementJson::day)
+fun Route.dailyEndpoints(dao: Dao) {
+    get("daily/{year}") { yearEndpoint(dao) }
+    get("daily/{year}/{month}") { monthEndpoint(dao) }
 }
 
-fun dailyMeasurements(stationId: Long, year: Int, month: Int): List<MeasurementJson> {
-    val station = StationDao.findById(stationId)!!
-    val dailyData = MeasurementDao.findByStationIdAndYearAndMonth(station, year, month)
-    return dailyData.map(Measurement::toJson).sortedBy(MeasurementJson::day)
+fun Route.hourlyEndpoints(dao: Dao) {
+    get("hourly/{year}") { yearEndpoint(dao) }
+    get("hourly/{year}/{month}") { monthEndpoint(dao) }
+    get("hourly/{year}/{month}/{day}") { dayEndpoint(dao) }
 }
 
-private fun Measurement.toJson() = MeasurementJson(
-    day = day.toString(DATE_TIME_PATTERN),
+suspend fun PipelineContext<Unit, ApplicationCall>.yearEndpoint(dao: Dao) {
+    val identifier = "${call.request.httpMethod.value} ${call.request.uri}"
+    val stationId = call.parameters["stationId"]!!.toLong()
+    val year = call.parameters["year"]!!.toInt()
+    measureAndLogDuration(identifier) {
+        StationDao.findById(stationId)
+            ?.let { station -> dao.findByYear(station, year) }
+            ?.let { measureAndLogDuration("Responding to $identifier") { call.respond(it) } }
+            ?: call.respond(HttpStatusCode.NotFound)
+    }
+}
 
-    hourlyAirTemperatureCentigrade = hourlyAirTemperatureCentigrade,
-    minAirTemperatureCentigrade = minAirTemperatureCentigrade,
-    avgAirTemperatureCentigrade = avgAirTemperatureCentigrade,
-    maxAirTemperatureCentigrade = maxAirTemperatureCentigrade,
+suspend fun PipelineContext<Unit, ApplicationCall>.monthEndpoint(dao: Dao) {
+    val identifier = "${call.request.httpMethod.value} ${call.request.uri}"
+    val stationId = call.parameters["stationId"]!!.toLong()
+    val year = call.parameters["year"]!!.toInt()
+    val month = call.parameters["month"]!!.toInt()
+    measureAndLogDuration(identifier) {
+        StationDao.findById(stationId)
+            ?.let { station -> dao.findByYearAndMonth(station, year, month) }
+            ?.let { measureAndLogDuration("Responding to $identifier") { call.respond(it) } }
+            ?: call.respond(HttpStatusCode.NotFound)
+    }
+}
 
-    hourlyDewPointTemperatureCentigrade = hourlyDewPointTemperatureCentigrade,
-    minDewPointTemperatureCentigrade = minDewPointTemperatureCentigrade,
-    maxDewPointTemperatureCentigrade = maxDewPointTemperatureCentigrade,
-    avgDewPointTemperatureCentigrade = avgDewPointTemperatureCentigrade,
-
-    hourlyHumidityPercent = hourlyHumidityPercent,
-    minHumidityPercent = minHumidityPercent,
-    avgHumidityPercent = avgHumidityPercent,
-    maxHumidityPercent = maxHumidityPercent,
-
-    hourlyAirPressureHectopascals = hourlyAirPressureHectopascals,
-    minAirPressureHectopascals = minAirPressureHectopascals,
-    avgAirPressureHectopascals = avgAirPressureHectopascals,
-    maxAirPressureHectopascals = maxAirPressureHectopascals,
-
-    hourlyCloudCoverages = hourlyCloudCoverages,
-
-    hourlySunshineDurationMinutes = hourlySunshineDurationMinutes,
-    sumSunshineDurationHours = sumSunshineDurationHours,
-
-    hourlyRainfallMillimeters = hourlyRainfallMillimeters,
-    sumRainfallMillimeters = sumRainfallMillimeters,
-
-    hourlySnowfallMillimeters = hourlySnowfallMillimeters,
-    sumSnowfallMillimeters = sumSnowfallMillimeters,
-
-    hourlyWindSpeedMetersPerSecond = hourlyWindSpeedMetersPerSecond,
-    avgWindSpeedMetersPerSecond = avgWindSpeedMetersPerSecond,
-    maxWindSpeedMetersPerSecond = maxWindSpeedMetersPerSecond,
-
-    hourlyWindDirectionDegrees = hourlyWindDirectionDegrees,
-
-    hourlyVisibilityMeters = hourlyVisibilityMeters,
-)
-
+suspend fun PipelineContext<Unit, ApplicationCall>.dayEndpoint(dao: Dao) {
+    val identifier = "${call.request.httpMethod.value} ${call.request.uri}?${call.request.queryString()}"
+    val stationId = call.parameters["stationId"]!!.toLong()
+    val year = call.parameters["year"]!!.toInt()
+    val month = call.parameters["month"]!!.toInt()
+    val day = call.parameters["day"]!!.toInt()
+    measureAndLogDuration(identifier) {
+        StationDao.findById(stationId)
+            ?.let { station -> dao.findByYearMonthAndDay(station, year, month, day) }
+            ?.let { measureAndLogDuration("Responding to $identifier") { call.respond(it) } }
+            ?: call.respond(HttpStatusCode.NotFound)
+    }
+}
