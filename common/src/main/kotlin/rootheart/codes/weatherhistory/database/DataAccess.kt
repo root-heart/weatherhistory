@@ -1,5 +1,6 @@
 package rootheart.codes.weatherhistory.database
 
+import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.DecimalColumnType
 import org.jetbrains.exposed.sql.FieldSet
@@ -17,6 +18,8 @@ import java.sql.ResultSet
 import kotlin.reflect.KFunction2
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty0
+
+private val log = KotlinLogging.logger {}
 
 abstract class PropertyColumnBinding<O, T, R>(
     val property: KMutableProperty1<O, in T>,
@@ -88,13 +91,13 @@ abstract class JdbcDao(vararg columnsToSelect: KProperty0<Column<*>>) : Dao() {
         sql = "select ${columns.joinToString(",") { it.get().name }} " +
                 "from measurements " +
                 "where ${MeasurementsTable.stationId.name} = ? " +
-                "and ${MeasurementsTable.day.name} >= ? " +
-                "and ${MeasurementsTable.day.name} < ?"
+                "and ${MeasurementsTable.day.name} between ? and ?"
     }
 
     override fun fetchFromDb(stationId: Long, start: LocalDate, end: LocalDate): List<Map<String, Any?>> = transaction {
         WeatherDb.dataSource.connection.use { conn ->
             conn.prepareStatement(sql).use { stmt ->
+                log.info { "Executing $sql" }
                 stmt.setLong(1, stationId)
                 stmt.setDate(2, Date(start.toDate().time))
                 stmt.setDate(3, Date(end.toDate().time))

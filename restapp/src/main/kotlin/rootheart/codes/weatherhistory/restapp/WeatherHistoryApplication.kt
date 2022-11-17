@@ -4,6 +4,7 @@ import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.application.install
+import io.ktor.application.log
 import io.ktor.features.CORS
 import io.ktor.features.ContentNegotiation
 import io.ktor.gson.gson
@@ -11,7 +12,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.files
 import io.ktor.http.content.static
 import io.ktor.request.httpMethod
-import io.ktor.request.queryString
 import io.ktor.request.uri
 import io.ktor.response.respond
 import io.ktor.routing.IgnoreTrailingSlash
@@ -24,7 +24,6 @@ import io.ktor.server.netty.Netty
 import io.ktor.util.pipeline.PipelineContext
 import rootheart.codes.common.measureAndLogDuration
 import rootheart.codes.weatherhistory.database.Dao
-import rootheart.codes.weatherhistory.database.ExposedDao
 import rootheart.codes.weatherhistory.database.StationDao
 import rootheart.codes.weatherhistory.database.WeatherDb
 
@@ -44,6 +43,8 @@ fun main() {
 }
 
 fun Application.setupRouting() = routing {
+    trace { application.log.trace(it.buildText()) }
+
     static("web") {
         files(".")
     }
@@ -158,7 +159,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.monthEndpoint(dao: Dao) {
 }
 
 suspend fun PipelineContext<Unit, ApplicationCall>.dayEndpoint(dao: Dao) {
-    val identifier = "${call.request.httpMethod.value} ${call.request.uri}?${call.request.queryString()}"
+    val identifier = "${call.request.httpMethod.value} ${call.request.uri}"
     val stationId = call.parameters["stationId"]!!.toLong()
     val year = call.parameters["year"]!!.toInt()
     val month = call.parameters["month"]!!.toInt()
