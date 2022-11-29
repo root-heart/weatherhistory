@@ -1,6 +1,5 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {BaseChart, MeasurementDataSet} from "../BaseChart";
-import {DailyData, SummaryList} from "../SummaryService";
 import {
     BarController,
     BarElement,
@@ -15,13 +14,14 @@ import {
     TimeScale,
     Tooltip
 } from "chart.js";
+import {TemperatureRecord} from "./temperature-data.service";
 
 @Component({
     selector: 'temperature-chart',
     template: '<canvas #temperatureChart></canvas>',
     styleUrls: ['../charts.css']
 })
-export class TemperatureChart extends BaseChart implements OnInit {
+export class TemperatureChart extends BaseChart<TemperatureRecord> implements OnInit {
     @ViewChild("temperatureChart")
     private canvas?: ElementRef;
 
@@ -37,7 +37,7 @@ export class TemperatureChart extends BaseChart implements OnInit {
         return this.canvas;
     }
 
-    protected getDataSets(summaryList: Array<DailyData>): Array<MeasurementDataSet> {
+    protected getDataSets(summaryList: Array<TemperatureRecord>): Array<MeasurementDataSet> {
         let dataSets: Array<MeasurementDataSet> = [];
 
         dataSets.push({

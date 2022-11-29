@@ -1,13 +1,17 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {BaseChart, MeasurementDataSet} from "../BaseChart";
-import {DailyData, SummaryList} from "../SummaryService";
+import {BaseChart, BaseRecord, MeasurementDataSet} from "../BaseChart";
+
+export type PrecipitationRecord = BaseRecord & {
+    sumRainfallMillimeters: number,
+    sumSnowfallMillimeters: number
+}
 
 @Component({
     selector: 'precipitation-chart',
     template: '<canvas #precipitationChart></canvas>',
     styleUrls: ['../charts.css']
 })
-export class PrecipitationChart extends BaseChart implements OnInit {
+export class PrecipitationChart extends BaseChart<PrecipitationRecord> implements OnInit {
     @ViewChild("precipitationChart")
     private canvas?: ElementRef;
 
@@ -22,7 +26,7 @@ export class PrecipitationChart extends BaseChart implements OnInit {
         return this.canvas;
     }
 
-    protected getDataSets(summaryList: Array<DailyData>): Array<MeasurementDataSet> {
+    protected getDataSets(summaryList: Array<PrecipitationRecord>): Array<MeasurementDataSet> {
         let dataSets: Array<MeasurementDataSet> = [];
         dataSets.push({
             type: 'bar',

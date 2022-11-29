@@ -1,6 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
 
-import { SunshineChart } from './sunshine-chart.component';
+import {SunshineChart} from './sunshine-chart.component';
 
 describe('SunshineChartComponent', () => {
   let component: SunshineChart;

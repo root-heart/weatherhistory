@@ -1,6 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
 
-import { PrecipitationChart } from './precipitation-chart.component';
+import {PrecipitationChart} from './precipitation-chart.component';
 
 describe('PrecipitationChartComponent', () => {
   let component: PrecipitationChart;

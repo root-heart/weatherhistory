@@ -1,6 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
 
-import { CloudinessChart } from './cloudiness-chart.component';
+import {CloudinessChart} from './cloudiness-chart.component';
 
 describe('CloudinessChartComponent', () => {
   let component: CloudinessChart;

@@ -1,15 +1,5 @@
 import {Directive, ElementRef} from "@angular/core";
-import {DailyData, SummaryList} from "./SummaryService";
-import {
-    CartesianScaleOptions,
-    Chart,
-    ChartConfiguration,
-    ChartData,
-    ChartDataset,
-    ChartOptions, CoreScaleOptions,
-    LegendItem,
-    TooltipItem
-} from "chart.js";
+import {Chart, ChartConfiguration, ChartData, ChartDataset, ChartOptions, LegendItem, TooltipItem} from "chart.js";
 
 export type MeasurementDataSet = ChartDataset & {
     showTooltip?: boolean,
@@ -17,22 +7,26 @@ export type MeasurementDataSet = ChartDataset & {
     tooltipValueFormatter?: any
 }
 
+export type BaseRecord = {
+    day: Date,
+}
+
 @Directive()
-export abstract class BaseChart {
+export abstract class BaseChart<T extends BaseRecord> {
     protected numberFormat = new Intl.NumberFormat('de-DE', {minimumFractionDigits: 1, maximumFractionDigits: 1});
     private chart?: Chart;
 
     protected constructor() {
     }
 
-    public setData(summaryList: Array<DailyData>): void {
-        let labels = this.getLabels(summaryList);
-        let dataSets = this.getDataSets(summaryList);
+    public setData(data: Array<T>): void {
+        let labels = this.getLabels(data);
+        let dataSets = this.getDataSets(data);
         this.drawChart(labels, dataSets);
     }
 
 
-    protected abstract getDataSets(summaryList: Array<DailyData>): Array<MeasurementDataSet>;
+    protected abstract getDataSets(data: Array<T>): Array<MeasurementDataSet>;
 
     protected abstract getCanvas(): ElementRef | undefined;
 
@@ -53,6 +47,11 @@ export abstract class BaseChart {
             animation: false,
             interaction: {
                 mode: 'index'
+            },
+            elements: {
+                point: {
+                    radius: 0 // default to disabled in all datasets
+                }
             },
             scales: {
                 x: {
@@ -103,12 +102,12 @@ export abstract class BaseChart {
             }
         };
 
+        // console.log("now the creation would take place")
         this.chart = new Chart(context, config);
-
     }
 
-    protected getLabels(summaryList: Array<DailyData>): Array<any> {
-        return summaryList.map(item => new Date(item.day));
+    protected getLabels(data: Array<T>): Array<any> {
+        return data.map(item => new Date(item.day));
     }
 
     protected getMaxY(): number | undefined {

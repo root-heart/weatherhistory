@@ -1,6 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
 
-import { AirPressureChart } from './air-pressure-chart.component';
+import {AirPressureChart} from './air-pressure-chart.component';
 
 describe('AirPressureChartComponent', () => {
   let component: AirPressureChart;

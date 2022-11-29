@@ -1,24 +1,31 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {BaseChart, MeasurementDataSet} from "../BaseChart";
+import {BaseChart, BaseRecord, MeasurementDataSet} from "../BaseChart";
 import {
     BarController,
     BarElement,
     CategoryScale,
-    Chart, Filler, Legend,
+    Chart,
+    Filler,
+    Legend,
     LinearScale,
     LineController,
     LineElement,
-    PointElement, Tooltip, TimeScale
+    PointElement,
+    TimeScale,
+    Tooltip
 } from "chart.js";
-import {DailyData, SummaryJson, SummaryList} from "../SummaryService";
 import 'chartjs-adapter-moment';
+
+export type SunshineDurationRecord = BaseRecord & {
+    sumSunshineDurationHours: number
+}
 
 @Component({
     selector: 'sunshine-chart',
     template: '<canvas #sunshineChart></canvas>',
     styleUrls: ['../charts.css']
 })
-export class SunshineChart extends BaseChart implements OnInit {
+export class SunshineChart extends BaseChart<SunshineDurationRecord> implements OnInit {
     @ViewChild("sunshineChart")
     private canvas?: ElementRef;
 
@@ -34,7 +41,7 @@ export class SunshineChart extends BaseChart implements OnInit {
         return this.canvas;
     }
 
-    protected getDataSets(summaryList: Array<DailyData>): Array<MeasurementDataSet> {
+    protected getDataSets(summaryList: Array<SunshineDurationRecord>): Array<MeasurementDataSet> {
         let dataSets: Array<MeasurementDataSet> = [];
         dataSets.push({
             type: 'bar',
