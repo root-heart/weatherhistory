@@ -49,75 +49,81 @@ fun Application.setupRouting() = routing {
         files(".")
     }
 
-    get("stations") {
-        call.respond(StationDao.findAll().sortedBy { it.federalState + it.name })
-    }
+    route("stations") {
+        get { call.respond(StationDao.findAll().sortedBy { it.federalState + it.name }) }
 
-    get("stations/{stationId}") {
-        val stationId = call.parameters["stationId"]!!.toLong()
-        StationDao.findById(stationId)
-            ?.let { call.respond(it) }
-            ?: call.respond(HttpStatusCode.NotFound, "Not Found")
-    }
+        route("{stationId}") {
+            get {
+                val stationId = call.parameters["stationId"]!!.toLong()
+                StationDao.findById(stationId)
+                    ?.let { call.respond(it) }
+                    ?: call.respond(HttpStatusCode.NotFound, "Not Found")
 
-    route("summary/{stationId}") {
-        get("{year}") {
-            val stationId = call.parameters["stationId"]!!.toLong()
-            val year = call.parameters["year"]!!.toInt()
-//            val summary = yearlySummary(stationId, year)
-            call.respond(HttpStatusCode.Gone)
+            }
+
+            route("summary") {
+                get("{year}") {
+                }
+
+                get("{year}/{month}") {
+                }
+
+                get("{year}/{month}/{day}") {
+                }
+            }
+
+            route("temperature") {
+                dailyEndpoints(DailyTemperatureDao)
+                hourlyEndpoints(HourlyTemperatureDao)
+            }
+
+            route("dewPointTemperature") {
+                dailyEndpoints(DailyDewPointTemperatureDao)
+                hourlyEndpoints(HourlyDewPointTemperatureDao)
+            }
+
+            route("humidity") {
+                dailyEndpoints(DailyHumidityDao)
+                hourlyEndpoints(HourlyHumidityDao)
+            }
+
+            route("airPressure") {
+                dailyEndpoints(DailyAirPressureDao)
+                hourlyEndpoints(HourlyAirPressureDao)
+            }
+
+            route("cloudCoverage") {
+                hourlyEndpoints(HourlyCoverageDao)
+            }
+
+            route("sunshine") {
+                dailyEndpoints(DailySunshineDurationDao)
+                hourlyEndpoints(HourlySunshineDurationDao)
+            }
+
+            route("rainfall") {
+                dailyEndpoints(DailyRainfallDao)
+                hourlyEndpoints(HourlyRainfallDao)
+            }
+
+            route("snowfall") {
+                dailyEndpoints(DailySnowfallDao)
+                hourlyEndpoints(HourlySnowfallDao)
+            }
+
+            route("wind") {
+                dailyEndpoints(DailyWindDao)
+                hourlyEndpoints(HourlyWindDao)
+            }
+
+            route("visibility") {
+                hourlyEndpoints(HourlyVisibilityDao)
+            }
         }
-
-        get("{year}/{month}") {
-        }
-
-        get("{year}/{month}/{day}") {
-        }
     }
 
-    route("temperature/{stationId}") {
-        dailyEndpoints(DailyTemperatureDao)
-        hourlyEndpoints(HourlyTemperatureDao)
-    }
 
-    route("dewPointTemperature") {
-        // see "temperature" route above
-    }
-
-    route("humidity") {
-        // see "temperature" route above
-    }
-
-    route("airPressure") {
-        // see "temperature" route above
-    }
-
-    route("cloudCoverage/{stationId}") {
-        hourlyEndpoints(HourlyCoverageDao)
-    }
-
-    route("sunshine/{stationId}") {
-        dailyEndpoints(DailySunshineDurationDao)
-        hourlyEndpoints(HourlySunshineDurationDao)
-    }
-
-    route("rainfall") {
-        // see "temperature" route above
-    }
-
-    route("snowfall") {
-        // see "temperature" route above
-    }
-
-    route("wind") {
-        // see "temperature" route above
-    }
-
-    route("visibility") {
-        // see "temperature" route above
-    }
-
-    stationsEndpoints()
+//    stationsEndpoints()
 //    summaryDataEndpoints()
 //    measurementEndpoints()
 }
