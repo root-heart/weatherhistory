@@ -2,6 +2,7 @@ package rootheart.codes.weatherhistory.database
 
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.DateColumnType
 import org.jetbrains.exposed.sql.DecimalColumnType
 import org.jetbrains.exposed.sql.FieldSet
 import org.jetbrains.exposed.sql.IntegerColumnType
@@ -118,7 +119,7 @@ abstract class JdbcDao(vararg columnsToSelect: KProperty0<Column<*>>) : Dao() {
         val columnType = it.get().columnType
         val columnName = it.get().name
         it.name to when (columnType) {
-            MeasurementsTable::day -> LocalDate(rs.getDate(columnName)).toString(DATE_TIME_PATTERN)
+            is DateColumnType -> LocalDate(rs.getDate(columnName)).toString(DATE_TIME_PATTERN)
             is DecimalArrayColumnType -> rs.getBigDecimalArray24(columnName)
             is DecimalColumnType -> rs.getBigDecimal(columnName)
             is IntArrayColumnType -> rs.getIntArray24(columnName)

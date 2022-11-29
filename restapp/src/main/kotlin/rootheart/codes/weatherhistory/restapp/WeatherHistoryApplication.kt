@@ -7,6 +7,7 @@ import io.ktor.application.install
 import io.ktor.application.log
 import io.ktor.features.CORS
 import io.ktor.features.ContentNegotiation
+import io.ktor.features.DataConversion
 import io.ktor.gson.gson
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.files
@@ -22,6 +23,7 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.pipeline.PipelineContext
+import org.joda.time.LocalDate
 import rootheart.codes.common.measureAndLogDuration
 import rootheart.codes.weatherhistory.database.Dao
 import rootheart.codes.weatherhistory.database.StationDao
@@ -37,6 +39,14 @@ fun main() {
             anyHost()
         }
         install(ContentNegotiation) { gson() }
+        install(DataConversion) {
+            convert<LocalDate> {
+                encode { value ->
+                    if (value is LocalDate) listOf(value.toString(DATE_TIME_PATTERN))
+                    else emptyList()
+                }
+            }
+        }
         setupRouting()
     }
     server.start(wait = true)
