@@ -10,16 +10,27 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
+import rootheart.codes.common.collections.avgDecimal
+import rootheart.codes.common.collections.avgInt
+import rootheart.codes.common.collections.maxDecimal
+import rootheart.codes.common.collections.maxInt
+import rootheart.codes.common.collections.minDecimal
+import rootheart.codes.common.collections.minInt
+import rootheart.codes.common.collections.sumDecimal
 import rootheart.codes.common.strings.splitAndTrimTokens
 import rootheart.codes.weatherhistory.database.Measurement
 import rootheart.codes.weatherhistory.database.MeasurementImporter
+import rootheart.codes.weatherhistory.database.MonthlySummary
+import rootheart.codes.weatherhistory.database.MonthlySummaryImporter
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationDao
 import java.io.ByteArrayInputStream
 import java.math.BigDecimal
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 import java.util.zip.ZipInputStream
+import kotlin.streams.toList
 import kotlin.system.measureTimeMillis
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
@@ -93,7 +104,9 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
             log.info { "Station ${station.id} - Waiting for download-unzip-parse-convert jobs to complete" }
             downloadJobs.joinAll()
             unzipJobs.joinAll()
+            val monthlySummaries = summarize()
             MeasurementImporter.importEntities(measurementByTime.values)
+            MonthlySummaryImporter.importEntities(monthlySummaries.values)
         }
     }
 
@@ -245,6 +258,53 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
 
         // TODO incorporate daily measurements for min, avg, max and sum values
     }
+
+    fun summarize(): Map<LocalDate, MonthlySummary> = measurementByTime.values
+        .groupBy { LocalDate(it.day.year, it.day.monthOfYear, 1) }
+        .mapValues { (beginningOfMonth, measurements) ->
+            val avgVisibilityMeters = measurements.stream()
+                .map(Measurement::hourlyVisibilityMeters)
+                .flatMap(Arrays::stream)
+                .toList()
+                .avgInt { it }
+            val cloudCoverageHistogram = Array(10) { 0 }
+            for (m in measurements) {
+                for (c in m.hourlyCloudCoverages) {
+                    if (c != null) {
+                        if (c == -1) cloudCoverageHistogram[9]++
+                        else cloudCoverageHistogram[c]++
+                    }
+                }
+            }
+            MonthlySummary(
+                station = measurements[0].station,
+                year = beginningOfMonth.year,
+                month = beginningOfMonth.monthOfYear,
+                minAirTemperatureCentigrade = measurements.minDecimal(Measurement::minAirTemperatureCentigrade),
+                avgAirTemperatureCentigrade = measurements.avgDecimal(Measurement::avgAirTemperatureCentigrade),
+                maxAirTemperatureCentigrade = measurements.maxDecimal(Measurement::maxAirTemperatureCentigrade),
+                minDewPointTemperatureCentigrade = measurements.minDecimal(Measurement::minDewPointTemperatureCentigrade),
+                avgDewPointTemperatureCentigrade = measurements.avgDecimal(Measurement::avgDewPointTemperatureCentigrade),
+                maxDewPointTemperatureCentigrade = measurements.maxDecimal(Measurement::maxDewPointTemperatureCentigrade),
+                minHumidityPercent = measurements.minDecimal(Measurement::minHumidityPercent),
+                avgHumidityPercent = measurements.avgDecimal(Measurement::avgHumidityPercent),
+                maxHumidityPercent = measurements.maxDecimal(Measurement::maxHumidityPercent),
+                minAirPressureHectopascals = measurements.minDecimal(Measurement::minAirPressureHectopascals),
+                avgAirPressureHectopascals = measurements.avgDecimal(Measurement::avgAirPressureHectopascals),
+                maxAirPressureHectopascals = measurements.maxDecimal(Measurement::maxAirPressureHectopascals),
+                minVisibilityMeters = measurements.minInt { m -> m.hourlyVisibilityMeters.filterNotNull().minOrNull() },
+                avgVisibilityMeters = avgVisibilityMeters,
+                maxVisibilityMeters = measurements.maxInt { m -> m.hourlyVisibilityMeters.filterNotNull().maxOrNull() },
+                cloudCoverageHistogram = cloudCoverageHistogram,
+                sumSunshineDurationHours = measurements.sumDecimal(Measurement::sumSunshineDurationHours),
+                sumRainfallMillimeters = measurements.sumDecimal(Measurement::sumRainfallMillimeters),
+                sumSnowfallMillimeters = measurements.sumDecimal(Measurement::sumSnowfallMillimeters),
+                avgWindSpeedMetersPerSecond = measurements.avgDecimal(Measurement::avgWindSpeedMetersPerSecond),
+                maxWindSpeedMetersPerSecond = measurements.maxDecimal(Measurement::maxWindSpeedMetersPerSecond),
+
+                )
+
+        }
 
     private fun fileIsMeasurementFile(filename: String) =
         filename.startsWith("produkt_") && filename.endsWith(".txt")

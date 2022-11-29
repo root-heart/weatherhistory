@@ -13,6 +13,12 @@ export type TemperatureRecord = BaseRecord & {
     minAirTemperatureCentigrade: number,
 }
 
+export type MonthlyTempRecord = BaseRecord & {
+    avgAirTemperatureCentigrade: number,
+    maxAirTemperatureCentigrade: number,
+    minAirTemperatureCentigrade: number,
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -27,4 +33,8 @@ export class TemperatureDataService {
             ? this.http.get<TemperatureRecord[]>(environment.apiServer + "/stations/" + stationId + "/temperature/daily/" + year)
             : this.http.get<TemperatureRecord[]>(environment.apiServer + "/stations/" + stationId + "/temperature/daily/" + year + "/" + month)
     }
- }
+
+    getMonthlyData(stationId: bigint, year: number): Observable<MonthlyTempRecord[]> {
+        return this.http.get<MonthlyTempRecord[]>(environment.apiServer + "/stations/" + stationId + "/temperature/monthly/" + year)
+    }
+}

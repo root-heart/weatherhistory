@@ -58,7 +58,7 @@ export class AppComponent {
     filterChanged(event: FilterChangedEvent) {
         let stationId = event.station.id;
         let year = event.start;
-        this.temperatureDataService.getDailyData(stationId, year)
+        this.temperatureDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.temperatureChart?.setData(data));
         this.cloudinessDataService.getHourlyData(stationId, year)
             .subscribe(data => this.cloudinessChart?.setData(data))
@@ -71,33 +71,5 @@ export class AppComponent {
         this.windSpeedDataService.getDailyData(stationId, year)
             .subscribe(data => this.windSpeedChart?.setData(data))
     }
-
-
-    // private updateAllCharts(yearlyData: YearlyData) {
-    //     // Yes, the member is defined as Date. Yes, the data send by the server comes in a format that typescript can
-    //     // recognize as a Date. No, typescript does not automatically create a Date but rather puts a String into the
-    //     // member that is a Date. So I have to do it on my own. Jeez...
-    //     yearlyData.dailyData.forEach(dailyData => {
-    //         dailyData.day = new Date(dailyData.day)
-    //         // summaryJson.lastDay = new Date(summaryJson.lastDay)
-    //         // summaryJson.lastDay.setHours(23)
-    //         // summaryJson.lastDay.setMinutes(59)
-    //         // summaryJson.lastDay.setSeconds(59)
-    //         // summaryJson.lastDay.setMilliseconds(999)
-    //     })
-    //     // this.meteogram?.setData(summaryList)
-    //     this.temperatureChart?.setData(yearlyData.dailyData)
-    //     this.sunshineChart?.setData(yearlyData.dailyData)
-    //     this.precipitationChart?.setData(yearlyData.dailyData)
-    //     this.airPresssurceChart?.setData(yearlyData.dailyData)
-    //     this.cloudinessChart?.setData(yearlyData.dailyData)
-    //     this.windSpeedChart?.setData(yearlyData.dailyData)
-    //
-    //     this.minTemperature = yearlyData.minAirTemperature
-    //     this.maxTemperature = yearlyData.maxAirTemperature
-    //     this.avgTemperature = yearlyData.avgAirTemperature
-    //
-    //     this.sumSunshineDuration = yearlyData.sumSunshine?.toFixed(1)
-    // }
 }
 

@@ -2,6 +2,14 @@ package rootheart.codes.weatherhistory.restapp
 
 import rootheart.codes.weatherhistory.database.JdbcDao
 import rootheart.codes.weatherhistory.database.MeasurementsTable
+import rootheart.codes.weatherhistory.database.MonthlySummaryTable
+import rootheart.codes.weatherhistory.database.SummaryJdbcDao
+
+object MonthlyTemperatureDao : SummaryJdbcDao(
+    MonthlySummaryTable::minAirTemperatureCentigrade,
+    MonthlySummaryTable::avgAirTemperatureCentigrade,
+    MonthlySummaryTable::maxAirTemperatureCentigrade,
+)
 
 object DailyTemperatureDao : JdbcDao(
     MeasurementsTable::minAirTemperatureCentigrade,

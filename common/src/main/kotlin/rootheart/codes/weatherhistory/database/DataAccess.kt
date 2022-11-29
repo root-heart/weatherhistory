@@ -90,7 +90,7 @@ abstract class JdbcDao(vararg columnsToSelect: KProperty0<Column<*>>) : Dao() {
         columns.addAll(columnsToSelect)
         columns.add(MeasurementsTable::day)
         sql = "select ${columns.joinToString(",") { it.get().name }} " +
-                "from measurements " +
+                "from ${MeasurementsTable.tableName} " +
                 "where ${MeasurementsTable.stationId.name} = ? " +
                 "and ${MeasurementsTable.day.name} between ? and ?"
     }
@@ -107,6 +107,58 @@ abstract class JdbcDao(vararg columnsToSelect: KProperty0<Column<*>>) : Dao() {
                         val measurements = ArrayList<Map<String, Any?>>()
                         while (rs.next()) {
                             measurements += buildJsonMap(rs)
+                        }
+                        return@measureAndLogDuration measurements
+                    }
+                }
+            }
+        }
+    }
+
+    private fun buildJsonMap(rs: ResultSet) = columns.associate {
+        val columnType = it.get().columnType
+        val columnName = it.get().name
+        it.name to when (columnType) {
+            is DateColumnType -> LocalDate(rs.getDate(columnName)).toString(DATE_TIME_PATTERN)
+            is DecimalArrayColumnType -> rs.getBigDecimalArray24(columnName)
+            is DecimalColumnType -> rs.getBigDecimal(columnName)
+            is IntArrayColumnType -> rs.getIntArray24(columnName)
+            is IntegerColumnType -> rs.getInt(columnName)
+            else -> rs.getObject(columnName)
+        }
+    }
+}
+
+abstract class SummaryJdbcDao(vararg columnsToSelect: KProperty0<Column<*>>) {
+    private val sql: String
+    private val columns: List<KProperty0<Column<*>>>
+
+    init {
+        columns = ArrayList()
+        columns.addAll(columnsToSelect)
+        columns.add(MonthlySummaryTable::year)
+        columns.add(MonthlySummaryTable::month)
+        sql = "select ${columns.joinToString(",") { it.get().name }} " +
+                "from ${MonthlySummaryTable.tableName} " +
+                "where ${MonthlySummaryTable.stationId.name} = ? " +
+                "and ${MonthlySummaryTable.year.name} = ?"
+    }
+
+    fun fetchFromDb(stationId: Long, year: Int): List<Map<String, Any?>> = transaction {
+        WeatherDb.dataSource.connection.use { conn ->
+            conn.prepareStatement(sql).use { stmt ->
+                log.info { "Executing $sql" }
+                stmt.setLong(1, stationId)
+                stmt.setInt(2, year)
+                stmt.executeQuery().use { rs ->
+                    measureAndLogDuration("create json($stationId, resultSet)") {
+                        val measurements = ArrayList<Map<String, Any?>>()
+                        while (rs.next()) {
+                            val jsonMap = buildJsonMap(rs).toMutableMap()
+                            val firstDayInMonth =
+                                LocalDate(jsonMap["year"].toString().toInt(), jsonMap["month"].toString().toInt(), 1)
+                            jsonMap["day"] = firstDayInMonth.toString(DATE_TIME_PATTERN)
+                            measurements += jsonMap
                         }
                         return@measureAndLogDuration measurements
                     }
