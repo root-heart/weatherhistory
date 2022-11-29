@@ -11,6 +11,38 @@ object MonthlyTemperatureDao : SummaryJdbcDao(
     MonthlySummaryTable::maxAirTemperatureCentigrade,
 )
 
+object MonthlyDewPointTemperatureDao : SummaryJdbcDao(
+    MonthlySummaryTable::minDewPointTemperatureCentigrade,
+    MonthlySummaryTable::avgDewPointTemperatureCentigrade,
+    MonthlySummaryTable::maxDewPointTemperatureCentigrade,
+)
+
+object MonthlyHumidityDao : SummaryJdbcDao(
+    MonthlySummaryTable::minHumidityPercent,
+    MonthlySummaryTable::avgHumidityPercent,
+    MonthlySummaryTable::maxHumidityPercent,
+)
+
+object MonthlySunshineDurationDao : SummaryJdbcDao(
+    MonthlySummaryTable::sumSunshineDurationHours,
+)
+
+object MonthlyAirPressureDao : SummaryJdbcDao(
+    MonthlySummaryTable::minAirPressureHectopascals,
+    MonthlySummaryTable::avgAirPressureHectopascals,
+    MonthlySummaryTable::maxAirPressureHectopascals,
+)
+
+object MonthlyWindDao : SummaryJdbcDao(
+    MonthlySummaryTable::avgWindSpeedMetersPerSecond,
+    MonthlySummaryTable::maxWindSpeedMetersPerSecond
+)
+
+object MonthlyPrecipitationDao : SummaryJdbcDao(
+    MonthlySummaryTable::sumRainfallMillimeters,
+    MonthlySummaryTable::sumSnowfallMillimeters
+)
+
 object DailyTemperatureDao : JdbcDao(
     MeasurementsTable::minAirTemperatureCentigrade,
     MeasurementsTable::avgAirTemperatureCentigrade,

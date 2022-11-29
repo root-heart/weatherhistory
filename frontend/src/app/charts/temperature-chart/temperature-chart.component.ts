@@ -1,5 +1,5 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {BaseChart, MeasurementDataSet} from "../BaseChart";
+import {BaseChart, BaseRecord, MeasurementDataSet} from "../BaseChart";
 import {
     BarController,
     BarElement,
@@ -14,7 +14,7 @@ import {
     TimeScale,
     Tooltip
 } from "chart.js";
-import {TemperatureRecord} from "./temperature-data.service";
+
 
 @Component({
     selector: 'temperature-chart',
@@ -90,4 +90,10 @@ export class TemperatureChart extends BaseChart<TemperatureRecord> implements On
     private formatMillimeters(value: number) {
         return this.numberFormat.format(value) + " mm";
     }
+}
+
+export type TemperatureRecord = BaseRecord & {
+    avgAirTemperatureCentigrade: number,
+    maxAirTemperatureCentigrade: number,
+    minAirTemperatureCentigrade: number,
 }

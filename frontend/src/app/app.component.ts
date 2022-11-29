@@ -1,17 +1,13 @@
 import {Component, ViewChild} from '@angular/core';
-import {TemperatureChart} from "./charts/temperature-chart/temperature-chart.component";
-import {SunshineChart} from "./charts/sunshine-chart/sunshine-chart.component";
+import {TemperatureChart, TemperatureRecord} from "./charts/temperature-chart/temperature-chart.component";
+import {SunshineChart, SunshineDurationRecord} from "./charts/sunshine-chart/sunshine-chart.component";
 import {FilterChangedEvent} from "./filter-header/station-and-date-filter.component";
 import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.component";
-import {PrecipitationChart} from "./charts/precipitation-chart/precipitation-chart.component";
-import {AirPressureChart} from "./charts/air-pressure-chart/air-pressure-chart.component";
-import {WindSpeedChart} from "./charts/wind-speed-chart/wind-speed-chart.component";
-import {TemperatureDataService} from "./charts/temperature-chart/temperature-data.service";
-import {CloudinessDataService} from "./charts/cloudiness-chart/cloudiness-data.service";
-import {AirPressureDataService} from "./charts/air-pressure-chart/air-pressure-data.service";
-import {PrecipitationDataService} from "./charts/precipitation-chart/precipitation-data.service";
-import {SunshineDurationDataService} from "./charts/sunshine-chart/sunshine-duration-data.service";
-import {WindSpeedDataService} from "./charts/wind-speed-chart/wind-speed-data.service";
+import {PrecipitationChart, PrecipitationRecord} from "./charts/precipitation-chart/precipitation-chart.component";
+import {AirPressureChart, AirPressureRecord} from "./charts/air-pressure-chart/air-pressure-chart.component";
+import {WindSpeedChart, WindSpeedRecord} from "./charts/wind-speed-chart/wind-speed-chart.component";
+import {HttpClient} from "@angular/common/http";
+import {DataService} from "./charts/data-service.service";
 
 @Component({
     selector: 'app-root',
@@ -46,12 +42,19 @@ export class AppComponent {
     sumSunshineDuration?: string
 
 
-    constructor(private temperatureDataService: TemperatureDataService,
-                private cloudinessDataService: CloudinessDataService,
-                private airPressureDataService: AirPressureDataService,
-                private precipitationDataService: PrecipitationDataService,
-                private sunshineDurationDataService : SunshineDurationDataService,
-                private windSpeedDataService: WindSpeedDataService) {
+    private temperatureDataService: DataService<TemperatureRecord>;
+    private airPressureDataService: DataService<AirPressureRecord>;
+    private precipitationDataService: DataService<PrecipitationRecord>;
+    private sunshineDurationDataService: DataService<SunshineDurationRecord>;
+    private windSpeedDataService: DataService<WindSpeedRecord>;
+
+    constructor(http: HttpClient) {
+        this.temperatureDataService = new DataService<TemperatureRecord>(http, "temperature");
+        // this.cloudinessDataService = new DataService<>(http, "")
+        this.airPressureDataService = new DataService<AirPressureRecord>(http, "airPressure")
+        this.precipitationDataService = new DataService<PrecipitationRecord>(http, "precipitation")
+        this.sunshineDurationDataService = new DataService<SunshineDurationRecord>(http, "sunshine")
+        this.windSpeedDataService = new DataService<WindSpeedRecord>(http, "wind")
 
     }
 
@@ -60,15 +63,15 @@ export class AppComponent {
         let year = event.start;
         this.temperatureDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.temperatureChart?.setData(data));
-        this.cloudinessDataService.getHourlyData(stationId, year)
-            .subscribe(data => this.cloudinessChart?.setData(data))
-        this.airPressureDataService.getDailyData(stationId, year)
+        // this.cloudinessDataService.getHourlyData(stationId, year)
+        //     .subscribe(data => this.cloudinessChart?.setData(data))
+        this.airPressureDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.airPressureChart?.setData(data))
-        this.precipitationDataService.getDailyData(stationId, year)
+        this.precipitationDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.precipitationChart?.setData(data))
-        this.sunshineDurationDataService.getDailyData(stationId, year)
+        this.sunshineDurationDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.sunshineChart?.setData(data))
-        this.windSpeedDataService.getDailyData(stationId, year)
+        this.windSpeedDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.windSpeedChart?.setData(data))
     }
 }

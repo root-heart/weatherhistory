@@ -90,16 +90,19 @@ fun Application.setupRouting() = routing {
             }
 
             route("dewPointTemperature") {
+                monthlyEndpoints(MonthlyDewPointTemperatureDao)
                 dailyEndpoints(DailyDewPointTemperatureDao)
                 hourlyEndpoints(HourlyDewPointTemperatureDao)
             }
 
             route("humidity") {
+                monthlyEndpoints(MonthlyHumidityDao)
                 dailyEndpoints(DailyHumidityDao)
                 hourlyEndpoints(HourlyHumidityDao)
             }
 
             route("airPressure") {
+                monthlyEndpoints(MonthlyAirPressureDao)
                 dailyEndpoints(DailyAirPressureDao)
                 hourlyEndpoints(HourlyAirPressureDao)
             }
@@ -109,8 +112,13 @@ fun Application.setupRouting() = routing {
             }
 
             route("sunshine") {
+                monthlyEndpoints(MonthlySunshineDurationDao)
                 dailyEndpoints(DailySunshineDurationDao)
                 hourlyEndpoints(HourlySunshineDurationDao)
+            }
+
+            route("precipitation") {
+                monthlyEndpoints(MonthlyPrecipitationDao)
             }
 
             route("rainfall") {
@@ -124,6 +132,7 @@ fun Application.setupRouting() = routing {
             }
 
             route("wind") {
+                monthlyEndpoints(MonthlyWindDao)
                 dailyEndpoints(DailyWindDao)
                 hourlyEndpoints(HourlyWindDao)
             }
