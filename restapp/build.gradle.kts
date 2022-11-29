@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    id("io.ktor.plugin") version "2.1.3"
 }
 
 group = "rootheart.codes.weatherhistory"
@@ -29,4 +30,8 @@ dependencies {
     testImplementation("org.mock-server:mockserver-netty:5.11.2")
     testImplementation("org.codehaus.groovy.modules.http-builder:http-builder:0.7.1")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+}
+
+application {
+    mainClass.set("rootheart.codes.weatherhistory.restapp.WeatherHistoryApplicationKt")
 }
