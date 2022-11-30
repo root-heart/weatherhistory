@@ -99,24 +99,17 @@ object HourlyCoverageDao : JdbcDao(
     MeasurementsTable::hourlyCloudCoverage
 )
 
-object DailyRainfallDao : JdbcDao(
+object DailyPrecipitationDao : JdbcDao(
     MeasurementsTable::sumRainfallMillimeters,
-)
-
-object HourlyRainfallDao : JdbcDao(
-    MeasurementsTable::hourlyRainfallMillimeters,
-    MeasurementsTable::sumRainfallMillimeters,
-)
-
-object DailySnowfallDao : JdbcDao(
     MeasurementsTable::sumSnowfallMillimeters,
 )
 
-object HourlySnowfallDao : JdbcDao(
+object HourlyPrecipitationDao : JdbcDao(
+    MeasurementsTable::hourlyRainfallMillimeters,
+    MeasurementsTable::sumRainfallMillimeters,
     MeasurementsTable::hourlySnowfallMillimeters,
     MeasurementsTable::sumSnowfallMillimeters,
 )
-
 
 object HourlySunshineDurationDao : JdbcDao(
     MeasurementsTable::hourlySunshineDurationMinutes,

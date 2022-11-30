@@ -119,16 +119,8 @@ fun Application.setupRouting() = routing {
 
             route("precipitation") {
                 monthlyEndpoints(MonthlyPrecipitationDao)
-            }
-
-            route("rainfall") {
-                dailyEndpoints(DailyRainfallDao)
-                hourlyEndpoints(HourlyRainfallDao)
-            }
-
-            route("snowfall") {
-                dailyEndpoints(DailySnowfallDao)
-                hourlyEndpoints(HourlySnowfallDao)
+                dailyEndpoints(DailyPrecipitationDao)
+                hourlyEndpoints(HourlyPrecipitationDao)
             }
 
             route("wind") {
