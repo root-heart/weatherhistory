@@ -15,7 +15,6 @@ import {
     Tooltip
 } from "chart.js";
 
-
 @Component({
     selector: 'temperature-chart',
     template: '<canvas #temperatureChart></canvas>',
@@ -38,48 +37,24 @@ export class TemperatureChart extends BaseChart<TemperatureRecord> implements On
     }
 
     protected getDataSets(summaryList: Array<TemperatureRecord>): Array<MeasurementDataSet> {
-        let dataSets: Array<MeasurementDataSet> = [];
-
-        dataSets.push({
-            type: 'line',
+        return [{
+            type: "line",
             label: 'Temperatur',
             borderColor: 'hsl(0, 80%, 45%)',
-            borderWidth: 2,
             backgroundColor: 'hsl(0, 80%, 45%)',
             data: summaryList.map(m => m.avgAirTemperatureCentigrade),
-            pointRadius: 0,
-            pointHitRadius: 20,
-
+            stack: "zero",
             showTooltip: true,
-            showLegend: true,
             tooltipValueFormatter: (value: number) => this.formatCentigrade(value)
-        });
-
-        dataSets.push({
-            type: 'line',
-            label: 'Minimum Temperatur',
-            borderColor: 'hsla(0, 80%, 45%, 0)',
+        }, {
+            type: 'bar',
+            label: 'Temperatur min/max',
+            borderColor: 'hsla(0, 80%, 45%, 1)',
             backgroundColor: 'hsla(0, 80%, 45%, 0.15)',
-            data: summaryList.map(m => m.minAirTemperatureCentigrade),
-            pointRadius: 0,
-            pointHitRadius: 20,
-            showTooltip: false
-        });
-
-        dataSets.push({
-            type: 'line',
-            label: 'Maximum Temperatur',
-            borderColor: 'hsla(0, 80%, 45%, 0)',
-            backgroundColor: 'hsla(0, 80%, 45%, 0.15)',
-            data: summaryList.map(m => m.maxAirTemperatureCentigrade),
-            fill: '-1',
-            pointRadius: 0,
-            pointHitRadius: 20,
-            showTooltip: false
-        });
-
-
-        return dataSets;
+            data: summaryList.map(m => [m.minAirTemperatureCentigrade, m.maxAirTemperatureCentigrade]),
+            stack: "one",
+            showTooltip: true
+        }]
     }
 
     private formatCentigrade(value: number) {

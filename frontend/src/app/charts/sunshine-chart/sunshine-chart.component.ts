@@ -42,44 +42,17 @@ export class SunshineChart extends BaseChart<SunshineDurationRecord> implements 
     }
 
     protected getDataSets(summaryList: Array<SunshineDurationRecord>): Array<MeasurementDataSet> {
-        let dataSets: Array<MeasurementDataSet> = [];
-        dataSets.push({
+        return [{
             type: 'bar',
             label: 'Sonnenschein',
             borderColor: 'hsl(40, 100%, 50%)',
             backgroundColor: 'hsl(40, 100%, 50%)',
             data: summaryList.map(m => m.sumSunshineDurationHours),
             stack: 'sunshine',
-            categoryPercentage: 1,
-            barPercentage: 1,
             showTooltip: true,
             showLegend: false,
             tooltipValueFormatter: (value: number) => this.formatHours(value)
-        });
-
-        dataSets.push({
-            type: 'bar',
-            label: 'Sonnenschein',
-            borderColor: 'hsl(0, 100%, 20%)',
-            backgroundColor: 'hsl(0, 100%, 20%)',
-            data: summaryList.map(m => {
-                if (m.sumSunshineDurationHours === null || m.sumSunshineDurationHours === undefined) {
-                    return 2
-                } else {
-                    return 0
-                }
-            }),
-            stack: 'sunshine',
-            categoryPercentage: 1,
-            barPercentage: 1,
-            showTooltip: true,
-            showLegend: false,
-            tooltipValueFormatter: (value: number) => this.formatHours(-1)
-        });
-
-        // console.log(summaryList.map(m => m.sumSunshineDurationHours))
-
-        return dataSets;
+        }]
     }
 
     protected getScales(): any {

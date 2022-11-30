@@ -61,18 +61,31 @@ export class AppComponent {
     filterChanged(event: FilterChangedEvent) {
         let stationId = event.station.id;
         let year = event.start;
+        // this.temperatureDataService.getDailyData(stationId, year)
+        //     .subscribe(data => this.temperatureChart?.setData(data, "daily"));
+        // // this.cloudinessDataService.getHourlyData(stationId, year)
+        // //     .subscribe(data => this.cloudinessChart?.setData(data))
+        // this.airPressureDataService.getDailyData(stationId, year)
+        //     .subscribe(data => this.airPressureChart?.setData(data, "daily"))
+        // this.precipitationDataService.getDailyData(stationId, year)
+        //     .subscribe(data => this.precipitationChart?.setData(data, "daily"))
+        // this.sunshineDurationDataService.getDailyData(stationId, year)
+        //     .subscribe(data => this.sunshineChart?.setData(data, "daily"))
+        // this.windSpeedDataService.getDailyData(stationId, year)
+        //     .subscribe(data => this.windSpeedChart?.setData(data, "daily"))
+
         this.temperatureDataService.getMonthlyData(stationId, year)
-            .subscribe(data => this.temperatureChart?.setData(data));
+            .subscribe(data => this.temperatureChart?.setData(data, "monthly"));
         // this.cloudinessDataService.getHourlyData(stationId, year)
         //     .subscribe(data => this.cloudinessChart?.setData(data))
         this.airPressureDataService.getMonthlyData(stationId, year)
-            .subscribe(data => this.airPressureChart?.setData(data))
+            .subscribe(data => this.airPressureChart?.setData(data, "monthly"))
         this.precipitationDataService.getMonthlyData(stationId, year)
-            .subscribe(data => this.precipitationChart?.setData(data))
+            .subscribe(data => this.precipitationChart?.setData(data, "monthly"))
         this.sunshineDurationDataService.getMonthlyData(stationId, year)
-            .subscribe(data => this.sunshineChart?.setData(data))
+            .subscribe(data => this.sunshineChart?.setData(data, "monthly"))
         this.windSpeedDataService.getMonthlyData(stationId, year)
-            .subscribe(data => this.windSpeedChart?.setData(data))
+            .subscribe(data => this.windSpeedChart?.setData(data, "monthly"))
     }
 }
 

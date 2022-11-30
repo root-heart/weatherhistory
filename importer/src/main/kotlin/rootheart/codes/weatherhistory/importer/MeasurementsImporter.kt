@@ -240,6 +240,11 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
         }
 
         // TODO fix some data issues
+        measurementByTime.values.forEach {
+            it.minAirPressureHectopascals = minDecimal(it.hourlyAirPressureHectopascals)
+            it.maxAirPressureHectopascals = maxDecimal(it.hourlyAirPressureHectopascals)
+        }
+
 //        val list = measurementByTime.values.sortedBy { it.day }
 //        for ((index, measurement) in list.withIndex()) {
 //            if (measurement.precipitationMillimeters != null

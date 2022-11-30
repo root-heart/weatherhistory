@@ -18,6 +18,36 @@ inline fun <T> Iterable<T>.minDecimal(selector: (T) -> BigDecimal?): BigDecimal?
     return minValue
 }
 
+fun minDecimal(array: Array<BigDecimal?>): BigDecimal? {
+    val iterator = array.iterator()
+    if (!iterator.hasNext()) throw NoSuchElementException()
+    var minValue = iterator.next()
+    while (iterator.hasNext()) {
+        val v = iterator.next()
+        if (minValue == null) {
+            minValue = v
+        } else if (v != null && minValue > v) {
+            minValue = v
+        }
+    }
+    return minValue
+}
+
+fun maxDecimal(array: Array<BigDecimal?>): BigDecimal? {
+    val iterator = array.iterator()
+    if (!iterator.hasNext()) throw NoSuchElementException()
+    var maxValue = iterator.next()
+    while (iterator.hasNext()) {
+        val v = iterator.next()
+        if (maxValue == null) {
+            maxValue = v
+        } else if (v != null && maxValue < v) {
+            maxValue = v
+        }
+    }
+    return maxValue
+}
+
 inline fun <T> Iterable<T>.minInt(selector: (T) -> Int?): Int? {
     val iterator = iterator()
     if (!iterator.hasNext()) throw NoSuchElementException()

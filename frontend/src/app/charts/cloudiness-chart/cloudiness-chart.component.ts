@@ -1,7 +1,6 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {BaseChart, BaseRecord, MeasurementDataSet} from "../BaseChart";
-import {MatrixController, MatrixElement} from 'chartjs-chart-matrix';
-import {Chart, ScriptableContext} from "chart.js";
+import {ScriptableContext} from "chart.js";
 
 export type CloudinessRecord = BaseRecord & {
     hourlyCloudCoverage: number[]
@@ -47,7 +46,6 @@ export class CloudinessChart extends BaseChart<CloudinessRecord> implements OnIn
 
     constructor() {
         super();
-        Chart.register(MatrixController, MatrixElement);
     }
 
     ngOnInit(): void {

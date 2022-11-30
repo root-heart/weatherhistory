@@ -27,8 +27,7 @@ export class WindSpeedChart extends BaseChart<WindSpeedRecord> implements OnInit
     }
 
     protected getDataSets(summaryList: Array<WindSpeedRecord>): Array<MeasurementDataSet> {
-        let dataSets: Array<MeasurementDataSet> = [];
-        dataSets.push({
+        return [{
             type: 'line',
             label: 'Windgeschwindigkeit',
             borderColor: 'hsl(270, 80%, 65%)',
@@ -41,23 +40,17 @@ export class WindSpeedChart extends BaseChart<WindSpeedRecord> implements OnInit
             showTooltip: true,
             showLegend: true,
             // tooltipValueFormatter: (value: number) => this.formatCentigrade(value)
-        });
-        dataSets.push({
-            type: 'line',
+        }, {
+            type: 'bar',
             label: 'Windgeschwindigkeit',
             borderColor: 'hsla(270, 80%, 65%, 0.3)',
             borderWidth: 0,
             backgroundColor: 'hsla(270, 80%, 65%, 0.3)',
             data: summaryList.map(m => m.maxWindSpeedMetersPerSecond),
-            pointRadius: 0,
-            pointHitRadius: 20,
-            fill: true,
-
             showTooltip: true,
             showLegend: true,
             // tooltipValueFormatter: (value: number) => this.formatCentigrade(value)
-        });
-        return dataSets
+        }]
     }
 
 }

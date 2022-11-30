@@ -29,8 +29,7 @@ export class AirPressureChart extends BaseChart<AirPressureRecord> implements On
     }
 
     protected getDataSets(summaryList: Array<AirPressureRecord>): Array<MeasurementDataSet> {
-        let dataSets: Array<MeasurementDataSet> = [];
-        dataSets.push({
+        return [{
             type: 'line',
             label: 'Luftdruck',
             borderColor: 'hsl(120, 80%, 45%)',
@@ -39,36 +38,17 @@ export class AirPressureChart extends BaseChart<AirPressureRecord> implements On
             data: summaryList.map(m => m.avgAirPressureHectopascals),
             pointRadius: 0,
             pointHitRadius: 20,
-
             showTooltip: true,
             showLegend: true,
             // tooltipValueFormatter: (value: number) => this.formatCentigrade(value)
-        });
-
-        dataSets.push({
-            type: 'line',
-            label: 'Minimum Luftdruck',
+        }, {
+            type: 'bar',
+            label: 'Luftdruck min/max',
             borderColor: 'hsla(120, 80%, 45%, 0)',
             backgroundColor: 'hsla(120, 80%, 45%, 0.15)',
-            data: summaryList.map(m => m.minAirPressureHectopascals),
-            pointRadius: 0,
-            pointHitRadius: 20,
-            showTooltip: false
-        });
-
-        dataSets.push({
-            type: 'line',
-            label: 'Maximum Luftdruck',
-            borderColor: 'hsla(120, 80%, 45%, 0)',
-            backgroundColor: 'hsla(120, 80%, 45%, 0.15)',
-            data: summaryList.map(m => m.maxAirPressureHectopascals),
-            fill: '-1',
-            pointRadius: 0,
-            pointHitRadius: 20,
-            showTooltip: false
-        });
-
-        return dataSets;
+            data: summaryList.map(m => [m.minAirPressureHectopascals, m.maxAirPressureHectopascals]),
+            showTooltip: true
+        }]
     }
 
 }
