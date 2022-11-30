@@ -99,7 +99,6 @@ object MeasurementTableMapping : TableMapping<Measurement>(
     Measurement::maxWindSpeedMetersPerSecond to MeasurementsTable.maxWindSpeedMetersPerSecond,
     Measurement::avgWindSpeedMetersPerSecond to MeasurementsTable.avgWindSpeedMetersPerSecond,
 
-
     Measurement::hourlyVisibilityMeters to MeasurementsTable.hourlyVisibilityMeters,
 )
 

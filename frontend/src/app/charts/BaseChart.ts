@@ -47,6 +47,7 @@ export abstract class BaseChart<T extends BaseRecord> {
         let context = <CanvasRenderingContext2D>canvas.nativeElement.getContext('2d');
 
         let options: ChartOptions = {
+            normalized: true,
             maintainAspectRatio: false,
             responsive: true,
             animation: false,
@@ -54,6 +55,7 @@ export abstract class BaseChart<T extends BaseRecord> {
                 mode: 'index',
                 intersect: false
             },
+            // parsing: true,
             elements: {point: {radius: 0}},
             scales: {
                 y: {max: this.getMaxY(), beginAtZero: false}
@@ -82,13 +84,19 @@ export abstract class BaseChart<T extends BaseRecord> {
                     type: "time",
                     time: {
                         unit: "day",
-                        displayFormats: {day: "DD.MMMM", month: "M", hour: "H"},
+                        displayFormats: {day: "DD.MM.", month: "M", hour: "H"},
+                    },
+                    ticks: {
+                        minRotation: 0, maxRotation: 0, sampleSize: 3
                     }
                 }
                 break;
             case "monthly":
                 options.scales!.x = {
-                    type: "category"
+                    type: "category",
+                    ticks: {
+                        minRotation: 0, maxRotation: 0, sampleSize: 3
+                    }
                 }
                 break;
         }

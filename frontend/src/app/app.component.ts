@@ -76,6 +76,7 @@ export class AppComponent {
 
         this.temperatureDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.temperatureChart?.setData(data, "monthly"));
+        // TODO reinstantiate cloud coverage chart
         // this.cloudinessDataService.getHourlyData(stationId, year)
         //     .subscribe(data => this.cloudinessChart?.setData(data))
         this.airPressureDataService.getMonthlyData(stationId, year)
@@ -86,6 +87,9 @@ export class AppComponent {
             .subscribe(data => this.sunshineChart?.setData(data, "monthly"))
         this.windSpeedDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.windSpeedChart?.setData(data, "monthly"))
+        // TODO dew point temperature chart
+        // TODO humidity chart
+        // TODO visibility chart
     }
 }
 
