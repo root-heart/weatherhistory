@@ -1,5 +1,6 @@
 import {Directive, ElementRef} from "@angular/core";
 import {Chart, ChartConfiguration, ChartData, ChartDataset, ChartOptions, LegendItem, TooltipItem} from "chart.js";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 export type MeasurementDataSet = ChartDataset & {
     showTooltip?: boolean,
@@ -21,6 +22,7 @@ export abstract class BaseChart<T extends BaseRecord> {
     protected resolution?: ChartResolution
 
     protected constructor() {
+        Chart.register(ChartDataLabels);
     }
 
     public setData(data: Array<T>, resolution: ChartResolution): void {
@@ -72,6 +74,30 @@ export abstract class BaseChart<T extends BaseRecord> {
                     filter: this.showTooltip,
                     callbacks: {label: this.formatTooltipLabel}
                 },
+                datalabels: {
+                    color: "#ddd",
+                    textStrokeWidth: 3,
+                    textStrokeColor: "black",
+                    align: ctx => {
+                        let max = Math.max.apply(null, ctx.dataset.data as number[])
+                        let min = Math.min.apply(null, ctx.dataset.data as number[])
+                        let span = max - min
+                        let value = ctx.dataset.data[ctx.dataIndex] as number
+                        if (value - min > min + 0.8 * span) {
+                            return "bottom"
+                            // } else if (value - min < min + 0.2 * span) {
+                            //     return "top"
+                            // } else {
+                            //     return "center"
+                        }
+                        return "top";
+                    },
+                    anchor: "end", // TODO
+                    // anchor: ctx =>  ctx.datasetIndex == 0 ? "start" : "end",
+                    textShadowColor: "black",
+                    textShadowBlur: 1,
+                    font: {size: 16, weight: "bold"},
+                }
             }
         };
 
