@@ -49,6 +49,10 @@ object MeasurementsTable : LongIdTable("MEASUREMENTS") {
 
     val hourlyVisibilityMeters = intArray("HOURLY_VISIBILITY_METERS")
 
+    val minVisibilityMeters = integer("MIN_VISIBILITY_METERS").nullable()
+    val avgVisibilityMeters = integer("AVG_VISIBILITY_METERS").nullable()
+    val maxVisibilityMeters = integer("MAX_VISIBILITY_METERS").nullable()
+
     init {
         index(isUnique = true, stationId, day)
     }
@@ -100,6 +104,9 @@ object MeasurementTableMapping : TableMapping<Measurement>(
     Measurement::avgWindSpeedMetersPerSecond to MeasurementsTable.avgWindSpeedMetersPerSecond,
 
     Measurement::hourlyVisibilityMeters to MeasurementsTable.hourlyVisibilityMeters,
+    Measurement::minVisibilityMeters to MeasurementsTable.minVisibilityMeters,
+    Measurement::avgVisibilityMeters to MeasurementsTable.avgVisibilityMeters,
+    Measurement::maxVisibilityMeters to MeasurementsTable.maxVisibilityMeters,
 )
 
 class Measurement(
@@ -142,8 +149,10 @@ class Measurement(
     var maxWindSpeedMetersPerSecond: BigDecimal? = null,
     var avgWindSpeedMetersPerSecond: BigDecimal? = null,
 
-
     var hourlyVisibilityMeters: Array<Int?> = Array(24) { null },
+    var minVisibilityMeters: Int? = null,
+    var avgVisibilityMeters: Int? = null,
+    var maxVisibilityMeters: Int? = null,
 ) {
     val stationId get() = station.id
     val dayDateTime get() = day.toDateTimeAtStartOfDay()!!

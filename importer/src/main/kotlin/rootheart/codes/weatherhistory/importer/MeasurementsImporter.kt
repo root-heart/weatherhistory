@@ -10,13 +10,10 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
-import rootheart.codes.common.collections.avgDecimal
-import rootheart.codes.common.collections.avgInt
-import rootheart.codes.common.collections.maxDecimal
-import rootheart.codes.common.collections.maxInt
-import rootheart.codes.common.collections.minDecimal
-import rootheart.codes.common.collections.minInt
-import rootheart.codes.common.collections.sumDecimal
+import rootheart.codes.common.collections.nullsafeAvg
+import rootheart.codes.common.collections.nullsafeMax
+import rootheart.codes.common.collections.nullsafeMin
+import rootheart.codes.common.collections.nullsafeSum
 import rootheart.codes.common.strings.splitAndTrimTokens
 import rootheart.codes.weatherhistory.database.Measurement
 import rootheart.codes.weatherhistory.database.MeasurementImporter
@@ -30,7 +27,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 import java.util.zip.ZipInputStream
-import kotlin.streams.toList
 import kotlin.system.measureTimeMillis
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
@@ -240,9 +236,17 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
         }
 
         // TODO fix some data issues
-        measurementByTime.values.forEach {
-            it.minAirPressureHectopascals = minDecimal(it.hourlyAirPressureHectopascals)
-            it.maxAirPressureHectopascals = maxDecimal(it.hourlyAirPressureHectopascals)
+        measurementByTime.values.forEach { m ->
+            m.minAirPressureHectopascals = m.hourlyAirPressureHectopascals.nullsafeMin()
+            m.maxAirPressureHectopascals = m.hourlyAirPressureHectopascals.nullsafeMax()
+
+            m.minDewPointTemperatureCentigrade = m.hourlyDewPointTemperatureCentigrade.nullsafeMin()
+            m.avgDewPointTemperatureCentigrade = m.hourlyDewPointTemperatureCentigrade.nullsafeAvg()
+            m.maxDewPointTemperatureCentigrade = m.hourlyDewPointTemperatureCentigrade.nullsafeMax()
+
+            m.minVisibilityMeters = m.hourlyVisibilityMeters.nullsafeMin()
+            m.avgVisibilityMeters = m.hourlyVisibilityMeters.nullsafeAvg()
+            m.maxVisibilityMeters = m.hourlyVisibilityMeters.nullsafeMax()
         }
 
 //        val list = measurementByTime.values.sortedBy { it.day }
@@ -267,11 +271,6 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
     fun summarize(): Map<LocalDate, MonthlySummary> = measurementByTime.values
         .groupBy { LocalDate(it.day.year, it.day.monthOfYear, 1) }
         .mapValues { (beginningOfMonth, measurements) ->
-            val avgVisibilityMeters = measurements.stream()
-                .map(Measurement::hourlyVisibilityMeters)
-                .flatMap(Arrays::stream)
-                .toList()
-                .avgInt { it }
             val cloudCoverageHistogram = Array(10) { 0 }
             for (m in measurements) {
                 for (c in m.hourlyCloudCoverages) {
@@ -285,27 +284,27 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
                 station = measurements[0].station,
                 year = beginningOfMonth.year,
                 month = beginningOfMonth.monthOfYear,
-                minAirTemperatureCentigrade = measurements.minDecimal(Measurement::minAirTemperatureCentigrade),
-                avgAirTemperatureCentigrade = measurements.avgDecimal(Measurement::avgAirTemperatureCentigrade),
-                maxAirTemperatureCentigrade = measurements.maxDecimal(Measurement::maxAirTemperatureCentigrade),
-                minDewPointTemperatureCentigrade = measurements.minDecimal(Measurement::minDewPointTemperatureCentigrade),
-                avgDewPointTemperatureCentigrade = measurements.avgDecimal(Measurement::avgDewPointTemperatureCentigrade),
-                maxDewPointTemperatureCentigrade = measurements.maxDecimal(Measurement::maxDewPointTemperatureCentigrade),
-                minHumidityPercent = measurements.minDecimal(Measurement::minHumidityPercent),
-                avgHumidityPercent = measurements.avgDecimal(Measurement::avgHumidityPercent),
-                maxHumidityPercent = measurements.maxDecimal(Measurement::maxHumidityPercent),
-                minAirPressureHectopascals = measurements.minDecimal(Measurement::minAirPressureHectopascals),
-                avgAirPressureHectopascals = measurements.avgDecimal(Measurement::avgAirPressureHectopascals),
-                maxAirPressureHectopascals = measurements.maxDecimal(Measurement::maxAirPressureHectopascals),
-                minVisibilityMeters = measurements.minInt { m -> m.hourlyVisibilityMeters.filterNotNull().minOrNull() },
-                avgVisibilityMeters = avgVisibilityMeters,
-                maxVisibilityMeters = measurements.maxInt { m -> m.hourlyVisibilityMeters.filterNotNull().maxOrNull() },
+                minAirTemperatureCentigrade = measurements.nullsafeMin(Measurement::minAirTemperatureCentigrade),
+                avgAirTemperatureCentigrade = measurements.nullsafeAvg(Measurement::avgAirTemperatureCentigrade),
+                maxAirTemperatureCentigrade = measurements.nullsafeMax(Measurement::maxAirTemperatureCentigrade),
+                minDewPointTemperatureCentigrade = measurements.nullsafeMin(Measurement::minDewPointTemperatureCentigrade),
+                avgDewPointTemperatureCentigrade = measurements.nullsafeAvg(Measurement::avgDewPointTemperatureCentigrade),
+                maxDewPointTemperatureCentigrade = measurements.nullsafeMax(Measurement::maxDewPointTemperatureCentigrade),
+                minHumidityPercent = measurements.nullsafeMin(Measurement::minHumidityPercent),
+                avgHumidityPercent = measurements.nullsafeAvg(Measurement::avgHumidityPercent),
+                maxHumidityPercent = measurements.nullsafeMax(Measurement::maxHumidityPercent),
+                minAirPressureHectopascals = measurements.nullsafeMin(Measurement::minAirPressureHectopascals),
+                avgAirPressureHectopascals = measurements.nullsafeAvg(Measurement::avgAirPressureHectopascals),
+                maxAirPressureHectopascals = measurements.nullsafeMax(Measurement::maxAirPressureHectopascals),
+                minVisibilityMeters = measurements.nullsafeMin(Measurement::minVisibilityMeters),
+                avgVisibilityMeters = measurements.nullsafeAvg(Measurement::avgVisibilityMeters),
+                maxVisibilityMeters = measurements.nullsafeMax(Measurement::maxVisibilityMeters),
                 cloudCoverageHistogram = cloudCoverageHistogram,
-                sumSunshineDurationHours = measurements.sumDecimal(Measurement::sumSunshineDurationHours),
-                sumRainfallMillimeters = measurements.sumDecimal(Measurement::sumRainfallMillimeters),
-                sumSnowfallMillimeters = measurements.sumDecimal(Measurement::sumSnowfallMillimeters),
-                avgWindSpeedMetersPerSecond = measurements.avgDecimal(Measurement::avgWindSpeedMetersPerSecond),
-                maxWindSpeedMetersPerSecond = measurements.maxDecimal(Measurement::maxWindSpeedMetersPerSecond),
+                sumSunshineDurationHours = measurements.nullsafeSum(Measurement::sumSunshineDurationHours),
+                sumRainfallMillimeters = measurements.nullsafeSum(Measurement::sumRainfallMillimeters),
+                sumSnowfallMillimeters = measurements.nullsafeSum(Measurement::sumSnowfallMillimeters),
+                avgWindSpeedMetersPerSecond = measurements.nullsafeAvg(Measurement::avgWindSpeedMetersPerSecond),
+                maxWindSpeedMetersPerSecond = measurements.nullsafeMax(Measurement::maxWindSpeedMetersPerSecond),
 
                 )
 

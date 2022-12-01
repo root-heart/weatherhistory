@@ -20,7 +20,11 @@ aside {
 }
 
 main {
-    margin: 0 10rem;
+    display: grid;
+    grid-template-columns: repeat(3, 30vw);
+    grid-gap: 1vw;
+    justify-content: center;
+    /*margin: 0 10rem;*/
     /*margin-top: 10rem;*/
     /*padding-top: 10rem;*/
 }

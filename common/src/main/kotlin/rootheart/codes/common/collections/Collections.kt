@@ -3,9 +3,20 @@ package rootheart.codes.common.collections
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-inline fun <T> Iterable<T>.minDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
-    val iterator = iterator()
-    if (!iterator.hasNext()) throw NoSuchElementException()
+inline fun <T, N : Comparable<N>> Iterable<T>.nullsafeMin(selector: (T) -> N?): N? {
+    return nullsafeMin(iterator(), selector)
+}
+
+inline fun <T, N : Comparable<N>> Array<T>.nullsafeMin(selector: (T) -> N?): N? {
+    return nullsafeMin(iterator(), selector)
+}
+
+inline fun <N : Comparable<N>> Array<N?>.nullsafeMin(): N? {
+    return nullsafeMin(iterator()) { it }
+}
+
+inline fun <T, N : Comparable<N>> nullsafeMin(iterator: Iterator<T>, selector: (T) -> N?): N? {
+    if (!iterator.hasNext()) return null
     var minValue = selector(iterator.next())
     while (iterator.hasNext()) {
         val v = selector(iterator.next())
@@ -18,53 +29,19 @@ inline fun <T> Iterable<T>.minDecimal(selector: (T) -> BigDecimal?): BigDecimal?
     return minValue
 }
 
-fun minDecimal(array: Array<BigDecimal?>): BigDecimal? {
-    val iterator = array.iterator()
-    if (!iterator.hasNext()) throw NoSuchElementException()
-    var minValue = iterator.next()
-    while (iterator.hasNext()) {
-        val v = iterator.next()
-        if (minValue == null) {
-            minValue = v
-        } else if (v != null && minValue > v) {
-            minValue = v
-        }
-    }
-    return minValue
+inline fun <T, N : Comparable<N>> Iterable<T>.nullsafeMax(selector: (T) -> N?): N? {
+    return nullsafeMax(iterator(), selector)
 }
 
-fun maxDecimal(array: Array<BigDecimal?>): BigDecimal? {
-    val iterator = array.iterator()
-    if (!iterator.hasNext()) throw NoSuchElementException()
-    var maxValue = iterator.next()
-    while (iterator.hasNext()) {
-        val v = iterator.next()
-        if (maxValue == null) {
-            maxValue = v
-        } else if (v != null && maxValue < v) {
-            maxValue = v
-        }
-    }
-    return maxValue
+inline fun <T, N : Comparable<N>> Array<T>.nullsafeMax(selector: (T) -> N?): N? {
+    return nullsafeMax(iterator(), selector)
 }
 
-inline fun <T> Iterable<T>.minInt(selector: (T) -> Int?): Int? {
-    val iterator = iterator()
-    if (!iterator.hasNext()) throw NoSuchElementException()
-    var minValue = selector(iterator.next())
-    while (iterator.hasNext()) {
-        val v = selector(iterator.next())
-        if (minValue == null) {
-            minValue = v
-        } else if (v != null && minValue > v) {
-            minValue = v
-        }
-    }
-    return minValue
+inline fun <N : Comparable<N>> Array<N?>.nullsafeMax(): N? {
+    return nullsafeMax(iterator()) { it }
 }
 
-inline fun <T> Iterable<T>.maxDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
-    val iterator = iterator()
+inline fun <T, N : Comparable<N>> nullsafeMax(iterator: Iterator<T>, selector: (T) -> N?): N? {
     if (!iterator.hasNext()) throw NoSuchElementException()
     var maxValue = selector(iterator.next())
     while (iterator.hasNext()) {
@@ -78,65 +55,52 @@ inline fun <T> Iterable<T>.maxDecimal(selector: (T) -> BigDecimal?): BigDecimal?
     return maxValue
 }
 
-inline fun <T> Iterable<T>.maxInt(selector: (T) -> Int?): Int? {
-    val iterator = iterator()
-    if (!iterator.hasNext()) throw NoSuchElementException()
-    var maxValue = selector(iterator.next())
-    while (iterator.hasNext()) {
-        val v = selector(iterator.next())
-        if (maxValue == null) {
-            maxValue = v
-        } else if (v != null && maxValue < v) {
-            maxValue = v
-        }
-    }
-    return maxValue
-}
 
-inline fun <T> Collection<T>.avgDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
+inline fun <T> Iterable<T>.nullsafeAvg(selector: (T) -> BigDecimal?): BigDecimal? {
     val countNonNull = count { selector(it) != null }.toLong()
-    return sumDecimal(selector)?.divide(BigDecimal.valueOf(countNonNull), RoundingMode.HALF_UP)
+    return nullsafeSum(iterator(), BigDecimal::plus, selector)?.divide(
+        BigDecimal.valueOf(countNonNull),
+        RoundingMode.HALF_UP
+    )
 }
 
-inline fun <T> Iterable<T>.avgInt(selector: (T) -> Int?): Int? {
+inline fun Array<BigDecimal?>.nullsafeAvg(): BigDecimal? {
+    val countNonNull = count { it != null }.toLong()
+    return nullsafeSum(iterator(), BigDecimal::plus) { it }?.divide(
+        BigDecimal.valueOf(countNonNull),
+        RoundingMode.HALF_UP
+    )
+}
+
+inline fun Array<Int?>.nullsafeAvg(): Int? {
+    val countNonNull = count { it != null }
+    return nullsafeSum(iterator(), Int::plus) { it }?.div(countNonNull)
+}
+
+inline fun <T> Iterable<T>.nullsafeAvg(selector: (T) -> Int?): Int? {
     val countNonNull = count { selector(it) != null }
-    return sumInt(selector)?.div(countNonNull)
+    return nullsafeSum(iterator(), Int::plus, selector)?.div(countNonNull)
 }
 
-inline fun <T> Collection<T>.sumDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
-    val iterator = iterator()
+inline fun <T> Iterable<T>.nullsafeSum(selector: (T) -> BigDecimal?): BigDecimal? {
+    return nullsafeSum(iterator(), BigDecimal::plus, selector)
+}
+
+inline fun <T, reified N : Number> nullsafeSum(
+    iterator: Iterator<T>,
+    plusFunction: (N, N) -> N,
+    selector: (T) -> N?
+): N? {
     if (!iterator.hasNext()) return null
     var sum = selector(iterator.next())
     while (iterator.hasNext()) {
         val v = selector(iterator.next())
-        v?.let { sum = sum?.add(it) ?: it }
-    }
-    return sum
-}
-
-inline fun <T> Iterable<T>.sumInt(selector: (T) -> Int?): Int? {
-    val iterator = iterator()
-    if (!iterator.hasNext()) return null
-    var sum = selector(iterator.next())
-    while (iterator.hasNext()) {
-        val v = selector(iterator.next())
-        if (v != null) {
-            if (sum == null) {
-                sum = 0
-            }
-            sum += v
+        if (sum == null) {
+            sum = v
+        } else if (v != null) {
+            sum = plusFunction(sum, v)
         }
     }
     return sum
 }
 
-//inline fun <T> Collection<T>.minDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
-//    val iterator = iterator()
-//    if (!iterator.hasNext()) return null
-//    var min = selector(iterator.next())
-//    while (iterator.hasNext()) {
-//        val v = selector(iterator.next())
-//        v?.let { min = if (it < min) it else min }
-//    }
-//    return min
-//}

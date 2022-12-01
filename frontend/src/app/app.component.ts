@@ -8,6 +8,10 @@ import {AirPressureChart, AirPressureRecord} from "./charts/air-pressure-chart/a
 import {WindSpeedChart, WindSpeedRecord} from "./charts/wind-speed-chart/wind-speed-chart.component";
 import {HttpClient} from "@angular/common/http";
 import {DataService} from "./charts/data-service.service";
+import {
+    DewPointTemperatureChart,
+    DewPointTemperatureRecord
+} from "./charts/dew-point-temperature-chart/dew-point-temperature-chart.component";
 
 @Component({
     selector: 'app-root',
@@ -35,6 +39,9 @@ export class AppComponent {
     @ViewChild('windSpeedChart')
     windSpeedChart?: WindSpeedChart
 
+    @ViewChild('dewPointTemperatureChart')
+    dewPointTemperatureChart?: DewPointTemperatureChart
+
     minTemperature: number | null = NaN
     avgTemperature: number | null = NaN
     maxTemperature: number | null = NaN
@@ -47,6 +54,7 @@ export class AppComponent {
     private precipitationDataService: DataService<PrecipitationRecord>;
     private sunshineDurationDataService: DataService<SunshineDurationRecord>;
     private windSpeedDataService: DataService<WindSpeedRecord>;
+    private dewPointTemperatureDataService: DataService<DewPointTemperatureRecord>;
 
     constructor(http: HttpClient) {
         this.temperatureDataService = new DataService<TemperatureRecord>(http, "temperature");
@@ -55,6 +63,7 @@ export class AppComponent {
         this.precipitationDataService = new DataService<PrecipitationRecord>(http, "precipitation")
         this.sunshineDurationDataService = new DataService<SunshineDurationRecord>(http, "sunshine")
         this.windSpeedDataService = new DataService<WindSpeedRecord>(http, "wind")
+        this.dewPointTemperatureDataService = new DataService<DewPointTemperatureRecord>(http, "dewPointTemperature")
 
     }
 
@@ -87,9 +96,12 @@ export class AppComponent {
             .subscribe(data => this.sunshineChart?.setData(data, "monthly"))
         this.windSpeedDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.windSpeedChart?.setData(data, "monthly"))
+        this.dewPointTemperatureDataService.getMonthlyData(stationId, year)
+            .subscribe(data => this.dewPointTemperatureChart?.setData(data, "monthly"))
         // TODO dew point temperature chart
         // TODO humidity chart
         // TODO visibility chart
+        // TODO wind direction chart
     }
 }
 
