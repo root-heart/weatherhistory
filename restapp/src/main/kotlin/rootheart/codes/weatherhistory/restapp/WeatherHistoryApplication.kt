@@ -130,6 +130,7 @@ fun Application.setupRouting() = routing {
             }
 
             route("visibility") {
+                monthlyEndpoints(MonthlyVisibilityDao)
                 hourlyEndpoints(HourlyVisibilityDao)
             }
         }

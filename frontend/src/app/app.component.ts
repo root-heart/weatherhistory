@@ -6,12 +6,14 @@ import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.compon
 import {PrecipitationChart, PrecipitationRecord} from "./charts/precipitation-chart/precipitation-chart.component";
 import {AirPressureChart, AirPressureRecord} from "./charts/air-pressure-chart/air-pressure-chart.component";
 import {WindSpeedChart, WindSpeedRecord} from "./charts/wind-speed-chart/wind-speed-chart.component";
+import {VisibilityChart, VisibilityRecord} from "./charts/visibility-chart/visibility-chart.component";
 import {HttpClient} from "@angular/common/http";
 import {DataService} from "./charts/data-service.service";
 import {
     DewPointTemperatureChart,
     DewPointTemperatureRecord
 } from "./charts/dew-point-temperature-chart/dew-point-temperature-chart.component";
+import {HumidityChart, HumidityRecord} from "./charts/humidity-chart/humidity-chart.component";
 
 @Component({
     selector: 'app-root',
@@ -42,6 +44,12 @@ export class AppComponent {
     @ViewChild('dewPointTemperatureChart')
     dewPointTemperatureChart?: DewPointTemperatureChart
 
+    @ViewChild('humidityChart')
+    humidityChart?: HumidityChart
+
+    @ViewChild('visibilityChart')
+    visibilityChart?: VisibilityChart
+
     minTemperature: number | null = NaN
     avgTemperature: number | null = NaN
     maxTemperature: number | null = NaN
@@ -55,6 +63,8 @@ export class AppComponent {
     private sunshineDurationDataService: DataService<SunshineDurationRecord>;
     private windSpeedDataService: DataService<WindSpeedRecord>;
     private dewPointTemperatureDataService: DataService<DewPointTemperatureRecord>;
+    private humidityDataService: DataService<HumidityRecord>;
+    private visibilityDataService: DataService<VisibilityRecord>;
 
     constructor(http: HttpClient) {
         this.temperatureDataService = new DataService<TemperatureRecord>(http, "temperature");
@@ -64,7 +74,8 @@ export class AppComponent {
         this.sunshineDurationDataService = new DataService<SunshineDurationRecord>(http, "sunshine")
         this.windSpeedDataService = new DataService<WindSpeedRecord>(http, "wind")
         this.dewPointTemperatureDataService = new DataService<DewPointTemperatureRecord>(http, "dewPointTemperature")
-
+        this.humidityDataService = new DataService<HumidityRecord>(http, "humidity")
+        this.visibilityDataService = new DataService<VisibilityRecord>(http, "visibility")
     }
 
     filterChanged(event: FilterChangedEvent) {
@@ -85,9 +96,7 @@ export class AppComponent {
 
         this.temperatureDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.temperatureChart?.setData(data, "monthly"));
-        // TODO reinstantiate cloud coverage chart
-        // this.cloudinessDataService.getHourlyData(stationId, year)
-        //     .subscribe(data => this.cloudinessChart?.setData(data))
+
         this.airPressureDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.airPressureChart?.setData(data, "monthly"))
         this.precipitationDataService.getMonthlyData(stationId, year)
@@ -98,9 +107,15 @@ export class AppComponent {
             .subscribe(data => this.windSpeedChart?.setData(data, "monthly"))
         this.dewPointTemperatureDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.dewPointTemperatureChart?.setData(data, "monthly"))
-        // TODO dew point temperature chart
-        // TODO humidity chart
+        this.humidityDataService.getMonthlyData(stationId, year)
+            .subscribe(data => this.humidityChart?.setData(data, "monthly"))
+        this.visibilityDataService.getMonthlyData(stationId, year)
+            .subscribe(data => this.visibilityChart?.setData(data, "monthly"))
         // TODO visibility chart
+
+        // TODO reinstantiate cloud coverage chart
+        // this.cloudinessDataService.getHourlyData(stationId, year)
+        //     .subscribe(data => this.cloudinessChart?.setData(data))
         // TODO wind direction chart
     }
 }

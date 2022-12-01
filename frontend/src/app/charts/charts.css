@@ -1,4 +1,6 @@
 :host {
-    height: 25rem;
+    height: 40vh;
+    /*height: 100%;*/
+    /*bottom: 0;*/
     display: block;
 }

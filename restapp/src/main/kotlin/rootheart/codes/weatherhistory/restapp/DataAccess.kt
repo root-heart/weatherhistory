@@ -132,6 +132,12 @@ object HourlyWindDao : JdbcDao(
     MeasurementsTable::maxWindSpeedMetersPerSecond,
 )
 
+object MonthlyVisibilityDao : SummaryJdbcDao(
+    MonthlySummaryTable::minVisibilityMeters,
+    MonthlySummaryTable::avgVisibilityMeters,
+    MonthlySummaryTable::maxVisibilityMeters,
+)
+
 object HourlyVisibilityDao : JdbcDao(
     MeasurementsTable::hourlyVisibilityMeters,
 )

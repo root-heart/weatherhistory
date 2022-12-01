@@ -247,6 +247,10 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
             m.minVisibilityMeters = m.hourlyVisibilityMeters.nullsafeMin()
             m.avgVisibilityMeters = m.hourlyVisibilityMeters.nullsafeAvg()
             m.maxVisibilityMeters = m.hourlyVisibilityMeters.nullsafeMax()
+
+            m.minHumidityPercent = m.hourlyHumidityPercent.nullsafeMin()
+            m.avgHumidityPercent = m.hourlyHumidityPercent.nullsafeAvg()
+            m.maxHumidityPercent = m.hourlyHumidityPercent.nullsafeMax()
         }
 
 //        val list = measurementByTime.values.sortedBy { it.day }

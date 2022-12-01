@@ -12,10 +12,12 @@ import {PrecipitationChart} from './charts/precipitation-chart/precipitation-cha
 import {AirPressureChart} from './charts/air-pressure-chart/air-pressure-chart.component';
 import {WindSpeedChart} from './charts/wind-speed-chart/wind-speed-chart.component';
 import { DewPointTemperatureChart } from './charts/dew-point-temperature-chart/dew-point-temperature-chart.component';
+import {HumidityChart} from "./charts/humidity-chart/humidity-chart.component";
+import {VisibilityChart} from "./charts/visibility-chart/visibility-chart.component";
 
 @NgModule({
     declarations: [
-        AppComponent, TemperatureChart, SunshineChart, CloudinessChart, StationAndDateFilterComponent, TemperatureChart, TemperatureChart, TemperatureChart, PrecipitationChart, AirPressureChart, WindSpeedChart, DewPointTemperatureChart,
+        AppComponent, TemperatureChart, SunshineChart, CloudinessChart, StationAndDateFilterComponent, TemperatureChart, TemperatureChart, TemperatureChart, PrecipitationChart, AirPressureChart, WindSpeedChart, DewPointTemperatureChart, HumidityChart, VisibilityChart,
     ],
     imports: [
         BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule
