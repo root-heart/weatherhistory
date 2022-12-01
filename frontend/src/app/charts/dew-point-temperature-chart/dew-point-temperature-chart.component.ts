@@ -31,18 +31,25 @@ export class DewPointTemperatureChart extends BaseChart<DewPointTemperatureRecor
     protected getDataSets(data: Array<DewPointTemperatureRecord>): Array<ChartDataset> {
         return [{
             type: "line",
-            label: 'Temperatur',
+            label: 'Taupunkttemperatur',
             borderColor: 'hsl(220, 80%, 70%)',
             backgroundColor: 'hsl(220, 80%, 70%)',
             data: data.map(m => m.avgDewPointTemperatureCentigrade),
-            stack: "zero",
         }, {
-            type: 'bar',
-            label: 'Temperatur min/max',
+            type: 'line',
+            label: 'min Taupunkttemperatur',
             borderColor: 'hsl(220, 80%, 70%)',
             backgroundColor: 'hsla(220, 80%, 70%, 0.3)',
-            data: data.map(m => [m.minDewPointTemperatureCentigrade, m.maxDewPointTemperatureCentigrade]),
-            stack: "one",
+            data: data.map(m => m.minDewPointTemperatureCentigrade),
+            borderWidth: 0,
+        }, {
+            type: 'line',
+            label: 'max Taupunkttemperatur',
+            borderColor: 'hsl(220, 80%, 70%)',
+            backgroundColor: 'hsla(220, 80%, 70%, 0.3)',
+            data: data.map(m => m.maxDewPointTemperatureCentigrade),
+            borderWidth: 0,
+            fill: "-1"
         }]
     }
 

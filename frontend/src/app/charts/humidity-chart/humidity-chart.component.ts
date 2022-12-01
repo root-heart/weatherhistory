@@ -19,6 +19,7 @@ export class HumidityChart extends BaseChart<HumidityRecord> implements OnInit {
 
     constructor() {
         super();
+        this.includeZero = false
     }
 
     ngOnInit(): void {
@@ -35,14 +36,24 @@ export class HumidityChart extends BaseChart<HumidityRecord> implements OnInit {
             borderColor: 'hsl(220, 80%, 30%)',
             backgroundColor: 'hsl(220, 80%, 30%)',
             data: data.map(m => m.avgHumidityPercent),
-            stack: "zero",
+            // stack: "zero",
         }, {
-            type: 'bar',
-            label: 'Temperatur min/max',
+            type: 'line',
+            label: 'Min Feuchte',
             borderColor: 'hsl(220, 80%, 30%)',
             backgroundColor: 'hsla(220, 80%, 30%, 0.3)',
-            data: data.map(m => [m.minHumidityPercent, m.maxHumidityPercent]),
-            stack: "one",
+            data: data.map(m => m.minHumidityPercent),
+            borderWidth: 0,
+            // stack: "one",
+        }, {
+            type: 'line',
+            label: 'Max Feuchte',
+            borderColor: 'hsl(220, 80%, 30%)',
+            backgroundColor: 'hsla(220, 80%, 30%, 0.3)',
+            data: data.map(m => m.maxHumidityPercent),
+            borderWidth: 0,
+            fill: "-1"
+            // stack: "one",
         }]
     }
 

@@ -31,18 +31,25 @@ export class VisibilityChart extends BaseChart<VisibilityRecord> implements OnIn
     protected getDataSets(data: Array<VisibilityRecord>): Array<ChartDataset> {
         return [{
             type: "line",
-            label: 'Temperatur',
+            label: "Sichtweite",
             borderColor: 'hsl(0, 0%, 70%)',
             backgroundColor: 'hsl(0, 0%, 70%)',
             data: data.map(m => m.avgVisibilityMeters),
-            stack: "zero",
         }, {
-            type: 'bar',
-            label: 'Temperatur min/max',
+            type: "line",
+            label: "min Sichtweite",
             borderColor: 'hsl(0, 0%, 70%)',
             backgroundColor: 'hsla(0, 0%, 70%, 0.3)',
-            data: data.map(m => [m.minVisibilityMeters, m.maxVisibilityMeters]),
-            stack: "one",
+            data: data.map(m => m.minVisibilityMeters),
+            borderWidth: 0,
+        }, {
+            type: "line",
+            label: "max Sichtweite",
+            borderColor: 'hsl(0, 0%, 70%)',
+            backgroundColor: 'hsla(0, 0%, 70%, 0.3)',
+            data: data.map(m => m.maxVisibilityMeters),
+            borderWidth: 0,
+            fill: "-1"
         }]
     }
 

@@ -19,6 +19,7 @@ export class AirPressureChart extends BaseChart<AirPressureRecord> implements On
 
     constructor() {
         super();
+        this.includeZero = false
     }
 
     ngOnInit(): void {
@@ -34,7 +35,7 @@ export class AirPressureChart extends BaseChart<AirPressureRecord> implements On
             label: 'Luftdruck',
             borderColor: 'hsl(120, 80%, 45%)',
             borderWidth: 2,
-            backgroundColor: 'hsl(120, 80%, 45%)',
+            // backgroundColor: 'hsla(120, 80%, 45%, 0)',
             data: summaryList.map(m => m.avgAirPressureHectopascals),
             pointRadius: 0,
             pointHitRadius: 20,
@@ -42,12 +43,23 @@ export class AirPressureChart extends BaseChart<AirPressureRecord> implements On
             showLegend: true,
             // tooltipValueFormatter: (value: number) => this.formatCentigrade(value)
         }, {
-            type: 'bar',
-            label: 'Luftdruck min/max',
+            type: 'line',
+            label: 'min Luftdruck',
+            borderWidth: 0,
             borderColor: 'hsla(120, 80%, 45%, 0)',
             backgroundColor: 'hsla(120, 80%, 45%, 0.15)',
-            data: summaryList.map(m => [m.minAirPressureHectopascals, m.maxAirPressureHectopascals]),
-            showTooltip: true
+            data: summaryList.map(m => m.minAirPressureHectopascals),
+            showTooltip: true,
+            // xAxisID: "x2"
+        }, {
+            type: 'line',
+            // stepped: true,
+            label: 'max Luftdruck',
+            borderColor: 'hsla(120, 80%, 45%, 0)',
+            backgroundColor: 'hsla(120, 80%, 45%, 0.15)',
+            data: summaryList.map(m => m.maxAirPressureHectopascals),
+            showTooltip: true,
+            fill: "-1"
         }]
     }
 

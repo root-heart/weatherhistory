@@ -1,6 +1,14 @@
 import {Directive, ElementRef} from "@angular/core";
-import {Chart, ChartConfiguration, ChartData, ChartDataset, ChartOptions, LegendItem, TooltipItem} from "chart.js";
-import ChartDataLabels from 'chartjs-plugin-datalabels';
+import {
+    CategoryScaleOptions,
+    Chart,
+    ChartConfiguration,
+    ChartData,
+    ChartDataset,
+    ChartOptions,
+    LegendItem,
+    TooltipItem
+} from "chart.js";
 
 export type MeasurementDataSet = ChartDataset & {
     showTooltip?: boolean,
@@ -20,6 +28,7 @@ export abstract class BaseChart<T extends BaseRecord> {
     protected numberFormat = new Intl.NumberFormat('de-DE', {minimumFractionDigits: 1, maximumFractionDigits: 1});
     private chart?: Chart;
     protected resolution?: ChartResolution
+    protected includeZero: boolean = true
 
     protected constructor() {
         // Chart.register(ChartDataLabels);
@@ -60,20 +69,17 @@ export abstract class BaseChart<T extends BaseRecord> {
             // parsing: true,
             elements: {point: {radius: 0}},
             scales: {
-                y: {max: this.getMaxY(), beginAtZero: false}
+                y: {max: this.getMaxY(), beginAtZero: this.includeZero}
             },
-            bar: {
-                datasets: {
-                    categoryPercentage: 0.8,
-                    barPercentage: 1
-                }
-            },
+            // datasets: {
+            //     bar: {
+            //         categoryPercentage: 1,
+            //         barPercentage: 1
+            //     }
+            // },
             plugins: {
                 legend: {display: false,},
-                tooltip: {
-                    filter: this.showTooltip,
-                    callbacks: {label: this.formatTooltipLabel}
-                },
+                tooltip: {enabled: true,},
                 // datalabels: {
                 //     color: "#ddd",
                 //     textStrokeWidth: 3,
@@ -101,6 +107,21 @@ export abstract class BaseChart<T extends BaseRecord> {
             }
         };
 
+        this.getXAxis(options)
+
+        let config: ChartConfiguration = {
+            type: "line",
+            options: options,
+            data: {
+                labels: labels,
+                datasets: dataSets
+            }
+        };
+
+        this.chart = new Chart(context, config);
+    }
+
+    private getXAxis(options: ChartOptions) {
         switch (this.resolution) {
             case "daily":
                 // xscale.afterBuildTicks = (axis: { ticks: any[]; }) => {
@@ -118,25 +139,21 @@ export abstract class BaseChart<T extends BaseRecord> {
                 }
                 break;
             case "monthly":
-                options.scales!.x = {
-                    type: "category",
-                    ticks: {
-                        minRotation: 0, maxRotation: 0, sampleSize: 3
-                    }
-                }
+                options.scales!.x = this.createXAxis(true)
+                options.scales!.x2 = this.createXAxis(false)
                 break;
         }
+    }
 
-        let config: ChartConfiguration = {
-            type: "line",
-            options: options,
-            data: {
-                labels: labels,
-                datasets: dataSets
-            }
-        };
-
-        this.chart = new Chart(context, config);
+    private createXAxis(visible: boolean): DeepPartial<CategoryScaleOptions> {
+        return {
+            // offset: true,
+            labels: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+            ticks: {
+                minRotation: 0, maxRotation: 0, sampleSize: 12
+            },
+            display: visible
+        }
     }
 
     protected getLabels(data: Array<T>): Array<any> {
@@ -166,6 +183,15 @@ export abstract class BaseChart<T extends BaseRecord> {
         }
         return label;
     }
-
-
 }
+
+// holy crap - thanks to stackoverflow for making my life with this hazy language called typescript a bit easier...
+type DeepPartial<T> = T extends Function
+    ? T
+    : T extends Array<infer U>
+        ? _DeepPartialArray<U>
+        : T extends object
+            ? _DeepPartialObject<T>
+            : T | undefined;
+type _DeepPartialArray<T> = Array<DeepPartial<T>>
+type _DeepPartialObject<T> = { [P in keyof T]?: DeepPartial<T[P]> };

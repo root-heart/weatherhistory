@@ -29,62 +29,58 @@
 
 <station-and-date-filter (onFilterChanged)="filterChanged($event)"></station-and-date-filter>
 
-<main>
-    <section>
-        <h1>Temperatur</h1>
-        min Temp: {{minTemperature}}
-        avg Temp: {{avgTemperature}}
-        max Temp: {{maxTemperature}}
-        <temperature-chart #temperatureChart></temperature-chart>
-    </section>
+<nav> blabla</nav>
 
-    <section>
-        <h1>Niederschlag</h1>
-        <precipitation-chart #precipitationChart></precipitation-chart>
-    </section>
+<!--<main>-->
+<section id="temperature">
+    <h1>Temperatur</h1>
+    <temperature-chart #temperatureChart></temperature-chart>
+</section>
 
-    <section>
-        <h1>Sonnenschein</h1>
-        Sonne: {{sumSunshineDuration}}
-        <sunshine-chart #sunshineChart></sunshine-chart>
-    </section>
+<section id="precipitation">
+    <h1>Niederschlag</h1>
+    <precipitation-chart #precipitationChart></precipitation-chart>
+</section>
 
-    <section>
-        <h1>Luftdruck</h1>
-        <air-pressure-chart #airPressureChart></air-pressure-chart>
-    </section>
+<section>
+    <h1>Sonnenschein</h1>
+    <sunshine-chart #sunshineChart></sunshine-chart>
+</section>
 
-    <section>
-        <h1>Wind</h1>
-        <wind-speed-chart #windSpeedChart></wind-speed-chart>
-    </section>
+<section>
+    <h1>Bewölkung</h1>
+    <cloudiness-chart #cloudinessChart></cloudiness-chart>
+</section>
 
-    <section>
-        <h1>Taupunkt</h1>
-        <dew-point-temperature-chart #dewPointTemperatureChart></dew-point-temperature-chart>
-    </section>
+<section>
+    <h1>Wind</h1>
+    <wind-speed-chart #windSpeedChart></wind-speed-chart>
+</section>
 
-    <section>
-        <h1>Luftfeuchtigkeit</h1>
-        <humidity-chart #humidityChart></humidity-chart>
-    </section>
-
-    <section>
-        <h1>Sichtweite</h1>
-        <visibility-chart #visibilityChart></visibility-chart>
-    </section>
-
-    <section>
-        <h1>Bewölkung</h1>
-        <cloudiness-chart #cloudinessChart></cloudiness-chart>
-    </section>
-
-    <section>
-        <h1>Windrichtung</h1>
-<!--        <cloudiness-chart #cloudinessChart></cloudiness-chart>-->
-    </section>
+<section>
+    <h1>Windrichtung</h1>
+    <!--        <cloudiness-chart #cloudinessChart></cloudiness-chart>-->
+</section>
+<section>
+    <h1>Luftfeuchtigkeit</h1>
+    <humidity-chart #humidityChart></humidity-chart>
+</section>
+<section>
+    <h1>Taupunkt</h1>
+    <dew-point-temperature-chart #dewPointTemperatureChart></dew-point-temperature-chart>
+</section>
+<section>
+    <h1>Luftdruck</h1>
+    <air-pressure-chart #airPressureChart></air-pressure-chart>
+</section>
 
 
-</main>
+<section>
+    <h1>Sichtweite</h1>
+    <visibility-chart #visibilityChart></visibility-chart>
+</section>
+
+
+<!--</main>-->
 
 

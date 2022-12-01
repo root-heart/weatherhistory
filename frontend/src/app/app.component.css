@@ -1,14 +1,26 @@
 :host {
     position: relative;
+    display: grid;
+    grid-template-columns: 15vw repeat(3, 25vw);
+    /*grid-template-rows: repeat(4, 35vh);*/
+    grid-gap: 0;
+    justify-content: center;
+}
+
+nav {
+    grid-row-end: span 5;
 }
 
 h1 {
-    grid-column-start: 1;
-    grid-column-end: 2;
+    /*grid-column-start: 1;*/
+    /*grid-column-end: 2;*/
+    margin: 0;
+    font-size: 100%;
+    font-weight: unset;
 }
 
 station-and-date-filter {
-
+    grid-column: 1 / span 4;
 }
 
 aside {
@@ -20,20 +32,30 @@ aside {
 }
 
 main {
-    display: grid;
-    grid-template-columns: repeat(3, 30vw);
-    /*grid-template-rows: repeat(4, 35vh);*/
-    grid-gap: 1vw;
-    justify-content: center;
     /*margin: 0 10rem;*/
     /*margin-top: 10rem;*/
     /*padding-top: 10rem;*/
 }
 
-main > section > h1 {
-    grid-column-start: 1;
-    grid-column-end: 3;
+main > section {
+    /*grid-column-start: 2;*/
+    /*grid-column-end: span 3;*/
 }
+
+#temperature {
+    /*grid-column-start: 3;*/
+    /*grid-column-end: 4;*/
+}
+
+#precipitation {
+    /*grid-column-start: 4;*/
+    /*grid-column-end: 6;*/
+}
+
+/*main > section > h1 {*/
+/*    grid-column-start: 1;*/
+/*    grid-column-end: 3;*/
+/*}*/
 
 main > section > article {
     height: 100%;

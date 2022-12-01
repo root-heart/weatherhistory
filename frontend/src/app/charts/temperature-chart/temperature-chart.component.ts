@@ -47,13 +47,26 @@ export class TemperatureChart extends BaseChart<TemperatureRecord> implements On
             showTooltip: true,
             tooltipValueFormatter: (value: number) => this.formatCentigrade(value)
         }, {
-            type: 'bar',
-            label: 'Temperatur min/max',
+            type: 'line',
+            label: 'min Temperatur',
             borderColor: 'hsla(0, 80%, 45%, 1)',
+            borderWidth: 0,
             backgroundColor: 'hsla(0, 80%, 45%, 0.15)',
-            data: summaryList.map(m => [m.minAirTemperatureCentigrade, m.maxAirTemperatureCentigrade]),
-            stack: "one",
-            showTooltip: true
+            data: summaryList.map(m => m.minAirTemperatureCentigrade),
+            stack: "zero",
+            // stack: "one",
+            showTooltip: true,
+        }, {
+            type: 'line',
+            label: 'max Temperatur',
+            borderColor: 'hsla(0, 80%, 45%, 1)',
+            borderWidth: 0,
+            backgroundColor: 'hsla(0, 80%, 45%, 0.15)',
+            data: summaryList.map(m => m.maxAirTemperatureCentigrade),
+            stack: "zero",
+            // stack: "one",
+            showTooltip: true,
+            fill: "-1",
         }]
     }
 

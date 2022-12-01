@@ -41,14 +41,15 @@ export class WindSpeedChart extends BaseChart<WindSpeedRecord> implements OnInit
             showLegend: true,
             // tooltipValueFormatter: (value: number) => this.formatCentigrade(value)
         }, {
-            type: 'bar',
-            label: 'Windgeschwindigkeit',
+            type: 'line',
+            label: 'max Windgeschwindigkeit',
             borderColor: 'hsla(270, 80%, 65%, 0.3)',
             borderWidth: 0,
             backgroundColor: 'hsla(270, 80%, 65%, 0.3)',
             data: summaryList.map(m => m.maxWindSpeedMetersPerSecond),
             showTooltip: true,
             showLegend: true,
+            fill: true
             // tooltipValueFormatter: (value: number) => this.formatCentigrade(value)
         }]
     }
