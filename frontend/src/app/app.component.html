@@ -29,58 +29,125 @@
 
 <station-and-date-filter (onFilterChanged)="filterChanged($event)"></station-and-date-filter>
 
-<nav> blabla</nav>
-
-<!--<main>-->
-<section id="temperature">
-    <h1>Temperatur</h1>
-    <temperature-chart #temperatureChart></temperature-chart>
-</section>
-
-<section id="precipitation">
-    <h1>Niederschlag</h1>
+<div class="experiment">
+    <min-avg-max-chart
+            [color]="'hsl(0, 80%, 45%)'"
+            [fill]="'hsla(0, 80%, 45%, 0.3)'"
+            [lineWidth]="2"
+            #temperatureChart
+    ></min-avg-max-chart>
+<!--    <temperature-chart #temperatureChart></temperature-chart>-->
     <precipitation-chart #precipitationChart></precipitation-chart>
-</section>
-
-<section>
-    <h1>Sonnenschein</h1>
     <sunshine-chart #sunshineChart></sunshine-chart>
-</section>
-
-<section>
-    <h1>Bewölkung</h1>
-    <cloudiness-chart #cloudinessChart></cloudiness-chart>
-</section>
-
-<section>
-    <h1>Wind</h1>
     <wind-speed-chart #windSpeedChart></wind-speed-chart>
-</section>
-
-<section>
-    <h1>Windrichtung</h1>
-    <!--        <cloudiness-chart #cloudinessChart></cloudiness-chart>-->
-</section>
-<section>
-    <h1>Luftfeuchtigkeit</h1>
     <humidity-chart #humidityChart></humidity-chart>
-</section>
-<section>
-    <h1>Taupunkt</h1>
     <dew-point-temperature-chart #dewPointTemperatureChart></dew-point-temperature-chart>
-</section>
-<section>
-    <h1>Luftdruck</h1>
     <air-pressure-chart #airPressureChart></air-pressure-chart>
-</section>
-
-
-<section>
-    <h1>Sichtweite</h1>
     <visibility-chart #visibilityChart></visibility-chart>
-</section>
+</div>
 
+<div class="tab-headers">
+    <div class="tab">
+        <div class="tab-header">
+            <div class="tab-title">Temperatur</div>
+            <div class="min-value">-12 °C</div>
+            <div class="min-value-title">Min</div>
+            <div class="avg-value">12 °C</div>
+            <div class="avg-value-title">Avg</div>
+            <div class="max-value">32 °C</div>
+            <div class="max-value-title">Max</div>
+        </div>
+        <div class="tab-body">
+            <!--            <temperature-chart #temperatureChart></temperature-chart>-->
+            <div style="border: 1px solid #777">HISTOGRAMM</div>
+        </div>
+    </div>
+</div>
 
-<!--</main>-->
+<!--<mat-tab-group animationDuration="0">-->
+<!--    <mat-tab>-->
+<!--        <ng-template mat-tab-label>-->
+<!--            -->
+<!--        </ng-template>-->
 
+<!--        <div class="tab-body">-->
+
+<!--          -->
+<!--        </div>-->
+
+<!--    </mat-tab>-->
+
+<!--    <mat-tab>-->
+<!--        <ng-template mat-tab-label>-->
+<!--            Niederschlag-->
+<!--        </ng-template>-->
+
+<!--        <div class="tab-body">-->
+<!--            <precipitation-chart #precipitationChart></precipitation-chart>-->
+<!--        </div>-->
+<!--    </mat-tab>-->
+
+<!--    <mat-tab>-->
+<!--        <ng-template mat-tab-label>-->
+<!--            Sonnenschein-->
+<!--        </ng-template>-->
+<!--        <div class="tab-body">-->
+<!--            <sunshine-chart #sunshineChart></sunshine-chart>-->
+<!--        </div>-->
+<!--    </mat-tab>-->
+
+<!--    <mat-tab>-->
+<!--        <ng-template mat-tab-label>-->
+<!--            Bewölkung-->
+<!--        </ng-template>-->
+<!--        <cloudiness-chart #cloudinessChart></cloudiness-chart>-->
+<!--    </mat-tab>-->
+
+<!--    <mat-tab>-->
+<!--        <ng-template mat-tab-label>-->
+<!--            Wind-->
+<!--        </ng-template>-->
+<!--        <wind-speed-chart #windSpeedChart></wind-speed-chart>-->
+
+<!--    </mat-tab>-->
+
+<!--    <mat-tab>-->
+<!--        <ng-template mat-tab-label>-->
+<!--            Windrichtung-->
+<!--        </ng-template>-->
+
+<!--    </mat-tab>-->
+
+<!--    <mat-tab>-->
+<!--        <ng-template mat-tab-label>-->
+<!--            Luftfeuchtigkeit-->
+<!--        </ng-template>-->
+<!--        <humidity-chart #humidityChart></humidity-chart>-->
+
+<!--    </mat-tab>-->
+
+<!--    <mat-tab>-->
+<!--        <ng-template mat-tab-label>-->
+<!--            Taupunkt-->
+<!--        </ng-template>-->
+<!--        <dew-point-temperature-chart #dewPointTemperatureChart></dew-point-temperature-chart>-->
+
+<!--    </mat-tab>-->
+
+<!--    <mat-tab>-->
+<!--        <ng-template mat-tab-label>-->
+<!--            Luftdruck-->
+<!--        </ng-template>-->
+<!--        <air-pressure-chart #airPressureChart></air-pressure-chart>-->
+
+<!--    </mat-tab>-->
+
+<!--    <mat-tab>-->
+<!--        <ng-template mat-tab-label>-->
+<!--            Sichtweite-->
+<!--        </ng-template>-->
+<!--        <visibility-chart #visibilityChart></visibility-chart>-->
+
+<!--    </mat-tab>-->
+<!--</mat-tab-group>-->
 

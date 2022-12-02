@@ -11,16 +11,19 @@ import {StationAndDateFilterComponent} from './filter-header/station-and-date-fi
 import {PrecipitationChart} from './charts/precipitation-chart/precipitation-chart.component';
 import {AirPressureChart} from './charts/air-pressure-chart/air-pressure-chart.component';
 import {WindSpeedChart} from './charts/wind-speed-chart/wind-speed-chart.component';
-import { DewPointTemperatureChart } from './charts/dew-point-temperature-chart/dew-point-temperature-chart.component';
+import {DewPointTemperatureChart} from './charts/dew-point-temperature-chart/dew-point-temperature-chart.component';
 import {HumidityChart} from "./charts/humidity-chart/humidity-chart.component";
 import {VisibilityChart} from "./charts/visibility-chart/visibility-chart.component";
+import {MatTabsModule} from "@angular/material/tabs";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {MinAvgMaxChart} from "./charts/BaseChart";
 
 @NgModule({
     declarations: [
-        AppComponent, TemperatureChart, SunshineChart, CloudinessChart, StationAndDateFilterComponent, TemperatureChart, TemperatureChart, TemperatureChart, PrecipitationChart, AirPressureChart, WindSpeedChart, DewPointTemperatureChart, HumidityChart, VisibilityChart,
+        AppComponent, TemperatureChart, SunshineChart, CloudinessChart, StationAndDateFilterComponent, TemperatureChart, TemperatureChart, TemperatureChart, PrecipitationChart, AirPressureChart, WindSpeedChart, DewPointTemperatureChart, HumidityChart, VisibilityChart, MinAvgMaxChart,
     ],
     imports: [
-        BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule
+        BrowserAnimationsModule, BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule, MatTabsModule
     ],
     providers: [],
     bootstrap: [AppComponent]

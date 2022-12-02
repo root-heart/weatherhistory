@@ -1,4 +1,6 @@
 @import "~@ng-select/ng-select/themes/default.theme.css";
+@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+
 
 
 body {
@@ -6,15 +8,15 @@ body {
     color: #e0e8ef;
 }
 
-html, body {
-    height: 100%;
-}
+/*html, body {*/
+/*    height: 100%;*/
+/*}*/
 
-body {
-    margin: 0;
-    font-family: Roboto, "Helvetica Neue", sans-serif;
-    font-size: 1.3rem;
-}
+/*body {*/
+/*    margin: 0;*/
+/*    font-family: Roboto, "Helvetica Neue", sans-serif;*/
+/*    font-size: 1.3rem;*/
+/*}*/
 
 input, button, .textInputElement {
     font-size: 1.3rem;
@@ -24,13 +26,3 @@ input, button, .textInputElement {
     border-radius: 0.4rem;
 }
 
-button:active {
-    background-color: red;
-}
-
-button:focus {
-    background-color: green;
-}
-
-input[type="text"] {
-}

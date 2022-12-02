@@ -1,5 +1,5 @@
 import {Component, ViewChild} from '@angular/core';
-import {TemperatureChart, TemperatureRecord} from "./charts/temperature-chart/temperature-chart.component";
+import {TemperatureRecord} from "./charts/temperature-chart/temperature-chart.component";
 import {SunshineChart, SunshineDurationRecord} from "./charts/sunshine-chart/sunshine-chart.component";
 import {FilterChangedEvent} from "./filter-header/station-and-date-filter.component";
 import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.component";
@@ -14,17 +14,20 @@ import {
     DewPointTemperatureRecord
 } from "./charts/dew-point-temperature-chart/dew-point-temperature-chart.component";
 import {HumidityChart, HumidityRecord} from "./charts/humidity-chart/humidity-chart.component";
+import {MinAvgMaxChart} from "./charts/BaseChart";
 
 @Component({
     selector: 'app-root',
     templateUrl: './app.component.html',
-    styleUrls: ['./app.component.css']
+    styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
     title = 'wetterchroniken.de/';
 
+    minTemps: number[] = []
+
     @ViewChild('temperatureChart')
-    temperatureChart?: TemperatureChart
+    temperatureChart?: MinAvgMaxChart<TemperatureRecord>
 
     @ViewChild('precipitationChart')
     precipitationChart?: PrecipitationChart
@@ -49,6 +52,9 @@ export class AppComponent {
 
     @ViewChild('visibilityChart')
     visibilityChart?: VisibilityChart
+
+    @ViewChild('minAvgMaxChart')
+    minAvgMaxTempChart?: MinAvgMaxChart<TemperatureRecord>
 
     minTemperature: number | null = NaN
     avgTemperature: number | null = NaN
@@ -94,11 +100,15 @@ export class AppComponent {
         // this.windSpeedDataService.getDailyData(stationId, year)
         //     .subscribe(data => this.windSpeedChart?.setData(data, "daily"))
 
-        this.temperatureDataService.getMonthlyData(stationId, year)
-            .subscribe(data => this.temperatureChart?.setData(data, "monthly"));
+        const monthlyData = this.temperatureDataService.getMonthlyData(stationId, year)
+        monthlyData.subscribe(data => this.temperatureChart?.setData(data, "monthly",
+            (r) => r.minAirTemperatureCentigrade,
+            (r) => r.avgAirTemperatureCentigrade,
+            (r) => r.maxAirTemperatureCentigrade))
 
         this.airPressureDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.airPressureChart?.setData(data, "monthly"))
+
         this.precipitationDataService.getMonthlyData(stationId, year)
             .subscribe(data => this.precipitationChart?.setData(data, "monthly"))
         this.sunshineDurationDataService.getMonthlyData(stationId, year)

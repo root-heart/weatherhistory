@@ -1,4 +1,4 @@
-import {Directive, ElementRef} from "@angular/core";
+import {Component, Directive, ElementRef, Input, ViewChild} from "@angular/core";
 import {
     CategoryScaleOptions,
     Chart,
@@ -23,6 +23,56 @@ export type BaseRecord = {
 
 export type ChartResolution = "daily" | "monthly"
 
+function getDefaultChartOptions(): ChartOptions {
+    return {
+        normalized: true,
+        maintainAspectRatio: false,
+        responsive: true,
+        animation: false,
+        interaction: {
+            mode: 'index',
+            intersect: false
+        },
+        // parsing: true,
+        elements: {point: {radius: 0}},
+        scales: {},
+        // datasets: {
+        //     bar: {
+        //         categoryPercentage: 1,
+        //         barPercentage: 1
+        //     }
+        // },
+        plugins: {
+            legend: {display: false,},
+            tooltip: {enabled: true,},
+            // datalabels: {
+            //     color: "#ddd",
+            //     textStrokeWidth: 3,
+            //     textStrokeColor: "black",
+            //     align: ctx => {
+            //         let max = Math.max.apply(null, ctx.dataset.data as number[])
+            //         let min = Math.min.apply(null, ctx.dataset.data as number[])
+            //         let span = max - min
+            //         let value = ctx.dataset.data[ctx.dataIndex] as number
+            //         if (value - min > min + 0.8 * span) {
+            //             return "bottom"
+            //             // } else if (value - min < min + 0.2 * span) {
+            //             //     return "top"
+            //             // } else {
+            //             //     return "center"
+            //         }
+            //         return "top";
+            //     },
+            //     anchor: "end", // TODO
+            //     // anchor: ctx =>  ctx.datasetIndex == 0 ? "start" : "end",
+            //     textShadowColor: "black",
+            //     textShadowBlur: 1,
+            //     font: {size: 16, weight: "bold"},
+            // }
+        }
+    }
+}
+
 @Directive()
 export abstract class BaseChart<T extends BaseRecord> {
     protected numberFormat = new Intl.NumberFormat('de-DE', {minimumFractionDigits: 1, maximumFractionDigits: 1});
@@ -41,7 +91,6 @@ export abstract class BaseChart<T extends BaseRecord> {
         this.drawChart(labels, dataSets);
     }
 
-
     protected abstract getDataSets(data: Array<T>): Array<ChartDataset>;
 
     protected abstract getCanvas(): ElementRef | undefined;
@@ -57,57 +106,11 @@ export abstract class BaseChart<T extends BaseRecord> {
         }
         let context = <CanvasRenderingContext2D>canvas.nativeElement.getContext('2d');
 
-        let options: ChartOptions = {
-            normalized: true,
-            maintainAspectRatio: false,
-            responsive: true,
-            animation: false,
-            interaction: {
-                mode: 'index',
-                intersect: false
-            },
-            // parsing: true,
-            elements: {point: {radius: 0}},
-            scales: {
-                y: {max: this.getMaxY(), beginAtZero: this.includeZero}
-            },
-            // datasets: {
-            //     bar: {
-            //         categoryPercentage: 1,
-            //         barPercentage: 1
-            //     }
-            // },
-            plugins: {
-                legend: {display: false,},
-                tooltip: {enabled: true,},
-                // datalabels: {
-                //     color: "#ddd",
-                //     textStrokeWidth: 3,
-                //     textStrokeColor: "black",
-                //     align: ctx => {
-                //         let max = Math.max.apply(null, ctx.dataset.data as number[])
-                //         let min = Math.min.apply(null, ctx.dataset.data as number[])
-                //         let span = max - min
-                //         let value = ctx.dataset.data[ctx.dataIndex] as number
-                //         if (value - min > min + 0.8 * span) {
-                //             return "bottom"
-                //             // } else if (value - min < min + 0.2 * span) {
-                //             //     return "top"
-                //             // } else {
-                //             //     return "center"
-                //         }
-                //         return "top";
-                //     },
-                //     anchor: "end", // TODO
-                //     // anchor: ctx =>  ctx.datasetIndex == 0 ? "start" : "end",
-                //     textShadowColor: "black",
-                //     textShadowBlur: 1,
-                //     font: {size: 16, weight: "bold"},
-                // }
-            }
-        };
+        let options: ChartOptions = getDefaultChartOptions()
 
-        this.getXAxis(options)
+        options.scales!.y = {max: this.getMaxY(), beginAtZero: this.includeZero, display: false}
+
+        this.setXAxis(options)
 
         let config: ChartConfiguration = {
             type: "line",
@@ -121,7 +124,7 @@ export abstract class BaseChart<T extends BaseRecord> {
         this.chart = new Chart(context, config);
     }
 
-    private getXAxis(options: ChartOptions) {
+    private setXAxis(options: ChartOptions) {
         switch (this.resolution) {
             case "daily":
                 // xscale.afterBuildTicks = (axis: { ticks: any[]; }) => {
@@ -152,12 +155,12 @@ export abstract class BaseChart<T extends BaseRecord> {
             ticks: {
                 minRotation: 0, maxRotation: 0, sampleSize: 12
             },
-            display: visible
+            display: false
         }
     }
 
     protected getLabels(data: Array<T>): Array<any> {
-        return data.map(item => this.resolution == "daily" ? new Date(item.day) : item.month);
+        return [];
     }
 
     protected getMaxY(): number | undefined {
@@ -182,6 +185,124 @@ export abstract class BaseChart<T extends BaseRecord> {
             label += tooltipItem.formattedValue;
         }
         return label;
+    }
+
+}
+
+// export type MinAvgMax<T> = {
+//     min: (r: T) => number,
+//     avg: (r: T) => number,
+//     max: (r: T) => number
+// }
+
+export type MinAvgMaxChartData = {
+    labels: string[],
+    min: number[],
+    avg: number[],
+    max: number[]
+}
+
+@Component({template: "<canvas #chart></canvas>", selector: "min-avg-max-chart"})
+export class MinAvgMaxChart<T extends BaseRecord> {
+    @Input() color: string = "#c33"
+    @Input() fill: string = "#cc333320"
+    @Input() lineWidth: number = 1
+    @ViewChild("chart") private canvas?: ElementRef
+    private chart?: Chart
+    private transformedData: MinAvgMaxChartData = {labels: [], min: [], avg: [], max: []}
+    protected resolution?: ChartResolution
+    protected includeZero: boolean = true
+
+    protected getCanvas(): ElementRef | undefined {
+        return this.canvas
+    }
+
+    public setData(data: Array<T>, resolution: ChartResolution, min: (r: T) => number, avg: (r: T) => number, max: (r: T) => number): void {
+        this.resolution = resolution
+        this.transformedData = {
+            labels: data.map(item => this.resolution == "daily" ? "" + item.day : "" + item.month),
+            min: data.map(min),
+            avg: data.map(avg),
+            max: data.map(max),
+        }
+
+        if (this.chart) {
+            this.chart.destroy();
+        }
+
+        let canvas = this.getCanvas();
+        if (!canvas) {
+            return;
+        }
+        let context = <CanvasRenderingContext2D>canvas.nativeElement.getContext('2d');
+
+        let options: ChartOptions = getDefaultChartOptions()
+
+        options.scales!.y = {beginAtZero: this.includeZero, display: false}
+
+        this.setXAxis(options)
+
+        let config: ChartConfiguration = {
+            type: "line",
+            options: options,
+            data: {
+                labels: this.transformedData.labels,
+                datasets: [{
+                    type: "line",
+                    label: 'Temperatur',
+                    borderWidth: this.lineWidth,
+                    borderColor: this.color,
+                    data: this.transformedData.avg
+                }, {
+                    type: 'line',
+                    label: 'min Temperatur',
+                    borderWidth: 0,
+                    backgroundColor: this.fill,
+                    data: this.transformedData.min
+                }, {
+                    type: 'line',
+                    label: 'max Temperatur',
+                    borderWidth: 0,
+                    backgroundColor: this.fill,
+                    data: this.transformedData.max,
+                    fill: "-1",
+                }]
+            }
+        };
+
+        this.chart = new Chart(context, config);
+    }
+
+    private setXAxis(options: ChartOptions) {
+        switch (this.resolution) {
+            case "daily":
+                options.scales!.x = {
+                    type: "time",
+                    time: {
+                        unit: "day",
+                        displayFormats: {day: "DD.MM.", month: "M", hour: "H"},
+                    },
+                    ticks: {
+                        minRotation: 0, maxRotation: 0, sampleSize: 3
+                    }
+                }
+                break;
+            case "monthly":
+                options.scales!.x = this.createXAxis(true)
+                options.scales!.x2 = this.createXAxis(false)
+                break;
+        }
+    }
+
+    private createXAxis(visible: boolean): DeepPartial<CategoryScaleOptions> {
+        return {
+            // offset: true,
+            labels: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+            ticks: {
+                minRotation: 0, maxRotation: 0, sampleSize: 12
+            },
+            display: false
+        }
     }
 }
 

@@ -1,62 +1,120 @@
-:host {
-    position: relative;
+.tab-body {
     display: grid;
-    grid-template-columns: 15vw repeat(3, 25vw);
-    /*grid-template-rows: repeat(4, 35vh);*/
-    grid-gap: 0;
-    justify-content: center;
+    grid-template-columns: repeat(2, 45vw);
+    height: 30vw;
 }
 
-nav {
-    grid-row-end: span 5;
-}
-
-h1 {
-    /*grid-column-start: 1;*/
-    /*grid-column-end: 2;*/
-    margin: 0;
-    font-size: 100%;
-    font-weight: unset;
-}
-
-station-and-date-filter {
-    grid-column: 1 / span 4;
-}
-
-aside {
-    position: fixed;
-    left: 2rem;
-    top: 10rem;
-    bottom: 5rem;
-    width: 30rem;
-}
-
-main {
-    /*margin: 0 10rem;*/
-    /*margin-top: 10rem;*/
-    /*padding-top: 10rem;*/
-}
-
-main > section {
-    /*grid-column-start: 2;*/
-    /*grid-column-end: span 3;*/
-}
-
-#temperature {
-    /*grid-column-start: 3;*/
-    /*grid-column-end: 4;*/
-}
-
-#precipitation {
-    /*grid-column-start: 4;*/
-    /*grid-column-end: 6;*/
-}
-
-/*main > section > h1 {*/
-/*    grid-column-start: 1;*/
-/*    grid-column-end: 3;*/
+/*:host {*/
+/*    !*position: relative;*!*/
+/*    !*display: grid;*!*/
+/*    !*grid-template-columns: 15vw repeat(3, 25vw);*!*/
+/*    !*grid-template-rows: repeat(4, 35vh);*!*/
+/*    !*grid-gap: 0;*!*/
+/*    !*justify-content: center;*!*/
 /*}*/
 
-main > section > article {
-    height: 100%;
+/*nav {*/
+/*    grid-row-end: span 5;*/
+/*}*/
+
+/*h1 {*/
+/*    border-top: 1px solid #777;*/
+/*    grid-column-start: 2;*/
+/*    grid-column-end: span 3;*/
+/*    !*grid-column-start: 1;*!*/
+/*    !*grid-column-end: 2;*!*/
+/*    padding: 0.5rem 0 0;*/
+/*    margin: 0;*/
+/*    font-size: 1.6rem;*/
+/*    font-weight: unset;*/
+/*}*/
+
+div.summary {
+    display: grid;
+    grid-template-columns: repeat(6, 10rem);
+    grid-gap: 0.3rem 1rem;
+    font-size: 1rem;
+    justify-content: center;
+    align-content: start;
+    grid-column-end: span 2;
+}
+
+/*station-and-date-filter {*/
+/*    grid-column: 1 / span 4;*/
+/*}*/
+
+/*aside {*/
+/*    position: fixed;*/
+/*    left: 2rem;*/
+/*    top: 10rem;*/
+/*    bottom: 5rem;*/
+/*    width: 30rem;*/
+/*}*/
+
+/*main {*/
+/*    !*margin: 0 10rem;*!*/
+/*    !*margin-top: 10rem;*!*/
+/*    !*padding-top: 10rem;*!*/
+/*}*/
+
+/*main > section {*/
+/*    !*grid-column-start: 2;*!*/
+/*    !*grid-column-end: span 3;*!*/
+/*}*/
+
+/*#temperature {*/
+/*    !*grid-column-start: 3;*!*/
+/*    !*grid-column-end: 4;*!*/
+/*}*/
+
+/*#precipitation {*/
+/*    !*grid-column-start: 4;*!*/
+/*    !*grid-column-end: 6;*!*/
+/*}*/
+
+/*!*main > section > h1 {*!*/
+/*!*    grid-column-start: 1;*!*/
+/*!*    grid-column-end: 3;*!*/
+/*!*}*!*/
+
+/*main > section > article {*/
+/*    height: 100%;*/
+/*}*/
+
+.tab-headers {
+    display: flex;
+}
+
+.tab-header {
+    display: grid;
+    grid-template-columns: repeat(3, 3rem);
+    grid-gap: 1rem;
+}
+
+md-tabs md-ink-bar {
+    background-color: black;
+}
+
+.tab-header>.tab-title {
+    grid-column-end: span 3;
+}
+
+
+.min-value {
+
+}
+
+.experiment {
+    display: grid;
+    grid-template-columns: repeat(10, 10vw);
+    /*height: 5.625vw;*/
+    position: relative;
+}
+
+.experiment>* {
+    height: 6vw;
+}
+
+.experiment>*>canvas {
+    position: absolute;
 }
