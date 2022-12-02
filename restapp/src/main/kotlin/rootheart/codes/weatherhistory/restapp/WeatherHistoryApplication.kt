@@ -26,6 +26,7 @@ import io.ktor.util.pipeline.PipelineContext
 import org.joda.time.LocalDate
 import rootheart.codes.common.measureAndLogDuration
 import rootheart.codes.weatherhistory.database.Dao
+import rootheart.codes.weatherhistory.database.MinAvgMaxSummaryDao
 import rootheart.codes.weatherhistory.database.StationDao
 import rootheart.codes.weatherhistory.database.SummaryJdbcDao
 import rootheart.codes.weatherhistory.database.WeatherDb
@@ -138,6 +139,21 @@ fun Application.setupRouting() = routing {
 }
 
 fun Route.monthlyEndpoints(dao: SummaryJdbcDao) {
+    get("monthly/{year}") {
+        val identifier = "${call.request.httpMethod.value} ${call.request.uri}"
+        val stationId = call.parameters["stationId"]!!.toLong()
+        val year = call.parameters["year"]!!.toInt()
+        measureAndLogDuration(identifier) {
+            StationDao.findById(stationId)
+                ?.let { dao.fetchFromDb(stationId, year) }
+                ?.let { measureAndLogDuration("Responding to $identifier") { call.respond(it) } }
+                ?: call.respond(HttpStatusCode.NotFound)
+        }
+
+    }
+}
+
+fun Route.monthlyEndpoints(dao: MinAvgMaxSummaryDao<*>) {
     get("monthly/{year}") {
         val identifier = "${call.request.httpMethod.value} ${call.request.uri}"
         val stationId = call.parameters["stationId"]!!.toLong()

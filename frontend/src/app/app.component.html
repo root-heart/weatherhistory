@@ -27,23 +27,55 @@
 <!--    </select>-->
 <!--</div>-->
 
-<station-and-date-filter (onFilterChanged)="filterChanged($event)"></station-and-date-filter>
+<station-and-date-filter (onFilterChanged)="filterChanged($event)" #filterComponent></station-and-date-filter>
 
 <div class="experiment">
     <min-avg-max-chart
             [color]="'hsl(0, 80%, 45%)'"
             [fill]="'hsla(0, 80%, 45%, 0.3)'"
             [lineWidth]="2"
-            #temperatureChart
-    ></min-avg-max-chart>
-<!--    <temperature-chart #temperatureChart></temperature-chart>-->
+            [showAxes]=false
+            [path]="'temperature'"
+            [filterComponent]=filterComponent></min-avg-max-chart>
+
     <precipitation-chart #precipitationChart></precipitation-chart>
     <sunshine-chart #sunshineChart></sunshine-chart>
     <wind-speed-chart #windSpeedChart></wind-speed-chart>
-    <humidity-chart #humidityChart></humidity-chart>
-    <dew-point-temperature-chart #dewPointTemperatureChart></dew-point-temperature-chart>
-    <air-pressure-chart #airPressureChart></air-pressure-chart>
-    <visibility-chart #visibilityChart></visibility-chart>
+
+    <min-avg-max-chart
+            [color]="'hsl(220, 80%, 30%)'"
+            [fill]="'hsla(220, 80%, 30%, 0.3)'"
+            [lineWidth]="2"
+            [showAxes]=false
+            [path]="'humidity'"
+            [filterComponent]=filterComponent></min-avg-max-chart>
+
+    <min-avg-max-chart
+            [color]="'hsl(220, 80%, 70%)'"
+            [fill]="'hsla(220, 80%, 70%, 0.3)'"
+            [lineWidth]="2"
+            [path]="'dewPointTemperature'"
+            [showAxes]=false
+            [filterComponent]=filterComponent></min-avg-max-chart>
+
+    <min-avg-max-chart
+            [color]="'hsl(120, 80%, 45%)'"
+            [fill]="'hsla(120, 80%, 45%, 0.15)'"
+            [lineWidth]="2"
+            [includeZero]=false
+            [showAxes]=false
+            [path]="'airPressure'"
+            [filterComponent]=filterComponent></min-avg-max-chart>
+
+    <min-avg-max-chart
+            [color]="'hsl(0, 0%, 70%)'"
+            [fill]="'hsla(0, 0%, 70%, 0.3)'"
+            [lineWidth]="2"
+            [showAxes]=false
+            [includeZero]=false
+            path="visibility"
+            [filterComponent]=filterComponent></min-avg-max-chart>
+
 </div>
 
 <div class="tab-headers">

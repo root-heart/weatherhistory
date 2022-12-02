@@ -9,6 +9,7 @@ import {
     LegendItem,
     TooltipItem
 } from "chart.js";
+import {DeepPartial} from "../types";
 
 export type MeasurementDataSet = ChartDataset & {
     showTooltip?: boolean,
@@ -23,7 +24,7 @@ export type BaseRecord = {
 
 export type ChartResolution = "daily" | "monthly"
 
-function getDefaultChartOptions(): ChartOptions {
+export function getDefaultChartOptions(): ChartOptions {
     return {
         normalized: true,
         maintainAspectRatio: false,
@@ -188,131 +189,3 @@ export abstract class BaseChart<T extends BaseRecord> {
     }
 
 }
-
-// export type MinAvgMax<T> = {
-//     min: (r: T) => number,
-//     avg: (r: T) => number,
-//     max: (r: T) => number
-// }
-
-export type MinAvgMaxChartData = {
-    labels: string[],
-    min: number[],
-    avg: number[],
-    max: number[]
-}
-
-@Component({template: "<canvas #chart></canvas>", selector: "min-avg-max-chart"})
-export class MinAvgMaxChart<T extends BaseRecord> {
-    @Input() color: string = "#c33"
-    @Input() fill: string = "#cc333320"
-    @Input() lineWidth: number = 1
-    @ViewChild("chart") private canvas?: ElementRef
-    private chart?: Chart
-    private transformedData: MinAvgMaxChartData = {labels: [], min: [], avg: [], max: []}
-    protected resolution?: ChartResolution
-    protected includeZero: boolean = true
-
-    protected getCanvas(): ElementRef | undefined {
-        return this.canvas
-    }
-
-    public setData(data: Array<T>, resolution: ChartResolution, min: (r: T) => number, avg: (r: T) => number, max: (r: T) => number): void {
-        this.resolution = resolution
-        this.transformedData = {
-            labels: data.map(item => this.resolution == "daily" ? "" + item.day : "" + item.month),
-            min: data.map(min),
-            avg: data.map(avg),
-            max: data.map(max),
-        }
-
-        if (this.chart) {
-            this.chart.destroy();
-        }
-
-        let canvas = this.getCanvas();
-        if (!canvas) {
-            return;
-        }
-        let context = <CanvasRenderingContext2D>canvas.nativeElement.getContext('2d');
-
-        let options: ChartOptions = getDefaultChartOptions()
-
-        options.scales!.y = {beginAtZero: this.includeZero, display: false}
-
-        this.setXAxis(options)
-
-        let config: ChartConfiguration = {
-            type: "line",
-            options: options,
-            data: {
-                labels: this.transformedData.labels,
-                datasets: [{
-                    type: "line",
-                    label: 'Temperatur',
-                    borderWidth: this.lineWidth,
-                    borderColor: this.color,
-                    data: this.transformedData.avg
-                }, {
-                    type: 'line',
-                    label: 'min Temperatur',
-                    borderWidth: 0,
-                    backgroundColor: this.fill,
-                    data: this.transformedData.min
-                }, {
-                    type: 'line',
-                    label: 'max Temperatur',
-                    borderWidth: 0,
-                    backgroundColor: this.fill,
-                    data: this.transformedData.max,
-                    fill: "-1",
-                }]
-            }
-        };
-
-        this.chart = new Chart(context, config);
-    }
-
-    private setXAxis(options: ChartOptions) {
-        switch (this.resolution) {
-            case "daily":
-                options.scales!.x = {
-                    type: "time",
-                    time: {
-                        unit: "day",
-                        displayFormats: {day: "DD.MM.", month: "M", hour: "H"},
-                    },
-                    ticks: {
-                        minRotation: 0, maxRotation: 0, sampleSize: 3
-                    }
-                }
-                break;
-            case "monthly":
-                options.scales!.x = this.createXAxis(true)
-                options.scales!.x2 = this.createXAxis(false)
-                break;
-        }
-    }
-
-    private createXAxis(visible: boolean): DeepPartial<CategoryScaleOptions> {
-        return {
-            // offset: true,
-            labels: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
-            ticks: {
-                minRotation: 0, maxRotation: 0, sampleSize: 12
-            },
-            display: false
-        }
-    }
-}
-
-// holy crap - thanks to stackoverflow for making my life with this hazy language called typescript a bit easier...
-type DeepPartial<T> = T extends Function
-    ? T
-    : T extends Array<infer U>
-        ? _DeepPartialArray<U>
-        : T extends object
-            ? _DeepPartialObject<T>
-            : T | undefined;
-type _DeepPartialArray<T> = Array<DeepPartial<T>>
-type _DeepPartialObject<T> = { [P in keyof T]?: DeepPartial<T[P]> };

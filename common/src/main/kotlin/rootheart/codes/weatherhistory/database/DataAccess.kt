@@ -129,6 +129,58 @@ abstract class JdbcDao(vararg columnsToSelect: KProperty0<Column<*>>) : Dao() {
     }
 }
 
+
+data class MinAvgMaxSummary(
+    val year: Int,
+    val month: Int,
+    val min: BigDecimal,
+    val avg: BigDecimal,
+    val max: BigDecimal,
+)
+
+open class MinAvgMaxSummaryDao<X: Number>(
+    minColumn: KProperty0<Column<X?>>,
+    avgColumn: KProperty0<Column<X?>>,
+    maxColumn: KProperty0<Column<X?>>,
+) {
+    private val sql: String
+
+    init {
+        sql = "select month," +
+                "${minColumn.get().name} as min, " +
+                "${avgColumn.get().name} as avg, " +
+                "${maxColumn.get().name} as max " +
+                "from ${MonthlySummaryTable.tableName} " +
+                "where ${MonthlySummaryTable.stationId.name} = ? " +
+                "and ${MonthlySummaryTable.year.name} = ?"
+    }
+
+    fun fetchFromDb(stationId: Long, year: Int): List<MinAvgMaxSummary> = transaction {
+        WeatherDb.dataSource.connection.use { conn ->
+            conn.prepareStatement(sql).use { stmt ->
+                log.info { "Executing $sql" }
+                stmt.setLong(1, stationId)
+                stmt.setInt(2, year)
+                stmt.executeQuery().use { rs ->
+                    measureAndLogDuration("create json($stationId, resultSet)") {
+                        val measurements = ArrayList<MinAvgMaxSummary>()
+                        while (rs.next()) {
+                            measurements += MinAvgMaxSummary(
+                                year = year,
+                                month = rs.getInt("month"),
+                                min = rs.getBigDecimal("min"),
+                                avg= rs.getBigDecimal("avg"),
+                                max = rs.getBigDecimal("max")
+                            )
+                        }
+                        return@measureAndLogDuration measurements
+                    }
+                }
+            }
+        }
+    }
+}
+
 abstract class SummaryJdbcDao(vararg columnsToSelect: KProperty0<Column<*>>) {
     private val sql: String
     private val columns: List<KProperty0<Column<*>>>
