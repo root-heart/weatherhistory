@@ -153,7 +153,7 @@ fun Route.monthlyEndpoints(dao: SummaryJdbcDao) {
     }
 }
 
-fun Route.monthlyEndpoints(dao: MinAvgMaxSummaryDao<*>) {
+fun Route.monthlyEndpoints(dao: MinAvgMaxSummaryDao) {
     get("monthly/{year}") {
         val identifier = "${call.request.httpMethod.value} ${call.request.uri}"
         val stationId = call.parameters["stationId"]!!.toLong()

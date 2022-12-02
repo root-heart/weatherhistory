@@ -138,10 +138,10 @@ data class MinAvgMaxSummary(
     val max: BigDecimal,
 )
 
-open class MinAvgMaxSummaryDao<X: Number>(
-    minColumn: KProperty0<Column<X?>>,
-    avgColumn: KProperty0<Column<X?>>,
-    maxColumn: KProperty0<Column<X?>>,
+open class MinAvgMaxSummaryDao(
+    minColumn: KProperty0<Column<out Number?>>,
+    avgColumn: KProperty0<Column<out Number?>>,
+    maxColumn: KProperty0<Column<out Number?>>,
 ) {
     private val sql: String
 

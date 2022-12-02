@@ -7,19 +7,19 @@ import rootheart.codes.weatherhistory.database.MonthlySummaryTable
 import rootheart.codes.weatherhistory.database.SummaryJdbcDao
 import java.math.BigDecimal
 
-object MonthlyTemperatureDao : MinAvgMaxSummaryDao<BigDecimal>(
+object MonthlyTemperatureDao : MinAvgMaxSummaryDao(
     MonthlySummaryTable::minAirTemperatureCentigrade,
     MonthlySummaryTable::avgAirTemperatureCentigrade,
     MonthlySummaryTable::maxAirTemperatureCentigrade,
 )
 
-object MonthlyDewPointTemperatureDao : MinAvgMaxSummaryDao<BigDecimal>(
+object MonthlyDewPointTemperatureDao : MinAvgMaxSummaryDao(
     MonthlySummaryTable::minDewPointTemperatureCentigrade,
     MonthlySummaryTable::avgDewPointTemperatureCentigrade,
     MonthlySummaryTable::maxDewPointTemperatureCentigrade,
 )
 
-object MonthlyHumidityDao : MinAvgMaxSummaryDao<BigDecimal>(
+object MonthlyHumidityDao : MinAvgMaxSummaryDao(
     MonthlySummaryTable::minHumidityPercent,
     MonthlySummaryTable::avgHumidityPercent,
     MonthlySummaryTable::maxHumidityPercent,
@@ -29,7 +29,7 @@ object MonthlySunshineDurationDao : SummaryJdbcDao(
     MonthlySummaryTable::sumSunshineDurationHours,
 )
 
-object MonthlyAirPressureDao : MinAvgMaxSummaryDao<BigDecimal>(
+object MonthlyAirPressureDao : MinAvgMaxSummaryDao(
     MonthlySummaryTable::minAirPressureHectopascals,
     MonthlySummaryTable::avgAirPressureHectopascals,
     MonthlySummaryTable::maxAirPressureHectopascals,
@@ -134,7 +134,7 @@ object HourlyWindDao : JdbcDao(
     MeasurementsTable::maxWindSpeedMetersPerSecond,
 )
 
-object MonthlyVisibilityDao : MinAvgMaxSummaryDao<Int>(
+object MonthlyVisibilityDao : MinAvgMaxSummaryDao(
     MonthlySummaryTable::minVisibilityMeters,
     MonthlySummaryTable::avgVisibilityMeters,
     MonthlySummaryTable::maxVisibilityMeters,
