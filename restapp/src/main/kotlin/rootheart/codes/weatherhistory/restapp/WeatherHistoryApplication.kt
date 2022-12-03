@@ -28,8 +28,8 @@ import io.ktor.util.pipeline.PipelineContext
 import org.joda.time.DateTime
 import rootheart.codes.common.measureAndLogDuration
 import rootheart.codes.weatherhistory.database.Dao
-import rootheart.codes.weatherhistory.database.MinAvgMaxDailyDao
-import rootheart.codes.weatherhistory.database.MinAvgMaxSummaryDao
+import rootheart.codes.weatherhistory.database.DailyMinAvgMaxDao
+import rootheart.codes.weatherhistory.database.MonthlyMinAvgMaxDao
 import rootheart.codes.weatherhistory.database.StationDao
 import rootheart.codes.weatherhistory.database.SummaryJdbcDao
 import rootheart.codes.weatherhistory.database.WeatherDb
@@ -166,7 +166,7 @@ fun Route.monthlyEndpoints(dao: SummaryJdbcDao) {
     }
 }
 
-fun Route.monthlyEndpoints(dao: MinAvgMaxSummaryDao) {
+fun Route.monthlyEndpoints(dao: MonthlyMinAvgMaxDao) {
     get("monthly/{year}") {
         val identifier = "${call.request.httpMethod.value} ${call.request.uri}"
         val stationId = call.parameters["stationId"]!!.toLong()
@@ -186,7 +186,7 @@ fun Route.dailyEndpoints(dao: Dao) {
     get("daily/{year}/{month}") { monthEndpoint(dao) }
 }
 
-fun Route.dailyEndpoints(dao: MinAvgMaxDailyDao) {
+fun Route.dailyEndpoints(dao: DailyMinAvgMaxDao) {
     get("daily/{year}") { yearEndpoint(dao::fetchFromDb) }
 //    get("daily/{year}/{month}") { monthEndpoint(dao) }
 }

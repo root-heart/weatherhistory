@@ -130,7 +130,7 @@ abstract class JdbcDao(vararg columnsToSelect: KProperty0<Column<*>>) : Dao() {
     }
 }
 
-data class MinAvgMaxSummary(
+data class MonthlyMinAvgMax(
     val year: Int,
     val month: Int,
     val min: Number?,
@@ -138,24 +138,30 @@ data class MinAvgMaxSummary(
     val max: Number?,
 )
 
-data class MinAvgMaxDaily(
+data class DailyMinAvgMax(
     val date: DateTime,
     val min: Number?,
     val avg: Number?,
     val max: Number?,
 )
 
-open class MinAvgMaxSummaryDao(
+data class MonthlySum(
+    val year: Int,
+    val month: Int,
+    val sum: Int
+)
+
+open class MonthlyMinAvgMaxDao(
     private val minColumn: Column<out Number?>,
     private val avgColumn: Column<out Number?>,
     private val maxColumn: Column<out Number?>,
 ) {
-    fun fetchFromDb(stationId: Long, year: Int): List<MinAvgMaxSummary> = transaction {
+    fun fetchFromDb(stationId: Long, year: Int): List<MonthlyMinAvgMax> = transaction {
         MonthlySummaryTable
             .slice(MonthlySummaryTable.month, minColumn, avgColumn, maxColumn)
             .select { (MonthlySummaryTable.year eq year) and (MonthlySummaryTable.stationId eq stationId) }
             .map {
-                MinAvgMaxSummary(
+                MonthlyMinAvgMax(
                     year = year,
                     month = it[MonthlySummaryTable.month],
                     min = it[minColumn],
@@ -166,19 +172,19 @@ open class MinAvgMaxSummaryDao(
     }
 }
 
-open class MinAvgMaxDailyDao(
+open class DailyMinAvgMaxDao(
     private val minColumn: Column<out Number?>,
     private val avgColumn: Column<out Number?>,
     private val maxColumn: Column<out Number?>,
 ) {
-    fun fetchFromDb(stationId: Long, year: Int): List<MinAvgMaxDaily> = transaction {
+    fun fetchFromDb(stationId: Long, year: Int): List<DailyMinAvgMax> = transaction {
         val start = LocalDate(year, 1, 1).toDateTimeAtStartOfDay()
         val end = start.plusYears(1)
         MeasurementsTable
             .slice(MeasurementsTable.day, minColumn, avgColumn, maxColumn)
             .select { (MeasurementsTable.day.between(start, end)) and (MeasurementsTable.stationId eq stationId) }
             .map {
-                MinAvgMaxDaily(
+                DailyMinAvgMax(
                     date = it[MeasurementsTable.day],
                     min = it[minColumn],
                     avg = it[avgColumn],
