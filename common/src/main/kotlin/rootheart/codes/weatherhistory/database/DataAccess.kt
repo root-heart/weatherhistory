@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.DecimalColumnType
 import org.jetbrains.exposed.sql.FieldSet
 import org.jetbrains.exposed.sql.IntegerColumnType
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
@@ -129,55 +130,61 @@ abstract class JdbcDao(vararg columnsToSelect: KProperty0<Column<*>>) : Dao() {
     }
 }
 
-
 data class MinAvgMaxSummary(
     val year: Int,
     val month: Int,
-    val min: BigDecimal,
-    val avg: BigDecimal,
-    val max: BigDecimal,
+    val min: Number?,
+    val avg: Number?,
+    val max: Number?,
+)
+
+data class MinAvgMaxDaily(
+    val date: DateTime,
+    val min: Number?,
+    val avg: Number?,
+    val max: Number?,
 )
 
 open class MinAvgMaxSummaryDao(
-    minColumn: KProperty0<Column<out Number?>>,
-    avgColumn: KProperty0<Column<out Number?>>,
-    maxColumn: KProperty0<Column<out Number?>>,
+    private val minColumn: Column<out Number?>,
+    private val avgColumn: Column<out Number?>,
+    private val maxColumn: Column<out Number?>,
 ) {
-    private val sql: String
-
-    init {
-        sql = "select month," +
-                "${minColumn.get().name} as min, " +
-                "${avgColumn.get().name} as avg, " +
-                "${maxColumn.get().name} as max " +
-                "from ${MonthlySummaryTable.tableName} " +
-                "where ${MonthlySummaryTable.stationId.name} = ? " +
-                "and ${MonthlySummaryTable.year.name} = ?"
-    }
-
     fun fetchFromDb(stationId: Long, year: Int): List<MinAvgMaxSummary> = transaction {
-        WeatherDb.dataSource.connection.use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
-                log.info { "Executing $sql" }
-                stmt.setLong(1, stationId)
-                stmt.setInt(2, year)
-                stmt.executeQuery().use { rs ->
-                    measureAndLogDuration("create json($stationId, resultSet)") {
-                        val measurements = ArrayList<MinAvgMaxSummary>()
-                        while (rs.next()) {
-                            measurements += MinAvgMaxSummary(
-                                year = year,
-                                month = rs.getInt("month"),
-                                min = rs.getBigDecimal("min"),
-                                avg= rs.getBigDecimal("avg"),
-                                max = rs.getBigDecimal("max")
-                            )
-                        }
-                        return@measureAndLogDuration measurements
-                    }
-                }
+        MonthlySummaryTable
+            .slice(MonthlySummaryTable.month, minColumn, avgColumn, maxColumn)
+            .select { (MonthlySummaryTable.year eq year) and (MonthlySummaryTable.stationId eq stationId) }
+            .map {
+                MinAvgMaxSummary(
+                    year = year,
+                    month = it[MonthlySummaryTable.month],
+                    min = it[minColumn],
+                    avg = it[avgColumn],
+                    max = it[maxColumn]
+                )
             }
-        }
+    }
+}
+
+open class MinAvgMaxDailyDao(
+    private val minColumn: Column<out Number?>,
+    private val avgColumn: Column<out Number?>,
+    private val maxColumn: Column<out Number?>,
+) {
+    fun fetchFromDb(stationId: Long, year: Int): List<MinAvgMaxDaily> = transaction {
+        val start = LocalDate(year, 1, 1).toDateTimeAtStartOfDay()
+        val end = start.plusYears(1)
+        MeasurementsTable
+            .slice(MeasurementsTable.day, minColumn, avgColumn, maxColumn)
+            .select { (MeasurementsTable.day.between(start, end)) and (MeasurementsTable.stationId eq stationId) }
+            .map {
+                MinAvgMaxDaily(
+                    date = it[MeasurementsTable.day],
+                    min = it[minColumn],
+                    avg = it[avgColumn],
+                    max = it[maxColumn]
+                )
+            }
     }
 }
 

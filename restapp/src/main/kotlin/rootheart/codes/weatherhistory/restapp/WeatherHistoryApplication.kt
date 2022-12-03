@@ -1,5 +1,8 @@
 package rootheart.codes.weatherhistory.restapp
 
+import com.google.gson.TypeAdapter
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonWriter
 import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
@@ -7,7 +10,6 @@ import io.ktor.application.install
 import io.ktor.application.log
 import io.ktor.features.CORS
 import io.ktor.features.ContentNegotiation
-import io.ktor.features.DataConversion
 import io.ktor.gson.gson
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.files
@@ -23,15 +25,29 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.pipeline.PipelineContext
-import org.joda.time.LocalDate
+import org.joda.time.DateTime
 import rootheart.codes.common.measureAndLogDuration
 import rootheart.codes.weatherhistory.database.Dao
+import rootheart.codes.weatherhistory.database.MinAvgMaxDailyDao
 import rootheart.codes.weatherhistory.database.MinAvgMaxSummaryDao
 import rootheart.codes.weatherhistory.database.StationDao
 import rootheart.codes.weatherhistory.database.SummaryJdbcDao
 import rootheart.codes.weatherhistory.database.WeatherDb
 
 private const val DATE_TIME_PATTERN = "yyyy-MM-dd"
+
+private val formatter = org.joda.time.format.DateTimeFormat.forPattern(DATE_TIME_PATTERN)
+
+class Ta : TypeAdapter<DateTime>() {
+    override fun write(out: JsonWriter?, value: DateTime?) {
+        out?.value(formatter.print(value))
+    }
+
+    override fun read(`in`: JsonReader?): DateTime {
+        TODO("Not yet implemented")
+    }
+
+}
 
 fun main() {
     WeatherDb.connect()
@@ -40,13 +56,10 @@ fun main() {
         install(CORS) {
             anyHost()
         }
-        install(ContentNegotiation) { gson() }
-        install(DataConversion) {
-            convert<LocalDate> {
-                encode { value ->
-                    if (value is LocalDate) listOf(value.toString(DATE_TIME_PATTERN))
-                    else emptyList()
-                }
+        install(ContentNegotiation) {
+            gson {
+                registerTypeAdapter(DateTime::class.java, Ta())
+                setDateFormat("yyyy-MM-dd")
             }
         }
         setupRouting()
@@ -169,23 +182,28 @@ fun Route.monthlyEndpoints(dao: MinAvgMaxSummaryDao) {
 }
 
 fun Route.dailyEndpoints(dao: Dao) {
-    get("daily/{year}") { yearEndpoint(dao) }
+//    get("daily/{year}") { yearEndpoint(dao) }
     get("daily/{year}/{month}") { monthEndpoint(dao) }
 }
 
+fun Route.dailyEndpoints(dao: MinAvgMaxDailyDao) {
+    get("daily/{year}") { yearEndpoint(dao::fetchFromDb) }
+//    get("daily/{year}/{month}") { monthEndpoint(dao) }
+}
+
 fun Route.hourlyEndpoints(dao: Dao) {
-    get("hourly/{year}") { yearEndpoint(dao) }
+//    get("hourly/{year}") { yearEndpoint(dao::findByYear) }
     get("hourly/{year}/{month}") { monthEndpoint(dao) }
     get("hourly/{year}/{month}/{day}") { dayEndpoint(dao) }
 }
 
-suspend fun PipelineContext<Unit, ApplicationCall>.yearEndpoint(dao: Dao) {
+suspend fun <T> PipelineContext<Unit, ApplicationCall>.yearEndpoint(findMethod: (Long, Int) -> List<T>) {
     val identifier = "${call.request.httpMethod.value} ${call.request.uri}"
     val stationId = call.parameters["stationId"]!!.toLong()
     val year = call.parameters["year"]!!.toInt()
     measureAndLogDuration(identifier) {
         StationDao.findById(stationId)
-            ?.let { station -> dao.findByYear(station, year) }
+            ?.let { station -> findMethod(stationId, year) }
             ?.let { measureAndLogDuration("Responding to $identifier") { call.respond(it) } }
             ?: call.respond(HttpStatusCode.NotFound)
     }

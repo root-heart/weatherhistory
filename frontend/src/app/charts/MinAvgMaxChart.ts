@@ -1,13 +1,14 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {Chart, ChartConfiguration, ChartOptions} from "chart.js";
+import {Chart, ChartConfiguration, ChartOptions, TimeScaleOptions} from "chart.js";
 import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
 import {FilterChangedEvent, StationAndDateFilterComponent} from "../filter-header/station-and-date-filter.component";
 import {HttpClient} from "@angular/common/http";
 import {environment} from "../../environments/environment";
 
 export type MinAvgMaxSummary = {
-    year: number,
-    month: number,
+    year?: number,
+    month?: number,
+    date?: Date,
     min: number,
     avg: number,
     max: number,
@@ -67,16 +68,18 @@ export class MinAvgMaxChart {
             display: this.showAxes
         }
         options.scales!.x = {
-            labels: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+            // labels: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
             ticks: {minRotation: 0, maxRotation: 0, sampleSize: 12},
             display: this.showAxes
         }
+
+        const labels = this.resolution == "monthly" ? data.map(d => d.month) : data.map(d => new Date(d.date!));
 
         let config: ChartConfiguration = {
             type: "line",
             options: options,
             data: {
-                labels: data.map(d => d.month),
+                labels: labels,
                 datasets: [{
                     // type: "line",
                     // label: 'Temperatur',

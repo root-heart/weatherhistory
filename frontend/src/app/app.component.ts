@@ -1,4 +1,4 @@
-import {Component, ViewChild} from '@angular/core';
+import {Component, ElementRef, ViewChild} from '@angular/core';
 import {SunshineChart, SunshineDurationRecord} from "./charts/sunshine-chart/sunshine-chart.component";
 import {FilterChangedEvent} from "./filter-header/station-and-date-filter.component";
 import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.component";
@@ -6,6 +6,8 @@ import {PrecipitationChart, PrecipitationRecord} from "./charts/precipitation-ch
 import {WindSpeedChart, WindSpeedRecord} from "./charts/wind-speed-chart/wind-speed-chart.component";
 import {HttpClient} from "@angular/common/http";
 import {DataService} from "./charts/data-service.service";
+
+export type MeasurementTypes = "temperature" | "humidity" | "airPressure" | "visibility"
 
 @Component({
     selector: 'app-root',
@@ -26,6 +28,8 @@ export class AppComponent {
 
     @ViewChild('windSpeedChart')
     windSpeedChart?: WindSpeedChart
+
+    measurementType?: MeasurementTypes
 
     minTemperature: number | null = NaN
     avgTemperature: number | null = NaN
@@ -57,6 +61,10 @@ export class AppComponent {
         // this.cloudinessDataService.getHourlyData(stationId, year)
         //     .subscribe(data => this.cloudinessChart?.setData(data))
         // TODO wind direction chart
+    }
+
+    showDetails(measurementType: MeasurementTypes) {
+        this.measurementType = measurementType
     }
 }
 
