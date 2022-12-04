@@ -3,24 +3,24 @@ package rootheart.codes.weatherhistory.database
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.Table
-import rootheart.codes.common.strings.splitAndTrimTokensToArrayWithLength24
+import rootheart.codes.common.strings.splitAndTrimTokensToList
 import java.math.BigDecimal
 
 
 //fun <T> Table.array(name: String, columnType: ColumnType): Column<Array<T>> =
 //    registerColumn(name, ArrayColumnType(columnType))
 
-fun Table.decimalArray(name: String): Column<Array<BigDecimal?>> =
+fun Table.decimalArray(name: String): Column<List<BigDecimal?>> =
     registerColumn(name, DecimalArrayColumnType())
 
-fun Table.intArray(name: String): Column<Array<Int?>> =
+fun Table.intArray(name: String): Column<List<Int?>> =
     registerColumn(name, IntArrayColumnType())
 
 class DecimalArrayColumnType : ColumnType() {
     override fun sqlType(): String = "TEXT"
 
     override fun valueToDB(value: Any?): Any? {
-        return if (value is Array<*>) {
+        return if (value is List<*>) {
             value.joinToString(",")
         } else {
             super.valueToDB(value)
@@ -29,13 +29,13 @@ class DecimalArrayColumnType : ColumnType() {
 
     override fun valueFromDB(value: Any): Any {
         if (value is String) {
-            return splitAndTrimTokensToArrayWithLength24(value, ::BigDecimal)
+            return splitAndTrimTokensToList(value, ::BigDecimal)
         }
         error("Unexpected array component type")
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        if (value is Array<*>) {
+        if (value is List<*>) {
             if (value.isEmpty()) {
                 return ""
             }
@@ -49,7 +49,7 @@ class IntArrayColumnType : ColumnType() {
     override fun sqlType(): String = "TEXT"
 
     override fun valueToDB(value: Any?): Any? {
-        return if (value is Array<*>) {
+        return if (value is List<*>) {
             value.joinToString(",")
         } else {
             super.valueToDB(value)
@@ -58,13 +58,13 @@ class IntArrayColumnType : ColumnType() {
 
     override fun valueFromDB(value: Any): Any {
         if (value is String) {
-            return splitAndTrimTokensToArrayWithLength24(value, String::toInt)
+            return splitAndTrimTokensToList(value, String::toInt)
         }
         error("Unexpected array component type")
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        if (value is Array<*>) {
+        if (value is List<*>) {
             if (value.isEmpty()) {
                 return ""
             }

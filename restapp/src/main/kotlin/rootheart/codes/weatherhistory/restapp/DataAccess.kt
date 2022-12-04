@@ -4,7 +4,7 @@ import rootheart.codes.weatherhistory.database.MeasurementColumns
 import rootheart.codes.weatherhistory.database.MeasurementsTable
 
 // still TODO "precipitation", "sunshine-duration", "wind"
-val measurementTypeColumnsMapping = mapOf(
+val measurementTypeColumnsMapping: Map<String, MeasurementColumns<out Number?>> = mapOf(
     "temperature" to MeasurementColumns(
         MeasurementsTable.minAirTemperatureCentigrade,
         MeasurementsTable.avgAirTemperatureCentigrade,

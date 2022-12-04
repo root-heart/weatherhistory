@@ -30,11 +30,10 @@ fun <T> splitAndTrimTokens(
     return list
 }
 
-inline fun <reified T> splitAndTrimTokensToArrayWithLength24(value: String, constructor: (String) -> T): Array<T?> {
+fun <T> splitAndTrimTokensToList(value: String, constructor: (String) -> T): List<T?> {
     var pos = 0
     var end = value.indexOf(',', pos)
-    val array: MutableList<T?> = ArrayList()
-    var index = 0
+    val list: MutableList<T?> = ArrayList()
     while (end >= 0) {
         while (value[pos] == ' ') {
             pos++
@@ -44,9 +43,9 @@ inline fun <reified T> splitAndTrimTokensToArrayWithLength24(value: String, cons
         }
         val column = value.substring(pos, end)
         if (column == "null") {
-            array.add(null)
+            list.add(null)
         } else {
-            array.add(constructor(column))
+            list.add(constructor(column))
         }
         pos = end + 1
         end = value.indexOf(',', pos)
@@ -54,10 +53,10 @@ inline fun <reified T> splitAndTrimTokensToArrayWithLength24(value: String, cons
     end = value.length
     val column = value.substring(pos, end)
     if (column == "null") {
-        array.add(null)
+        list.add(null)
     } else {
-        array.add(constructor(column))
+        list.add(constructor(column))
     }
-    return array.toTypedArray()
+    return list
 }
 
