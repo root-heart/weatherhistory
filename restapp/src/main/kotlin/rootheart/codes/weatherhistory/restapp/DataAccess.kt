@@ -1,35 +1,35 @@
 package rootheart.codes.weatherhistory.restapp
 
-import rootheart.codes.weatherhistory.database.MeasurementColumns
 import rootheart.codes.weatherhistory.database.MeasurementsTable
+import rootheart.codes.weatherhistory.database.MinAvgMaxDao
 
 // still TODO "precipitation", "sunshine-duration", "wind"
-val measurementTypeColumnsMapping: Map<String, MeasurementColumns<out Number?>> = mapOf(
-    "temperature" to MeasurementColumns(
+val measurementTypeColumnsMapping: Map<String, MinAvgMaxDao<out Number?>> = mapOf(
+    "temperature" to MinAvgMaxDao(
         MeasurementsTable.minAirTemperatureCentigrade,
         MeasurementsTable.avgAirTemperatureCentigrade,
         MeasurementsTable.maxAirTemperatureCentigrade,
         MeasurementsTable.detailedAirTemperatureCentigrade,
     ),
-    "air-pressure" to MeasurementColumns(
+    "air-pressure" to MinAvgMaxDao(
         MeasurementsTable.minAirPressureHectopascals,
         MeasurementsTable.avgAirPressureHectopascals,
         MeasurementsTable.maxAirPressureHectopascals,
         MeasurementsTable.detailedAirPressureHectopascals,
     ),
-    "dew-point-temperature" to MeasurementColumns(
+    "dew-point-temperature" to MinAvgMaxDao(
         MeasurementsTable.minDewPointTemperatureCentigrade,
         MeasurementsTable.avgDewPointTemperatureCentigrade,
         MeasurementsTable.maxDewPointTemperatureCentigrade,
         MeasurementsTable.detailedAirPressureHectopascals
     ),
-    "humidity" to MeasurementColumns(
+    "humidity" to MinAvgMaxDao(
         MeasurementsTable.minHumidityPercent,
         MeasurementsTable.avgHumidityPercent,
         MeasurementsTable.maxHumidityPercent,
         MeasurementsTable.detailedHumidityPercent
     ),
-    "visibility" to MeasurementColumns(
+    "visibility" to MinAvgMaxDao(
         MeasurementsTable.minVisibilityMeters,
         MeasurementsTable.avgVisibilityMeters,
         MeasurementsTable.maxVisibilityMeters,

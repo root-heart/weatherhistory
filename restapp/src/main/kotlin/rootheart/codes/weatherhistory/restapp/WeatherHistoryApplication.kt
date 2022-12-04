@@ -102,12 +102,12 @@ fun Route.measurementEndpoints() {
         val year = call.parameters["year"]!!.toInt()
         val month = call.parameters["month"]?.toInt()
         val day = call.parameters["day"]?.toInt()
-        val columns = measurementTypeColumnsMapping[measurementType]
+        val dao = measurementTypeColumnsMapping[measurementType]
         val interval = requestResolutionToIntervalMapping[resolution]
-        if (columns == null || interval == null) {
+        if (dao == null || interval == null) {
             call.respond(HttpStatusCode.NotFound)
         } else {
-            val data = MinAvgMaxDao.findAll(stationId, year, month, day, columns, interval)
+            val data = dao.findAll(stationId, year, month, day, interval)
             call.respond(data)
         }
     }
