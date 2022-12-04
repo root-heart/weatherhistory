@@ -99,18 +99,21 @@
             path="visibility"
             [filterComponent]=filterComponent></min-avg-max-chart>
 
+    <histogram-chart [filterComponent]=filterComponent [showAxes]=false></histogram-chart>
+
 </div>
 
-<div style="height: 60vh" *ngIf="measurementType==='temperature'">
-    <min-avg-max-chart
-            [color]="'hsl(0, 80%, 45%)'"
-            [fill]="'hsla(0, 80%, 45%, 0.3)'"
-            [lineWidth]="3"
-            [showAxes]=false
-            resolution="daily"
-            path="temperature"
-            style="display: block; height: 100%"
-            [filterComponent]=filterComponent></min-avg-max-chart>
+<div style="height: 60vh">
+
+<!--    <min-avg-max-chart-->
+<!--            [color]="'hsl(0, 80%, 45%)'"-->
+<!--            [fill]="'hsla(0, 80%, 45%, 0.3)'"-->
+<!--            [lineWidth]="3"-->
+<!--            [showAxes]=false-->
+<!--            resolution="daily"-->
+<!--            path="temperature"-->
+<!--            style="display: block; height: 100%"-->
+<!--            [filterComponent]=filterComponent></min-avg-max-chart>-->
 </div>
 
 <div style="height: 60vh; background-color: #dd5500" *ngIf="measurementType==='airPressure'">

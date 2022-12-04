@@ -18,6 +18,7 @@ import rootheart.codes.common.strings.splitAndTrimTokens
 import rootheart.codes.weatherhistory.database.Interval
 import rootheart.codes.weatherhistory.database.Measurement
 import rootheart.codes.weatherhistory.database.MeasurementImporter
+import rootheart.codes.weatherhistory.database.MeasurementsTable
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationDao
 import java.io.ByteArrayInputStream
@@ -190,38 +191,46 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
                         measurementRecord.detailedAirTemperatureCentigrade[hour] = nullsafeBigDecimal(row[idxAirTemp])
                         measurementRecord.detailedHumidityPercent[hour] = nullsafeBigDecimal(row[idxHumidity])
                     }
+
                     MeasurementType.CLOUDINESS -> {
                         val columnIndex = semicolonSeparatedValues.columnNames.indexOf("V_N")
                         measurementRecord.detailedCloudCoverages[hour] = nullsafeInt(row[columnIndex])
                     }
+
                     MeasurementType.DEW_POINT -> {
                         val columnIndex = semicolonSeparatedValues.columnNames.indexOf("TD")
                         measurementRecord.detailedDewPointTemperatureCentigrade[hour] =
                             nullsafeBigDecimal(row[columnIndex])
                     }
+
                     MeasurementType.MAX_WIND_SPEED -> {
                         val columnIndex = semicolonSeparatedValues.columnNames.indexOf("FX_911")
                         measurementRecord.detailedWindSpeedMetersPerSecond[hour] = nullsafeBigDecimal(row[columnIndex])
                     }
+
                     MeasurementType.MOISTURE -> {
                         val columnIndex = semicolonSeparatedValues.columnNames.indexOf("P_STD")
                         measurementRecord.detailedAirPressureHectopascals[hour] = nullsafeBigDecimal(row[columnIndex])
                     }
+
                     MeasurementType.SUNSHINE_DURATION -> {
                         val columnIndex = semicolonSeparatedValues.columnNames.indexOf("SD_SO")
                         measurementRecord.detailedSunshineDurationHours[hour] =
                             nullsafeBigDecimal(row[columnIndex])?.divide(sixty, RoundingMode.HALF_UP)
                     }
+
                     MeasurementType.VISIBILITY -> {
                         val columnIndex = semicolonSeparatedValues.columnNames.indexOf("V_VV")
                         measurementRecord.detailedVisibilityMeters[hour] = nullsafeInt(row[columnIndex])
                     }
+
                     MeasurementType.WIND_SPEED -> {
                         var columnIndex = semicolonSeparatedValues.columnNames.indexOf("F")
                         measurementRecord.detailedWindSpeedMetersPerSecond[hour] = nullsafeBigDecimal(row[columnIndex])
                         columnIndex = semicolonSeparatedValues.columnNames.indexOf("D")
                         measurementRecord.detailedWindDirectionDegrees[hour] = nullsafeInt(row[columnIndex])
                     }
+
                     MeasurementType.PRECIPITATION -> {
                         var columnIndex = semicolonSeparatedValues.columnNames.indexOf("WRTR")
                         val precipitationTypeCodeString = row[columnIndex]
@@ -239,6 +248,7 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
 
         // TODO fix some data issues
         measurementByTime.values.forEach { m ->
+
             m.minAirPressureHectopascals = m.detailedAirPressureHectopascals.nullsafeMin()
             m.maxAirPressureHectopascals = m.detailedAirPressureHectopascals.nullsafeMax()
 
@@ -253,6 +263,13 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
             m.minHumidityPercent = m.detailedHumidityPercent.nullsafeMin()
             m.avgHumidityPercent = m.detailedHumidityPercent.nullsafeAvg()
             m.maxHumidityPercent = m.detailedHumidityPercent.nullsafeMax()
+
+            val histogram = Array(10) { 0 }
+            m.detailedCloudCoverages
+                .filterNotNull()
+                .map { if (it == -1) 9 else it }
+                .forEach { histogram[it]++ }
+            m.cloudCoverageHistogram = histogram
         }
 
 //        val list = measurementByTime.values.sortedBy { it.day }
@@ -279,11 +296,8 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
         .mapValues { (beginningOfMonth, measurements) ->
             val cloudCoverageHistogram = Array(10) { 0 }
             for (m in measurements) {
-                for (c in m.detailedCloudCoverages) {
-                    if (c != null) {
-                        if (c == -1) cloudCoverageHistogram[9]++
-                        else cloudCoverageHistogram[c]++
-                    }
+                m.cloudCoverageHistogram.forEachIndexed { index, coverage ->
+                    cloudCoverageHistogram[index] += coverage
                 }
             }
             Measurement(
@@ -317,7 +331,8 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
                 maxVisibilityMeters = measurements.nullsafeMax(Measurement::maxVisibilityMeters),
                 detailedVisibilityMeters = measurements.map { it.avgVisibilityMeters }.toTypedArray(),
 
-//                cloudCoverageHistogram = cloudCoverageHistogram,
+//                detailedCloudCoverages = listOf(),
+                cloudCoverageHistogram = cloudCoverageHistogram,
 
                 sumSunshineDurationHours = measurements.nullsafeSum(Measurement::sumSunshineDurationHours),
                 detailedSunshineDurationHours = measurements.map { it.sumSunshineDurationHours }.toTypedArray(),

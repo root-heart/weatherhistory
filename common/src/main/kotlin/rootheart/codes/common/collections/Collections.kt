@@ -1,5 +1,6 @@
 package rootheart.codes.common.collections
 
+import rootheart.codes.weatherhistory.database.MeasurementsTable
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -104,3 +105,12 @@ inline fun <T, reified N : Number> nullsafeSum(
     return sum
 }
 
+fun List<Int?>.generateHistogram(): Map<Int, Int> {
+    val histogram = HashMap<Int, Int>()
+    filterNotNull()
+        .forEach {
+        val currentValue = histogram.getOrPut(it) { 0 }
+        histogram[it] = currentValue + 1
+    }
+    return histogram
+}

@@ -2,6 +2,8 @@ package rootheart.codes.weatherhistory.database
 
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.FieldSet
+import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
@@ -140,4 +142,14 @@ class SumDao(
         sum1 = row[sum1] ?: 0,
         sum2 = if (sum2 != null) row[sum2] ?: 0 else null,
     )
+}
+
+
+class HistogramDao() {
+
+}
+object GeneralPurposeDao {
+    fun <T> select(fieldset: FieldSet, condition: Op<Boolean>, mapper: (ResultRow) -> T): List<T> = transaction {
+        fieldset.select(condition).map(mapper)
+    }
 }

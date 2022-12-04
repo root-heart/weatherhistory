@@ -1,16 +1,15 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {BaseChart, BaseRecord, MeasurementDataSet} from "../BaseChart";
+import { MeasurementDataSet} from "../BaseChart";
 import {ScriptableContext} from "chart.js";
 
-export type CloudinessRecord = BaseRecord & {
+export type CloudinessRecord = {
     hourlyCloudCoverage: number[]
 }
 @Component({
     selector: 'cloudiness-chart',
-    template: '<canvas #cloudinessChart></canvas>',
-    styleUrls: ['../charts.css']
+    template: '<canvas #cloudinessChart></canvas>'
 })
-export class CloudinessChart extends BaseChart<CloudinessRecord> implements OnInit {
+export class CloudinessChart  implements OnInit {
 
     @ViewChild("cloudinessChart")
     private canvas?: ElementRef;
@@ -45,7 +44,7 @@ export class CloudinessChart extends BaseChart<CloudinessRecord> implements OnIn
     ];
 
     constructor() {
-        super();
+
     }
 
     ngOnInit(): void {

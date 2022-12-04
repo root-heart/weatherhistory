@@ -34,6 +34,7 @@ object MeasurementsTable : LongIdTable("MEASUREMENTS") {
     val maxAirPressureHectopascals = decimal("MAX_AIR_PRESSURE_HECTOPASCALS", 5, 1).nullable()
 
     val detailedCloudCoverage = intArray("DETAILED_CLOUD_COVERAGE")
+    val cloudCoverageHistogram = intArray("CLOUD_COVERAGE_HISTOGRAM")
 
     val detailedSunshineDurationMinutes = intArray("DETAILED_SUNSHINE_DURATION_MINUTES")
     val sumSunshineDurationHours = decimal("SUM_SUNSHINE_DURATION_HOURS", 8, 1).nullable()
@@ -87,6 +88,7 @@ object MeasurementTableMapping : TableMapping<Measurement>(
     Measurement::maxAirPressureHectopascals to MeasurementsTable.maxAirPressureHectopascals,
 
     Measurement::detailedCloudCoverages to MeasurementsTable.detailedCloudCoverage,
+    Measurement::cloudCoverageHistogram to MeasurementsTable.cloudCoverageHistogram,
 
     Measurement::detailedSunshineDurationHours to MeasurementsTable.detailedSunshineDurationMinutes,
     Measurement::sumSunshineDurationHours to MeasurementsTable.sumSunshineDurationHours,
@@ -134,6 +136,7 @@ class Measurement(
     var maxAirPressureHectopascals: BigDecimal? = null,
 
     val detailedCloudCoverages: Array<Int?> = Array(24) { null },
+    var cloudCoverageHistogram: Array<Int> = Array(10) { 0 },
 
     val detailedSunshineDurationHours: Array<BigDecimal?> = Array(24) { null },
     var sumSunshineDurationHours: BigDecimal? = null,

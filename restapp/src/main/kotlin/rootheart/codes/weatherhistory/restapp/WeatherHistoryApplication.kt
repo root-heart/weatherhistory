@@ -21,9 +21,15 @@ import io.ktor.routing.route
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.and
 import org.joda.time.LocalDate
+import rootheart.codes.common.collections.generateHistogram
+import rootheart.codes.weatherhistory.database.GeneralPurposeDao
 import rootheart.codes.weatherhistory.database.Interval
-import rootheart.codes.weatherhistory.database.MinAvgMaxDao
+import rootheart.codes.weatherhistory.database.MeasurementsTable
 import rootheart.codes.weatherhistory.database.StationDao
 import rootheart.codes.weatherhistory.database.WeatherDb
 
@@ -62,6 +68,7 @@ fun Application.weatherHistory() {
     setupRouting()
 }
 
+class DailyHistogram(val firstDay: LocalDate, val histogram: List<Int?>)
 
 fun Application.setupRouting() = routing {
     trace { application.log.trace(it.buildText()) }
@@ -80,6 +87,37 @@ fun Application.setupRouting() = routing {
                     ?.let { call.respond(it) }
                     ?: call.respond(HttpStatusCode.NotFound, "Not Found")
 
+            }
+
+            get("cloudiness/{resolution}/{year}") {
+                val stationId = call.parameters["stationId"]!!.toLong()
+                val year = call.parameters["year"]!!.toInt()
+                val resolution = call.parameters["resolution"]!!
+                val interval = requestResolutionToIntervalMapping[resolution]!!
+
+                val start = LocalDate(year, 1, 1).toDateTimeAtStartOfDay()
+                val end = start.plusYears(1)
+
+                val fields = MeasurementsTable.slice(
+                    MeasurementsTable.firstDay,
+                    MeasurementsTable.cloudCoverageHistogram
+                )
+                val condition = MeasurementsTable.firstDay.greaterEq(start)
+                    .and(MeasurementsTable.firstDay.less(end))
+                    .and(MeasurementsTable.stationId.eq(stationId))
+                    .and(MeasurementsTable.interval.eq(interval))
+                val h = GeneralPurposeDao.select(fields, condition) { row ->
+//                    val histogram = Array(10) { 0 }
+//                    row[MeasurementsTable.detailedCloudCoverage]
+//                        .filterNotNull()
+//                        .map { if (it == -1) 9 else it }
+//                        .forEach { histogram[it]++ }
+                    DailyHistogram(
+                        firstDay = row[MeasurementsTable.firstDay].toLocalDate(),
+                        histogram = row[MeasurementsTable.cloudCoverageHistogram]
+                    )
+                }
+                call.respond(h)
             }
 
             measurementEndpoints()

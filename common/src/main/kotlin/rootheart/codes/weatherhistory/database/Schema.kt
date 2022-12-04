@@ -47,7 +47,7 @@ object WeatherDb {
     fun createTables() {
         Database.connect(dataSource)
         transaction {
-            SchemaUtils.create(StationsTable, MeasurementsTable, MonthlySummaryTable)
+            SchemaUtils.create(StationsTable, MeasurementsTable)
         }
     }
 
