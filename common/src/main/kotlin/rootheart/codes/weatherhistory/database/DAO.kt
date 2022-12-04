@@ -23,7 +23,8 @@ import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty0
 
 private val log = KotlinLogging.logger {}
-
+// using JDBC improves performance by almost 100%
+private const val useJdbc = true
 abstract class PropertyColumnBinding<O, T, R>(
     val property: KMutableProperty1<O, in T>,
     val column: Column<out T>
@@ -57,78 +58,27 @@ fun ResultSet.getDateTimeByName(columnName: String) = DateTime(getDate(columnNam
 
 abstract class Dao {
     fun findByYear(station: Station, year: Int): List<Map<String, Any?>> =
-        measureAndLogDuration("TemperatureMeasurementDao.findDailyByYear(${station.id}, $year)") {
+        measureAndLogDuration("findDailyByYear(${station.id}, $year)") {
             val start = LocalDate(year, 1, 1)
             val end = start.plusYears(1)
             return@measureAndLogDuration fetchFromDb(station.id!!, start, end)
         }
 
     fun findByYearAndMonth(station: Station, year: Int, month: Int): List<Map<String, Any?>> =
-        measureAndLogDuration("TemperatureMeasurementDao.findDailyByYearAndMonth(${station.id}, $year, $month)") {
+        measureAndLogDuration("findDailyByYearAndMonth(${station.id}, $year, $month)") {
             val start = LocalDate(year, month, 1)
             val end = start.plusMonths(1)
             return@measureAndLogDuration fetchFromDb(station.id!!, start, end)
         }
 
     fun findByYearMonthAndDay(station: Station, year: Int, month: Int, day: Int): Map<String, Any?>? =
-        measureAndLogDuration("TemperatureMeasurementDao.findHourlyByYearMonthAndDay(${station.id}, $year, $month, $day)") {
+        measureAndLogDuration("findHourlyByYearMonthAndDay(${station.id}, $year, $month, $day)") {
             val start = LocalDate(year, month, day)
             val end = start
             return@measureAndLogDuration fetchFromDb(station.id!!, start, end).firstOrNull()
         }
 
     abstract fun fetchFromDb(stationId: Long, start: LocalDate, end: LocalDate): List<Map<String, Any?>>
-}
-
-// TODO JdbcDao seems to be much faster than ExposedDao.
-// It results in a 50% faster response time for a whole GET request with the db access being almost twice as fast.
-// Keep it for possible future usage
-abstract class JdbcDao(vararg columnsToSelect: KProperty0<Column<*>>) : Dao() {
-    private val sql: String
-    private val columns: List<KProperty0<Column<*>>>
-
-    init {
-        columns = ArrayList()
-        columns.addAll(columnsToSelect)
-        columns.add(MeasurementsTable::day)
-        sql = "select ${columns.joinToString(",") { it.get().name }} " +
-                "from ${MeasurementsTable.tableName} " +
-                "where ${MeasurementsTable.stationId.name} = ? " +
-                "and ${MeasurementsTable.day.name} between ? and ?"
-    }
-
-    override fun fetchFromDb(stationId: Long, start: LocalDate, end: LocalDate): List<Map<String, Any?>> = transaction {
-        WeatherDb.dataSource.connection.use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
-                log.info { "Executing $sql" }
-                stmt.setLong(1, stationId)
-                stmt.setDate(2, Date(start.toDate().time))
-                stmt.setDate(3, Date(end.toDate().time))
-                stmt.executeQuery().use { rs ->
-                    measureAndLogDuration("create json($stationId, resultSet)") {
-                        val measurements = ArrayList<Map<String, Any?>>()
-                        while (rs.next()) {
-                            measurements += buildJsonMap(rs)
-                        }
-                        return@measureAndLogDuration measurements
-                    }
-                }
-            }
-        }
-    }
-
-    private fun buildJsonMap(rs: ResultSet) = columns.associate {
-        val columnType = it.get().columnType
-        val columnName = it.get().name
-        it.name to when (columnType) {
-            is DateColumnType -> LocalDate(rs.getDate(columnName)).toString(DATE_TIME_PATTERN)
-            is DecimalArrayColumnType -> rs.getBigDecimalArray24(columnName)
-            is DecimalColumnType -> rs.getBigDecimal(columnName)
-            is IntArrayColumnType -> rs.getIntArray24(columnName)
-            is IntegerColumnType -> rs.getInt(columnName)
-            else -> rs.getObject(columnName)
-        }
-    }
 }
 
 data class MonthlyMinAvgMax(
@@ -152,7 +102,7 @@ data class MonthlySum(
     val sum: Int
 )
 
-private fun <T> Any.measureTransaction(identifier: String, statement: Transaction.() -> T): T =
+fun <T> Any.measureTransaction(identifier: String, statement: Transaction.() -> T): T =
     measureAndLogDuration(identifier) { transaction { statement() } }
 
 open class MonthlyMinAvgMaxDao(
@@ -170,8 +120,10 @@ open class MonthlyMinAvgMaxDao(
             "where ${MonthlySummaryTable.stationId.name} = ? " +
             "and ${MonthlySummaryTable.year.name} = ?"
 
-    fun fetchFromDb(stationId: Long, year: Int): List<MonthlyMinAvgMax> =
-        measureTransaction("fetchFromDb($stationId, $year)") { exposed(stationId, year) }
+    fun findByStationIdAndYear(stationId: Long, year: Int): List<MonthlyMinAvgMax> =
+        measureTransaction("findByStationIdAndYear($stationId, $year)") {
+            if (useJdbc) jdbc(stationId, year) else exposed(stationId, year)
+        }
 
     private fun jdbc(stationId: Long, year: Int): List<MonthlyMinAvgMax> =
         WeatherDb.dataSource.connection.use { conn ->
@@ -215,18 +167,21 @@ open class DailyMinAvgMaxDao(
     private val avgColumn: Column<out Number?>,
     private val maxColumn: Column<out Number?>,
 ) {
-    fun fetchFromDb(stationId: Long, year: Int): List<DailyMinAvgMax> =
-        measureTransaction("fetchFromDb($stationId, $year)") { exposed(stationId, year) }
+    fun findByStationIdAndYear(stationId: Long, year: Int): List<DailyMinAvgMax> =
+        measureTransaction("findByStationIdAndYear($stationId, $year)") {
+//            if (useJdbc) jdbc(stationId, year) else exposed(stationId, year)
+            exposed(stationId, year)
+        }
 
     private fun exposed(stationId: Long, year: Int): List<DailyMinAvgMax> {
         val start = LocalDate(year, 1, 1).toDateTimeAtStartOfDay()
         val end = start.plusYears(1)
         return MeasurementsTable
-            .slice(MeasurementsTable.day, minColumn, avgColumn, maxColumn)
-            .select { (MeasurementsTable.day.between(start, end)) and (MeasurementsTable.stationId eq stationId) }
+            .slice(MeasurementsTable.firstDay, minColumn, avgColumn, maxColumn)
+            .select { (MeasurementsTable.firstDay.between(start, end)) and (MeasurementsTable.stationId eq stationId) }
             .map {
                 DailyMinAvgMax(
-                    date = it[MeasurementsTable.day],
+                    date = it[MeasurementsTable.firstDay],
                     min = it[minColumn],
                     avg = it[avgColumn],
                     max = it[maxColumn]
@@ -283,33 +238,6 @@ abstract class SummaryJdbcDao(vararg columnsToSelect: KProperty0<Column<*>>) {
             is IntArrayColumnType -> rs.getIntArray24(columnName)
             is IntegerColumnType -> rs.getInt(columnName)
             else -> rs.getObject(columnName)
-        }
-    }
-}
-
-abstract class ExposedDao(vararg columnsToSelect: KProperty0<Column<*>>) : Dao() {
-    private val fieldSet: FieldSet
-    private val columns: List<KProperty0<Column<*>>>
-
-    init {
-        columns = ArrayList()
-        columns.addAll(columnsToSelect)
-        columns.add(MeasurementsTable::day)
-        fieldSet = MeasurementsTable.slice(columns.map { it.get() })
-    }
-
-    override fun fetchFromDb(stationId: Long, start: LocalDate, end: LocalDate): List<Map<String, Any?>> = transaction {
-        val x = fieldSet
-            .select { MeasurementsTable.byStationIdAndDateBetween(stationId, start, end) }
-        return@transaction measureAndLogDuration("create json($stationId, resultSet)") {
-            x.map(::buildJsonType)
-        }
-    }
-
-    private fun buildJsonType(resultRow: ResultRow) = columns.associate {
-        it.name to when (it) {
-            MeasurementsTable::day -> LocalDate(resultRow[it.get()]).toString(DATE_TIME_PATTERN)
-            else -> resultRow[it.get()]
         }
     }
 }

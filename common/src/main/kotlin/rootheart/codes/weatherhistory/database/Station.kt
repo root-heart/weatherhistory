@@ -62,20 +62,17 @@ object StationDao {
         StationsTable.selectAll().map(StationDao::fromResultRow)
     }
 
-    fun findById(id: Long) = transaction {
-        measureAndLogDuration("StationDao.findById($id)") {
-            var station = cache[id]
-            if (station == null) {
-                station = StationsTable.select { StationsTable.id eq id }
-                    .map(::fromResultRow)
-                    .firstOrNull()
-                if (station != null) {
-                    cache[id] = station
-                }
+    fun findById(id: Long) = measureTransaction("findById($id)") {
+        var station = cache[id]
+        if (station == null) {
+            station = StationsTable.select { StationsTable.id eq id }
+                .map(::fromResultRow)
+                .firstOrNull()
+            if (station != null) {
+                cache[id] = station
             }
-            log.info { "blabla"}
-            return@measureAndLogDuration station
         }
+        return@measureTransaction station
     }
 
     fun findStationByExternalId(stationId: String): Station? = transaction {
