@@ -39,12 +39,14 @@ data class MinAvgMax(
 )
 
 class MinAvgMaxDao<X : Number?>(
-    private val min: Column<X>,
+    private val min: Column<X>?,
     private val avg: Column<X>,
     private val max: Column<X>,
     private val details: Column<List<X>>,
 ) : DAO<MinAvgMax, X> {
-    private val fields = MeasurementsTable.slice(MeasurementsTable.firstDay, min, avg, max, details)
+    private val fields =
+        if (min == null) MeasurementsTable.slice(MeasurementsTable.firstDay, avg, max, details)
+        else MeasurementsTable.slice(MeasurementsTable.firstDay, min, avg, max, details)
 
     // TODO somehow specify the transaction context outside the DAO
     override fun findAll(
@@ -79,7 +81,7 @@ class MinAvgMaxDao<X : Number?>(
 
     private fun mapToMinAvgMax(row: ResultRow) = MinAvgMax(
         firstDay = row[MeasurementsTable.firstDay].toLocalDate(),
-        min = row[min],
+        min = if (min == null) 0 else row[min],
         avg = row[avg],
         max = row[max],
         details = row[details]
@@ -96,7 +98,7 @@ class SumDao(
     private val sum1: Column<BigDecimal?>,
     private val sum2: Column<BigDecimal?>? = null,
 ) : DAO<Sum, BigDecimal> {
-    private val fields = if ( sum2 == null) {
+    private val fields = if (sum2 == null) {
         MeasurementsTable.slice(MeasurementsTable.firstDay, sum1)
     } else {
         MeasurementsTable.slice(MeasurementsTable.firstDay, sum1, sum2)

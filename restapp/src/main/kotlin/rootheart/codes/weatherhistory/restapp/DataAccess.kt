@@ -37,6 +37,12 @@ val measurementTypeColumnsMapping: Map<String, DAO<*, out Number?>> = mapOf(
         MeasurementsTable.maxVisibilityMeters,
         MeasurementsTable.detailedVisibilityMeters
     ),
+    "wind-speed" to MinAvgMaxDao(
+        null,
+        MeasurementsTable.avgWindSpeedMetersPerSecond,
+        MeasurementsTable.maxWindSpeedMetersPerSecond,
+        MeasurementsTable.detailedWindSpeedMetersPerSecond
+    ),
     "sunshine-duration" to SumDao(
         MeasurementsTable.sumSunshineDurationHours
     ),

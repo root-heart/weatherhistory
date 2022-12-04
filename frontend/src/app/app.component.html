@@ -27,7 +27,7 @@
 <!--    </select>-->
 <!--</div>-->
 
-<station-and-date-filter (onFilterChanged)="filterChanged($event)" #filterComponent></station-and-date-filter>
+<station-and-date-filter #filterComponent></station-and-date-filter>
 
 <div class="experiment">
     <min-avg-max-chart
@@ -55,7 +55,14 @@
             [filterComponent]=filterComponent
     ></sum-chart>
 
-    <!--    <wind-speed-chart #windSpeedChart></wind-speed-chart>-->
+    <min-avg-max-chart
+            [color]="'hsl(270, 80%, 65%)'"
+            [fill]="'hsla(270, 80%, 65%, 0.3)'"
+            [lineWidth]="2"
+            [showAxes]=false
+            [path]="'wind-speed'"
+            [filterComponent]=filterComponent></min-avg-max-chart>
+
 
     <min-avg-max-chart
             [color]="'hsl(220, 80%, 30%)'"
