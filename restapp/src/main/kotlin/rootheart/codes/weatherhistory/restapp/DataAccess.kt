@@ -1,10 +1,12 @@
 package rootheart.codes.weatherhistory.restapp
 
+import rootheart.codes.weatherhistory.database.DAO
 import rootheart.codes.weatherhistory.database.MeasurementsTable
 import rootheart.codes.weatherhistory.database.MinAvgMaxDao
+import rootheart.codes.weatherhistory.database.SumDao
 
 // still TODO "precipitation", "sunshine-duration", "wind"
-val measurementTypeColumnsMapping: Map<String, MinAvgMaxDao<out Number?>> = mapOf(
+val measurementTypeColumnsMapping: Map<String, DAO<*, out Number?>> = mapOf(
     "temperature" to MinAvgMaxDao(
         MeasurementsTable.minAirTemperatureCentigrade,
         MeasurementsTable.avgAirTemperatureCentigrade,
@@ -34,6 +36,13 @@ val measurementTypeColumnsMapping: Map<String, MinAvgMaxDao<out Number?>> = mapO
         MeasurementsTable.avgVisibilityMeters,
         MeasurementsTable.maxVisibilityMeters,
         MeasurementsTable.detailedVisibilityMeters
-    )
+    ),
+    "sunshine-duration" to SumDao(
+        MeasurementsTable.sumSunshineDurationHours
+    ),
+    "precipitation" to SumDao(
+        MeasurementsTable.sumRainfallMillimeters,
+        MeasurementsTable.sumSnowfallMillimeters
+    ),
 )
 

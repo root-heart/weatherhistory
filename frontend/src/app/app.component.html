@@ -40,9 +40,22 @@
             (click)="showDetails('temperature')"
     ></min-avg-max-chart>
 
-<!--    <precipitation-chart #precipitationChart></precipitation-chart>-->
-<!--    <sunshine-chart #sunshineChart></sunshine-chart>-->
-<!--    <wind-speed-chart #windSpeedChart></wind-speed-chart>-->
+    <sum-chart
+            [fill]="'hsl(40, 100%, 50%)'"
+            [showAxes]=false
+            [path]="'sunshine-duration'"
+            [filterComponent]=filterComponent
+    ></sum-chart>
+
+    <sum-chart
+            [fill]="'hsl(240, 100%, 50%)'"
+            [fill2]="'hsl(40, 0%, 80%)'"
+            [showAxes]=false
+            [path]="'precipitation'"
+            [filterComponent]=filterComponent
+    ></sum-chart>
+
+    <!--    <wind-speed-chart #windSpeedChart></wind-speed-chart>-->
 
     <min-avg-max-chart
             [color]="'hsl(220, 80%, 30%)'"
