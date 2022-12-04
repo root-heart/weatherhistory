@@ -10,7 +10,7 @@ fun main() {
 fun sumInts() {
     val r = Random(2000)
     repeat(100000) {
-        measureAndLogDuration("summing values") {
+        {}.measureAndLogDuration("summing values") {
             var sum = 0
             for (i in 0..100000) {
                 sum += r.nextInt()
@@ -23,7 +23,7 @@ fun sumInts() {
 fun sumBigDecimals() {
     val r = Random(2000)
     repeat(100000) {
-        measureAndLogDuration("summing values") {
+        {}.measureAndLogDuration("summing values") {
             var sum = BigDecimal(0)
             for (i in 0..100000) {
                 sum += BigDecimal(r.nextInt())

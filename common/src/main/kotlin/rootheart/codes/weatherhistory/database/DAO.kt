@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.DecimalColumnType
 import org.jetbrains.exposed.sql.FieldSet
 import org.jetbrains.exposed.sql.IntegerColumnType
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -151,15 +152,53 @@ data class MonthlySum(
     val sum: Int
 )
 
+private fun <T> Any.measureTransaction(identifier: String, statement: Transaction.() -> T): T =
+    measureAndLogDuration(identifier) { transaction { statement() } }
+
 open class MonthlyMinAvgMaxDao(
     private val minColumn: Column<out Number?>,
     private val avgColumn: Column<out Number?>,
     private val maxColumn: Column<out Number?>,
 ) {
-    fun fetchFromDb(stationId: Long, year: Int): List<MonthlyMinAvgMax> = transaction {
-        MonthlySummaryTable
-            .slice(MonthlySummaryTable.month, minColumn, avgColumn, maxColumn)
-            .select { (MonthlySummaryTable.year eq year) and (MonthlySummaryTable.stationId eq stationId) }
+    private val fieldSet = MonthlySummaryTable.slice(MonthlySummaryTable.month, minColumn, avgColumn, maxColumn)
+
+    private val sql = "select ${MonthlySummaryTable.month.name}, " +
+            "${minColumn.name} as min, " +
+            "${avgColumn.name} as avg, " +
+            "${maxColumn.name} as max " +
+            "from ${MonthlySummaryTable.tableName} " +
+            "where ${MonthlySummaryTable.stationId.name} = ? " +
+            "and ${MonthlySummaryTable.year.name} = ?"
+
+    fun fetchFromDb(stationId: Long, year: Int): List<MonthlyMinAvgMax> =
+        measureTransaction("fetchFromDb($stationId, $year)") { exposed(stationId, year) }
+
+    private fun jdbc(stationId: Long, year: Int): List<MonthlyMinAvgMax> =
+        WeatherDb.dataSource.connection.use { conn ->
+            conn.prepareStatement(sql).use { stmt ->
+                log.info { "Executing $sql" }
+                stmt.setLong(1, stationId)
+                stmt.setInt(2, year)
+                stmt.executeQuery().use { rs -> createJson(rs, year) }
+            }
+        }
+
+    private fun createJson(rs: ResultSet, year: Int) = measureAndLogDuration("createJson") {
+        val measurements = ArrayList<MonthlyMinAvgMax>()
+        while (rs.next()) {
+            measurements += MonthlyMinAvgMax(
+                year = year,
+                month = rs.getInt(1),
+                min = rs.getBigDecimal(2),
+                avg = rs.getBigDecimal(3),
+                max = rs.getBigDecimal(4)
+            )
+        }
+        return@measureAndLogDuration measurements
+    }
+
+    private fun exposed(stationId: Long, year: Int) =
+        fieldSet.select { (MonthlySummaryTable.year eq year) and (MonthlySummaryTable.stationId eq stationId) }
             .map {
                 MonthlyMinAvgMax(
                     year = year,
@@ -169,7 +208,6 @@ open class MonthlyMinAvgMaxDao(
                     max = it[maxColumn]
                 )
             }
-    }
 }
 
 open class DailyMinAvgMaxDao(
@@ -177,10 +215,13 @@ open class DailyMinAvgMaxDao(
     private val avgColumn: Column<out Number?>,
     private val maxColumn: Column<out Number?>,
 ) {
-    fun fetchFromDb(stationId: Long, year: Int): List<DailyMinAvgMax> = transaction {
+    fun fetchFromDb(stationId: Long, year: Int): List<DailyMinAvgMax> =
+        measureTransaction("fetchFromDb($stationId, $year)") { exposed(stationId, year) }
+
+    private fun exposed(stationId: Long, year: Int): List<DailyMinAvgMax> {
         val start = LocalDate(year, 1, 1).toDateTimeAtStartOfDay()
         val end = start.plusYears(1)
-        MeasurementsTable
+        return MeasurementsTable
             .slice(MeasurementsTable.day, minColumn, avgColumn, maxColumn)
             .select { (MeasurementsTable.day.between(start, end)) and (MeasurementsTable.stationId eq stationId) }
             .map {
