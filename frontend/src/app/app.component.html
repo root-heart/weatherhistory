@@ -40,9 +40,9 @@
             (click)="showDetails('temperature')"
     ></min-avg-max-chart>
 
-    <precipitation-chart #precipitationChart></precipitation-chart>
-    <sunshine-chart #sunshineChart></sunshine-chart>
-    <wind-speed-chart #windSpeedChart></wind-speed-chart>
+<!--    <precipitation-chart #precipitationChart></precipitation-chart>-->
+<!--    <sunshine-chart #sunshineChart></sunshine-chart>-->
+<!--    <wind-speed-chart #windSpeedChart></wind-speed-chart>-->
 
     <min-avg-max-chart
             [color]="'hsl(220, 80%, 30%)'"
@@ -56,7 +56,7 @@
             [color]="'hsl(220, 80%, 70%)'"
             [fill]="'hsla(220, 80%, 70%, 0.3)'"
             [lineWidth]="2"
-            [path]="'dewPointTemperature'"
+            [path]="'dew-point-temperature'"
             [showAxes]=false
             [filterComponent]=filterComponent></min-avg-max-chart>
 
@@ -66,7 +66,7 @@
             [lineWidth]="2"
             [includeZero]=false
             [showAxes]=false
-            [path]="'airPressure'"
+            [path]="'air-pressure'"
             (click)="showDetails('airPressure')"
             [filterComponent]=filterComponent></min-avg-max-chart>
 
@@ -75,6 +75,7 @@
             [fill]="'hsla(0, 0%, 70%, 0.3)'"
             [lineWidth]="2"
             [includeZero]=false
+            [showAxes]=false
             path="visibility"
             [filterComponent]=filterComponent></min-avg-max-chart>
 

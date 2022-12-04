@@ -88,7 +88,7 @@ object MeasurementTableMapping : TableMapping<Measurement>(
 
     Measurement::detailedCloudCoverages to MeasurementsTable.detailedCloudCoverage,
 
-    Measurement::detailedSunshineDurationMinutes to MeasurementsTable.detailedSunshineDurationMinutes,
+    Measurement::detailedSunshineDurationHours to MeasurementsTable.detailedSunshineDurationMinutes,
     Measurement::sumSunshineDurationHours to MeasurementsTable.sumSunshineDurationHours,
 
     Measurement::detailedRainfallMillimeters to MeasurementsTable.detailedRainfallMillimeters,
@@ -135,7 +135,7 @@ class Measurement(
 
     val detailedCloudCoverages: Array<Int?> = Array(24) { null },
 
-    val detailedSunshineDurationMinutes: Array<Int?> = Array(24) { null },
+    val detailedSunshineDurationHours: Array<BigDecimal?> = Array(24) { null },
     var sumSunshineDurationHours: BigDecimal? = null,
 
     val detailedRainfallMillimeters: Array<BigDecimal?> = Array(24) { null },

@@ -4,11 +4,10 @@ import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
 import {FilterChangedEvent, StationAndDateFilterComponent} from "../filter-header/station-and-date-filter.component";
 import {HttpClient} from "@angular/common/http";
 import {environment} from "../../environments/environment";
+import {registerables} from 'chart.js';
 
 export type MinAvgMaxSummary = {
-    year?: number,
-    month?: number,
-    date?: Date,
+    firstDay?: Date,
     min: number,
     avg: number,
     max: number,
@@ -48,7 +47,7 @@ export class MinAvgMaxChart {
     private chart?: Chart
 
     constructor(private http: HttpClient) {
-
+        Chart.register(...registerables);
     }
 
     public setData(data: Array<MinAvgMaxSummary>): void {
@@ -73,7 +72,7 @@ export class MinAvgMaxChart {
             display: this.showAxes
         }
 
-        const labels = this.resolution == "monthly" ? data.map(d => d.month) : data.map(d => new Date(d.date!));
+        const labels = data.map(d => new Date(d.firstDay!));
 
         let config: ChartConfiguration = {
             type: "line",

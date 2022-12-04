@@ -18,12 +18,11 @@ import rootheart.codes.common.strings.splitAndTrimTokens
 import rootheart.codes.weatherhistory.database.Interval
 import rootheart.codes.weatherhistory.database.Measurement
 import rootheart.codes.weatherhistory.database.MeasurementImporter
-import rootheart.codes.weatherhistory.database.MonthlySummary
-import rootheart.codes.weatherhistory.database.MonthlySummaryImporter
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationDao
 import java.io.ByteArrayInputStream
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
@@ -44,6 +43,8 @@ private val unzipParseConvertExecutor = CoroutineScope(newFixedThreadPoolContext
 private val downloadThreads = CoroutineScope(newFixedThreadPoolContext(8, "download"))
 
 private val jobs = ArrayList<Job>()
+
+private val sixty = BigDecimal(60)
 
 @DelicateCoroutinesApi
 fun importMeasurements(hourlyDirectory: HtmlDirectory, dailyDirectory: HtmlDirectory) {
@@ -208,8 +209,8 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
                     }
                     MeasurementType.SUNSHINE_DURATION -> {
                         val columnIndex = semicolonSeparatedValues.columnNames.indexOf("SD_SO")
-                        measurementRecord.detailedSunshineDurationMinutes[hour] =
-                            nullsafeBigDecimal(row[columnIndex])?.intValueExact()
+                        measurementRecord.detailedSunshineDurationHours[hour] =
+                            nullsafeBigDecimal(row[columnIndex])?.divide(sixty, RoundingMode.HALF_UP)
                     }
                     MeasurementType.VISIBILITY -> {
                         val columnIndex = semicolonSeparatedValues.columnNames.indexOf("V_VV")
@@ -293,31 +294,41 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
                 minAirTemperatureCentigrade = measurements.nullsafeMin(Measurement::minAirTemperatureCentigrade),
                 avgAirTemperatureCentigrade = measurements.nullsafeAvg(Measurement::avgAirTemperatureCentigrade),
                 maxAirTemperatureCentigrade = measurements.nullsafeMax(Measurement::maxAirTemperatureCentigrade),
+                detailedAirTemperatureCentigrade = measurements.map { it.avgAirTemperatureCentigrade }.toTypedArray(),
 
                 minDewPointTemperatureCentigrade = measurements.nullsafeMin(Measurement::minDewPointTemperatureCentigrade),
                 avgDewPointTemperatureCentigrade = measurements.nullsafeAvg(Measurement::avgDewPointTemperatureCentigrade),
                 maxDewPointTemperatureCentigrade = measurements.nullsafeMax(Measurement::maxDewPointTemperatureCentigrade),
+                detailedDewPointTemperatureCentigrade = measurements.map { it.avgDewPointTemperatureCentigrade }
+                    .toTypedArray(),
 
                 minHumidityPercent = measurements.nullsafeMin(Measurement::minHumidityPercent),
                 avgHumidityPercent = measurements.nullsafeAvg(Measurement::avgHumidityPercent),
                 maxHumidityPercent = measurements.nullsafeMax(Measurement::maxHumidityPercent),
+                detailedHumidityPercent = measurements.map { it.avgHumidityPercent }.toTypedArray(),
 
                 minAirPressureHectopascals = measurements.nullsafeMin(Measurement::minAirPressureHectopascals),
                 avgAirPressureHectopascals = measurements.nullsafeAvg(Measurement::avgAirPressureHectopascals),
                 maxAirPressureHectopascals = measurements.nullsafeMax(Measurement::maxAirPressureHectopascals),
+                detailedAirPressureHectopascals = measurements.map { it.avgAirPressureHectopascals }.toTypedArray(),
 
                 minVisibilityMeters = measurements.nullsafeMin(Measurement::minVisibilityMeters),
                 avgVisibilityMeters = measurements.nullsafeAvg(Measurement::avgVisibilityMeters),
                 maxVisibilityMeters = measurements.nullsafeMax(Measurement::maxVisibilityMeters),
+                detailedVisibilityMeters = measurements.map { it.avgVisibilityMeters }.toTypedArray(),
 
 //                cloudCoverageHistogram = cloudCoverageHistogram,
 
                 sumSunshineDurationHours = measurements.nullsafeSum(Measurement::sumSunshineDurationHours),
+                detailedSunshineDurationHours = measurements.map { it.sumSunshineDurationHours }.toTypedArray(),
 
                 sumRainfallMillimeters = measurements.nullsafeSum(Measurement::sumRainfallMillimeters),
+                detailedRainfallMillimeters = measurements.map { it.sumRainfallMillimeters }.toTypedArray(),
                 sumSnowfallMillimeters = measurements.nullsafeSum(Measurement::sumSnowfallMillimeters),
+                detailedSnowfallMillimeters = measurements.map { it.sumSnowfallMillimeters }.toTypedArray(),
 
                 avgWindSpeedMetersPerSecond = measurements.nullsafeAvg(Measurement::avgWindSpeedMetersPerSecond),
+                detailedWindSpeedMetersPerSecond = measurements.map { it.avgWindSpeedMetersPerSecond }.toTypedArray(),
                 maxWindSpeedMetersPerSecond = measurements.nullsafeMax(Measurement::maxWindSpeedMetersPerSecond),
 
                 )

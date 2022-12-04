@@ -2,17 +2,16 @@ package rootheart.codes.weatherhistory.database
 
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.DateColumnType
-import org.jetbrains.exposed.sql.DecimalColumnType
-import org.jetbrains.exposed.sql.FieldSet
-import org.jetbrains.exposed.sql.IntegerColumnType
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.between
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.joda.time.LocalDate
+import org.joda.time.LocalDateTime
 import rootheart.codes.common.measureAndLogDuration
 import rootheart.codes.common.strings.splitAndTrimTokensToArrayWithLength24
 import java.math.BigDecimal
@@ -20,229 +19,121 @@ import java.sql.Date
 import java.sql.ResultSet
 import kotlin.reflect.KFunction2
 import kotlin.reflect.KMutableProperty1
-import kotlin.reflect.KProperty0
 
 private val log = KotlinLogging.logger {}
+
 // using JDBC improves performance by almost 100%
 private const val useJdbc = true
-abstract class PropertyColumnBinding<O, T, R>(
-    val property: KMutableProperty1<O, in T>,
-    val column: Column<out T>
-) {
-    abstract fun setValueFromResultInProperty(r: R, o: O)
-}
-
-class JdbcPropertyColumnBinding<O, T>(
-    property: KMutableProperty1<O, in T>,
-    column: Column<out T>,
-    val resultSetGetter: KFunction2<ResultSet, String, T>
-) : PropertyColumnBinding<O, T, ResultSet>(property, column) {
-    override fun setValueFromResultInProperty(r: ResultSet, o: O) = property.set(o, resultSetGetter(r, column.name))
-}
-
-class ExposedPropertyColumnBinding<O, D>(
-    property: KMutableProperty1<O, in D>,
-    column: Column<out D>,
-) : PropertyColumnBinding<O, D, ResultRow>(property, column) {
-    override fun setValueFromResultInProperty(r: ResultRow, o: O) = property.set(o, r[column])
-}
-
-fun <O, D> bind(
-    property: KMutableProperty1<O, in D>,
-    column: Column<out D>
-) = ExposedPropertyColumnBinding(property, column)
-
-fun ResultSet.getBigDecimalByName(columnName: String) = getBigDecimal(columnName)
-
-fun ResultSet.getDateTimeByName(columnName: String) = DateTime(getDate(columnName))
-
-abstract class Dao {
-    fun findByYear(station: Station, year: Int): List<Map<String, Any?>> =
-        measureAndLogDuration("findDailyByYear(${station.id}, $year)") {
-            val start = LocalDate(year, 1, 1)
-            val end = start.plusYears(1)
-            return@measureAndLogDuration fetchFromDb(station.id!!, start, end)
-        }
-
-    fun findByYearAndMonth(station: Station, year: Int, month: Int): List<Map<String, Any?>> =
-        measureAndLogDuration("findDailyByYearAndMonth(${station.id}, $year, $month)") {
-            val start = LocalDate(year, month, 1)
-            val end = start.plusMonths(1)
-            return@measureAndLogDuration fetchFromDb(station.id!!, start, end)
-        }
-
-    fun findByYearMonthAndDay(station: Station, year: Int, month: Int, day: Int): Map<String, Any?>? =
-        measureAndLogDuration("findHourlyByYearMonthAndDay(${station.id}, $year, $month, $day)") {
-            val start = LocalDate(year, month, day)
-            val end = start
-            return@measureAndLogDuration fetchFromDb(station.id!!, start, end).firstOrNull()
-        }
-
-    abstract fun fetchFromDb(stationId: Long, start: LocalDate, end: LocalDate): List<Map<String, Any?>>
-}
-
-data class MonthlyMinAvgMax(
-    val year: Int,
-    val month: Int,
-    val min: Number?,
-    val avg: Number?,
-    val max: Number?,
-)
-
-data class DailyMinAvgMax(
-    val date: DateTime,
-    val min: Number?,
-    val avg: Number?,
-    val max: Number?,
-)
-
-data class MonthlySum(
-    val year: Int,
-    val month: Int,
-    val sum: Int
-)
 
 fun <T> Any.measureTransaction(identifier: String, statement: Transaction.() -> T): T =
     measureAndLogDuration(identifier) { transaction { statement() } }
 
-open class MonthlyMinAvgMaxDao(
-    private val minColumn: Column<out Number?>,
-    private val avgColumn: Column<out Number?>,
-    private val maxColumn: Column<out Number?>,
+data class MinAvgMax(
+    val firstDay: LocalDate,
+    val min: Number?,
+    val avg: Number?,
+    val max: Number?,
+    val details: Array<Number?>
+)
+
+data class MeasurementColumns<X : Number?>(
+    val min: Column<X>,
+    val avg: Column<X>,
+    val max: Column<X>,
+    val details: Column<Array<X>>,
 ) {
-    private val fieldSet = MonthlySummaryTable.slice(MonthlySummaryTable.month, minColumn, avgColumn, maxColumn)
-
-    private val sql = "select ${MonthlySummaryTable.month.name}, " +
-            "${minColumn.name} as min, " +
-            "${avgColumn.name} as avg, " +
-            "${maxColumn.name} as max " +
-            "from ${MonthlySummaryTable.tableName} " +
-            "where ${MonthlySummaryTable.stationId.name} = ? " +
-            "and ${MonthlySummaryTable.year.name} = ?"
-
-    fun findByStationIdAndYear(stationId: Long, year: Int): List<MonthlyMinAvgMax> =
-        measureTransaction("findByStationIdAndYear($stationId, $year)") {
-            if (useJdbc) jdbc(stationId, year) else exposed(stationId, year)
-        }
-
-    private fun jdbc(stationId: Long, year: Int): List<MonthlyMinAvgMax> =
-        WeatherDb.dataSource.connection.use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
-                log.info { "Executing $sql" }
-                stmt.setLong(1, stationId)
-                stmt.setInt(2, year)
-                stmt.executeQuery().use { rs -> createJson(rs, year) }
-            }
-        }
-
-    private fun createJson(rs: ResultSet, year: Int) = measureAndLogDuration("createJson") {
-        val measurements = ArrayList<MonthlyMinAvgMax>()
-        while (rs.next()) {
-            measurements += MonthlyMinAvgMax(
-                year = year,
-                month = rs.getInt(1),
-                min = rs.getBigDecimal(2),
-                avg = rs.getBigDecimal(3),
-                max = rs.getBigDecimal(4)
-            )
-        }
-        return@measureAndLogDuration measurements
+    override fun toString(): String {
+        return "${min.name}/${avg.name}/${max.name}/${details.name}"
     }
-
-    private fun exposed(stationId: Long, year: Int) =
-        fieldSet.select { (MonthlySummaryTable.year eq year) and (MonthlySummaryTable.stationId eq stationId) }
-            .map {
-                MonthlyMinAvgMax(
-                    year = year,
-                    month = it[MonthlySummaryTable.month],
-                    min = it[minColumn],
-                    avg = it[avgColumn],
-                    max = it[maxColumn]
-                )
-            }
 }
 
-open class DailyMinAvgMaxDao(
-    private val minColumn: Column<out Number?>,
-    private val avgColumn: Column<out Number?>,
-    private val maxColumn: Column<out Number?>,
-) {
-    fun findByStationIdAndYear(stationId: Long, year: Int): List<DailyMinAvgMax> =
-        measureTransaction("findByStationIdAndYear($stationId, $year)") {
-//            if (useJdbc) jdbc(stationId, year) else exposed(stationId, year)
-            exposed(stationId, year)
-        }
-
-    private fun exposed(stationId: Long, year: Int): List<DailyMinAvgMax> {
-        val start = LocalDate(year, 1, 1).toDateTimeAtStartOfDay()
-        val end = start.plusYears(1)
-        return MeasurementsTable
-            .slice(MeasurementsTable.firstDay, minColumn, avgColumn, maxColumn)
-            .select { (MeasurementsTable.firstDay.between(start, end)) and (MeasurementsTable.stationId eq stationId) }
-            .map {
-                DailyMinAvgMax(
-                    date = it[MeasurementsTable.firstDay],
-                    min = it[minColumn],
-                    avg = it[avgColumn],
-                    max = it[maxColumn]
+object MinAvgMaxDao {
+    fun <T : Number?> findAll(
+        stationId: Long,
+        year: Int,
+        month: Int?,
+        day: Int?,
+        columns: MeasurementColumns<T>,
+        interval: Interval
+    ): List<MinAvgMax> = measureTransaction("findAll($stationId, $year, $month, $day, $columns, $interval)") {
+        val start = LocalDate(year, month ?: 1, day ?: 1).toDateTimeAtStartOfDay()
+        val end = when (month) {
+            null -> start.plusYears(1)
+            else -> when (day) {
+                null -> start.plusMonths(1)
+                else -> start.plusDays(1)
+            }
+        }.minusMillis(1)
+        MeasurementsTable.slice(MeasurementsTable.firstDay, columns.min, columns.avg, columns.max, columns.details)
+            .select(condition(stationId, interval, start, end))
+            .map { row ->
+                val x = row[columns.details].map { it as Number? }.toTypedArray()
+                MinAvgMax(
+                    firstDay = row[MeasurementsTable.firstDay].toLocalDate(),
+                    min = row[columns.min],
+                    avg = row[columns.avg],
+                    max = row[columns.max],
+                    details = x
                 )
             }
     }
+
+    private fun condition(stationId: Long, interval: Interval, start: DateTime, end: DateTime) =
+        MeasurementsTable.stationId.eq(stationId)
+            .and(MeasurementsTable.interval.eq(interval))
+            .and(MeasurementsTable.firstDay.between(start, end))
+
+//    private fun jdbc(
+//        stationId: Long,
+//        year: Int,
+//        month: Int?,
+//        day: Int?,
+//        columns: MeasurementColumns,
+//        interval: Interval
+//    ) {
+//        val sql = "select ${MeasurementsTable.firstDay.name}, " +
+//                "${columns.min.name} as min, " +
+//                "${columns.avg.name} as avg, " +
+//                "${columns.max.name} as max, " +
+//                "${columns.details.name} as details " +
+//                "from ${MeasurementsTable.tableName} " +
+//                "where ${MeasurementsTable.stationId.name} = ? " +
+//                "and ${MeasurementsTable.interval.name} = ? " +
+//                "and ${MeasurementsTable.firstDay.name} between ? and ?"
+//        val start = LocalDate(year, month ?: 1, day ?: 1).toDateTimeAtStartOfDay()
+//        val end = when (month) {
+//            null -> start.plusYears(1)
+//            else -> when (day) {
+//                null -> start.plusMonths(1)
+//                else -> start.plusDays(1)
+//            }
+//        }.minusMillis(1)
+//        return WeatherDb.dataSource.connection.use { conn ->
+//            conn.prepareStatement(sql).use { stmt ->
+//                log.info { "Executing $sql" }
+//                stmt.setLong(1, stationId)
+//                stmt.setString(2, interval.name)
+//                stmt.setDate(3, Date(start.toDate().time))
+//                stmt.setDate(4, Date(end.toDate().time))
+//                stmt.executeQuery().use(::makeListFromResultSet)
+//            }
+//        }
+//    }
+//
+//    private fun makeListFromResultSet(rs: ResultSet): List<MinAvgMax> {
+//        val list = ArrayList<MinAvgMax>()
+//        while (rs.next()) {
+//            list += MinAvgMax(
+//                firstDay = LocalDate(rs.getDate("firstDay")),
+//                min = rs.getBigDecimal("min"),
+//                avg = rs.getBigDecimal("avg"),
+//                max = rs.getBigDecimal("max"),
+//                details = rs.getBigDecimalArray24("details").toList()
+//            )
+//        }
+//        return list
+//    }
 }
-
-abstract class SummaryJdbcDao(vararg columnsToSelect: KProperty0<Column<*>>) {
-    private val sql: String
-    private val columns: List<KProperty0<Column<*>>>
-
-    init {
-        columns = ArrayList()
-        columns.addAll(columnsToSelect)
-        columns.add(MonthlySummaryTable::year)
-        columns.add(MonthlySummaryTable::month)
-        sql = "select ${columns.joinToString(",") { it.get().name }} " +
-                "from ${MonthlySummaryTable.tableName} " +
-                "where ${MonthlySummaryTable.stationId.name} = ? " +
-                "and ${MonthlySummaryTable.year.name} = ?"
-    }
-
-    fun fetchFromDb(stationId: Long, year: Int): List<Map<String, Any?>> = transaction {
-        WeatherDb.dataSource.connection.use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
-                log.info { "Executing $sql" }
-                stmt.setLong(1, stationId)
-                stmt.setInt(2, year)
-                stmt.executeQuery().use { rs ->
-                    measureAndLogDuration("create json($stationId, resultSet)") {
-                        val measurements = ArrayList<Map<String, Any?>>()
-                        while (rs.next()) {
-                            val jsonMap = buildJsonMap(rs).toMutableMap()
-                            val firstDayInMonth =
-                                LocalDate(jsonMap["year"].toString().toInt(), jsonMap["month"].toString().toInt(), 1)
-                            jsonMap["day"] = firstDayInMonth.toString(DATE_TIME_PATTERN)
-                            measurements += jsonMap
-                        }
-                        return@measureAndLogDuration measurements
-                    }
-                }
-            }
-        }
-    }
-
-    private fun buildJsonMap(rs: ResultSet) = columns.associate {
-        val columnType = it.get().columnType
-        val columnName = it.get().name
-        it.name to when (columnType) {
-            is DateColumnType -> LocalDate(rs.getDate(columnName)).toString(DATE_TIME_PATTERN)
-            is DecimalArrayColumnType -> rs.getBigDecimalArray24(columnName)
-            is DecimalColumnType -> rs.getBigDecimal(columnName)
-            is IntArrayColumnType -> rs.getIntArray24(columnName)
-            is IntegerColumnType -> rs.getInt(columnName)
-            else -> rs.getObject(columnName)
-        }
-    }
-}
-
-private const val DATE_TIME_PATTERN = "yyyy-MM-dd"
 
 private fun ResultSet.getBigDecimalArray24(columnName: String): Array<BigDecimal?> {
     val value = getString(columnName)
