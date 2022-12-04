@@ -101,7 +101,7 @@ export class HistogramChart {
                 backgroundColor: this.coverageColors[index],
                 data: data.map(d => d.histogram[index]),
                 categoryPercentage: 0.8,
-                barPercentage: 0.6,
+                barPercentage: 1,
                 stack: 'histogram'
             }
         }
