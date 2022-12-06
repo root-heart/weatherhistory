@@ -59,13 +59,21 @@ export class SumChart {
             display: this.showAxes
         }
         options.scales!.x = {
-            // labels: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+            type: "time",
+            time: {
+                unit: "month",
+                displayFormats: {
+                    month: "MMMMM",
+                    round: "day",
+                    bound: "ticks"
+                }
+            },
             ticks: {minRotation: 0, maxRotation: 0, sampleSize: 12},
             display: this.showAxes
         }
         options.scales!.x2 = {display: false}
 
-        const labels = data.map(d => new Date(d.firstDay!));
+        const labels = data.map(d => d.firstDay);
 
         let config: ChartConfiguration = {
             type: "bar",

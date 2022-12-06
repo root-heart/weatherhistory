@@ -5,6 +5,7 @@ import {FilterChangedEvent, StationAndDateFilterComponent} from "../filter-heade
 import {HttpClient} from "@angular/common/http";
 import {environment} from "../../environments/environment";
 import {registerables} from 'chart.js';
+import 'chartjs-adapter-luxon';
 
 export type MinAvgMaxSummary = {
     firstDay?: Date,
@@ -67,12 +68,19 @@ export class MinAvgMaxChart {
             display: this.showAxes
         }
         options.scales!.x = {
+            type: "time",
+            time: {
+                unit: "month",
+                displayFormats: {
+                    month: "MMMMM"
+                }
+            },
             // labels: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
             ticks: {minRotation: 0, maxRotation: 0, sampleSize: 12},
             display: this.showAxes
         }
 
-        const labels = data.map(d => new Date(d.firstDay!));
+        const labels = data.map(d => d.firstDay);
 
         let config: ChartConfiguration = {
             type: "line",
