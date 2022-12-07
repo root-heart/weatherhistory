@@ -62,7 +62,7 @@ object StationDao {
         StationsTable.selectAll().map(StationDao::fromResultRow)
     }
 
-    fun findById(id: Long) = measureTransaction("findById($id)") {
+    fun findById(id: Long) = transaction {
         var station = cache[id]
         if (station == null) {
             station = StationsTable.select { StationsTable.id eq id }
@@ -72,7 +72,7 @@ object StationDao {
                 cache[id] = station
             }
         }
-        return@measureTransaction station
+        station
     }
 
     fun findStationByExternalId(stationId: String): Station? = transaction {

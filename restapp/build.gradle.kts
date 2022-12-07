@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     id("io.ktor.plugin") version "2.1.3"
+    kotlin("plugin.serialization")
 }
 
 group = "rootheart.codes.weatherhistory"

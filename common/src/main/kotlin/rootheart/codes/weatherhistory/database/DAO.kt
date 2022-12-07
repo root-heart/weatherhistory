@@ -19,9 +19,6 @@ import java.math.BigDecimal
 
 private val log = KotlinLogging.logger {}
 
-fun <T> Any.measureTransaction(identifier: String, statement: Transaction.() -> T): T =
-    measureAndLogDuration(identifier) { transaction { statement() } }
-
 interface DAO<T, E> {
     fun findAll(
         stationId: Long,
@@ -60,7 +57,7 @@ class MinAvgMaxDao<X : Number?>(
     ): List<MinAvgMax> = transaction {
         // TODO this should be put outside the DAO
         val start = LocalDate(year, month ?: 1, day ?: 1).toDateTimeAtStartOfDay()
-        val end = calcEnd(start, month, day).minusMillis(1)
+        val end = calcEnd(start, month, day)
         fields.select(condition(stationId, interval, start, end))
             .map(::mapToMinAvgMax)
     }
@@ -72,7 +69,7 @@ class MinAvgMaxDao<X : Number?>(
         if (day == null) {
             return start.plusMonths(1)
         }
-        return start.plusDays(1).minusMillis(1)
+        return start.plusDays(1)
     }
 
     private fun condition(stationId: Long, interval: Interval, start: DateTime, end: DateTime) =
