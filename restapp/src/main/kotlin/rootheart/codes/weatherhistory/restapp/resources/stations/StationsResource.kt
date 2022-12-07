@@ -38,8 +38,8 @@ fun Routing.stationsResource() {
                     else if (day == null) firstDay.plusMonths(1)
                     else firstDay.plusDays(1)
                 val resolution = optQueryParam("resolution") { requestResolutionToIntervalMapping[it] }
-                    ?: if (month == null) Interval.MONTH
-                    else Interval.DAY
+                        ?: if (month == null) Interval.MONTH
+                        else Interval.DAY
                 val data = dao.findAll(stationId, firstDay, lastDay, resolution)
                 call.respond(data)
             }
@@ -48,46 +48,39 @@ fun Routing.stationsResource() {
 }
 
 val measurementTypeColumnsMapping: Map<String, DAO<*, out Number?>> = with(MeasurementsTable) {
-    mapOf(
-        "temperature" to MinAvgMaxDao(
-            minAirTemperatureCentigrade,
-            avgAirTemperatureCentigrade,
-            maxAirTemperatureCentigrade,
-            detailedAirTemperatureCentigrade,
-        ),
-        "air-pressure" to MinAvgMaxDao(
-            minAirPressureHectopascals,
-            avgAirPressureHectopascals,
-            maxAirPressureHectopascals,
-            detailedAirPressureHectopascals,
-        ),
-        "dew-point-temperature" to MinAvgMaxDao(
-            minDewPointTemperatureCentigrade,
-            avgDewPointTemperatureCentigrade,
-            maxDewPointTemperatureCentigrade,
-            detailedAirPressureHectopascals
-        ),
-        "humidity" to MinAvgMaxDao(minHumidityPercent, avgHumidityPercent, maxHumidityPercent, detailedHumidityPercent),
-        "visibility" to MinAvgMaxDao(
-            minVisibilityMeters,
-            avgVisibilityMeters,
-            maxVisibilityMeters,
-            detailedVisibilityMeters
-        ),
-        "wind-speed" to MinAvgMaxDao(
-            null,
-            avgWindSpeedMetersPerSecond,
-            maxWindSpeedMetersPerSecond,
-            detailedWindSpeedMetersPerSecond
-        ),
-        "sunshine-duration" to SumDao(sumSunshineDurationHours),
-        "precipitation" to SumDao(sumRainfallMillimeters, sumSnowfallMillimeters),
-        "cloud-coverage" to HistogramDao(cloudCoverageHistogram)
+    mapOf("temperature" to MinAvgMaxDao(minAirTemperatureCentigrade,
+                                        avgAirTemperatureCentigrade,
+                                        maxAirTemperatureCentigrade,
+                                        detailedAirTemperatureCentigrade),
+          "air-pressure" to MinAvgMaxDao(minAirPressureHectopascals,
+                                         avgAirPressureHectopascals,
+                                         maxAirPressureHectopascals,
+                                         detailedAirPressureHectopascals),
+          "dew-point-temperature" to MinAvgMaxDao(minDewPointTemperatureCentigrade,
+                                                  avgDewPointTemperatureCentigrade,
+                                                  maxDewPointTemperatureCentigrade,
+                                                  detailedAirPressureHectopascals),
+          "humidity" to MinAvgMaxDao(minHumidityPercent,
+                                     avgHumidityPercent,
+                                     maxHumidityPercent,
+                                     detailedHumidityPercent),
+          "visibility" to MinAvgMaxDao(minVisibilityMeters,
+                                       avgVisibilityMeters,
+                                       maxVisibilityMeters,
+                                       detailedVisibilityMeters),
+          "wind-speed" to MinAvgMaxDao(null,
+                                       avgWindSpeedMetersPerSecond,
+                                       maxWindSpeedMetersPerSecond,
+                                       detailedWindSpeedMetersPerSecond),
+          "sunshine-duration" to SumDao(sumSunshineDurationHours),
+          "precipitation" to SumDao(sumRainfallMillimeters,
+                                    sumSnowfallMillimeters),
+          "cloud-coverage" to HistogramDao(cloudCoverageHistogram)
     )
 }
 
 private val requestResolutionToIntervalMapping = mapOf(
-    "daily" to Interval.DAY,
-    "monthly" to Interval.MONTH,
-    "yearly" to Interval.YEAR
+        "daily" to Interval.DAY,
+        "monthly" to Interval.MONTH,
+        "yearly" to Interval.YEAR
 )

@@ -15,12 +15,10 @@ fun Table.intArray(name: String): Column<List<Int?>> =
 class DecimalArrayColumnType : ColumnType() {
     override fun sqlType(): String = "TEXT"
 
-    override fun valueToDB(value: Any?): Any? {
-        return if (value is List<*>) {
-            value.joinToString(",")
-        } else {
-            super.valueToDB(value)
-        }
+    override fun valueToDB(value: Any?) = if (value is List<*>) {
+        value.joinToString(",")
+    } else {
+        super.valueToDB(value)
     }
 
     override fun valueFromDB(value: Any): Any {
@@ -41,6 +39,7 @@ class DecimalArrayColumnType : ColumnType() {
         }
     }
 }
+
 class IntArrayColumnType : ColumnType() {
     override fun sqlType(): String = "TEXT"
 
@@ -70,40 +69,3 @@ class IntArrayColumnType : ColumnType() {
         }
     }
 }
-
-//class ArrayColumnType(
-//    private val type: ColumnType
-//) : ColumnType() {
-//
-//    override fun sqlType(): String = "VARCHAR(200)"
-//
-//    override fun valueToDB(value: Any?): Any? {
-//        return if (value is Array<*>) {
-//            value.joinToString(",")
-//        } else {
-//            super.valueToDB(value)
-//        }
-//    }
-//
-//    override fun valueFromDB(value: Any): Any {
-//        if (value is String) {
-//            if (type is DecimalColumnType) {
-//                return splitAndTrimTokensToArrayWithLength24(value, ::BigDecimal)
-//            } else if (type is IntegerColumnType) {
-//                return splitAndTrimTokensToArrayWithLength24(value, String::toInt)
-//            }
-//        }
-//        error("Unexpected array component type")
-//    }
-//
-//    override fun notNullValueToDB(value: Any): Any {
-//        if (value is Array<*>) {
-//            if (value.isEmpty()) {
-//                return ""
-//            }
-//            return value.joinToString(",")
-//        } else {
-//            return super.notNullValueToDB(value)
-//        }
-//    }
-//}
