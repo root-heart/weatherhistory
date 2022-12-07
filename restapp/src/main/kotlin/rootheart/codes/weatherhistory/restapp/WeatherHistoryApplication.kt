@@ -3,26 +3,44 @@ package rootheart.codes.weatherhistory.restapp
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
-import io.ktor.serialization.gson.gson
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.http.content.files
-import io.ktor.server.http.content.static
-import io.ktor.server.netty.Netty
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.cors.routing.CORS
-import io.ktor.server.resources.Resources
-import io.ktor.server.routing.IgnoreTrailingSlash
-import io.ktor.server.routing.routing
+import io.ktor.serialization.gson.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.http.content.*
+import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.resources.*
+import io.ktor.server.routing.*
 import org.joda.time.LocalDate
 import rootheart.codes.weatherhistory.database.WeatherDb
+import rootheart.codes.weatherhistory.restapp.resources.stations.stationsResource
 
-private const val DATE_TIME_PATTERN = "yyyy-MM-dd"
+fun main() {
+    WeatherDb.connect()
+    val server = embeddedServer(Netty, port = 8080, module = Application::weatherHistory)
+    server.start(wait = true)
+}
 
-private val formatter = org.joda.time.format.DateTimeFormat.forPattern(DATE_TIME_PATTERN)
+private fun Application.weatherHistory() {
+    install(IgnoreTrailingSlash)
+    install(CORS) { anyHost() }
+    install(ContentNegotiation) {
+        gson {
+            registerTypeAdapter(LocalDate::class.java, LocalDateTypeAdapter())
+            setDateFormat("yyyy-MM-dd")
+        }
+    }
+    install(Resources)
 
-class Ta : TypeAdapter<LocalDate>() {
+    routing {
+        stationsResource()
+        static("web") { files(".") }
+    }
+}
+
+private class LocalDateTypeAdapter : TypeAdapter<LocalDate>() {
+    private val formatter = org.joda.time.format.DateTimeFormat.forPattern("yyyy-MM-dd")
     override fun write(out: JsonWriter?, value: LocalDate?) {
         out?.value(formatter.print(value))
     }
@@ -31,28 +49,4 @@ class Ta : TypeAdapter<LocalDate>() {
         TODO("Not yet implemented")
     }
 
-}
-
-fun main() {
-    WeatherDb.connect()
-    val server = embeddedServer(Netty, port = 8080, module = Application::weatherHistory)
-    server.start(wait = true)
-}
-
-fun Application.weatherHistory() {
-    install(IgnoreTrailingSlash)
-    install(CORS) { anyHost() }
-    install(ContentNegotiation) {
-        gson {
-            registerTypeAdapter(LocalDate::class.java, Ta())
-            setDateFormat("yyyy-MM-dd")
-        }
-    }
-    install(Resources)
-    setupRouting()
-}
-
-fun Application.setupRouting() = routing {
-    stationsResource()
-    static("web") { files(".") }
 }

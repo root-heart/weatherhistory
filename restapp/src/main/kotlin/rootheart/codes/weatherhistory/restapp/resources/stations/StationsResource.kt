@@ -1,17 +1,21 @@
-package rootheart.codes.weatherhistory.restapp
+package rootheart.codes.weatherhistory.restapp.resources.stations
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.resources.Resource
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.call
-import io.ktor.server.resources.get
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Routing
-import io.ktor.util.pipeline.PipelineContext
+import io.ktor.http.*
+import io.ktor.resources.*
+import io.ktor.server.application.*
+import io.ktor.server.resources.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.util.pipeline.*
 import kotlinx.serialization.Serializable
 import org.joda.time.LocalDate
+import rootheart.codes.weatherhistory.database.DAO
+import rootheart.codes.weatherhistory.database.HistogramDao
 import rootheart.codes.weatherhistory.database.Interval
+import rootheart.codes.weatherhistory.database.MeasurementsTable
+import rootheart.codes.weatherhistory.database.MinAvgMaxDao
 import rootheart.codes.weatherhistory.database.StationDao
+import rootheart.codes.weatherhistory.database.SumDao
 
 @Serializable
 @Resource("stations")
@@ -37,7 +41,7 @@ class Stations {
                 override val month: Int,
                 override val resolution: String? = "daily"
             ) : Params() {
-                override val stationId get() = measurements.byId.stationId
+                override val stationId get() = measurements.stationId
                 override val measurementType get() = measurements.measurementType
                 override val year get() = measurements.year
                 override val duration get() = Interval.MONTH
@@ -77,7 +81,7 @@ abstract class Params {
     open val resolution: String? = null
     open val duration: Interval? = null
 
-    val firstDay get() = LocalDate(year ?: 0, month ?: 1, day ?: 1)
+    val firstDay get() = LocalDate(year ?: LocalDate.now().year, month ?: 1, day ?: 1)
     val lastDay
         get() = when (duration) {
             Interval.YEAR -> firstDay.plusYears(1)
@@ -98,6 +102,55 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.fetchMeasurementData(
     )
     call.respond(data ?: HttpStatusCode.NotFound)
 }
+
+private val measurementTypeColumnsMapping: Map<String, DAO<*, out Number?>> = mapOf(
+    "temperature" to MinAvgMaxDao(
+        MeasurementsTable.minAirTemperatureCentigrade,
+        MeasurementsTable.avgAirTemperatureCentigrade,
+        MeasurementsTable.maxAirTemperatureCentigrade,
+        MeasurementsTable.detailedAirTemperatureCentigrade,
+    ),
+    "air-pressure" to MinAvgMaxDao(
+        MeasurementsTable.minAirPressureHectopascals,
+        MeasurementsTable.avgAirPressureHectopascals,
+        MeasurementsTable.maxAirPressureHectopascals,
+        MeasurementsTable.detailedAirPressureHectopascals,
+    ),
+    "dew-point-temperature" to MinAvgMaxDao(
+        MeasurementsTable.minDewPointTemperatureCentigrade,
+        MeasurementsTable.avgDewPointTemperatureCentigrade,
+        MeasurementsTable.maxDewPointTemperatureCentigrade,
+        MeasurementsTable.detailedAirPressureHectopascals
+    ),
+    "humidity" to MinAvgMaxDao(
+        MeasurementsTable.minHumidityPercent,
+        MeasurementsTable.avgHumidityPercent,
+        MeasurementsTable.maxHumidityPercent,
+        MeasurementsTable.detailedHumidityPercent
+    ),
+    "visibility" to MinAvgMaxDao(
+        MeasurementsTable.minVisibilityMeters,
+        MeasurementsTable.avgVisibilityMeters,
+        MeasurementsTable.maxVisibilityMeters,
+        MeasurementsTable.detailedVisibilityMeters
+    ),
+    "wind-speed" to MinAvgMaxDao(
+        null,
+        MeasurementsTable.avgWindSpeedMetersPerSecond,
+        MeasurementsTable.maxWindSpeedMetersPerSecond,
+        MeasurementsTable.detailedWindSpeedMetersPerSecond
+    ),
+    "sunshine-duration" to SumDao(
+        MeasurementsTable.sumSunshineDurationHours
+    ),
+    "precipitation" to SumDao(
+        MeasurementsTable.sumRainfallMillimeters,
+        MeasurementsTable.sumSnowfallMillimeters
+    ),
+    "cloud-coverage" to HistogramDao(MeasurementsTable.cloudCoverageHistogram)
+)
+
+
 
 private val requestResolutionToIntervalMapping = mapOf(
     "daily" to Interval.DAY,
