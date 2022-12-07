@@ -7,8 +7,7 @@ import {HttpClient} from "@angular/common/http";
 
 export type Sum = {
     firstDay: Date,
-    sum1: number,
-    sum2: number
+    sum: number
 }
 
 @Component({
@@ -81,15 +80,15 @@ export class SumChart {
             data: {
                 labels: labels,
                 datasets: [{
-                    borderWidth: 0,
-                    backgroundColor: this.fill2,
-                    data: data.map(d => d.sum2),
-                    categoryPercentage: 0.8,
-                    barPercentage: 0.6,
-                    xAxisID: "x2"
-                }, {
+                    // borderWidth: 0,
+                    // backgroundColor: this.fill2,
+                    // data: data.map(d => d.sum2),
+                    // categoryPercentage: 0.8,
+                    // barPercentage: 0.6,
+                    // xAxisID: "x2"
+                    // }, {
                     backgroundColor: this.fill,
-                    data: data.map(d => d.sum1),
+                    data: data.map(d => d.sum),
                     categoryPercentage: 0.8,
                     barPercentage: 1,
                     xAxisID: "x"

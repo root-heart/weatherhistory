@@ -162,7 +162,7 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
                     measurementRecord.sumSnowfallMillimeters = nullsafeBigDecimal(row[columnIndex])
                 }
                 columnIndex = semicolonSeparatedValues.columnNames.indexOf("SDK")
-                measurementRecord.sumSunshineDurationHours = nullsafeBigDecimal(row[columnIndex])
+//                measurementRecord.sumSunshineDurationMinutes = nullsafeBigDecimal(row[columnIndex])?.multiply(sixty)?.intValueExact()
 //                    columnIndex = semicolonSeparatedValues.columnNames.indexOf("SHK")
 //                    measurementRecord.snowheightCentimeters = nullsafeBigDecimal(row[columnIndex])
                 columnIndex = semicolonSeparatedValues.columnNames.indexOf("PM")
@@ -215,8 +215,7 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
 
                     MeasurementType.SUNSHINE_DURATION -> {
                         val columnIndex = semicolonSeparatedValues.columnNames.indexOf("SD_SO")
-                        measurementRecord.detailedSunshineDurationHours[hour] =
-                            nullsafeBigDecimal(row[columnIndex])?.divide(sixty, RoundingMode.HALF_UP)
+                        measurementRecord.detailedSunshineDurationMinutes[hour] = nullsafeBigDecimal(row[columnIndex])?.intValueExact()
                     }
 
                     MeasurementType.VISIBILITY -> {
@@ -263,6 +262,8 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
             m.minHumidityPercent = m.detailedHumidityPercent.nullsafeMin()
             m.avgHumidityPercent = m.detailedHumidityPercent.nullsafeAvg()
             m.maxHumidityPercent = m.detailedHumidityPercent.nullsafeMax()
+
+            m.sumSunshineDurationMinutes = m.detailedSunshineDurationMinutes.filterNotNull().sum()
 
             val histogram = Array(10) { 0 }
             m.detailedCloudCoverages
@@ -334,8 +335,8 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
 //                detailedCloudCoverages = listOf(),
                 cloudCoverageHistogram = cloudCoverageHistogram,
 
-                sumSunshineDurationHours = measurements.nullsafeSum(Measurement::sumSunshineDurationHours),
-                detailedSunshineDurationHours = measurements.map { it.sumSunshineDurationHours }.toTypedArray(),
+                sumSunshineDurationMinutes = measurements.nullsafeSum(Measurement::sumSunshineDurationMinutes),
+                detailedSunshineDurationMinutes = measurements.map { it.sumSunshineDurationMinutes }.toTypedArray(),
 
                 sumRainfallMillimeters = measurements.nullsafeSum(Measurement::sumRainfallMillimeters),
                 detailedRainfallMillimeters = measurements.map { it.sumRainfallMillimeters }.toTypedArray(),

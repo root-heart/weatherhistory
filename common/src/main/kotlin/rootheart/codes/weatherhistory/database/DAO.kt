@@ -2,6 +2,8 @@ package rootheart.codes.weatherhistory.database
 
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.FieldSet
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
@@ -9,105 +11,78 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.LocalDate
-import java.math.BigDecimal
 
 private val log = KotlinLogging.logger {}
 
-interface DAO<T, E> {
-    fun findAll(stationId: Long, startInclusive: LocalDate, endExclusive: LocalDate, resolution: Interval): List<T>
+interface Columns<N : Number?, R> {
+    val fields: FieldSet
+
+    fun dataObject(resultRow: ResultRow): R
 }
 
-data class MinAvgMax(
-    val firstDay: LocalDate,
-    val min: Number?,
-    val avg: Number?,
-    val max: Number?,
-    val details: List<Number?>
-)
+class MinAvgMaxColumns<N : Number?>(
+        val min: Column<N>,
+        val avg: Column<N>,
+        val max: Column<N>,
+        val details: Column<List<N>>) : Columns<N, MinAvgMax> {
+    override val fields
+        get() = MeasurementsTable.slice(listOfNotNull(MeasurementsTable.firstDay, min, avg, max, details))
 
-class MinAvgMaxDao<X : Number?>(
-    private val min: Column<X>?,
-    private val avg: Column<X>,
-    private val max: Column<X>,
-    private val details: Column<List<X>>,
-) : DAO<MinAvgMax, X> {
-    private val fields =
-        if (min == null) MeasurementsTable.slice(MeasurementsTable.firstDay, avg, max, details)
-        else MeasurementsTable.slice(MeasurementsTable.firstDay, min, avg, max, details)
-
-    // TODO somehow specify the transaction context outside the DAO
-    override fun findAll(
-        stationId: Long,
-        startInclusive: LocalDate,
-        endExclusive: LocalDate,
-        resolution: Interval
-    ): List<MinAvgMax> = transaction {
-        fields.select(condition(stationId, resolution, startInclusive, endExclusive))
-            .map {
-                MinAvgMax(
-                    firstDay = it[MeasurementsTable.firstDay].toLocalDate(),
-                    min = if (min == null) 0 else it[min],
-                    avg = it[avg],
-                    max = it[max],
-                    details = it[details]
-                )
-            }
-    }
+    override fun dataObject(resultRow: ResultRow) =
+        MinAvgMax(firstDay = resultRow[MeasurementsTable.firstDay].toLocalDate(),
+                  min = resultRow[min],
+                  avg = resultRow[avg],
+                  max = resultRow[max],
+                  details = resultRow[details])
 }
 
-data class Sum(
-    val firstDay: LocalDate,
-    val sum1: Number?,
-    val sum2: Number?,
-)
+data class MinAvgMax(val firstDay: LocalDate,
+                     val min: Number?,
+                     val avg: Number?,
+                     val max: Number?,
+                     val details: List<Number?>)
 
-class SumDao(
-    private val sum1: Column<BigDecimal?>,
-    private val sum2: Column<BigDecimal?>? = null,
-) : DAO<Sum, BigDecimal> {
-    private val fields = if (sum2 == null) {
-        MeasurementsTable.slice(MeasurementsTable.firstDay, sum1)
-    } else {
-        MeasurementsTable.slice(MeasurementsTable.firstDay, sum1, sum2)
-    }
+class AvgMaxColumns<N : Number?>(
+        val avg: Column<N>,
+        val max: Column<N>,
+        val details: Column<List<N>>) : Columns<N, MinAvgMax> {
+    override val fields get() = MeasurementsTable.slice(listOfNotNull(MeasurementsTable.firstDay, avg, max, details))
+    override fun dataObject(resultRow: ResultRow) =
+        MinAvgMax(firstDay = resultRow[MeasurementsTable.firstDay].toLocalDate(),
+                  min = null,
+                  avg = resultRow[avg],
+                  max = resultRow[max],
+                  details = resultRow[details])
+}
 
-    // TODO somehow specify the transaction context outside the DAO
-    override fun findAll(
-        stationId: Long,
-        startInclusive: LocalDate,
-        endExclusive: LocalDate,
-        resolution: Interval
-    ): List<Sum> = transaction {
-        fields.select(condition(stationId, resolution, startInclusive, endExclusive))
-            .map {
-                Sum(
-                    firstDay = it[MeasurementsTable.firstDay].toLocalDate(),
-                    sum1 = it[sum1] ?: 0,
-                    sum2 = if (sum2 != null) it[sum2] ?: 0 else null,
-                )
-            }
-    }
+class SumColumns<X : Number?>(val details: Column<List<X?>>, val sum: Column<X?>) : Columns<X, Sum> {
+    override val fields get() = MeasurementsTable.slice(MeasurementsTable.firstDay, sum, details)
+    override fun dataObject(resultRow: ResultRow) = Sum(firstDay = resultRow[MeasurementsTable.firstDay].toLocalDate(),
+                                                        sum = resultRow[sum])
+}
+
+data class Sum(val firstDay: LocalDate, val sum: Number?)
+
+class HistogramColumns(val details: Column<List<Int?>>, val histogram: Column<List<Int?>>) : Columns<Int?, Histogram> {
+    override val fields get() = MeasurementsTable.slice(MeasurementsTable.firstDay, histogram, details)
+    override fun dataObject(resultRow: ResultRow) =
+        Histogram(resultRow[MeasurementsTable.firstDay].toLocalDate(), resultRow[histogram])
+
 }
 
 class Histogram(val firstDay: LocalDate, val histogram: List<Int?>)
 
-class HistogramDao(private val column: Column<List<Int?>>) : DAO<Histogram, Int> {
-    private val fields = MeasurementsTable.slice(MeasurementsTable.firstDay, column)
-
-    // TODO somehow specify the transaction context outside the DAO
-    override fun findAll(
-        stationId: Long,
-        startInclusive: LocalDate,
-        endExclusive: LocalDate,
-        resolution: Interval
-    ): List<Histogram> = transaction {
-        fields.select(condition(stationId, resolution, startInclusive, endExclusive))
-            .map { row -> Histogram(row[MeasurementsTable.firstDay].toLocalDate(), row[column]) }
-    }
+class DAO<N : Number?, R>(private val columns: Columns<N, R>) {
+    fun findAll(stationId: Long, startInclusive: LocalDate, endExclusive: LocalDate, resolution: Interval) =
+        transaction {
+            columns.fields
+                    .select(condition(stationId, resolution, startInclusive, endExclusive))
+                    .map { columns.dataObject(it) }
+        }
 }
 
 private fun condition(stationId: Long, interval: Interval, start: LocalDate, end: LocalDate) =
     MeasurementsTable.stationId.eq(stationId)
-        .and(MeasurementsTable.interval.eq(interval))
-        .and(MeasurementsTable.firstDay.greaterEq(start.toDateTimeAtStartOfDay()))
-        .and(MeasurementsTable.firstDay.less(end.toDateTimeAtStartOfDay()))
+            .and(MeasurementsTable.interval.eq(interval))
+            .and(MeasurementsTable.firstDay.greaterEq(start.toDateTimeAtStartOfDay()))
+            .and(MeasurementsTable.firstDay.less(end.toDateTimeAtStartOfDay()))

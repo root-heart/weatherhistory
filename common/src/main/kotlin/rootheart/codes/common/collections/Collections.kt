@@ -87,6 +87,10 @@ inline fun <T> Iterable<T>.nullsafeSum(selector: (T) -> BigDecimal?): BigDecimal
     return nullsafeSum(iterator(), BigDecimal::plus, selector)
 }
 
+inline fun <T> Iterable<T>.nullsafeSum(selector: (T) -> Int?): Int? {
+    return nullsafeSum(iterator(), Int::plus, selector)
+}
+
 inline fun <T, reified N : Number> nullsafeSum(
     iterator: Iterator<T>,
     plusFunction: (N, N) -> N,

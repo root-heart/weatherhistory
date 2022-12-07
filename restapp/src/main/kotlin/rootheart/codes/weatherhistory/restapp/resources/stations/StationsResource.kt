@@ -1,17 +1,16 @@
 package rootheart.codes.weatherhistory.restapp.resources.stations
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Routing
+import io.ktor.server.routing.get
+import io.ktor.server.routing.route
 import org.joda.time.LocalDate
 import rootheart.codes.weatherhistory.database.DAO
-import rootheart.codes.weatherhistory.database.HistogramDao
 import rootheart.codes.weatherhistory.database.Interval
 import rootheart.codes.weatherhistory.database.MeasurementsTable
-import rootheart.codes.weatherhistory.database.MinAvgMaxDao
 import rootheart.codes.weatherhistory.database.StationDao
-import rootheart.codes.weatherhistory.database.SumDao
 import rootheart.codes.weatherhistory.restapp.optPathParam
 import rootheart.codes.weatherhistory.restapp.optQueryParam
 import rootheart.codes.weatherhistory.restapp.requiredPathParam
@@ -28,7 +27,7 @@ fun Routing.stationsResource() {
 
             get("{measurementType}/{year}/{month?}/{day?}") {
                 val stationId = requiredPathParam("stationId") { it.toLong() }
-                val dao = requiredPathParam("measurementType") { measurementTypeColumnsMapping[it] }
+                val dao = DAO(requiredPathParam("measurementType") { measurementTypeColumnsMapping[it] })
                 val year = requiredPathParam("year") { it.toInt() }
                 val month = optPathParam("month") { it.toInt() }
                 val day = optPathParam("day") { it.toInt() }
@@ -47,40 +46,18 @@ fun Routing.stationsResource() {
     }
 }
 
-val measurementTypeColumnsMapping: Map<String, DAO<*, out Number?>> = with(MeasurementsTable) {
-    mapOf("temperature" to MinAvgMaxDao(minAirTemperatureCentigrade,
-                                        avgAirTemperatureCentigrade,
-                                        maxAirTemperatureCentigrade,
-                                        detailedAirTemperatureCentigrade),
-          "air-pressure" to MinAvgMaxDao(minAirPressureHectopascals,
-                                         avgAirPressureHectopascals,
-                                         maxAirPressureHectopascals,
-                                         detailedAirPressureHectopascals),
-          "dew-point-temperature" to MinAvgMaxDao(minDewPointTemperatureCentigrade,
-                                                  avgDewPointTemperatureCentigrade,
-                                                  maxDewPointTemperatureCentigrade,
-                                                  detailedAirPressureHectopascals),
-          "humidity" to MinAvgMaxDao(minHumidityPercent,
-                                     avgHumidityPercent,
-                                     maxHumidityPercent,
-                                     detailedHumidityPercent),
-          "visibility" to MinAvgMaxDao(minVisibilityMeters,
-                                       avgVisibilityMeters,
-                                       maxVisibilityMeters,
-                                       detailedVisibilityMeters),
-          "wind-speed" to MinAvgMaxDao(null,
-                                       avgWindSpeedMetersPerSecond,
-                                       maxWindSpeedMetersPerSecond,
-                                       detailedWindSpeedMetersPerSecond),
-          "sunshine-duration" to SumDao(sumSunshineDurationHours),
-          "precipitation" to SumDao(sumRainfallMillimeters,
-                                    sumSnowfallMillimeters),
-          "cloud-coverage" to HistogramDao(cloudCoverageHistogram)
-    )
-}
+val measurementTypeColumnsMapping = mapOf(
+        "temperature" to MeasurementsTable.temperatures,
+        "air-pressure" to MeasurementsTable.airPressure,
+        "dew-point-temperature" to MeasurementsTable.dewPointTemperatures,
+        "humidity" to MeasurementsTable.humidity,
+        "visibility" to MeasurementsTable.visibility,
+        "wind-speed" to MeasurementsTable.windSpeed,
+        "sunshine-duration" to MeasurementsTable.sunshineDuration,
+        "rainfall" to MeasurementsTable.rainfall,
+        "snowfall" to MeasurementsTable.snowfall,
+        "cloud-coverage" to MeasurementsTable.cloudCoverage)
 
-private val requestResolutionToIntervalMapping = mapOf(
-        "daily" to Interval.DAY,
-        "monthly" to Interval.MONTH,
-        "yearly" to Interval.YEAR
-)
+private val requestResolutionToIntervalMapping = mapOf("daily" to Interval.DAY,
+                                                       "monthly" to Interval.MONTH,
+                                                       "yearly" to Interval.YEAR)
