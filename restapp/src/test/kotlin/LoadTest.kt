@@ -1,21 +1,26 @@
+import rootheart.codes.weatherhistory.restapp.measurementTypeColumnsMapping
 import java.net.URL
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 fun main() {
-    val stationIds = listOf(1)
-    val measurementTypes = listOf("temperature", "air-pressure", "dew-point-temperature", "visibility", "humidity")
-    val resolutions = listOf("monthly", "daily")
-    val years = 1980..2022
+    val server = "192.168.178.51"
+    val port = "8080"
+    val stationIds = 1..2
+    val measurementTypes = measurementTypeColumnsMapping.keys
+    val years = 1990..1991
     val months = 1..12
-    val urls = stationIds.map { "http://localhost:8080/stations/$it" }
+    val days = 10..20
+    val resolutions = listOf("monthly", "daily")
+    val urls = stationIds.map { "http://$server:$port/stations/$it" }
         .flatMap { urlPart -> measurementTypes.map { "$urlPart/$it" } }
-        .flatMap { urlPart -> resolutions.map { "$urlPart/$it" } }
         .flatMap { urlPart -> years.map { "$urlPart/$it" } }
         .flatMap { urlPart -> months.map { "$urlPart/$it" } }
-        .map(::URL)
+        .flatMap { urlPart -> days.map { "$urlPart/$it" } }
+        .flatMap { urlPart -> resolutions.map { "$urlPart?resolution=$it" } }
+    .map(::URL)
 
-    responseTimeTest(urls)
+//    responseTimeTest(urls)
     throughputTest(urls)
 }
 
@@ -41,7 +46,7 @@ fun throughputTest(urls: List<URL>) {
     repeat(100) { run ->
         print("Run $run: ")
         val start = System.currentTimeMillis()
-        urls.parallelStream().forEach(URL::readBytes)
+        urls.forEach(URL::readBytes)
         val current = System.currentTimeMillis()
         val duration = current - start
         val requestsPerSecond = urls.size * 1000 / duration
