@@ -14,7 +14,11 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger name="Exposed" level="debug">
+    <logger name="Exposed" level="warn">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <logger name="rootheart.codes.weatherhistory.database.JdbcDAO" level="warn">
         <appender-ref ref="STDOUT"/>
     </logger>
 

@@ -2,6 +2,8 @@ package rootheart.codes.weatherhistory.database
 
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.joda.time.DateTime
 import org.joda.time.LocalDate
 import rootheart.codes.common.strings.splitAndTrimTokensToList
 import java.math.BigDecimal
@@ -21,12 +23,24 @@ private val log = KotlinLogging.logger {}
  * However, JDBC is much less readable than Exposed. So I decided to stick with exposed, but keep the original
  * JDBC implementation
  */
-class JdbcDAO<X : Number?>(
+class JdbcMinAvgMaxDao<X : Number?>(
     private val min: Column<X>,
     private val avg: Column<X>,
     private val max: Column<X>,
     private val details: Column<List<X>>,
-) {
+) : DAO<MinAvgMax, X> {
+    override fun findAll(
+        stationId: Long,
+        year: Int,
+        month: Int?,
+        day: Int?,
+        interval: Interval
+    ): List<MinAvgMax> = transaction {
+        // TODO this should be put outside the DAO
+        val start = LocalDate(year, month ?: 1, day ?: 1).toDateTimeAtStartOfDay()
+        val end = calcEnd(start, month, day).minusMillis(1)
+        jdbc(stationId, year, month, day, interval)
+    }
 
     private fun jdbc(
         stationId: Long,
@@ -43,15 +57,10 @@ class JdbcDAO<X : Number?>(
                 "from ${MeasurementsTable.tableName} " +
                 "where ${MeasurementsTable.stationId.name} = ? " +
                 "and ${MeasurementsTable.interval.name} = ? " +
-                "and ${MeasurementsTable.firstDay.name} between ? and ?"
+                "and ${MeasurementsTable.firstDay.name} >= ? " +
+                "and ${MeasurementsTable.firstDay.name} < ?"
         val start = LocalDate(year, month ?: 1, day ?: 1).toDateTimeAtStartOfDay()
-        val end = when (month) {
-            null -> start.plusYears(1)
-            else -> when (day) {
-                null -> start.plusMonths(1)
-                else -> start.plusDays(1)
-            }
-        }.minusMillis(1)
+        val end = calcEnd(start, month, day)
         return WeatherDb.dataSource.connection.use { conn ->
             conn.prepareStatement(sql).use { stmt ->
                 log.info { "Executing $sql" }
@@ -63,6 +72,17 @@ class JdbcDAO<X : Number?>(
             }
         }
     }
+
+    private fun calcEnd(start: DateTime, month: Int?, day: Int?): DateTime {
+        if (month == null) {
+            return start.plusYears(1)
+        }
+        if (day == null) {
+            return start.plusMonths(1)
+        }
+        return start.plusDays(1)
+    }
+
 
     private fun makeListFromResultSet(rs: ResultSet): List<MinAvgMax> {
         val list = ArrayList<MinAvgMax>()
