@@ -87,7 +87,4 @@ open class DatabaseInserter<POKO : Any>(private val tableMapping: TableMapping<P
 object MeasurementImporter : DatabaseInserter<Measurement>(MeasurementTableMapping)
 
 @DelicateCoroutinesApi
-object MonthlySummaryImporter : DatabaseInserter<MonthlySummary>(MonthlySummaryTableMapping)
-
-@DelicateCoroutinesApi
 object StationsImporter : DatabaseInserter<Station>(StationTableMapping)

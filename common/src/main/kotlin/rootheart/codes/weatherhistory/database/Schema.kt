@@ -54,7 +54,7 @@ object WeatherDb {
     fun dropTables() {
         Database.connect(dataSource)
         transaction {
-            SchemaUtils.drop(MonthlySummaryTable, MeasurementsTable, StationsTable)
+            SchemaUtils.drop(MeasurementsTable, StationsTable)
         }
     }
 }
