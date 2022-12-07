@@ -18,11 +18,11 @@ import rootheart.codes.weatherhistory.database.StationDao
 class Stations {
     @Serializable
     @Resource("{stationId}")
-    class ById(val parent: Stations = Stations(), val stationId: Long) {
+    class ById(private val stations: Stations, val stationId: Long) {
         @Serializable
         @Resource("{measurementType}/{year}")
         class Measurements(
-            val byId: ById,
+            private val byId: ById,
             override val measurementType: String,
             override val year: Int,
             override val resolution: String? = "monthly",
@@ -33,7 +33,7 @@ class Stations {
             @Serializable
             @Resource("{month}")
             class ForMonth(
-                val measurements: Measurements,
+                private val measurements: Measurements,
                 override val month: Int,
                 override val resolution: String? = "daily"
             ) : Params() {
@@ -45,7 +45,7 @@ class Stations {
                 @Serializable
                 @Resource("{day}")
                 class ForDay(
-                    val forMonth: ForMonth,
+                    private val forMonth: ForMonth,
                     override val day: Int,
                     override val resolution: String? = "daily"
                 ) : Params() {

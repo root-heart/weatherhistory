@@ -74,7 +74,12 @@ class SumDao(
     }
 
     // TODO somehow specify the transaction context outside the DAO
-    override fun findAll(stationId: Long, startInclusive: LocalDate, endExclusive: LocalDate, resolution: Interval): List<Sum> = transaction {
+    override fun findAll(
+        stationId: Long,
+        startInclusive: LocalDate,
+        endExclusive: LocalDate,
+        resolution: Interval
+    ): List<Sum> = transaction {
         fields.select(condition(stationId, resolution, startInclusive, endExclusive))
             .map(::mapToMinAvgMax)
     }
@@ -86,6 +91,22 @@ class SumDao(
     )
 }
 
+class Histogram(val firstDay: LocalDate, val histogram: List<Int?>)
+
+class HistogramDao(private val column: Column<List<Int?>>) : DAO<Histogram, Int> {
+    private val fields = MeasurementsTable.slice(MeasurementsTable.firstDay, column)
+
+    // TODO somehow specify the transaction context outside the DAO
+    override fun findAll(
+        stationId: Long,
+        startInclusive: LocalDate,
+        endExclusive: LocalDate,
+        resolution: Interval
+    ): List<Histogram> = transaction {
+        fields.select(condition(stationId, resolution, startInclusive, endExclusive))
+            .map { row -> Histogram(row[MeasurementsTable.firstDay].toLocalDate(), row[column]) }
+    }
+}
 
 private fun condition(stationId: Long, interval: Interval, start: LocalDate, end: LocalDate) =
     MeasurementsTable.stationId.eq(stationId)

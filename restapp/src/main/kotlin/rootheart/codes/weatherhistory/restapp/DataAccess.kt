@@ -1,6 +1,7 @@
 package rootheart.codes.weatherhistory.restapp
 
 import rootheart.codes.weatherhistory.database.DAO
+import rootheart.codes.weatherhistory.database.HistogramDao
 import rootheart.codes.weatherhistory.database.MeasurementsTable
 import rootheart.codes.weatherhistory.database.MinAvgMaxDao
 import rootheart.codes.weatherhistory.database.SumDao
@@ -49,5 +50,6 @@ val measurementTypeColumnsMapping: Map<String, DAO<*, out Number?>> = mapOf(
         MeasurementsTable.sumRainfallMillimeters,
         MeasurementsTable.sumSnowfallMillimeters
     ),
+    "cloud-coverage" to HistogramDao(MeasurementsTable.cloudCoverageHistogram)
 )
 
