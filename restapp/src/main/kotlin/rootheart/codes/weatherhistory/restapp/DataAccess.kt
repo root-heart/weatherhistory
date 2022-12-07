@@ -5,7 +5,6 @@ import rootheart.codes.weatherhistory.database.MeasurementsTable
 import rootheart.codes.weatherhistory.database.MinAvgMaxDao
 import rootheart.codes.weatherhistory.database.SumDao
 
-// still TODO "precipitation", "sunshine-duration", "wind"
 val measurementTypeColumnsMapping: Map<String, DAO<*, out Number?>> = mapOf(
     "temperature" to MinAvgMaxDao(
         MeasurementsTable.minAirTemperatureCentigrade,

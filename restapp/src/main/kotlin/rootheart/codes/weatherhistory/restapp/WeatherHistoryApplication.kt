@@ -3,30 +3,30 @@ package rootheart.codes.weatherhistory.restapp
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
-import io.ktor.application.Application
-import io.ktor.application.call
-import io.ktor.application.install
-import io.ktor.application.log
-import io.ktor.features.CORS
-import io.ktor.features.ContentNegotiation
-import io.ktor.gson.gson
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.files
-import io.ktor.http.content.static
-import io.ktor.response.respond
-import io.ktor.routing.IgnoreTrailingSlash
-import io.ktor.routing.Route
-import io.ktor.routing.get
-import io.ktor.routing.route
-import io.ktor.routing.routing
+import io.ktor.serialization.gson.gson
+import io.ktor.server.application.Application
+import io.ktor.server.application.call
+import io.ktor.server.application.install
+import io.ktor.server.application.log
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.http.content.files
+import io.ktor.server.http.content.static
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.resources.Resources
+import io.ktor.server.response.respond
+import io.ktor.server.routing.IgnoreTrailingSlash
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.and
 import org.joda.time.LocalDate
-import rootheart.codes.common.collections.generateHistogram
 import rootheart.codes.weatherhistory.database.GeneralPurposeDao
 import rootheart.codes.weatherhistory.database.Interval
 import rootheart.codes.weatherhistory.database.MeasurementsTable
@@ -65,6 +65,7 @@ fun Application.weatherHistory() {
             setDateFormat("yyyy-MM-dd")
         }
     }
+//    install(Resources)
     setupRouting()
 }
 
@@ -107,11 +108,6 @@ fun Application.setupRouting() = routing {
                     .and(MeasurementsTable.stationId.eq(stationId))
                     .and(MeasurementsTable.interval.eq(interval))
                 val h = GeneralPurposeDao.select(fields, condition) { row ->
-//                    val histogram = Array(10) { 0 }
-//                    row[MeasurementsTable.detailedCloudCoverage]
-//                        .filterNotNull()
-//                        .map { if (it == -1) 9 else it }
-//                        .forEach { histogram[it]++ }
                     DailyHistogram(
                         firstDay = row[MeasurementsTable.firstDay].toLocalDate(),
                         histogram = row[MeasurementsTable.cloudCoverageHistogram]
