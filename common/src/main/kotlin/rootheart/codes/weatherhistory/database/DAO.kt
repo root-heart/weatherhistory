@@ -2,31 +2,20 @@ package rootheart.codes.weatherhistory.database
 
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.FieldSet
-import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.joda.time.DateTime
 import org.joda.time.LocalDate
-import rootheart.codes.common.measureAndLogDuration
 import java.math.BigDecimal
 
 private val log = KotlinLogging.logger {}
 
 interface DAO<T, E> {
-    fun findAll(
-        stationId: Long,
-        year: Int,
-        month: Int?,
-        day: Int?,
-        interval: Interval
-    ): List<T>
+    fun findAll(stationId: Long, startInclusive: LocalDate, endExclusive: LocalDate, resolution: Interval): List<T>
 }
 
 data class MinAvgMax(
@@ -50,33 +39,14 @@ class MinAvgMaxDao<X : Number?>(
     // TODO somehow specify the transaction context outside the DAO
     override fun findAll(
         stationId: Long,
-        year: Int,
-        month: Int?,
-        day: Int?,
-        interval: Interval
+        startInclusive: LocalDate,
+        endExclusive: LocalDate,
+        resolution: Interval
     ): List<MinAvgMax> = transaction {
         // TODO this should be put outside the DAO
-        val start = LocalDate(year, month ?: 1, day ?: 1).toDateTimeAtStartOfDay()
-        val end = calcEnd(start, month, day)
-        fields.select(condition(stationId, interval, start, end))
+        fields.select(condition(stationId, resolution, startInclusive, endExclusive))
             .map(::mapToMinAvgMax)
     }
-
-    private fun calcEnd(start: DateTime, month: Int?, day: Int?): DateTime {
-        if (month == null) {
-            return start.plusYears(1)
-        }
-        if (day == null) {
-            return start.plusMonths(1)
-        }
-        return start.plusDays(1)
-    }
-
-    private fun condition(stationId: Long, interval: Interval, start: DateTime, end: DateTime) =
-        MeasurementsTable.stationId.eq(stationId)
-            .and(MeasurementsTable.interval.eq(interval))
-            .and(MeasurementsTable.firstDay.greaterEq(start))
-            .and(MeasurementsTable.firstDay.less(end))
 
     private fun mapToMinAvgMax(row: ResultRow) = MinAvgMax(
         firstDay = row[MeasurementsTable.firstDay].toLocalDate(),
@@ -104,35 +74,10 @@ class SumDao(
     }
 
     // TODO somehow specify the transaction context outside the DAO
-    override fun findAll(
-        stationId: Long,
-        year: Int,
-        month: Int?,
-        day: Int?,
-        interval: Interval
-    ): List<Sum> = transaction {
-        // TODO this should be put outside the DAO
-        val start = LocalDate(year, month ?: 1, day ?: 1).toDateTimeAtStartOfDay()
-        val end = calcEnd(start, month, day).minusMillis(1)
-        fields.select(condition(stationId, interval, start, end))
+    override fun findAll(stationId: Long, startInclusive: LocalDate, endExclusive: LocalDate, resolution: Interval): List<Sum> = transaction {
+        fields.select(condition(stationId, resolution, startInclusive, endExclusive))
             .map(::mapToMinAvgMax)
     }
-
-    private fun calcEnd(start: DateTime, month: Int?, day: Int?): DateTime {
-        if (month == null) {
-            return start.plusYears(1)
-        }
-        if (day == null) {
-            return start.plusMonths(1)
-        }
-        return start.plusDays(1).minusMillis(1)
-    }
-
-    private fun condition(stationId: Long, interval: Interval, start: DateTime, end: DateTime) =
-        MeasurementsTable.stationId.eq(stationId)
-            .and(MeasurementsTable.interval.eq(interval))
-            .and(MeasurementsTable.firstDay.greaterEq(start))
-            .and(MeasurementsTable.firstDay.less(end))
 
     private fun mapToMinAvgMax(row: ResultRow) = Sum(
         firstDay = row[MeasurementsTable.firstDay].toLocalDate(),
@@ -142,11 +87,8 @@ class SumDao(
 }
 
 
-class HistogramDao() {
-
-}
-object GeneralPurposeDao {
-    fun <T> select(fieldset: FieldSet, condition: Op<Boolean>, mapper: (ResultRow) -> T): List<T> = transaction {
-        fieldset.select(condition).map(mapper)
-    }
-}
+private fun condition(stationId: Long, interval: Interval, start: LocalDate, end: LocalDate) =
+    MeasurementsTable.stationId.eq(stationId)
+        .and(MeasurementsTable.interval.eq(interval))
+        .and(MeasurementsTable.firstDay.greaterEq(start.toDateTimeAtStartOfDay()))
+        .and(MeasurementsTable.firstDay.less(end.toDateTimeAtStartOfDay()))

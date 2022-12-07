@@ -31,24 +31,9 @@ class JdbcMinAvgMaxDao<X : Number?>(
 ) : DAO<MinAvgMax, X> {
     override fun findAll(
         stationId: Long,
-        year: Int,
-        month: Int?,
-        day: Int?,
-        interval: Interval
+        startInclusive: LocalDate, endExclusive: LocalDate,
+        resolution: Interval
     ): List<MinAvgMax> = transaction {
-        // TODO this should be put outside the DAO
-        val start = LocalDate(year, month ?: 1, day ?: 1).toDateTimeAtStartOfDay()
-        val end = calcEnd(start, month, day).minusMillis(1)
-        jdbc(stationId, year, month, day, interval)
-    }
-
-    private fun jdbc(
-        stationId: Long,
-        year: Int,
-        month: Int?,
-        day: Int?,
-        interval: Interval
-    ): List<MinAvgMax> {
         val sql = "select ${MeasurementsTable.firstDay.name} as firstDay, " +
                 "${min.name} as min, " +
                 "${avg.name} as avg, " +
@@ -59,15 +44,14 @@ class JdbcMinAvgMaxDao<X : Number?>(
                 "and ${MeasurementsTable.interval.name} = ? " +
                 "and ${MeasurementsTable.firstDay.name} >= ? " +
                 "and ${MeasurementsTable.firstDay.name} < ?"
-        val start = LocalDate(year, month ?: 1, day ?: 1).toDateTimeAtStartOfDay()
-        val end = calcEnd(start, month, day)
-        return WeatherDb.dataSource.connection.use { conn ->
+
+        WeatherDb.dataSource.connection.use { conn ->
             conn.prepareStatement(sql).use { stmt ->
                 log.info { "Executing $sql" }
                 stmt.setLong(1, stationId)
-                stmt.setString(2, interval.name)
-                stmt.setDate(3, Date(start.toDate().time))
-                stmt.setDate(4, Date(end.toDate().time))
+                stmt.setString(2, resolution.name)
+                stmt.setDate(3, Date(startInclusive.toDate().time))
+                stmt.setDate(4, Date(endExclusive.toDate().time))
                 stmt.executeQuery().use { makeListFromResultSet(it) }
             }
         }
