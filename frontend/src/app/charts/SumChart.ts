@@ -24,7 +24,7 @@ export class SumChart {
         c.onFilterChanged.subscribe((event: FilterChangedEvent) => {
             let stationId = event.station.id;
             let year = event.start;
-            let url = `${environment.apiServer}/stations/${stationId}/${this.path}/${this.resolution}/${year}`
+            let url = `${environment.apiServer}/stations/${stationId}/${this.path}/${year}?resolution=${this.resolution}`
             this.http
                 .get<Sum[]>(url)
                 .subscribe(data => this.setData(data))

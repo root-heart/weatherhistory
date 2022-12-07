@@ -17,13 +17,13 @@ export type Histogram = {
 export class HistogramChart {
     @Input() fill: string = "#cc3333"
     @Input() fill2: string = "#3333cc"
-    @Input() path: string = "cloudiness"
+    @Input() path: string = "cloud-coverage"
 
     @Input() set filterComponent(c: StationAndDateFilterComponent) {
         c.onFilterChanged.subscribe((event: FilterChangedEvent) => {
             let stationId = event.station.id;
             let year = event.start;
-            let url = `${environment.apiServer}/stations/${stationId}/${this.path}/${this.resolution}/${year}`
+            let url = `${environment.apiServer}/stations/${stationId}/${this.path}/${year}?resolution=${this.resolution}`
             this.http
                 .get<Histogram[]>(url)
                 .subscribe(data => this.setData(data))
