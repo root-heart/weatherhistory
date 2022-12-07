@@ -6,10 +6,6 @@ import org.jetbrains.exposed.sql.Table
 import rootheart.codes.common.strings.splitAndTrimTokensToList
 import java.math.BigDecimal
 
-
-//fun <T> Table.array(name: String, columnType: ColumnType): Column<Array<T>> =
-//    registerColumn(name, ArrayColumnType(columnType))
-
 fun Table.decimalArray(name: String): Column<List<BigDecimal?>> =
     registerColumn(name, DecimalArrayColumnType())
 

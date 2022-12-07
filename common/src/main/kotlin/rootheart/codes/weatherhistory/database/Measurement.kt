@@ -159,5 +159,4 @@ class Measurement(
 ) {
     val stationId get() = station.id
     val firstDayDateTime get() = firstDay.toDateTimeAtStartOfDay()!!
-    val dayFormatted get() = firstDay.toString("yyyy-MM-dd")
 }
