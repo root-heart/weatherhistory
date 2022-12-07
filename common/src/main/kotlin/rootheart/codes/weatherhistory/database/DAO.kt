@@ -2,7 +2,6 @@ package rootheart.codes.weatherhistory.database
 
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
@@ -43,18 +42,17 @@ class MinAvgMaxDao<X : Number?>(
         endExclusive: LocalDate,
         resolution: Interval
     ): List<MinAvgMax> = transaction {
-        // TODO this should be put outside the DAO
         fields.select(condition(stationId, resolution, startInclusive, endExclusive))
-            .map(::mapToMinAvgMax)
+            .map {
+                MinAvgMax(
+                    firstDay = it[MeasurementsTable.firstDay].toLocalDate(),
+                    min = if (min == null) 0 else it[min],
+                    avg = it[avg],
+                    max = it[max],
+                    details = it[details]
+                )
+            }
     }
-
-    private fun mapToMinAvgMax(row: ResultRow) = MinAvgMax(
-        firstDay = row[MeasurementsTable.firstDay].toLocalDate(),
-        min = if (min == null) 0 else row[min],
-        avg = row[avg],
-        max = row[max],
-        details = row[details]
-    )
 }
 
 data class Sum(
@@ -81,14 +79,14 @@ class SumDao(
         resolution: Interval
     ): List<Sum> = transaction {
         fields.select(condition(stationId, resolution, startInclusive, endExclusive))
-            .map(::mapToMinAvgMax)
+            .map {
+                Sum(
+                    firstDay = it[MeasurementsTable.firstDay].toLocalDate(),
+                    sum1 = it[sum1] ?: 0,
+                    sum2 = if (sum2 != null) it[sum2] ?: 0 else null,
+                )
+            }
     }
-
-    private fun mapToMinAvgMax(row: ResultRow) = Sum(
-        firstDay = row[MeasurementsTable.firstDay].toLocalDate(),
-        sum1 = row[sum1] ?: 0,
-        sum2 = if (sum2 != null) row[sum2] ?: 0 else null,
-    )
 }
 
 class Histogram(val firstDay: LocalDate, val histogram: List<Int?>)
