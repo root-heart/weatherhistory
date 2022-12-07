@@ -8,10 +8,12 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.http.content.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.resources.*
 import io.ktor.server.routing.*
+import io.ktor.util.pipeline.*
 import org.joda.time.LocalDate
 import rootheart.codes.weatherhistory.database.WeatherDb
 import rootheart.codes.weatherhistory.restapp.resources.stations.stationsResource
@@ -48,5 +50,29 @@ private class LocalDateTypeAdapter : TypeAdapter<LocalDate>() {
     override fun read(`in`: JsonReader?): LocalDate {
         TODO("Not yet implemented")
     }
-
 }
+
+fun <T> PipelineContext<Unit, ApplicationCall>.requiredPathParam(name: String, map: (String) -> T?): T =
+    map(requiredPathParam(name)) ?: badRequest("value for parameter $name cannot be mapped")
+
+fun <T> PipelineContext<Unit, ApplicationCall>.optPathParam(name: String, map: (String) -> T?): T? =
+    call.parameters[name]?.let { tryMapOrBadRequest(it, map) }
+
+fun <T> PipelineContext<Unit, ApplicationCall>.optQueryParam(name: String, map: (String?) -> T?): T? =
+    map(call.request.queryParameters[name])
+
+private fun PipelineContext<Unit, ApplicationCall>.requiredPathParam(name: String): String =
+    call.parameters[name] ?: badRequest("param $name required")
+
+
+fun <T> tryMapOrBadRequest(value: String, map: (String) -> T): T? =
+    try {
+        map(value)
+    } catch (e: Exception) {
+        badRequest("value can not be mapped")
+    }
+
+fun badRequest(message: String): Nothing = throw throw BadRequestException(message)
+
+
+
