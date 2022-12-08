@@ -43,7 +43,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 import java.util.zip.ZipInputStream
-import kotlin.collections.ArrayList
 import kotlin.system.measureTimeMillis
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
@@ -51,7 +50,7 @@ import kotlin.time.measureTimedValue
 private val log = KotlinLogging.logger {}
 
 @DelicateCoroutinesApi
-private val databaseExecutor = CoroutineScope(newFixedThreadPoolContext(2, "database-operations"))
+private val databaseExecutor = CoroutineScope(newFixedThreadPoolContext(32, "database-operations"))
 
 @DelicateCoroutinesApi
 private val unzipParseConvertExecutor = CoroutineScope(newFixedThreadPoolContext(8, "download-unzip-parse-convert"))
@@ -59,7 +58,7 @@ private val unzipParseConvertExecutor = CoroutineScope(newFixedThreadPoolContext
 @DelicateCoroutinesApi
 private val downloadThreads = CoroutineScope(newFixedThreadPoolContext(2, "download"))
 
-private val jobs = ArrayList<Job>()
+private val databaseInsertJobs = ArrayList<Job>()
 
 private val sixty = BigDecimal(60)
 
@@ -90,8 +89,8 @@ fun importMeasurements(hourlyDirectory: HtmlDirectory, dailyDirectory: HtmlDirec
 
             data.map { MeasurementsImporter(it.key, it.value) }
                     .forEach { it.downloadAndConvert() }
-            log.info { "Waiting for database jobs to complete ..." }
-            jobs.joinAll()
+            log.info { "Waiting for database insert jobs to complete ..." }
+            databaseInsertJobs.joinAll()
         }
     }
     log.info { "Finished import in $duration milliseconds, exiting program" }
@@ -120,7 +119,7 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
             }
         }
 
-        jobs += databaseExecutor.launch {
+        databaseInsertJobs += databaseExecutor.launch {
             log.info { "Station ${station.id} - Waiting for all download jobs to complete" }
             downloadJobs.joinAll()
 
@@ -132,38 +131,39 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
             val measurements = measurementByTime.values + monthlySummaries.values
 
             log.info { "Station ${station.id} - Inserting ${measurements.size} objects into the database" }
-            // TODO this code calls the database. put it somewhere else
-            val stationIds = measurements.mapNotNull { it.stationId }.distinct()
-            val query = StationsTable.select { StationsTable.id.inList(stationIds) }
-            val stationIdById = transaction { query.map { row -> row[StationsTable.id] }.associateBy { it.value } }
 
-            measurements.chunked(32768).parallelStream().forEach { chunk ->
-                transaction {
-                    MeasurementsTable.batchInsert(chunk) {
-                        this[MeasurementsTable.stationId] = stationIdById[it.stationId]!!
-                        this[MeasurementsTable.firstDay] = it.firstDayDateTime
-                        this[MeasurementsTable.interval] = it.interval
-
-                        copyMinAvgMax(it.temperatures, MeasurementsTable.temperatures)
-                        copyMinAvgMax(it.dewPointTemperatures, MeasurementsTable.dewPointTemperatures)
-                        copyMinAvgMax(it.humidity, MeasurementsTable.humidity)
-                        copyMinAvgMax(it.airPressure, MeasurementsTable.airPressure)
-                        copyMinAvgMax(it.visibility, MeasurementsTable.visibility)
-                        copyAvgMax(it.wind, MeasurementsTable.windSpeed)
-
-                        this[MeasurementsTable.cloudCoverage.histogram] = it.cloudCoverage.histogram
-                        this[MeasurementsTable.cloudCoverage.details] = it.cloudCoverage.details
-
-                        copySum(it.sunshineDuration, MeasurementsTable.sunshineDuration)
-                        copySum(it.rainfall, MeasurementsTable.rainfall)
-                        copySum(it.snowfall, MeasurementsTable.snowfall)
-
-                        this[MeasurementsTable.detailedWindDirectionDegrees] = it.detailedWindDirectionDegrees
-                    }
-                }
-            }
+            measurements.chunked(1024).parallelStream().forEach(::insertMeasurementsIntoDatabase)
             log.info { "Station ${station.id} - Inserted ${measurements.size} objects into the database" }
         }
+    }
+
+    // TODO this code calls the database. put it somewhere else
+    private fun insertMeasurementsIntoDatabase(measurements: List<Measurement>) = transaction {
+        val stationIds = measurements.mapNotNull { it.stationId }.distinct()
+        val query = StationsTable.select { StationsTable.id.inList(stationIds) }
+        val stationIdById = transaction { query.map { row -> row[StationsTable.id] }.associateBy { it.value } }
+        MeasurementsTable.batchInsert(measurements) {
+            this[MeasurementsTable.stationId] = stationIdById[it.stationId]!!
+            this[MeasurementsTable.firstDay] = it.firstDayDateTime
+            this[MeasurementsTable.interval] = it.interval
+
+            copyMinAvgMax(it.temperatures, MeasurementsTable.temperatures)
+            copyMinAvgMax(it.dewPointTemperatures, MeasurementsTable.dewPointTemperatures)
+            copyMinAvgMax(it.humidity, MeasurementsTable.humidity)
+            copyMinAvgMax(it.airPressure, MeasurementsTable.airPressure)
+            copyMinAvgMax(it.visibility, MeasurementsTable.visibility)
+            copyAvgMax(it.wind, MeasurementsTable.windSpeed)
+
+            this[MeasurementsTable.cloudCoverage.histogram] = it.cloudCoverage.histogram
+            this[MeasurementsTable.cloudCoverage.details] = it.cloudCoverage.details
+
+            copySum(it.sunshineDuration, MeasurementsTable.sunshineDuration)
+            copySum(it.rainfall, MeasurementsTable.rainfall)
+            copySum(it.snowfall, MeasurementsTable.snowfall)
+
+            this[MeasurementsTable.detailedWindDirectionDegrees] = it.detailedWindDirectionDegrees
+        }
+        log.info { "Station ${station.id} - Inserted ${measurements.size} objects into the database" }
     }
 
     private fun <N : Number> BatchInsertStatement.copyMinAvgMax(from: MinAvgMax<N?>, to: MinAvgMaxColumns<N>) {
@@ -438,6 +438,3 @@ private val DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHH").withZo
 private val DATE_FORMATTER = DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC()
 
 private const val COLUMN_NAME_MEASUREMENT_TIME = "MESS_DATUM"
-
-inline fun Array<BigDecimal?>.nullsafeAvgDecimal(): BigDecimal? =
-    this.nullsafeSumDecimals { it }?.let { it / BigDecimal(size) }
