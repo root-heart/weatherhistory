@@ -26,7 +26,7 @@ class DecimalArrayColumnType : ColumnType() {
 
     override fun valueFromDB(value: Any): Any {
         if (value is String) {
-            return splitAndTrimTokensToList(value, ::BigDecimal)
+            return splitAndTrimTokensToList(value) { if (it == "") null else BigDecimal(it) }.toTypedArray()
         }
         error("Unexpected array component type")
     }
@@ -56,7 +56,7 @@ class IntArrayColumnType(nullable: Boolean = true) : ColumnType() {
 
     override fun valueFromDB(value: Any): Any {
         if (value is String) {
-            return splitAndTrimTokensToList(value, String::toInt)
+            return splitAndTrimTokensToList(value) { if (it == "") null else it.toInt() }.toTypedArray()
         }
         error("Unexpected array component type")
     }

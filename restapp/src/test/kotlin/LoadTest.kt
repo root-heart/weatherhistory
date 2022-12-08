@@ -4,7 +4,8 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 fun main() {
-    val server = "192.168.178.51"
+//    val server = "192.168.178.51"
+    val server = "localhost"
     val port = "8080"
     val stationIds = 1..2
     val measurementTypes = measurementTypeColumnsMapping.keys
@@ -46,7 +47,7 @@ fun throughputTest(urls: List<URL>) {
     repeat(100) { run ->
         print("Run $run: ")
         val start = System.currentTimeMillis()
-        urls.forEach(URL::readBytes)
+        urls.parallelStream().forEach(URL::readBytes)
         val current = System.currentTimeMillis()
         val duration = current - start
         val requestsPerSecond = urls.size * 1000 / duration
