@@ -8,7 +8,7 @@ enum class MeasurementType(
 
 //    CLOUD_TYPE("CS", mapOf("V_N" to IntProperty(HourlyMeasurement::cloudCoverage))),
 
-    CLOUDINESS("N"),
+    CLOUD_COVERAGE("N"),
 
     DEW_POINT("TD"),
 
