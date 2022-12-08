@@ -1,4 +1,4 @@
-import rootheart.codes.weatherhistory.restapp.measurementTypeColumnsMapping
+import rootheart.codes.weatherhistory.restapp.resources.stations.measurementTypeColumnsMapping
 import java.net.URL
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime

@@ -9,7 +9,10 @@ import java.math.BigDecimal
 fun Table.decimalArray(name: String): Column<Array<BigDecimal?>> =
     registerColumn(name, DecimalArrayColumnType())
 
-fun Table.intArray(name: String): Column<Array<Int?>> =
+fun Table.intArray(name: String): Column<Array<Int>> =
+    registerColumn(name, IntArrayColumnType())
+
+fun Table.intArrayNullable(name: String): Column<Array<Int?>> =
     registerColumn(name, IntArrayColumnType())
 
 class DecimalArrayColumnType : ColumnType() {
@@ -40,7 +43,7 @@ class DecimalArrayColumnType : ColumnType() {
     }
 }
 
-class IntArrayColumnType : ColumnType() {
+class IntArrayColumnType(nullable: Boolean = true) : ColumnType() {
     override fun sqlType(): String = "TEXT"
 
     override fun valueToDB(value: Any?): Any? {

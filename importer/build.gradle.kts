@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm")
     groovy
@@ -32,4 +34,8 @@ dependencies {
 
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    languageVersion = "1.7"
 }

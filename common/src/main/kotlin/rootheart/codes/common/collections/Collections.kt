@@ -30,6 +30,8 @@ inline fun <T, N : Comparable<N>> nullsafeMin(iterator: Iterator<T>, selector: (
     return minValue
 }
 
+////////////////////////////////////////////////////////////////
+
 inline fun <T, N : Comparable<N>> Iterable<T>.nullsafeMax(selector: (T) -> N?): N? {
     return nullsafeMax(iterator(), selector)
 }
@@ -56,40 +58,38 @@ inline fun <T, N : Comparable<N>> nullsafeMax(iterator: Iterator<T>, selector: (
     return maxValue
 }
 
+////////////////////////////////////////////////////////////////
 
-inline fun <T> Iterable<T>.nullsafeAvg(selector: (T) -> BigDecimal?): BigDecimal? {
-    val countNonNull = count { selector(it) != null }.toLong()
-    return nullsafeSum(iterator(), BigDecimal::plus, selector)?.divide(
-        BigDecimal.valueOf(countNonNull),
-        RoundingMode.HALF_UP
-    )
-}
+fun <E> Collection<E>.nullsafeAvgDecimal(selector: (E) -> BigDecimal?): BigDecimal? =
+    this.nullsafeSumDecimals(selector)?.let { it / BigDecimal(size) }
 
-inline fun Array<BigDecimal?>.nullsafeAvg(): BigDecimal? {
-    val countNonNull = count { it != null }.toLong()
-    return nullsafeSum(iterator(), BigDecimal::plus) { it }?.divide(
-        BigDecimal.valueOf(countNonNull),
-        RoundingMode.HALF_UP
-    )
-}
+fun <E> Collection<E>.nullsafeAvgInt(selector: (E) -> Int?): Int? =
+    this.nullsafeSumInts(selector)?.let { it / size }
 
-inline fun Array<Int?>.nullsafeAvg(): Int? {
-    val countNonNull = count { it != null }
-    return nullsafeSum(iterator(), Int::plus) { it }?.div(countNonNull)
-}
+fun Array<BigDecimal?>.nullsafeAvgDecimals(): BigDecimal? =
+    nullsafeSum(iterator(), BigDecimal::plus) { it }?.let { it / BigDecimal(size) }
 
-inline fun <T> Iterable<T>.nullsafeAvg(selector: (T) -> Int?): Int? {
-    val countNonNull = count { selector(it) != null }
-    return nullsafeSum(iterator(), Int::plus, selector)?.div(countNonNull)
-}
+fun Array<Int?>.nullsafeAvgInts(): Int? =
+    nullsafeSum(iterator(), Int::plus) { it }?.let { it / size }
 
-inline fun <T> Iterable<T>.nullsafeSum(selector: (T) -> BigDecimal?): BigDecimal? {
-    return nullsafeSum(iterator(), BigDecimal::plus, selector)
-}
 
-inline fun <T> Iterable<T>.nullsafeSum(selector: (T) -> Int?): Int? {
+////////////////////////////////////////////////////////////////
+
+fun <E> Iterable<E>.nullsafeSumDecimals(selector: (E) -> BigDecimal?) =
+    nullsafeSumDecimals(iterator(), selector)
+
+fun <E> Array<E>.nullsafeSumDecimals(selector: (E) -> BigDecimal?) =
+    nullsafeSum(iterator(), BigDecimal::plus, selector)
+
+fun <E> nullsafeSumDecimals(iterator: Iterator<E>, selector: (E) -> BigDecimal?) =
+    nullsafeSum(iterator, BigDecimal::plus, selector)
+
+inline fun <T> Iterable<T>.nullsafeSumInts(selector: (T) -> Int?): Int? {
     return nullsafeSum(iterator(), Int::plus, selector)
 }
+
+fun <E> Array<E>.nullsafeSumInts(selector: (E) -> Int?) =
+    nullsafeSum(iterator(), Int::plus, selector)
 
 inline fun <T, reified N : Number> nullsafeSum(
     iterator: Iterator<T>,
@@ -107,14 +107,4 @@ inline fun <T, reified N : Number> nullsafeSum(
         }
     }
     return sum
-}
-
-fun List<Int?>.generateHistogram(): Map<Int, Int> {
-    val histogram = HashMap<Int, Int>()
-    filterNotNull()
-        .forEach {
-        val currentValue = histogram.getOrPut(it) { 0 }
-        histogram[it] = currentValue + 1
-    }
-    return histogram
 }
