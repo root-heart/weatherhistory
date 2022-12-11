@@ -4,11 +4,7 @@ import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ResultRow
 import org.joda.time.LocalDate
-import rootheart.codes.common.collections.nullsafeSum
-import rootheart.codes.common.collections.nullsafeSumDecimals
-import rootheart.codes.common.collections.nullsafeSumInts
 import java.math.BigDecimal
-import java.util.Arrays
 
 enum class Interval {
     YEAR, MONTH, DAY
@@ -88,80 +84,60 @@ object MeasurementsTable : LongIdTable("MEASUREMENTS") {
 }
 
 // TODO Place this class and its children somewhere else as this is more or less to "JSONify" the data.
-abstract class MeasurementColumns<N : Number?, R>(private vararg val columns: Column<*>) {
-    val fields get() = MeasurementsTable.slice(columns.distinct() + MeasurementsTable.firstDay)
+abstract class MeasurementColumns<N : Number?, R>(private val columns: Map<Column<*>, String>) {
+    val fields get() = MeasurementsTable.slice(columns.keys.toList() + MeasurementsTable.firstDay)
 
-    abstract fun dataObject(row: ResultRow): Map<String, Any?>
+    fun dataObject(row: ResultRow): Map<String, Any?> {
+        val map = HashMap<String, Any?> ()
+        map["firstDay"] = row[MeasurementsTable.firstDay].toLocalDate()
+        columns.forEach {
+            map[it.value] = row[it.key]
+        }
+        return map
+    }
 }
 
-class MinAvgMaxColumns<N : Number>(
-        val min: Column<N?>,
-        val avg: Column<N?>,
-        val max: Column<N?>,
-        val details: Column<Array<N?>>
-) : MeasurementColumns<N, MinAvgMax<N>>(min, avg, max, details) {
-    override fun dataObject(row: ResultRow) = mapOf("firstDay" to row[MeasurementsTable.firstDay].toLocalDate(),
-                                                    "min" to row[min],
-                                                    "avg" to row[avg],
-                                                    "max" to row[max],
-                                                    "details" to row[details])
-}
+class MinAvgMaxColumns<N : Number>(val min: Column<N?>,
+                                   val avg: Column<N?>,
+                                   val max: Column<N?>,
+                                   val details: Column<Array<N?>>) :
+        MeasurementColumns<N, MinAvgMax<N>>(mapOf(min to "min", avg to "avg", max to "max", details to "details"))
 
 class MinAvgMax<N : Number?>(var details: Array<N?>, var min: N? = null, var avg: N? = null, var max: N? = null)
 
 class AvgMaxColumns<N : Number?>(var avg: Column<N?>, var max: Column<N?>, var details: Column<Array<N?>>) :
-        MeasurementColumns<N, MinAvgMax<N?>>(avg, max, details) {
-    override fun dataObject(row: ResultRow) = mapOf("firstDay" to row[MeasurementsTable.firstDay].toLocalDate(),
-                                                    "avg" to row[avg],
-                                                    "max" to row[max],
-                                                    "details" to row[details])
-}
+        MeasurementColumns<N, MinAvgMax<N?>>(mapOf(avg to "avg", max to "max", details to "details"))
 
 class IntegersColumns(var details: Column<Array<Int?>>, var sum: Column<Int?>) :
-        MeasurementColumns<Int, Integers>(details, sum) {
-    override fun dataObject(row: ResultRow) = mapOf("firstDay" to row[MeasurementsTable.firstDay].toLocalDate(),
-                                                    "sum" to row[sum],
-                                                    "values" to row[details])
-
-}
+        MeasurementColumns<Int, Integers>(mapOf(details to "details", sum to "sum"))
 
 class DecimalsColumns(var details: Column<Array<BigDecimal?>>, var sum: Column<BigDecimal?>) :
-        MeasurementColumns<Int, Decimals>(details, sum) {
-    override fun dataObject(row: ResultRow) = mapOf("firstDay" to row[MeasurementsTable.firstDay].toLocalDate(),
-                                                    "sum" to row[sum],
-                                                    "values" to row[details])
-}
+        MeasurementColumns<Int, Decimals>(mapOf(details to "details", sum to "sum"))
 
 class Decimals(val values: Array<BigDecimal?>, var sum: BigDecimal? = null)
 
 class Integers(val values: Array<Int?>, var sum: Int? = null)
 
 class HistogramColumns(val details: Column<Array<Int?>>, val histogram: Column<Array<Int>>) :
-        MeasurementColumns<Int?, Histogram>(details, histogram) {
-    override fun dataObject(row: ResultRow) = mapOf("firstDay" to row[MeasurementsTable.firstDay],
-                                                    "histogram" to row[histogram],
-                                                    "details" to row[details])
-}
+        MeasurementColumns<Int?, Histogram>(mapOf(details to "details", histogram to "histogram"))
 
 class Histogram(var histogram: Array<Int>, var details: Array<Int?>)
 
-class Measurement(
-        @Transient var station: Station,
-        @Transient var firstDay: LocalDate,
-        val interval: Interval,
+class Measurement(@Transient var station: Station,
+                  @Transient var firstDay: LocalDate,
+                  val interval: Interval,
 
-        val temperatures: MinAvgMax<BigDecimal?>,
-        val dewPointTemperatures: MinAvgMax<BigDecimal?>,
-        val humidity: MinAvgMax<BigDecimal?>,
-        val airPressure: MinAvgMax<BigDecimal?>,
-        val visibility: MinAvgMax<Int?>,
-        val cloudCoverage: Histogram,
-        val sunshineDuration: Integers,
-        val rainfall: Decimals,
-        val snowfall: Decimals,
-        val wind: MinAvgMax<BigDecimal?>,
-        val detailedWindDirectionDegrees: Array<Int?>
-) {
+                  val temperatures: MinAvgMax<BigDecimal?>,
+                  val dewPointTemperatures: MinAvgMax<BigDecimal?>,
+                  val humidity: MinAvgMax<BigDecimal?>,
+                  val airPressure: MinAvgMax<BigDecimal?>,
+                  val visibility: MinAvgMax<Int?>,
+                  val cloudCoverage: Histogram,
+                  val sunshineDuration: Integers,
+                  val rainfall: Decimals,
+                  val snowfall: Decimals,
+                  val wind: MinAvgMax<BigDecimal?>,
+                  val detailedWindDirectionDegrees: Array<Int?>) {
     val stationId get() = station.id
     val firstDayDateTime get() = firstDay.toDateTimeAtStartOfDay()!!
 }

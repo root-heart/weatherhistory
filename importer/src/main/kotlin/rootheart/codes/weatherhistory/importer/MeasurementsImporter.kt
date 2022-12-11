@@ -127,8 +127,8 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
             unzipJobs.joinAll()
 
             log.info { "Station ${station.id} - Summarizing ${measurementByTime.size} objects" }
-            val monthlySummaries = summarize()
-            val measurements = measurementByTime.values + monthlySummaries.values
+            val summaries = summarize(measurementByTime.values)
+            val measurements = measurementByTime.values + summaries
 
             log.info { "Station ${station.id} - Inserting ${measurements.size} objects into the database" }
 
@@ -200,14 +200,14 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
     }
 
     private fun unzip(zippedBytes: ByteArray) =
-        ZipInputStream(ByteArrayInputStream(zippedBytes)).use { zipInputStream ->
-            val entries = generateSequence { zipInputStream.nextEntry }
-            if (entries.any { fileIsMeasurementFile(it.name) }) {
-                zipInputStream.readBytes()
-            } else {
-                ByteArray(0)
+            ZipInputStream(ByteArrayInputStream(zippedBytes)).use { zipInputStream ->
+                val entries = generateSequence { zipInputStream.nextEntry }
+                if (entries.any { fileIsMeasurementFile(it.name) }) {
+                    zipInputStream.readBytes()
+                } else {
+                    ByteArray(0)
+                }
             }
-        }
 
     private fun parse(bytes: ByteArray) = ByteArrayInputStream(bytes).bufferedReader().use { reader ->
         val header = reader.readLine() ?: ""
@@ -282,11 +282,20 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
 //            }
 //        }
     }
+}
 
-    private fun summarize(): Map<LocalDate, Measurement> = measurementByTime.values
+private fun summarize(measurements: Collection<Measurement>): Collection<Measurement> {
+    val summarizedByMonth = measurements
             .groupBy { LocalDate(it.firstDay.year, it.firstDay.monthOfYear, 1) }
-            .mapValues { (beginningOfMonth, measurements) -> summarizeMonth(beginningOfMonth, measurements) }
-
+            .mapValues { (beginningOfMonth, measurements) ->
+                summarizeMonth(beginningOfMonth, measurements, Interval.MONTH)
+            }
+    val summarizedByYear = summarizedByMonth.values
+            .groupBy { LocalDate(it.firstDay.year, 1, 1) }
+            .mapValues { (beginningOfYear, measurements) ->
+                summarizeMonth(beginningOfYear, measurements, Interval.YEAR)
+            }
+    return summarizedByMonth.values + summarizedByYear.values
 }
 
 private fun setHourlyAirTemperatureData(measurementRecord: Measurement, hour: Int, row: SemicolonSeparatedValues.Row) {
@@ -351,53 +360,53 @@ private fun setDailyData(measurementRecord: Measurement, row: SemicolonSeparated
     measurementRecord.temperatures.min = row["TNK"]?.let(::BigDecimal)
 }
 
-private fun summarizeMonth(beginningOfMonth: LocalDate, measurements: List<Measurement>): Measurement {
+private fun summarizeMonth(beginningOfMonth: LocalDate, measurements: List<Measurement>,
+                           interval: Interval): Measurement {
     val cloudCoverageHistogram = Array(10) { 0 }
     for (m in measurements) {
         m.cloudCoverage.histogram.forEachIndexed { index, coverage -> cloudCoverageHistogram[index] += coverage }
     }
 
-    return Measurement(
-            station = measurements[0].station,
-            firstDay = beginningOfMonth,
-            interval = Interval.MONTH,
+    return Measurement(station = measurements[0].station,
+                       firstDay = beginningOfMonth,
+                       interval = interval,
 
-            temperatures = summarizeDecimals(measurements, Measurement::temperatures),
-            dewPointTemperatures = summarizeDecimals(measurements, Measurement::dewPointTemperatures),
-            humidity = summarizeDecimals(measurements, Measurement::humidity),
-            airPressure = summarizeDecimals(measurements, Measurement::airPressure),
-            visibility = summarizeIntegers(measurements, Measurement::visibility),
-            wind = summarizeDecimals(measurements, Measurement::wind),
+                       temperatures = summarizeDecimals(measurements, Measurement::temperatures),
+                       dewPointTemperatures = summarizeDecimals(measurements, Measurement::dewPointTemperatures),
+                       humidity = summarizeDecimals(measurements, Measurement::humidity),
+                       airPressure = summarizeDecimals(measurements, Measurement::airPressure),
+                       visibility = summarizeIntegers(measurements, Measurement::visibility),
+                       wind = summarizeDecimals(measurements, Measurement::wind),
 
-            cloudCoverage = Histogram(histogram = cloudCoverageHistogram, details = Array(0) { 0 }),
+                       cloudCoverage = Histogram(histogram = cloudCoverageHistogram, details = Array(0) { 0 }),
 
-            sunshineDuration = Integers(sum = measurements.nullsafeSumInts { it.sunshineDuration.sum },
-                                        values = measurements.flatMap { it.sunshineDuration.values.toList() }
-                                                .toTypedArray()),
+                       sunshineDuration = Integers(sum = measurements.nullsafeSumInts { it.sunshineDuration.sum },
+                                                   values = measurements.map { it.sunshineDuration.sum }
+                                                           .toTypedArray()),
 
-            rainfall = Decimals(sum = measurements.nullsafeSumDecimals { it.rainfall.sum },
-                                values = measurements.flatMap { it.rainfall.values.toList() }.toTypedArray()),
+                       rainfall = Decimals(sum = measurements.nullsafeSumDecimals { it.rainfall.sum },
+                                           values = measurements.map { it.rainfall.sum }.toTypedArray()),
 
-            snowfall = Decimals(sum = measurements.nullsafeSumDecimals { it.snowfall.sum },
-                                values = measurements.flatMap { it.snowfall.values.toList() }.toTypedArray()),
+                       snowfall = Decimals(sum = measurements.nullsafeSumDecimals { it.snowfall.sum },
+                                           values = measurements.map { it.snowfall.sum }.toTypedArray()),
 
-            detailedWindDirectionDegrees = Array(0) { null })
+                       detailedWindDirectionDegrees = Array(0) { null })
 }
 
 private fun summarizeDecimals(measurements: Collection<Measurement>,
                               selector: (Measurement) -> MinAvgMax<BigDecimal?>) =
-    MinAvgMax<BigDecimal?>(min = measurements.nullsafeMin { selector(it).min },
-                           avg = measurements.nullsafeAvgDecimal { selector(it).avg },
-                           max = measurements.nullsafeMax { selector(it).max },
-                           details = measurements.map { selector(it).avg }.toTypedArray()
-    )
+        MinAvgMax<BigDecimal?>(min = measurements.nullsafeMin { selector(it).min },
+                               avg = measurements.nullsafeAvgDecimal { selector(it).avg },
+                               max = measurements.nullsafeMax { selector(it).max },
+                               details = measurements.map { selector(it).avg }.toTypedArray()
+        )
 
 private fun summarizeIntegers(measurements: Collection<Measurement>,
                               selector: (Measurement) -> MinAvgMax<Int?>) =
-    MinAvgMax<Int?>(min = measurements.nullsafeMin { selector(it).min },
-                    avg = measurements.nullsafeAvgInt { selector(it).avg },
-                    max = measurements.nullsafeMax { selector(it).max },
-                    details = measurements.map { selector(it).avg }.toTypedArray())
+        MinAvgMax<Int?>(min = measurements.nullsafeMin { selector(it).min },
+                        avg = measurements.nullsafeAvgInt { selector(it).avg },
+                        max = measurements.nullsafeMax { selector(it).max },
+                        details = measurements.map { selector(it).avg }.toTypedArray())
 
 private fun emptyMeasurement(station: Station, day: LocalDate, interval: Interval, detailsSize: Int): Measurement {
     return Measurement(station = station,
@@ -418,7 +427,7 @@ private fun emptyMeasurement(station: Station, day: LocalDate, interval: Interva
 }
 
 private fun fileIsMeasurementFile(filename: String) =
-    filename.startsWith("produkt_") && filename.endsWith(".txt")
+        filename.startsWith("produkt_") && filename.endsWith(".txt")
 
 private fun nullsafeBigDecimal(value: String?): BigDecimal? {
     if (value != null) {
