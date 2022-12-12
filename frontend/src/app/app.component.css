@@ -48,6 +48,18 @@ md-tabs md-ink-bar {
     padding: 0.3rem 1rem;
 }
 
+/*.experiment {*/
+/*    display: grid;*/
+/*    grid-template-columns: repeat(3, 25vw);*/
+/*    justify-content: center;*/
+/*    position: relative;*/
+/*}*/
+
+/*.experiment>* {*/
+/*    height: 16vw;*/
+/*    padding: 1vw 3vw;*/
+/*}*/
+
 .experiment>*:hover {
     background-color: #ffffff10;
 }
