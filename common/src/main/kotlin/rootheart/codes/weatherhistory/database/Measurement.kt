@@ -2,7 +2,12 @@ package rootheart.codes.weatherhistory.database
 
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.LocalDate
 import java.math.BigDecimal
 
@@ -84,17 +89,19 @@ object MeasurementsTable : LongIdTable("MEASUREMENTS") {
 }
 
 // TODO Place this class and its children somewhere else as this is more or less to "JSONify" the data.
-abstract class MeasurementColumns<N : Number?, R>(private val columns: Map<Column<*>, String>) {
+abstract class MeasurementColumns<N : Number?, R>(val columns: Map<Column<*>, String>) {
     val fields get() = MeasurementsTable.slice(columns.keys.toList() + MeasurementsTable.firstDay)
+}
 
-    fun dataObject(row: ResultRow): Map<String, Any?> {
-        val map = HashMap<String, Any?> ()
-        map["firstDay"] = row[MeasurementsTable.firstDay].toLocalDate()
-        columns.forEach {
-            map[it.value] = row[it.key]
-        }
-        return map
-    }
+class MeasurementsDAO<N : Number?, R>(private val columns: MeasurementColumns<N, R>) {
+    fun findAll(stationId: Long, startInclusive: LocalDate, endExclusive: LocalDate, resolution: Interval) =
+            transaction {
+                columns.fields
+                        .select(MeasurementsTable.stationId.eq(stationId)
+                                        .and(MeasurementsTable.interval.eq(resolution))
+                                        .and(MeasurementsTable.firstDay.greaterEq(startInclusive.toDateTimeAtStartOfDay()))
+                                        .and(MeasurementsTable.firstDay.less(endExclusive.toDateTimeAtStartOfDay())))
+            }
 }
 
 class MinAvgMaxColumns<N : Number>(val min: Column<N?>,
