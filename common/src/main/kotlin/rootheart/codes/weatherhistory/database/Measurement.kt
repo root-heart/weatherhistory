@@ -2,6 +2,7 @@ package rootheart.codes.weatherhistory.database
 
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
@@ -89,46 +90,70 @@ object MeasurementsTable : LongIdTable("MEASUREMENTS") {
 }
 
 // TODO Place this class and its children somewhere else as this is more or less to "JSONify" the data.
-abstract class MeasurementColumns<N : Number?, R>(val columns: Map<Column<*>, String>) {
+open class MeasurementColumns(val columns: Map<Column<*>, String>) {
     val fields get() = MeasurementsTable.slice(columns.keys.toList() + MeasurementsTable.firstDay)
 }
 
-class MeasurementsDAO<N : Number?, R>(private val columns: MeasurementColumns<N, R>) {
-    fun findAll(stationId: Long, startInclusive: LocalDate, endExclusive: LocalDate, resolution: Interval) =
-            transaction {
-                columns.fields
-                        .select(MeasurementsTable.stationId.eq(stationId)
-                                        .and(MeasurementsTable.interval.eq(resolution))
-                                        .and(MeasurementsTable.firstDay.greaterEq(startInclusive.toDateTimeAtStartOfDay()))
-                                        .and(MeasurementsTable.firstDay.less(endExclusive.toDateTimeAtStartOfDay())))
-            }
+class MeasurementsDAO(private val columns: MeasurementColumns) {
+    fun <T> findAll(stationId: Long, startInclusive: LocalDate, endExclusive: LocalDate, resolution: Interval,
+                    mapper: (ResultRow) -> T) = transaction {
+        columns.fields
+                .select(MeasurementsTable.stationId.eq(stationId)
+                                .and(MeasurementsTable.interval.eq(resolution))
+                                .and(MeasurementsTable.firstDay.greaterEq(startInclusive.toDateTimeAtStartOfDay()))
+                                .and(MeasurementsTable.firstDay.less(endExclusive.toDateTimeAtStartOfDay())))
+                .map(mapper)
+    }
 }
 
 class MinAvgMaxColumns<N : Number>(val min: Column<N?>,
                                    val avg: Column<N?>,
                                    val max: Column<N?>,
                                    val details: Column<Array<N?>>) :
-        MeasurementColumns<N, MinAvgMax<N>>(mapOf(min to "min", avg to "avg", max to "max", details to "details"))
+        MeasurementColumns(mapOf(min to "min", avg to "avg", max to "max", details to "details"))
 
 class MinAvgMax<N : Number?>(var details: Array<N?>, var min: N? = null, var avg: N? = null, var max: N? = null)
 
 class AvgMaxColumns<N : Number?>(var avg: Column<N?>, var max: Column<N?>, var details: Column<Array<N?>>) :
-        MeasurementColumns<N, MinAvgMax<N?>>(mapOf(avg to "avg", max to "max", details to "details"))
+        MeasurementColumns(mapOf(avg to "avg", max to "max", details to "details"))
 
 class IntegersColumns(var details: Column<Array<Int?>>, var sum: Column<Int?>) :
-        MeasurementColumns<Int, Integers>(mapOf(details to "details", sum to "sum"))
+        MeasurementColumns(mapOf(details to "details", sum to "sum"))
 
 class DecimalsColumns(var details: Column<Array<BigDecimal?>>, var sum: Column<BigDecimal?>) :
-        MeasurementColumns<Int, Decimals>(mapOf(details to "details", sum to "sum"))
+        MeasurementColumns(mapOf(details to "details", sum to "sum"))
 
 class Decimals(val values: Array<BigDecimal?>, var sum: BigDecimal? = null)
 
 class Integers(val values: Array<Int?>, var sum: Int? = null)
 
 class HistogramColumns(val details: Column<Array<Int?>>, val histogram: Column<Array<Int>>) :
-        MeasurementColumns<Int?, Histogram>(mapOf(details to "details", histogram to "histogram"))
+        MeasurementColumns(mapOf(details to "details", histogram to "histogram"))
 
 class Histogram(var histogram: Array<Int>, var details: Array<Int?>)
+
+class SummaryColumns : MeasurementColumns(mapOf(
+        MeasurementsTable.temperatures.min to "minTemperature",
+        MeasurementsTable.temperatures.avg to "avgTemperature",
+        MeasurementsTable.temperatures.max to "maxTemperature",
+        MeasurementsTable.dewPointTemperatures.min to "minDewPointTemperature",
+        MeasurementsTable.dewPointTemperatures.avg to "avgDewPointTemperature",
+        MeasurementsTable.dewPointTemperatures.max to "maxDewPointTemperature",
+        MeasurementsTable.humidity.min to "minHumidity",
+        MeasurementsTable.humidity.avg to "avgHumidity",
+        MeasurementsTable.humidity.max to "maxHumidity",
+        MeasurementsTable.airPressure.min to "minAirPressure",
+        MeasurementsTable.airPressure.avg to "avgAirPressure",
+        MeasurementsTable.airPressure.max to "maxAirPressure",
+        MeasurementsTable.cloudCoverage.histogram to "cloudCoverage",
+        MeasurementsTable.sunshineDuration.sum to "sunshineDuration",
+        MeasurementsTable.rainfall.sum to "rainfall",
+        MeasurementsTable.snowfall.sum to "snowfall",
+        MeasurementsTable.windSpeed.avg to "avgWindspeed",
+        MeasurementsTable.windSpeed.max to "maxWindspeed",
+        MeasurementsTable.visibility.min to "minVisibility",
+        MeasurementsTable.visibility.avg to "avgVisibility",
+        MeasurementsTable.visibility.max to "maxVisibility"))
 
 class Measurement(@Transient var station: Station,
                   @Transient var firstDay: LocalDate,

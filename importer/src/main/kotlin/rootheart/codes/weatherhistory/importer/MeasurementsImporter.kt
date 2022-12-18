@@ -8,10 +8,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.statements.BatchInsertStatement
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 import rootheart.codes.common.collections.nullsafeAvgDecimal
@@ -23,20 +19,14 @@ import rootheart.codes.common.collections.nullsafeMin
 import rootheart.codes.common.collections.nullsafeSumDecimals
 import rootheart.codes.common.collections.nullsafeSumInts
 import rootheart.codes.common.strings.splitAndTrimTokens
-import rootheart.codes.weatherhistory.database.AvgMaxColumns
 import rootheart.codes.weatherhistory.database.Decimals
-import rootheart.codes.weatherhistory.database.DecimalsColumns
 import rootheart.codes.weatherhistory.database.Histogram
 import rootheart.codes.weatherhistory.database.Integers
-import rootheart.codes.weatherhistory.database.IntegersColumns
 import rootheart.codes.weatherhistory.database.Interval
 import rootheart.codes.weatherhistory.database.Measurement
-import rootheart.codes.weatherhistory.database.MeasurementsTable
 import rootheart.codes.weatherhistory.database.MinAvgMax
-import rootheart.codes.weatherhistory.database.MinAvgMaxColumns
 import rootheart.codes.weatherhistory.database.Station
 import rootheart.codes.weatherhistory.database.StationDao
-import rootheart.codes.weatherhistory.database.StationsTable
 import java.io.ByteArrayInputStream
 import java.math.BigDecimal
 import java.util.*
@@ -130,8 +120,7 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
 
             log.info { "Station ${station.id} - Inserting ${measurements.size} objects into the database" }
 
-            measurements.chunked(1024).parallelStream()
-                    .forEach { MeasurementsDatabaseInserter.insertMeasurementsIntoDatabase() }
+            measurements.chunked(1024).parallelStream().forEach(::insertMeasurementsIntoDatabase)
             log.info { "Station ${station.id} - Inserted ${measurements.size} objects into the database" }
         }
     }
@@ -281,8 +270,7 @@ private fun summarize(beginningOfMonth: LocalDate, measurements: List<Measuremen
                        cloudCoverage = Histogram(histogram = cloudCoverageHistogram, details = Array(0) { 0 }),
 
                        sunshineDuration = Integers(sum = measurements.nullsafeSumInts { it.sunshineDuration.sum },
-                                                   values = measurements.map { it.sunshineDuration.sum }
-                                                           .toTypedArray()),
+                                                   values = measurements.map { it.sunshineDuration.sum }.toTypedArray()),
 
                        rainfall = Decimals(sum = measurements.nullsafeSumDecimals { it.rainfall.sum },
                                            values = measurements.map { it.rainfall.sum }.toTypedArray()),

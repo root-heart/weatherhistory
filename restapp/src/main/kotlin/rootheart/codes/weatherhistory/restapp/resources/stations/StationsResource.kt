@@ -8,11 +8,12 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import org.jetbrains.exposed.sql.ResultRow
 import org.joda.time.LocalDate
-import rootheart.codes.weatherhistory.database.MeasurementsDAO
 import rootheart.codes.weatherhistory.database.Interval
 import rootheart.codes.weatherhistory.database.MeasurementColumns
+import rootheart.codes.weatherhistory.database.MeasurementsDAO
 import rootheart.codes.weatherhistory.database.MeasurementsTable
 import rootheart.codes.weatherhistory.database.StationDao
+import rootheart.codes.weatherhistory.database.SummaryColumns
 import rootheart.codes.weatherhistory.restapp.optPathParam
 import rootheart.codes.weatherhistory.restapp.optQueryParam
 import rootheart.codes.weatherhistory.restapp.requiredPathParam
@@ -42,8 +43,7 @@ fun Routing.stationsResource() {
                 val resolution = optQueryParam("resolution") { requestResolutionToIntervalMapping[it] }
                         ?: if (month == null) Interval.MONTH
                         else Interval.DAY
-                val data = dao.findAll(stationId, firstDay, lastDay, resolution)
-                        .map { columns.dataObject(it) }
+                val data = dao.findAll(stationId, firstDay, lastDay, resolution, columns::toMap)
                 call.respond(data)
             }
         }
@@ -60,13 +60,14 @@ val measurementTypeColumnsMapping = mapOf(
         "sunshine-duration" to MeasurementsTable.sunshineDuration,
         "rainfall" to MeasurementsTable.rainfall,
         "snowfall" to MeasurementsTable.snowfall,
-        "cloud-coverage" to MeasurementsTable.cloudCoverage)
+        "cloud-coverage" to MeasurementsTable.cloudCoverage,
+        "summary" to SummaryColumns())
 
 private val requestResolutionToIntervalMapping = mapOf("daily" to Interval.DAY,
                                                        "monthly" to Interval.MONTH,
                                                        "yearly" to Interval.YEAR)
 
-private fun MeasurementColumns<*, *>.dataObject(row: ResultRow): Map<String, Any?> {
+private fun MeasurementColumns.toMap(row: ResultRow): Map<String, Any?> {
     val map = HashMap<String, Any?>()
     map["firstDay"] = row[MeasurementsTable.firstDay].toLocalDate()
     columns.forEach {
@@ -74,4 +75,3 @@ private fun MeasurementColumns<*, *>.dataObject(row: ResultRow): Map<String, Any
     }
     return map
 }
-
