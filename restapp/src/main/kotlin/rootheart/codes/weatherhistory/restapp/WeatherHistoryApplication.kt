@@ -52,16 +52,16 @@ private class LocalDateTypeAdapter : TypeAdapter<LocalDate>() {
     }
 }
 
-fun <T> PipelineContext<Unit, ApplicationCall>.requiredPathParam(name: String, map: (String) -> T?): T =
-    map(requiredPathParam(name)) ?: badRequest("value for parameter $name cannot be mapped")
+inline fun <reified T> PipelineContext<Unit, ApplicationCall>.requiredPathParam(name: String, map: (String) -> T?): T =
+    map(requiredPathParam(name)) ?: badRequest("value for parameter $name cannot be mapped to ${T::class}")
 
-fun <T> PipelineContext<Unit, ApplicationCall>.optPathParam(name: String, map: (String) -> T?): T? =
+inline fun <reified T> PipelineContext<Unit, ApplicationCall>.optPathParam(name: String, noinline map: (String) -> T?): T? =
     call.parameters[name]?.let { tryMapOrBadRequest(it, map) }
 
 fun <T> PipelineContext<Unit, ApplicationCall>.optQueryParam(name: String, map: (String?) -> T?): T? =
     map(call.request.queryParameters[name])
 
-private fun PipelineContext<Unit, ApplicationCall>.requiredPathParam(name: String): String =
+fun PipelineContext<Unit, ApplicationCall>.requiredPathParam(name: String): String =
     call.parameters[name] ?: badRequest("param $name required")
 
 
