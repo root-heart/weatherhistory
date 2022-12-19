@@ -4,6 +4,8 @@ import {environment} from "../../environments/environment";
 import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
 import {HttpClient} from "@angular/common/http";
+import {Measurement} from "../SummaryData";
+import {MinAvgMaxSummary} from "./MinAvgMaxChart";
 
 export type Sum = {
     firstDay: Date,
@@ -11,22 +13,22 @@ export type Sum = {
 }
 
 @Component({
-    selector: "sum-chart[filterComponent][path]",
+    selector: "sum-chart[filterComponent]",
     template: "<canvas #chart></canvas>"
 })
 export class SumChart {
     @Input() fill: string = "#cc3333"
     @Input() fill2: string = "#3333cc"
-    @Input() path: string = "sunshine-duration"
+    @Input() sum: keyof Measurement = "sunshineDuration"
 
     @Input() set filterComponent(c: StationAndDateFilterComponent) {
-        c.onFilterChanged.subscribe((event: FilterChangedEvent) => {
-            let stationId = event.station.id;
-            let year = event.start;
-            let url = `${environment.apiServer}/stations/${stationId}/${this.path}/${year}?resolution=${this.resolution}`
-            this.http
-                .get<Sum[]>(url)
-                .subscribe(data => this.setData(data))
+        c.onFilterChanged.subscribe(event => {
+            let minAvgMaxData = event.details.map(m => {
+                return <Sum> {
+                    firstDay: m.firstDay, sum: m[this.sum]
+                }
+            })
+            this.setData(minAvgMaxData)
         })
     }
 

@@ -20,13 +20,11 @@ export class HistogramChart {
     @Input() path: string = "cloud-coverage"
 
     @Input() set filterComponent(c: StationAndDateFilterComponent) {
-        c.onFilterChanged.subscribe((event: FilterChangedEvent) => {
-            let stationId = event.station.id;
-            let year = event.start;
-            let url = `${environment.apiServer}/stations/${stationId}/${this.path}/${year}?resolution=${this.resolution}`
-            this.http
-                .get<Histogram[]>(url)
-                .subscribe(data => this.setData(data))
+        c.onFilterChanged.subscribe(event => {
+            let data = event.details.map(m => {
+                return <Histogram>{firstDay: m.firstDay, histogram: m.cloudCoverage}
+            })
+            this.setData(data)
         })
     }
 
@@ -54,7 +52,7 @@ export class HistogramChart {
         'hsl(0, 50%, 20%)',
     ];
 
-    constructor(private http: HttpClient) {
+    constructor() {
         Chart.register(...registerables);
     }
 
@@ -75,6 +73,13 @@ export class HistogramChart {
             display: this.showAxes
         }
         options.scales!.x = {
+            type: "time",
+            time: {
+                unit: "month",
+                displayFormats: {
+                    month: "MMM"
+                }
+            },
             // labels: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
             ticks: {minRotation: 0, maxRotation: 0, sampleSize: 12},
             display: this.showAxes
@@ -92,7 +97,7 @@ export class HistogramChart {
 
         const lengths = data.map(d => d.histogram).map(h => h.length);
         let maxLength = Math.max.apply(null, lengths)
-        let datasets: ChartDataset[] =  []
+        let datasets: ChartDataset[] = []
 
         for (let index = 0; index < maxLength; index++) {
             datasets[index] = {

@@ -1,14 +1,13 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {Chart, ChartConfiguration, ChartOptions, TimeScaleOptions} from "chart.js";
+import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
 import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
-import {FilterChangedEvent, StationAndDateFilterComponent} from "../filter-header/station-and-date-filter.component";
+import {StationAndDateFilterComponent} from "../filter-header/station-and-date-filter.component";
 import {HttpClient} from "@angular/common/http";
-import {environment} from "../../environments/environment";
-import {registerables} from 'chart.js';
 import 'chartjs-adapter-luxon';
+import {Measurement} from "../SummaryData";
 
 export type MinAvgMaxSummary = {
-    firstDay?: Date,
+    firstDay: Date,
     min: number,
     avg: number,
     max: number,
@@ -19,24 +18,28 @@ export type MinAvgMaxSummary = {
  * properties are set
  */
 @Component({
-    selector: "min-avg-max-chart[filterComponent][path]",
+    selector: "min-avg-max-chart[filterComponent]",
     template: "<canvas #chart></canvas>"
 })
 export class MinAvgMaxChart {
     @Input() color: string = "#c33"
     @Input() fill: string = "#cc333320"
-    @Input() lineWidth: number = 1
+    @Input() lineWidth: number = 2
 
-    @Input() path: string = "temperature"
+    // @Input() path: string = "temperature"
+    @Input() min: keyof Measurement = "minTemperature"
+    @Input() avg: keyof Measurement = "avgTemperature"
+    @Input() max: keyof Measurement = "maxTemperature"
+    @Input() logarithmic: boolean = false
 
     @Input() set filterComponent(c: StationAndDateFilterComponent) {
-        c.onFilterChanged.subscribe((event: FilterChangedEvent) => {
-            let stationId = event.station.id;
-            let year = event.start;
-            let url = `${environment.apiServer}/stations/${stationId}/${this.path}/${year}?resolution=${this.resolution}`
-            this.http
-                .get<MinAvgMaxSummary[]>(url)
-                .subscribe(data => this.setData(data))
+        c.onFilterChanged.subscribe(event => {
+            let minAvgMaxData = event.details.map(m => {
+                return <MinAvgMaxSummary> {
+                    firstDay: m.firstDay, min: m[this.min], avg: m[this.avg], max: m[this.max]
+                }
+            })
+            this.setData(minAvgMaxData)
         })
     }
 
@@ -63,16 +66,24 @@ export class MinAvgMaxChart {
 
         let options: ChartOptions = getDefaultChartOptions()
 
-        options.scales!.y = {
-            beginAtZero: this.includeZero,
-            display: this.showAxes
+        if (this.logarithmic) {
+            options.scales!.y! = {
+                type: "logarithmic",
+                display: this.showAxes,
+            }
+        } else {
+            options.scales!.y = {
+                beginAtZero: this.includeZero,
+                display: this.showAxes,
+            }
         }
+
         options.scales!.x = {
             type: "time",
             time: {
                 unit: "month",
                 displayFormats: {
-                    month: "MMMMM"
+                    month: "MMM"
                 }
             },
             // labels: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
