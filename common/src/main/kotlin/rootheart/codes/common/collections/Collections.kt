@@ -1,8 +1,6 @@
 package rootheart.codes.common.collections
 
-import rootheart.codes.weatherhistory.database.MeasurementsTable
 import java.math.BigDecimal
-import java.math.RoundingMode
 
 inline fun <T, N : Comparable<N>> Iterable<T>.nullsafeMin(selector: (T) -> N?): N? {
     return nullsafeMin(iterator(), selector)
@@ -61,40 +59,48 @@ inline fun <T, N : Comparable<N>> nullsafeMax(iterator: Iterator<T>, selector: (
 ////////////////////////////////////////////////////////////////
 
 fun <E> Collection<E>.nullsafeAvgDecimal(selector: (E) -> BigDecimal?): BigDecimal? =
-    this.nullsafeSumDecimals(selector)?.let { it / BigDecimal(size) }
+        this.nullsafeSumDecimals(selector)
+                ?.let { sum ->
+                    val notNullValuesCount = mapNotNull(selector).count()
+                    sum / BigDecimal(notNullValuesCount)
+                }
 
 fun <E> Collection<E>.nullsafeAvgInt(selector: (E) -> Int?): Int? =
-    this.nullsafeSumInts(selector)?.let { it / size }
+        this.nullsafeSumInts(selector)?.let { it / mapNotNull(selector).count() }
 
 fun Array<BigDecimal?>.nullsafeAvgDecimals(): BigDecimal? =
-    nullsafeSum(iterator(), BigDecimal::plus) { it }?.let { it / BigDecimal(size) }
+        nullsafeSum(iterator(), BigDecimal::plus) { it }
+                ?.let { sum ->
+                    val notNullValuesCount = filterNotNull().count()
+                    sum / BigDecimal(notNullValuesCount)
+                }
 
 fun Array<Int?>.nullsafeAvgInts(): Int? =
-    nullsafeSum(iterator(), Int::plus) { it }?.let { it / size }
+        nullsafeSum(iterator(), Int::plus) { it }?.let { it / filterNotNull().count() }
 
 
 ////////////////////////////////////////////////////////////////
 
 fun <E> Iterable<E>.nullsafeSumDecimals(selector: (E) -> BigDecimal?) =
-    nullsafeSumDecimals(iterator(), selector)
+        nullsafeSumDecimals(iterator(), selector)
 
 fun <E> Array<E>.nullsafeSumDecimals(selector: (E) -> BigDecimal?) =
-    nullsafeSum(iterator(), BigDecimal::plus, selector)
+        nullsafeSum(iterator(), BigDecimal::plus, selector)
 
 fun <E> nullsafeSumDecimals(iterator: Iterator<E>, selector: (E) -> BigDecimal?) =
-    nullsafeSum(iterator, BigDecimal::plus, selector)
+        nullsafeSum(iterator, BigDecimal::plus, selector)
 
 inline fun <T> Iterable<T>.nullsafeSumInts(selector: (T) -> Int?): Int? {
     return nullsafeSum(iterator(), Int::plus, selector)
 }
 
 fun <E> Array<E>.nullsafeSumInts(selector: (E) -> Int?) =
-    nullsafeSum(iterator(), Int::plus, selector)
+        nullsafeSum(iterator(), Int::plus, selector)
 
 inline fun <T, reified N : Number> nullsafeSum(
-    iterator: Iterator<T>,
-    plusFunction: (N, N) -> N,
-    selector: (T) -> N?
+        iterator: Iterator<T>,
+        plusFunction: (N, N) -> N,
+        selector: (T) -> N?
 ): N? {
     if (!iterator.hasNext()) return null
     var sum = selector(iterator.next())
