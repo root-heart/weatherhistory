@@ -1,63 +1,54 @@
-.tab-body {
-    display: grid;
-    grid-template-columns: repeat(2, 45vw);
-    height: 30vw;
-}
-
-.tab-headers {
-    display: flex;
-}
-
-.tab-header {
-    display: grid;
-    grid-template-columns: repeat(3, 3rem);
-    grid-gap: 1rem;
-}
-
-md-tabs md-ink-bar {
-    background-color: black;
-}
-
-.tab-header > .tab-title {
-    grid-column-end: span 3;
-}
-
-
-.min-value {
-
-}
-
 h1, h2 {
     margin: 0;
 }
 
-.experiment {
-    /*margin-left: 40rem;*/
+.chart-tiles {
     display: grid;
-    grid-template-columns: 60rem 20rem;
-    grid-template-rows: max-content 20rem;
-    grid-auto-rows: max-content 20rem;
+    justify-content: center;
+    grid-gap: 1vw 2vw;
 }
 
-.experiment > h1 {
-    /*grid-area: a;*/
+.chart-tiles.one-column {
+    grid-template-columns: max(96vw, 30rem);
+}
+
+.chart-tiles.two-columns {
+    grid-template-columns: repeat(2, max(46.5vw, 30rem));
+}
+
+.chart-tiles.three-columns {
+    grid-template-columns: repeat(3, max(31vw, 30rem));
+}
+
+section.chart-tile {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 30% 70%;
+}
+
+.chart-tiles.one-column > .chart-tile {
+    grid-template-rows: 2rem 40vw;
+}
+
+.chart-tiles.two-columns > .chart-tile {
+    grid-template-rows: 2rem 20vw;
+}
+
+.chart-tiles.three-columns > .chart-tile {
+    grid-template-rows: 2rem 15vw;
+}
+
+section.chart-tile > h1 {
+    font-weight: normal;
+    align-self: end;
+}
+
+section.chart-tile > .summary {
+    justify-self: right;
+    align-self: end;
+}
+
+section.chart-tile > .chart {
     grid-column: span 2;
-}
-
-.summary-value {
-    display: grid;
-    grid-template-rows: repeat(3, auto);
-}
-
-.summary-value > .legend {
-    font-size: 0.8rem;
-}
-
-.summary-value > .value {
-    font-size: 1.2rem;
-    /*justify-self: right;*/
-}
-
-.summary-value > .when {
-    font-size: 0.8rem;
+    height: 100%;
 }

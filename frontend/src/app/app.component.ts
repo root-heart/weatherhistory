@@ -16,11 +16,7 @@ export class AppComponent {
 
     measurementType?: MeasurementTypes
 
-    minTemperature: number | null = NaN
-    avgTemperature: number | null = NaN
-    maxTemperature: number | null = NaN
-
-    sumSunshineDuration?: string
+    columnCount: number = 1
 
     showDetails(measurementType: MeasurementTypes) {
         this.measurementType = measurementType

@@ -27,16 +27,20 @@ export class MinAvgMaxChart {
     @Input() lineWidth: number = 2
 
     // @Input() path: string = "temperature"
-    @Input() min: keyof Measurement = "minTemperature"
-    @Input() avg: keyof Measurement = "avgTemperature"
-    @Input() max: keyof Measurement = "maxTemperature"
+    @Input() min?: keyof Measurement
+    @Input() avg?: keyof Measurement
+    @Input() max?: keyof Measurement
     @Input() logarithmic: boolean = false
+    @Input() maxValue?: number
 
     @Input() set filterComponent(c: StationAndDateFilterComponent) {
         c.onFilterChanged.subscribe(event => {
             let minAvgMaxData = event.details.map(m => {
-                return <MinAvgMaxSummary> {
-                    firstDay: m.firstDay, min: m[this.min], avg: m[this.avg], max: m[this.max]
+                return <MinAvgMaxSummary>{
+                    firstDay: m.firstDay,
+                    min: this.min ? m[this.min] : 0,
+                    avg: this.avg ? m[this.avg] : 0,
+                    max: this.max ? m[this.max] : 0
                 }
             })
             this.setData(minAvgMaxData)
@@ -50,7 +54,7 @@ export class MinAvgMaxChart {
     @ViewChild("chart") private canvas?: ElementRef
     private chart?: Chart
 
-    constructor(private http: HttpClient) {
+    constructor() {
         Chart.register(...registerables);
     }
 
@@ -70,6 +74,9 @@ export class MinAvgMaxChart {
             options.scales!.y! = {
                 type: "logarithmic",
                 display: this.showAxes,
+            }
+            if (this.maxValue) {
+                options.scales!.y!.max = this.maxValue
             }
         } else {
             options.scales!.y = {
