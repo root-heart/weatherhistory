@@ -55,7 +55,7 @@ fun Routing.stationsResource() {
 //                    val details = columns.select(stationId, firstDay, lastDay, Interval.DAY, columns::toMap)
 //                }
 
-                var x = if (summary.isEmpty()) emptyMap<String, Any?>() else summary[0]
+                val x = if (summary.isEmpty()) emptyMap() else summary[0]
                 call.respond(mapOf("summary" to x, "details" to details))
             }
         }
@@ -84,44 +84,6 @@ private fun MeasurementColumns.toMap(row: ResultRow): Map<String, Any?> {
     return map
 }
 
-//private fun toMeasurement(row: ResultRow): Measurement {
-//    val measurement = with(MeasurementsTable) {
-//        Measurement(
-//                firstDay = row[firstDay].toLocalDate(),
-//                temperatures = MinAvgMax(Array(0) { BigDecimal.ZERO },
-//                                         row[temperatures.min],
-//                                         row[temperatures.avg],
-//                                         row[temperatures.max]),
-//                dewPointTemperatures = MinAvgMax(Array(0) { BigDecimal.ZERO },
-//                                                 row[dewPointTemperatures.min],
-//                                                 row[dewPointTemperatures.avg],
-//                                                 row[dewPointTemperatures.max]),
-//                humidity = MinAvgMax(Array(0) { BigDecimal.ZERO },
-//                                     row[humidity.min],
-//                                     row[humidity.avg],
-//                                     row[humidity.max]),
-//                airPressure = MinAvgMax(Array(0) { BigDecimal.ZERO },
-//                                        row[humidity.min],
-//                                        row[humidity.avg],
-//                                        row[humidity.max]),
-//                visibility = MinAvgMax(Array(0) { 0 },
-//                                       row[visibility.min],
-//                                       row[visibility.avg],
-//                                       row[visibility.max]),
-//                cloudCoverage = Histogram(row[cloudCoverage.histogram], row[cloudCoverage.details]),
-//                sunshineDuration = Integers(row[sunshineDuration.details], row[sunshineDuration.sum]),
-//                rainfall = Decimals(row[rainfall.details], row[rainfall.sum]),
-//                snowfall = Decimals(row[snowfall.details], row[snowfall.sum]),
-//                wind = MinAvgMax(Array(0) { BigDecimal.ZERO },
-//                                 BigDecimal.ZERO,
-//                                 row[windSpeed.avg],
-//                                 row[windSpeed.max]),
-//                detailedWindDirectionDegrees = row[detailedWindDirectionDegrees],
-//        )
-//    }
-//    return measurement
-//}
-
 private fun <T> MeasurementColumns.select(stationId: Long, startInclusive: LocalDate, endExclusive: LocalDate,
                                           resolution: Interval, mapper: (ResultRow) -> T) = transaction {
     fields.select(MeasurementsTable.stationId.eq(stationId).and(MeasurementsTable.interval.eq(resolution))
@@ -131,12 +93,3 @@ private fun <T> MeasurementColumns.select(stationId: Long, startInclusive: Local
 
 data class DayClassHistogram(val icyDays: Int, val frostyDays: Int, val vegetationDays: Int, val summerDays: Int,
                              val hotDays: Int, val desertDays: Int, val tropicNights: Int)
-
-private data class Histograms(
-        val dayClassHistogram: DayClassHistogram?,
-        val sunshineHistogram: Histogram?,
-        val rainfallHistogram: Histogram?,
-        val maxWindSpeedHistogram: Array<Int>?,
-        val humidityHistogram: Histogram?,
-        val cloudCoverageHistogram: Histogram?,
-)
