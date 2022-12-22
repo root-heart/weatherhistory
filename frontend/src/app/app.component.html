@@ -1,8 +1,8 @@
 <station-and-date-filter #filterComponent></station-and-date-filter>
 
-<button (click)="columnCount = 1">1</button>
-<button (click)="columnCount = 2">2</button>
-<button (click)="columnCount = 3">3</button>
+<!--<button (click)="columnCount = 1">1</button>-->
+<!--<button (click)="columnCount = 2">2</button>-->
+<!--<button (click)="columnCount = 3">3</button>-->
 
 <div [ngClass]="{'chart-tiles': true, 'one-column': columnCount == 1, 'two-columns': columnCount == 2, 'three-columns': columnCount == 3}">
     <section class="chart-tile">
@@ -26,9 +26,10 @@
     <section class="chart-tile">
         <h1>Sonnenschein</h1>
 
-        <div class="summary">&#931; {{filterComponent.data?.summary?.sunshineDuration?.toFixed(1)}}h</div>
+        <div class="summary">&#931; {{divideBy60(filterComponent.data?.summary?.sunshineDuration)?.toFixed(1)}}h</div>
 
         <sum-chart class="chart" [fill]="'hsl(40, 100%, 50%)'" [sum]="'sunshineDuration'"
+                   [valueConverter]="divideBy60"
                    [filterComponent]=filterComponent></sum-chart>
     </section>
 
@@ -57,11 +58,9 @@
         <min-avg-max-chart class="chart" [color]="'hsl(270, 80%, 65%)'" [fill]="'hsla(270, 80%, 65%, 0.3)'"
                            [avg]="'avgWindspeed'" [max]="'maxWindspeed'"
                            [filterComponent]=filterComponent></min-avg-max-chart>
-
     </section>
 
     <section class="chart-tile">
-
         <h1>Luftfeuchtigkeit</h1>
 
         <div class="summary">
@@ -92,11 +91,9 @@
                            [min]="'minDewPointTemperature'" [avg]="'avgDewPointTemperature'"
                            [max]="'maxDewPointTemperature'"
                            [filterComponent]=filterComponent></min-avg-max-chart>
-
     </section>
 
     <section class="chart-tile">
-
         <h1>Luftdruck</h1>
 
         <div class="summary">
@@ -112,11 +109,9 @@
                            [includeZero]=false
                            (click)="showDetails('airPressure')"
                            [filterComponent]=filterComponent></min-avg-max-chart>
-
     </section>
 
     <section class="chart-tile">
-
         <h1>Sichtweite</h1>
 
         <div class="summary">
@@ -128,7 +123,7 @@
         </div>
 
         <min-avg-max-chart class="chart" [color]="'hsl(0, 0%, 70%)'" [fill]="'hsla(0, 0%, 70%, 0.3)'"
-                           [logarithmic]="true" [maxValue]="100000"
+                           [logarithmic]="true" [minValue]="10" [maxValue]="100000"
                            [min]="'minVisibility'" [avg]="'avgVisibility'" [max]="'maxVisibility'"
                            [filterComponent]=filterComponent></min-avg-max-chart>
     </section>
@@ -137,6 +132,9 @@
         <h1>Bewölkung</h1>
 
         <div class="summary">
+            heiter bis wolkenlos: {{sumOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [0, 1, 2])}}
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            stark bewölkt bis bedeckt: {{sumOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [6, 7, 8])}}
         </div>
 
         <histogram-chart class="chart" [filterComponent]=filterComponent></histogram-chart>

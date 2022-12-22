@@ -35,15 +35,18 @@ section.chart-tile {
 }
 
 .chart-tiles.three-columns > .chart-tile {
-    grid-template-rows: 2rem 15vw;
+    grid-template-rows: 2rem 14vw;
 }
 
 section.chart-tile > h1 {
     font-weight: normal;
+    font-size: 1.3rem;
     align-self: end;
 }
 
 section.chart-tile > .summary {
+    font-weight: lighter;
+    font-size: 0.8rem;
     justify-self: right;
     align-self: end;
 }
