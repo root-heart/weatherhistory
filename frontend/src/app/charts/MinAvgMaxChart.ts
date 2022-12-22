@@ -115,21 +115,15 @@ export class MinAvgMaxChart {
             data: {
                 labels: labels,
                 datasets: [{
-                    // type: "line",
-                    // label: 'Temperatur',
                     borderWidth: this.lineWidth,
                     borderColor: this.color,
                     backgroundColor: this.color,
                     data: data.map(d => d.avg)
                 }, {
-                    // type: 'line',
-                    // label: 'min Temperatur',
                     borderWidth: 0,
                     backgroundColor: this.fill,
                     data: data.map(d => d.min)
                 }, {
-                    // type: 'line',
-                    // label: 'max Temperatur',
                     borderWidth: 0,
                     backgroundColor: this.fill,
                     data: data.map(d => d.max),
