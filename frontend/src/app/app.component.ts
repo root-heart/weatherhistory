@@ -1,6 +1,12 @@
 import {Component, ViewChild} from '@angular/core';
 import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.component";
-import {Duration} from "luxon";
+import {
+    faCloud,
+    faCloudShowersHeavy,
+    faCloudSun,
+    faSnowflake,
+    faSun
+} from '@fortawesome/free-solid-svg-icons';
 
 export type MeasurementTypes = "temperature" | "humidity" | "airPressure" | "visibility"
 
@@ -18,6 +24,12 @@ export class AppComponent {
     measurementType?: MeasurementTypes
 
     columnCount: number = 3
+
+    faSun = faSun
+    faCloudSun = faCloudSun
+    faCloud = faCloud
+    faRain = faCloudShowersHeavy
+    faSnow = faSnowflake
 
     showDetails(measurementType: MeasurementTypes) {
         this.measurementType = measurementType
