@@ -31,6 +31,7 @@ export class MinAvgMaxChart {
     @Input() avg?: keyof Measurement
     @Input() max?: keyof Measurement
     @Input() logarithmic: boolean = false
+    @Input() minValue?: number
     @Input() maxValue?: number
 
     @Input() set filterComponent(c: StationAndDateFilterComponent) {
@@ -74,6 +75,9 @@ export class MinAvgMaxChart {
             options.scales!.y! = {
                 type: "logarithmic",
                 display: this.showAxes,
+            }
+            if (this.minValue) {
+                options.scales!.y!.min = this.minValue
             }
             if (this.maxValue) {
                 options.scales!.y!.max = this.maxValue
