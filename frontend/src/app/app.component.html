@@ -136,13 +136,13 @@
 
         <div class="summary">
             <fa-icon [icon]="faSun"></fa-icon>
-            {{sumOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [0, 1, 2])}}
+            {{percentageOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [0, 1, 2])}}
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
             <fa-icon [icon]="faCloudSun"></fa-icon>
-            {{sumOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [3, 4, 5])}}
+            {{percentageOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [3, 4, 5])}}
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
             <fa-icon [icon]="faCloud"></fa-icon>
-            {{sumOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [6, 7, 8, 9])}}
+            {{percentageOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [6, 7, 8, 9])}}
         </div>
 
         <histogram-chart class="chart" [filterComponent]=filterComponent></histogram-chart>
