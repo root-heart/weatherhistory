@@ -6,6 +6,7 @@ import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
 import {HttpClient} from "@angular/common/http";
 import {Measurement} from "../SummaryData";
 import {MinAvgMaxSummary} from "./MinAvgMaxChart";
+import {Duration} from 'luxon'
 
 export type Sum = {
     firstDay: Date,
@@ -20,12 +21,16 @@ export class SumChart {
     @Input() fill: string = "#cc3333"
     @Input() fill2: string = "#3333cc"
     @Input() sum: keyof Measurement = "sunshineDuration"
+    @Input() valueConverter: (x?: number) => number | undefined = function (x) {
+        return x
+    }
 
     @Input() set filterComponent(c: StationAndDateFilterComponent) {
         c.onFilterChanged.subscribe(event => {
             let minAvgMaxData = event.details.map(m => {
-                return <Sum> {
-                    firstDay: m.firstDay, sum: m[this.sum]
+                let s = m[this.sum] as number
+                return <Sum>{
+                    firstDay: m.firstDay, sum: s == null ? null : this.valueConverter(s)
                 }
             })
             this.setData(minAvgMaxData)
@@ -64,7 +69,7 @@ export class SumChart {
             time: {
                 unit: "month",
                 displayFormats: {
-                    month: "MMMMM",
+                    month: "MMM",
                     round: "day",
                     bound: "ticks"
                 }
