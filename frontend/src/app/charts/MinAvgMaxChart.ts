@@ -33,6 +33,7 @@ export class MinAvgMaxChart {
     @Input() logarithmic: boolean = false
     @Input() minValue?: number
     @Input() maxValue?: number
+    @Input() ticks?: Array<{value: number, label: string}>
 
     @Input() set filterComponent(c: StationAndDateFilterComponent) {
         c.onFilterChanged.subscribe(event => {
@@ -82,6 +83,11 @@ export class MinAvgMaxChart {
             if (this.maxValue) {
                 options.scales!.y!.max = this.maxValue
             }
+            if (this.ticks) {
+                options.scales!.y!.min = this.ticks[0].value
+                options.scales!.y!.max = this.ticks[this.ticks.length - 1].value
+                options.scales!.y!.afterBuildTicks = (chart) => {chart.ticks = this.ticks!}
+            }
         } else {
             options.scales!.y = {
                 beginAtZero: this.includeZero,
@@ -97,7 +103,6 @@ export class MinAvgMaxChart {
                     month: "MMM"
                 }
             },
-            // labels: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
             ticks: {minRotation: 0, maxRotation: 0, sampleSize: 12},
             display: this.showAxes
         }
