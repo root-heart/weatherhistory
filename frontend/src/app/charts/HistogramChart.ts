@@ -77,23 +77,17 @@ export class HistogramChart {
             time: {
                 unit: "month",
                 displayFormats: {
-                    month: "MMM"
+                    month: "MMM",
+                    round: "day",
+                    bound: "ticks"
                 }
             },
-            // labels: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
             ticks: {minRotation: 0, maxRotation: 0, sampleSize: 12},
             display: this.showAxes
         }
         options.scales!.x2 = {display: false}
 
-        const labels = data.map(d => new Date(d.firstDay!));
-
-        const getColor = (context: ScriptableContext<'bar'>) => {
-            let bucket = context.datasetIndex
-            let value = data[context.dataIndex]
-            let coverage = value.histogram[bucket]
-            return coverage === undefined || coverage === null ? 'hsl(0, 50%, 30%)' : this.coverageColors[coverage];
-        }
+        const labels = data.map(d => d.firstDay);
 
         const lengths = data.map(d => d.histogram).map(h => h.length);
         let maxLength = Math.max.apply(null, lengths)
