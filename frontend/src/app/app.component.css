@@ -1,35 +1,57 @@
-:host {
-    position: relative;
+h1, h2 {
+    margin: 0;
 }
 
-h1 {
-    grid-column-start: 1;
-    grid-column-end: 2;
+.chart-tiles {
+    display: grid;
+    justify-content: center;
+    grid-gap: 1vw 2vw;
 }
 
-station-and-date-filter {
-
+.chart-tiles.one-column {
+    grid-template-columns: max(96vw, 30rem);
 }
 
-aside {
-    position: fixed;
-    left: 2rem;
-    top: 10rem;
-    bottom: 5rem;
-    width: 30rem;
+.chart-tiles.two-columns {
+    grid-template-columns: repeat(2, max(46.5vw, 30rem));
 }
 
-main {
-    margin: 0 10rem;
-    /*margin-top: 10rem;*/
-    /*padding-top: 10rem;*/
+.chart-tiles.three-columns {
+    grid-template-columns: repeat(3, max(31vw, 30rem));
 }
 
-main > section > h1 {
-    grid-column-start: 1;
-    grid-column-end: 3;
+section.chart-tile {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 30% 70%;
 }
 
-main > section > article {
+.chart-tiles.one-column > .chart-tile {
+    grid-template-rows: 2rem 40vw;
+}
+
+.chart-tiles.two-columns > .chart-tile {
+    grid-template-rows: 2rem 20vw;
+}
+
+.chart-tiles.three-columns > .chart-tile {
+    grid-template-rows: 2rem 14vw;
+}
+
+section.chart-tile > h1 {
+    font-weight: normal;
+    font-size: 1.3rem;
+    align-self: end;
+}
+
+section.chart-tile > .summary {
+    font-weight: lighter;
+    font-size: 0.8rem;
+    justify-self: right;
+    align-self: end;
+}
+
+section.chart-tile > .chart {
+    grid-column: span 2;
     height: 100%;
 }

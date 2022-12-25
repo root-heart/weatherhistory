@@ -1,69 +1,142 @@
-<!--<div style="display: grid; width: 60%; grid-template-columns: repeat(14, auto)">-->
-<!--    <span>wetterchroniken.de/</span>-->
-<!--    <select>-->
-<!--        <option>Ort 1</option>-->
-<!--        <option>Ort 2</option>-->
-<!--        <option>Ort 3</option>-->
-<!--    </select>-->
-<!--    <input type="number">-->
-<!--    <select>-->
-<!--        <option>Ganzes Jahr</option>-->
-<!--        <option>Frühling</option>-->
-<!--        <option>Sommer</option>-->
-<!--        <option>Herbst</option>-->
-<!--        <option>Winter</option>-->
-<!--        <option>Januar</option>-->
-<!--        <option>Februar</option>-->
-<!--        <option>März</option>-->
-<!--        <option>April</option>-->
-<!--        <option>Mai</option>-->
-<!--        <option>Juni</option>-->
-<!--        <option>Juli</option>-->
-<!--        <option>August</option>-->
-<!--        <option>September</option>-->
-<!--        <option>Oktober</option>-->
-<!--        <option>November</option>-->
-<!--        <option>Dezember</option>-->
-<!--    </select>-->
-<!--</div>-->
+<station-and-date-filter #filterComponent></station-and-date-filter>
 
-<station-and-date-filter (onFilterChanged)="filterChanged($event)"></station-and-date-filter>
+<!--<button (click)="columnCount = 1">1</button>-->
+<!--<button (click)="columnCount = 2">2</button>-->
+<!--<button (click)="columnCount = 3">3</button>-->
 
-<main>
-    <section>
+<div [ngClass]="{'chart-tiles': true, 'one-column': columnCount == 1, 'two-columns': columnCount == 2, 'three-columns': columnCount == 3}">
+    <section class="chart-tile">
         <h1>Temperatur</h1>
-        min Temp: {{minTemperature}}
-        avg Temp: {{avgTemperature}}
-        max Temp: {{maxTemperature}}
-        <temperature-chart #temperatureChart></temperature-chart>
+
+        <div class="summary">
+            &#x2b9f; {{filterComponent.data?.summary?.minTemperature?.toFixed(1)}}°C
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            &#8960; {{filterComponent.data?.summary?.avgTemperature?.toFixed(1)}}°C
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            &#x2b9d; {{filterComponent.data?.summary?.maxTemperature?.toFixed(1)}}°C
+        </div>
+
+        <min-avg-max-chart class="chart"
+                           [color]="'hsl(0, 80%, 45%)'" [fill]="'hsla(0, 80%, 45%, 0.3)'"
+                           [min]="'minTemperature'" [avg]="'avgTemperature'" [max]="'maxTemperature'"
+                           [filterComponent]=filterComponent
+                           (click)="showDetails('temperature')"></min-avg-max-chart>
     </section>
 
-    <section>
-        <h1>Niederschlag</h1>
-        <precipitation-chart #precipitationChart></precipitation-chart>
-    </section>
-
-    <section>
+    <section class="chart-tile">
         <h1>Sonnenschein</h1>
-        Sonne: {{sumSunshineDuration}}
-        <sunshine-chart #sunshineChart></sunshine-chart>
+
+        <div class="summary">&#931; {{divideBy60(filterComponent.data?.summary?.sunshineDuration)?.toFixed(1)}}h</div>
+
+        <sum-chart class="chart" [fill]="'hsl(40, 100%, 50%)'" [sum]="'sunshineDuration'"
+                   [valueConverter]="divideBy60"
+                   [filterComponent]=filterComponent></sum-chart>
     </section>
 
-    <section>
-        <h1>Bewölkung</h1>
-        <cloudiness-chart #cloudinessChart></cloudiness-chart>
+    <section class="chart-tile">
+        <h1>Niederschlag</h1>
+
+        <div class="summary">
+            Regen &#931; {{filterComponent.data?.summary?.rainfall?.toFixed(1)}}l/m²
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            Schnee &#931; {{filterComponent.data?.summary?.snowfall?.toFixed(1)}}mm
+        </div>
+
+        <sum-chart class="chart" [fill]="'hsl(240, 100%, 50%)'" [fill2]="'hsl(40, 0%, 80%)'" [sum]="'rainfall'"
+                   [filterComponent]=filterComponent></sum-chart>
     </section>
 
-    <section>
-        <h1>Luftdruck</h1>
-        <air-pressure-chart #airPressureChart></air-pressure-chart>
-    </section>
-
-    <section>
+    <section class="chart-tile">
         <h1>Wind</h1>
-        <wind-speed-chart #windSpeedChart></wind-speed-chart>
+
+        <div class="summary">
+            &#8960; {{filterComponent.data?.summary?.avgWindspeed?.toFixed(1)}}m/s
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            &#x2b9d; {{filterComponent.data?.summary?.maxWindspeed?.toFixed(1)}}m/s
+        </div>
+
+        <min-avg-max-chart class="chart" [color]="'hsl(270, 80%, 65%)'" [fill]="'hsla(270, 80%, 65%, 0.3)'"
+                           [avg]="'avgWindspeed'" [max]="'maxWindspeed'"
+                           [filterComponent]=filterComponent></min-avg-max-chart>
     </section>
 
-</main>
+    <section class="chart-tile">
+        <h1>Luftfeuchtigkeit</h1>
 
+        <div class="summary">
+            &#x2b9f; {{filterComponent.data?.summary?.minHumidity?.toFixed(1)}}%
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            &#8960; {{filterComponent.data?.summary?.avgHumidity?.toFixed(1)}}%
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            &#x2b9d; {{filterComponent.data?.summary?.maxHumidity?.toFixed(1)}}%
+        </div>
 
+        <min-avg-max-chart class="chart" [color]="'hsl(220, 80%, 30%)'" [fill]="'hsla(220, 80%, 30%, 0.3)'"
+                           [min]="'minHumidity'" [avg]="'avgHumidity'" [max]="'maxHumidity'"
+                           [filterComponent]=filterComponent></min-avg-max-chart>
+    </section>
+
+    <section class="chart-tile">
+        <h1>Taupunkt</h1>
+
+        <div class="summary">
+            &#x2b9f; {{filterComponent.data?.summary?.minDewPointTemperature?.toFixed(1)}}°C
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            &#8960; {{filterComponent.data?.summary?.avgDewPointTemperature?.toFixed(1)}}°C
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            &#x2b9d; {{filterComponent.data?.summary?.maxDewPointTemperature?.toFixed(1)}}°C
+        </div>
+
+        <min-avg-max-chart class="chart" [color]="'hsl(220, 80%, 70%)'" [fill]="'hsla(220, 80%, 70%, 0.3)'"
+                           [min]="'minDewPointTemperature'" [avg]="'avgDewPointTemperature'"
+                           [max]="'maxDewPointTemperature'"
+                           [filterComponent]=filterComponent></min-avg-max-chart>
+    </section>
+
+    <section class="chart-tile">
+        <h1>Luftdruck</h1>
+
+        <div class="summary">
+            &#x2b9f; {{filterComponent.data?.summary?.minAirPressure?.toFixed(1)}}hPa
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            &#8960; {{filterComponent.data?.summary?.avgAirPressure?.toFixed(1)}}hPa
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            &#x2b9d; {{filterComponent.data?.summary?.maxAirPressure?.toFixed(1)}}hPa
+        </div>
+
+        <min-avg-max-chart class="chart" [color]="'hsl(120, 80%, 45%)'" [fill]="'hsla(120, 80%, 45%, 0.15)'"
+                           [min]="'minAirPressure'" [avg]="'avgAirPressure'" [max]="'maxAirPressure'"
+                           [includeZero]=false
+                           (click)="showDetails('airPressure')"
+                           [filterComponent]=filterComponent></min-avg-max-chart>
+    </section>
+
+    <section class="chart-tile">
+        <h1>Sichtweite</h1>
+
+        <div class="summary">
+            &#x2b9f; {{filterComponent.data?.summary?.minVisibility?.toFixed(0)}}m
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            &#8960; {{filterComponent.data?.summary?.avgVisibility?.toFixed(0)}}m
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            &#x2b9d; {{filterComponent.data?.summary?.maxVisibility?.toFixed(0)}}m
+        </div>
+
+        <min-avg-max-chart class="chart" [color]="'hsl(0, 0%, 70%)'" [fill]="'hsla(0, 0%, 70%, 0.3)'"
+                           [logarithmic]="true" [minValue]="10" [maxValue]="100000"
+                           [min]="'minVisibility'" [avg]="'avgVisibility'" [max]="'maxVisibility'"
+                           [filterComponent]=filterComponent></min-avg-max-chart>
+    </section>
+
+    <section class="chart-tile">
+        <h1>Bewölkung</h1>
+
+        <div class="summary">
+            heiter bis wolkenlos: {{sumOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [0, 1, 2])}}
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            stark bewölkt bis bedeckt: {{sumOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [6, 7, 8])}}
+        </div>
+
+        <histogram-chart class="chart" [filterComponent]=filterComponent></histogram-chart>
+    </section>
+</div>

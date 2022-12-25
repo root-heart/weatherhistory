@@ -1,11 +1,21 @@
 package rootheart.codes.common.collections
 
 import java.math.BigDecimal
-import java.math.RoundingMode
 
-inline fun <T> Iterable<T>.minDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
-    val iterator = iterator()
-    if (!iterator.hasNext()) throw NoSuchElementException()
+inline fun <T, N : Comparable<N>> Iterable<T>.nullsafeMin(selector: (T) -> N?): N? {
+    return nullsafeMin(iterator(), selector)
+}
+
+inline fun <T, N : Comparable<N>> Array<T>.nullsafeMin(selector: (T) -> N?): N? {
+    return nullsafeMin(iterator(), selector)
+}
+
+inline fun <N : Comparable<N>> Array<N?>.nullsafeMin(): N? {
+    return nullsafeMin(iterator()) { it }
+}
+
+inline fun <T, N : Comparable<N>> nullsafeMin(iterator: Iterator<T>, selector: (T) -> N?): N? {
+    if (!iterator.hasNext()) return null
     var minValue = selector(iterator.next())
     while (iterator.hasNext()) {
         val v = selector(iterator.next())
@@ -18,8 +28,21 @@ inline fun <T> Iterable<T>.minDecimal(selector: (T) -> BigDecimal?): BigDecimal?
     return minValue
 }
 
-inline fun <T> Iterable<T>.maxDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
-    val iterator = iterator()
+////////////////////////////////////////////////////////////////
+
+inline fun <T, N : Comparable<N>> Iterable<T>.nullsafeMax(selector: (T) -> N?): N? {
+    return nullsafeMax(iterator(), selector)
+}
+
+inline fun <T, N : Comparable<N>> Array<T>.nullsafeMax(selector: (T) -> N?): N? {
+    return nullsafeMax(iterator(), selector)
+}
+
+inline fun <N : Comparable<N>> Array<N?>.nullsafeMax(): N? {
+    return nullsafeMax(iterator()) { it }
+}
+
+inline fun <T, N : Comparable<N>> nullsafeMax(iterator: Iterator<T>, selector: (T) -> N?): N? {
     if (!iterator.hasNext()) throw NoSuchElementException()
     var maxValue = selector(iterator.next())
     while (iterator.hasNext()) {
@@ -33,18 +56,61 @@ inline fun <T> Iterable<T>.maxDecimal(selector: (T) -> BigDecimal?): BigDecimal?
     return maxValue
 }
 
-inline fun <T> Collection<T>.avgDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
-    val countNonNull = count { selector(it) != null }.toLong()
-    return sumDecimal(selector)?.divide(BigDecimal.valueOf(countNonNull), RoundingMode.HALF_UP)
+////////////////////////////////////////////////////////////////
+
+fun <E> Collection<E>.nullsafeAvgDecimal(selector: (E) -> BigDecimal?): BigDecimal? =
+        this.nullsafeSumDecimals(selector)
+                ?.let { sum ->
+                    val notNullValuesCount = mapNotNull(selector).count()
+                    sum / BigDecimal(notNullValuesCount)
+                }
+
+fun <E> Collection<E>.nullsafeAvgInt(selector: (E) -> Int?): Int? =
+        this.nullsafeSumInts(selector)?.let { it / mapNotNull(selector).count() }
+
+fun Array<BigDecimal?>.nullsafeAvgDecimals(): BigDecimal? =
+        nullsafeSum(iterator(), BigDecimal::plus) { it }
+                ?.let { sum ->
+                    val notNullValuesCount = filterNotNull().count()
+                    sum / BigDecimal(notNullValuesCount)
+                }
+
+fun Array<Int?>.nullsafeAvgInts(): Int? =
+        nullsafeSum(iterator(), Int::plus) { it }?.let { it / filterNotNull().count() }
+
+
+////////////////////////////////////////////////////////////////
+
+fun <E> Iterable<E>.nullsafeSumDecimals(selector: (E) -> BigDecimal?) =
+        nullsafeSumDecimals(iterator(), selector)
+
+fun <E> Array<E>.nullsafeSumDecimals(selector: (E) -> BigDecimal?) =
+        nullsafeSum(iterator(), BigDecimal::plus, selector)
+
+fun <E> nullsafeSumDecimals(iterator: Iterator<E>, selector: (E) -> BigDecimal?) =
+        nullsafeSum(iterator, BigDecimal::plus, selector)
+
+inline fun <T> Iterable<T>.nullsafeSumInts(selector: (T) -> Int?): Int? {
+    return nullsafeSum(iterator(), Int::plus, selector)
 }
 
-inline fun <T> Collection<T>.sumDecimal(selector: (T) -> BigDecimal?): BigDecimal? {
-    val iterator = iterator()
+fun <E> Array<E>.nullsafeSumInts(selector: (E) -> Int?) =
+        nullsafeSum(iterator(), Int::plus, selector)
+
+inline fun <T, reified N : Number> nullsafeSum(
+        iterator: Iterator<T>,
+        plusFunction: (N, N) -> N,
+        selector: (T) -> N?
+): N? {
     if (!iterator.hasNext()) return null
     var sum = selector(iterator.next())
     while (iterator.hasNext()) {
         val v = selector(iterator.next())
-        v?.let { sum = sum?.add(v) ?: v }
+        if (sum == null) {
+            sum = v
+        } else if (v != null) {
+            sum = plusFunction(sum, v)
+        }
     }
     return sum
 }

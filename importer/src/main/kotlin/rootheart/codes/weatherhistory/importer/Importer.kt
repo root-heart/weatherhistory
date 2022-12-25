@@ -12,17 +12,23 @@ private val log = KotlinLogging.logger {}
 fun main(args: Array<String>) {
     var baseUrlString =
         if (args.size == 1) args[0]
-        else "https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/hourly/"
+        else "https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/"
+
     if (!baseUrlString.endsWith("/")) {
         baseUrlString += "/"
     }
-    val baseUrl = URL(baseUrlString)
-    val rootDirectory = HtmlDirectoryParser.parseHtml(baseUrl)
+
+    val hourlyUrl = URL(baseUrlString + "hourly/")
+    val dailyUrl = URL(baseUrlString + "daily/kl/")
+
+    val hourlyDirectory = HtmlDirectoryParser.parseHtml(hourlyUrl)
+    val dailyDirectory = HtmlDirectoryParser.parseHtml(dailyUrl)
 
     WeatherDb.connect()
 
-    importStations(rootDirectory)
-    importMeasurements(rootDirectory)
+    val stationsFiles = hourlyDirectory.getAllStationsFiles() + dailyDirectory.getAllStationsFiles()
+    importStations(stationsFiles)
+    importMeasurements(hourlyDirectory, dailyDirectory)
 
     exitProcess(0)
 }

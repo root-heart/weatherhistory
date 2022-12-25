@@ -1,9 +1,14 @@
 package rootheart.codes.weatherhistory.importer
 
-import java.io.ByteArrayInputStream
-import java.util.stream.Collectors
+class SemicolonSeparatedValues(val columnNames: List<String>, rows: List<List<String?>>) {
+    val rows: List<Row>
 
-data class SemicolonSeparatedValues(
-    val columnNames: List<String>,
-    val rows: List<List<String?>>
-)
+    init {
+        this.rows = rows.map { Row(it) }
+    }
+
+    inner class Row(private val columnValues: List<String?>) {
+        operator fun get(columnName: String) = columnValues[columnNames.indexOf(columnName)]
+        operator fun get(columnIndex: Int) = columnValues[columnIndex]
+    }
+}

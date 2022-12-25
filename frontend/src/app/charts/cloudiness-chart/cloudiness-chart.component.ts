@@ -1,15 +1,15 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {DailyData, SummaryList} from "../SummaryService";
-import {BaseChart, MeasurementDataSet} from "../BaseChart";
-import {MatrixController, MatrixDataPoint, MatrixElement} from 'chartjs-chart-matrix';
-import {Chart, ScriptableContext} from "chart.js";
+import { MeasurementDataSet} from "../BaseChart";
+import {ScriptableContext} from "chart.js";
 
+export type CloudinessRecord = {
+    hourlyCloudCoverage: number[]
+}
 @Component({
     selector: 'cloudiness-chart',
-    template: '<canvas #cloudinessChart></canvas>',
-    styleUrls: ['../charts.css']
+    template: '<canvas #cloudinessChart></canvas>'
 })
-export class CloudinessChart extends BaseChart implements OnInit {
+export class CloudinessChart  implements OnInit {
 
     @ViewChild("cloudinessChart")
     private canvas?: ElementRef;
@@ -44,8 +44,7 @@ export class CloudinessChart extends BaseChart implements OnInit {
     ];
 
     constructor() {
-        super();
-        Chart.register(MatrixController, MatrixElement);
+
     }
 
     ngOnInit(): void {
@@ -55,12 +54,12 @@ export class CloudinessChart extends BaseChart implements OnInit {
         return this.canvas;
     }
 
-    protected getDataSets(summaryList: Array<DailyData>): Array<MeasurementDataSet> {
+    protected getDataSets(summaryList: Array<CloudinessRecord>): Array<MeasurementDataSet> {
         let coverageColors = this.coverageColors
         function getColor(context: ScriptableContext<'bar'>) {
             let hour = context.datasetIndex
             let data = summaryList[context.dataIndex]
-            let coverage = data.cloudCoverages[hour]
+            let coverage = data.hourlyCloudCoverage[hour]
             return coverage === undefined || coverage === null ? 'hsl(0, 50%, 30%)' : coverageColors[coverage];
         }
 

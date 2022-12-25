@@ -1,11 +1,16 @@
 package rootheart.codes.weatherhistory.database
 
+import mu.KotlinLogging
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import rootheart.codes.common.measureAndLogDuration
 import java.math.BigDecimal
+import java.util.concurrent.ConcurrentHashMap
+
+private val log = KotlinLogging.logger { }
 
 object StationsTable : LongIdTable("STATIONS") {
     val externalSystem = varchar("EXTERNAL_SYSTEM", 20)
@@ -52,14 +57,22 @@ data class Station(
 }
 
 object StationDao {
+    private val cache = ConcurrentHashMap<Long, Station>()
     fun findAll() = transaction {
         StationsTable.selectAll().map(StationDao::fromResultRow)
     }
 
     fun findById(id: Long) = transaction {
-        StationsTable.select { StationsTable.id eq id }
-            .map(::fromResultRow)
-            .firstOrNull()
+        var station = cache[id]
+        if (station == null) {
+            station = StationsTable.select { StationsTable.id eq id }
+                .map(::fromResultRow)
+                .firstOrNull()
+            if (station != null) {
+                cache[id] = station
+            }
+        }
+        station
     }
 
     fun findStationByExternalId(stationId: String): Station? = transaction {

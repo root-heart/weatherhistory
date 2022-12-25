@@ -1,6 +1,9 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {FormControl} from "@angular/forms";
 import {WeatherStation, WeatherStationList, WeatherStationService} from "../WeatherStationService";
+import {SummaryData} from "../SummaryData";
+import {HttpClient} from "@angular/common/http";
+import {environment} from "../../environments/environment";
 
 export class FilterChangedEvent {
     station: WeatherStation
@@ -27,9 +30,10 @@ export class StationAndDateFilterComponent implements OnInit {
     stations: WeatherStationList = []
     selectedStation?: WeatherStation
 
-    @Output() onFilterChanged = new EventEmitter<FilterChangedEvent>()
+    @Output() onFilterChanged = new EventEmitter<SummaryData>()
+    data?: SummaryData;
 
-    constructor(private weatherStationService: WeatherStationService) {
+    constructor(private weatherStationService: WeatherStationService, private http: HttpClient) {
         weatherStationService.getWeatherStations().subscribe(data => this.setStations(data));
     }
 
@@ -45,13 +49,14 @@ export class StationAndDateFilterComponent implements OnInit {
     fireFilterChangedEvent(): void {
         // let station: WeatherStation = this.weatherStationFilterInput.value
         // console.log("filter changed? " + this.selectedStation?.name + " - " + this.fromYear.value + " - " + this.toYear.value)
-        if (this.selectedStation && this.fromYear.value && this.toYear.value) {
-            // console.log("filter changed!")
-            this.onFilterChanged.emit({
-                station: this.selectedStation,
-                start: this.fromYear.value,
-                end: this.toYear.value
-            })
+        if (this.selectedStation?.id && this.fromYear.value && this.toYear.value) {
+            let url = `${environment.apiServer}/stations/${this.selectedStation?.id}/summary/${this.fromYear.value}`
+            this.http
+                .get<SummaryData>(url)
+                .subscribe(data => {
+                    this.data = data
+                    this.onFilterChanged.emit(data)
+                })
         }
     }
 
