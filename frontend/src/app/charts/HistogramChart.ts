@@ -1,9 +1,8 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {FilterChangedEvent, StationAndDateFilterComponent} from "../filter-header/station-and-date-filter.component";
-import {environment} from "../../environments/environment";
+import {StationAndDateFilterComponent} from "../filter-header/station-and-date-filter.component";
 import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
-import {Chart, ChartConfiguration, ChartDataset, ChartOptions, registerables, ScriptableContext} from "chart.js";
-import {HttpClient} from "@angular/common/http";
+import {Chart, ChartConfiguration, ChartDataset, ChartOptions, registerables} from "chart.js";
+import ChartjsPluginStacked100 from "chartjs-plugin-stacked100";
 
 export type Histogram = {
     firstDay: Date,
@@ -37,23 +36,20 @@ export class HistogramChart {
 
     // TODO @Input()
     private readonly coverageColors = [
-        'hsl(210, 80%, 80%)',
-        'hsl(210, 90%, 95%)',
-        'hsl(55, 80%, 90%)',
-        'hsl(55, 65%, 80%)',
-        'hsl(55, 45%, 70%)',
-        'hsl(55, 25%, 70%)',
-        'hsl(55, 5%, 65%)',
-        'hsl(55, 5%, 55%)',
-        'hsl(55, 5%, 45%)',
-        'hsl(55, 5%, 35%)',
-
-        'hsl(0, 50%, 30%)',
-        'hsl(0, 50%, 20%)',
+        {name: "wolkenlos", color: "hsl(210, 80%, 80%)"},
+        {name: "sonnig", color: "hsl(210, 90%, 95%)"},
+        {name: "heiter", color: "hsl(55, 80%, 90%)"},
+        {name: "leicht bewölkt", color: "hsl(55, 65%, 80%)"},
+        {name: "wolkig", color: "hsl(55, 45%, 70%)"},
+        {name: "bewölkt", color: "hsl(55, 25%, 70%)"},
+        {name: "stark bewölkt", color: "hsl(55, 5%, 65%)"},
+        {name: "fast bedeckt", color: "hsl(55, 5%, 55%)"},
+        {name: "bedeckt", color: "hsl(55, 5%, 45%)"},
+        {name: "Himmel nicht erkennbar", color: "hsl(55, 5%, 35%)"},
     ];
 
     constructor() {
-        Chart.register(...registerables);
+        Chart.register(...registerables, ChartjsPluginStacked100);
     }
 
     public setData(data: Array<Histogram>): void {
@@ -68,6 +64,7 @@ export class HistogramChart {
 
         let options: ChartOptions = getDefaultChartOptions()
 
+        options.plugins!.stacked100 = {enable: true}
         options.scales!.y = {
             beginAtZero: this.includeZero,
             display: this.showAxes
@@ -96,8 +93,8 @@ export class HistogramChart {
         for (let index = 0; index < maxLength; index++) {
             datasets[index] = {
                 type: 'bar',
-                label: 'Bewölkung ' + index,
-                backgroundColor: this.coverageColors[index],
+                label: this.coverageColors[index].name,
+                backgroundColor: this.coverageColors[index].color,
                 data: data.map(d => d.histogram[index]),
                 categoryPercentage: 0.8,
                 barPercentage: 1,

@@ -37,9 +37,11 @@
         <h1>Niederschlag</h1>
 
         <div class="summary">
-            Regen &#931; {{filterComponent.data?.summary?.rainfall?.toFixed(1)}}l/m²
+            <fa-icon [icon]="faRain"></fa-icon>
+            {{filterComponent.data?.summary?.rainfall?.toFixed(1)}}l/m²
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            Schnee &#931; {{filterComponent.data?.summary?.snowfall?.toFixed(1)}}mm
+            <fa-icon [icon]="faSnow"></fa-icon>
+            {{filterComponent.data?.summary?.snowfall?.toFixed(1)}}mm
         </div>
 
         <sum-chart class="chart" [fill]="'hsl(240, 100%, 50%)'" [fill2]="'hsl(40, 0%, 80%)'" [sum]="'rainfall'"
@@ -123,7 +125,8 @@
         </div>
 
         <min-avg-max-chart class="chart" [color]="'hsl(0, 0%, 70%)'" [fill]="'hsla(0, 0%, 70%, 0.3)'"
-                           [logarithmic]="true" [minValue]="10" [maxValue]="100000"
+                           [logarithmic]="true"
+                           [ticks]="[{value: 1, label: '1'}, {value: 10, label: '10'}, {value: 100, label: '100'}, {value: 1000, label: '1km'}, {value: 10000, label: '10km'}, {value: 100000, label: '100km'}]"
                            [min]="'minVisibility'" [avg]="'avgVisibility'" [max]="'maxVisibility'"
                            [filterComponent]=filterComponent></min-avg-max-chart>
     </section>
@@ -132,9 +135,14 @@
         <h1>Bewölkung</h1>
 
         <div class="summary">
-            heiter bis wolkenlos: {{sumOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [0, 1, 2])}}
+            <fa-icon [icon]="faSun"></fa-icon>
+            {{percentageOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [0, 1, 2])}}
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            stark bewölkt bis bedeckt: {{sumOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [6, 7, 8])}}
+            <fa-icon [icon]="faCloudSun"></fa-icon>
+            {{percentageOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [3, 4, 5])}}
+            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+            <fa-icon [icon]="faCloud"></fa-icon>
+            {{percentageOfCloudCoverage(filterComponent.data?.summary?.cloudCoverage, [6, 7, 8, 9])}}
         </div>
 
         <histogram-chart class="chart" [filterComponent]=filterComponent></histogram-chart>

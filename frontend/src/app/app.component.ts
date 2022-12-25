@@ -1,6 +1,12 @@
 import {Component, ViewChild} from '@angular/core';
 import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.component";
-import {Duration} from "luxon";
+import {
+    faCloud,
+    faCloudShowersHeavy,
+    faCloudSun,
+    faSnowflake,
+    faSun
+} from '@fortawesome/free-solid-svg-icons';
 
 export type MeasurementTypes = "temperature" | "humidity" | "airPressure" | "visibility"
 
@@ -19,6 +25,12 @@ export class AppComponent {
 
     columnCount: number = 3
 
+    faSun = faSun
+    faCloudSun = faCloudSun
+    faCloud = faCloud
+    faRain = faCloudShowersHeavy
+    faSnow = faSnowflake
+
     showDetails(measurementType: MeasurementTypes) {
         this.measurementType = measurementType
     }
@@ -27,15 +39,20 @@ export class AppComponent {
         return x ? x / 60 : undefined
     }
 
-    sumOfCloudCoverage(coverageHistogram: number[] | undefined, coverageIndices: number[]): number {
+    percentageOfCloudCoverage(coverageHistogram: number[] | undefined, coverageIndices: number[]): string {
         if (!coverageHistogram) {
-            return 0
+            return ""
         }
+
+        let part = 0
         let sum = 0
-        for (let i = 0; i < coverageIndices.length; i++) {
-            sum += coverageHistogram[coverageIndices[i]]
+        for (let i = 0; i < coverageHistogram.length; i++) {
+            if (coverageIndices.indexOf(i) !== -1) {
+                part += coverageHistogram[i]
+            }
+            sum += coverageHistogram[i]
         }
-        return sum
+        return (part / sum * 100).toFixed(1) + "%"
     }
 }
 

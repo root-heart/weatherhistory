@@ -33,6 +33,7 @@ export class MinAvgMaxChart {
     @Input() logarithmic: boolean = false
     @Input() minValue?: number
     @Input() maxValue?: number
+    @Input() ticks?: Array<{value: number, label: string}>
 
     @Input() set filterComponent(c: StationAndDateFilterComponent) {
         c.onFilterChanged.subscribe(event => {
@@ -82,6 +83,11 @@ export class MinAvgMaxChart {
             if (this.maxValue) {
                 options.scales!.y!.max = this.maxValue
             }
+            if (this.ticks) {
+                options.scales!.y!.min = this.ticks[0].value
+                options.scales!.y!.max = this.ticks[this.ticks.length - 1].value
+                options.scales!.y!.afterBuildTicks = (chart) => {chart.ticks = this.ticks!}
+            }
         } else {
             options.scales!.y = {
                 beginAtZero: this.includeZero,
@@ -97,7 +103,6 @@ export class MinAvgMaxChart {
                     month: "MMM"
                 }
             },
-            // labels: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
             ticks: {minRotation: 0, maxRotation: 0, sampleSize: 12},
             display: this.showAxes
         }
@@ -110,21 +115,15 @@ export class MinAvgMaxChart {
             data: {
                 labels: labels,
                 datasets: [{
-                    // type: "line",
-                    // label: 'Temperatur',
                     borderWidth: this.lineWidth,
                     borderColor: this.color,
                     backgroundColor: this.color,
                     data: data.map(d => d.avg)
                 }, {
-                    // type: 'line',
-                    // label: 'min Temperatur',
                     borderWidth: 0,
                     backgroundColor: this.fill,
                     data: data.map(d => d.min)
                 }, {
-                    // type: 'line',
-                    // label: 'max Temperatur',
                     borderWidth: 0,
                     backgroundColor: this.fill,
                     data: data.map(d => d.max),

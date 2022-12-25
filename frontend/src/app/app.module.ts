@@ -11,13 +11,14 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {MinAvgMaxChart} from "./charts/MinAvgMaxChart";
 import {SumChart} from "./charts/SumChart";
 import {HistogramChart} from "./charts/HistogramChart";
+import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 
 @NgModule({
     declarations: [
         AppComponent, CloudinessChart, StationAndDateFilterComponent, MinAvgMaxChart, SumChart, HistogramChart,
     ],
     imports: [
-        BrowserAnimationsModule, BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule, MatTabsModule
+        BrowserAnimationsModule, BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule, MatTabsModule, FontAwesomeModule
     ],
     providers: [],
     bootstrap: [AppComponent]
