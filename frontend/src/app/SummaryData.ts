@@ -1,3 +1,6 @@
+import {BehaviorSubject, Subject} from "rxjs";
+import {WeatherStation} from "./WeatherStationService";
+
 export type Measurement = {
     maxTemperature?: number,
     rainfall?: number,
@@ -29,6 +32,25 @@ export type SummaryData = {
     details: Measurement[]
 }
 
+type CurrentFilter = {
+    selectedStation?: WeatherStation,
+    dateRangeFilter?: DateRangeFilter,
+    from?: number,
+    to?: number
+}
+
+export enum DateRangeFilter {
+    THIS_MONTH, LAST_MONTH, THIS_YEAR, LAST_YEAR, CUSTOM
+}
+
+export const currentFilter: CurrentFilter = {
+    selectedStation: undefined,
+    dateRangeFilter: DateRangeFilter.THIS_YEAR,
+    from: undefined,
+    to: undefined
+}
+
+export const currentData = new BehaviorSubject<SummaryData | undefined>(undefined)
 
 function abc() {
     let s: SummaryData = {

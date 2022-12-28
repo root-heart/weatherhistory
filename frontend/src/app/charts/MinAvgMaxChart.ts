@@ -1,10 +1,9 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
 import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
-import {StationAndDateFilterComponent} from "../filter-header/station-and-date-filter.component";
-import {HttpClient} from "@angular/common/http";
 import 'chartjs-adapter-luxon';
-import {Measurement} from "../SummaryData";
+import {Measurement, SummaryData} from "../SummaryData";
+import {Observable} from "rxjs";
 
 export type MinAvgMaxSummary = {
     firstDay: Date,
@@ -33,11 +32,11 @@ export class MinAvgMaxChart {
     @Input() logarithmic: boolean = false
     @Input() minValue?: number
     @Input() maxValue?: number
-    @Input() ticks?: Array<{value: number, label: string}>
+    @Input() ticks?: Array<{ value: number, label: string }>
 
-    @Input() set filterComponent(c: StationAndDateFilterComponent) {
-        c.onFilterChanged.subscribe(event => {
-            let minAvgMaxData = event.details.map(m => {
+    @Input() set filterComponent(c: Observable<SummaryData | undefined>) {
+        c.subscribe(event => {
+            let minAvgMaxData = event?.details?.map(m => {
                 return <MinAvgMaxSummary>{
                     firstDay: m.firstDay,
                     min: this.min ? m[this.min] : 0,
@@ -45,7 +44,7 @@ export class MinAvgMaxChart {
                     max: this.max ? m[this.max] : 0
                 }
             })
-            this.setData(minAvgMaxData)
+            this.setData(minAvgMaxData || [])
         })
     }
 
@@ -86,7 +85,9 @@ export class MinAvgMaxChart {
             if (this.ticks) {
                 options.scales!.y!.min = this.ticks[0].value
                 options.scales!.y!.max = this.ticks[this.ticks.length - 1].value
-                options.scales!.y!.afterBuildTicks = (chart) => {chart.ticks = this.ticks!}
+                options.scales!.y!.afterBuildTicks = (chart) => {
+                    chart.ticks = this.ticks!
+                }
             }
         } else {
             options.scales!.y = {

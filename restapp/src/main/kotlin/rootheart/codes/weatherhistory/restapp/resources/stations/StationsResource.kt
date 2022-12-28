@@ -19,6 +19,9 @@ import rootheart.codes.weatherhistory.database.Interval
 import rootheart.codes.weatherhistory.database.MeasurementColumns
 import rootheart.codes.weatherhistory.database.MeasurementsTable
 import rootheart.codes.weatherhistory.database.StationDao
+import rootheart.codes.weatherhistory.restapp.DATE_TIME_FORMAT
+import rootheart.codes.weatherhistory.restapp.optPathParam
+import rootheart.codes.weatherhistory.restapp.optQueryParam
 import rootheart.codes.weatherhistory.restapp.requiredPathParam
 
 fun Routing.stationsResource() {
@@ -31,32 +34,45 @@ fun Routing.stationsResource() {
                 call.respond(StationDao.findById(stationId) ?: HttpStatusCode.NotFound)
             }
 
-            get("{measurementType}/{year}/{month?}/{day?}") {
+            get("{measurementType}/{year?}/{month?}/{day?}") {
                 val stationId = requiredPathParam("stationId") { it.toLong() }
                 val columns = requiredPathParam("measurementType") { measurementTypeColumnsMapping[it] }
-                val year = requiredPathParam("year") { it.toInt() }
-//                val month = optPathParam("month") { it.toInt() }
-//                val day = optPathParam("day") { it.toInt() }
-//                if (month == null) {
-                val firstDay = LocalDate(year, 1, 1)
-                val lastDay = firstDay.plusYears(1)
-                val summary = columns.select(stationId, firstDay, lastDay, Interval.YEAR, columns::toMap)
-                val details = columns.select(stationId, firstDay, lastDay, Interval.MONTH, columns::toMap)
-
-//                } else if (day == null) {
-//                    val firstDay = LocalDate(year, month, 1)
-//                    val lastDay = firstDay.plusMonths(1)
-//                    val summary = columns.select(stationId, firstDay, lastDay, Interval.MONTH, columns::toMap)
-//                    val details = columns.select(stationId, firstDay, lastDay, Interval.DAY, columns::toMap)
-//
-//                } else {
-//                    val firstDay = LocalDate(year, month, day)
-//                    val lastDay = firstDay.plusDays(1)
-//                    val details = columns.select(stationId, firstDay, lastDay, Interval.DAY, columns::toMap)
-//                }
-
-                val x = if (summary.isEmpty()) emptyMap() else summary[0]
-                call.respond(mapOf("summary" to x, "details" to details))
+                val year = optPathParam("year") { it.toInt() }
+                val fromQueryParam = optQueryParam("from") { DATE_TIME_FORMAT.parseLocalDate(it) }
+                if (year != null) {
+                    val month = optPathParam("month") { it.toInt() }
+                    if (month != null) {
+                        val day = optPathParam("day") { it.toInt() }
+                        if (day != null) {
+                            val firstDay = LocalDate(year, month, day)
+                            val lastDay = firstDay.plusDays(1)
+                            val summary = columns.select(stationId, firstDay, lastDay, Interval.DAY, columns::toMap)
+                            val details = columns.select(stationId, firstDay, lastDay, Interval.DAY, columns::toMap)
+                            val x = if (summary.isEmpty()) emptyMap() else summary[0]
+                            call.respond(mapOf("summary" to x, "details" to details))
+                        } else {
+                            val firstDay = LocalDate(year, month, 1)
+                            val lastDay = firstDay.plusMonths(1)
+                            val summary = columns.select(stationId, firstDay, lastDay, Interval.MONTH, columns::toMap)
+                            val details = columns.select(stationId, firstDay, lastDay, Interval.DAY, columns::toMap)
+                            val x = if (summary.isEmpty()) emptyMap() else summary[0]
+                            call.respond(mapOf("summary" to x, "details" to details))
+                        }
+                    } else {
+                        val firstDay = LocalDate(year, 1, 1)
+                        val lastDay = firstDay.plusYears(1)
+                        val summary = columns.select(stationId, firstDay, lastDay, Interval.YEAR, columns::toMap)
+                        val details = columns.select(stationId, firstDay, lastDay, Interval.MONTH, columns::toMap)
+                        val x = if (summary.isEmpty()) emptyMap() else summary[0]
+                        call.respond(mapOf("summary" to x, "details" to details))
+                    }
+                } else if (fromQueryParam != null) {
+                    val lastDay = optQueryParam("to") { DATE_TIME_FORMAT.parseLocalDate(it) } ?: LocalDate.now()
+                    val summary = columns.select(stationId, fromQueryParam, lastDay, Interval.YEAR, columns::toMap)
+                    val details = columns.select(stationId, fromQueryParam, lastDay, Interval.DAY, columns::toMap)
+                    val x = if (summary.isEmpty()) emptyMap() else summary[0]
+                    call.respond(mapOf("summary" to x, "details" to details))
+                }
             }
         }
     }
@@ -75,7 +91,7 @@ val measurementTypeColumnsMapping = mapOf("temperature" to MeasurementsTable.tem
                                           "summary" to MeasurementsTable.summaryColumns)
 
 private val requestResolutionToIntervalMapping =
-    mapOf("daily" to Interval.DAY, "monthly" to Interval.MONTH, "yearly" to Interval.YEAR)
+        mapOf("daily" to Interval.DAY, "monthly" to Interval.MONTH, "yearly" to Interval.YEAR)
 
 private fun MeasurementColumns.toMap(row: ResultRow): Map<String, Any?> {
     val map = HashMap<String, Any?>()

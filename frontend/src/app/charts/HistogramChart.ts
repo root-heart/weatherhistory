@@ -3,6 +3,8 @@ import {StationAndDateFilterComponent} from "../filter-header/station-and-date-f
 import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartDataset, ChartOptions, registerables} from "chart.js";
 import ChartjsPluginStacked100 from "chartjs-plugin-stacked100";
+import {Observable} from "rxjs";
+import {SummaryData} from "../SummaryData";
 
 export type Histogram = {
     firstDay: Date,
@@ -18,12 +20,12 @@ export class HistogramChart {
     @Input() fill2: string = "#3333cc"
     @Input() path: string = "cloud-coverage"
 
-    @Input() set filterComponent(c: StationAndDateFilterComponent) {
-        c.onFilterChanged.subscribe(event => {
-            let data = event.details.map(m => {
+    @Input() set filterComponent(c: Observable<SummaryData | undefined>) {
+        c.subscribe(event => {
+            let data = event?.details?.map(m => {
                 return <Histogram>{firstDay: m.firstDay, histogram: m.cloudCoverage}
             })
-            this.setData(data)
+            this.setData(data || [])
         })
     }
 

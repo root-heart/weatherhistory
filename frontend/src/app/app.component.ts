@@ -1,12 +1,15 @@
 import {Component, ViewChild} from '@angular/core';
 import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.component";
 import {
+    faCalendar,
     faCloud,
     faCloudShowersHeavy,
     faCloudSun,
+    faMapLocationDot,
     faSnowflake,
     faSun
 } from '@fortawesome/free-solid-svg-icons';
+import {currentData, currentFilter, DateRangeFilter} from "./SummaryData";
 
 export type MeasurementTypes = "temperature" | "humidity" | "airPressure" | "visibility"
 
@@ -23,16 +26,29 @@ export class AppComponent {
 
     measurementType?: MeasurementTypes
 
-    columnCount: number = 3
-
     faSun = faSun
     faCloudSun = faCloudSun
     faCloud = faCloud
     faRain = faCloudShowersHeavy
     faSnow = faSnowflake
+    faMapLocationDot = faMapLocationDot
+    faCalendar = faCalendar
+    currentData = currentData
+    currentFilter = currentFilter
+
+    visibleFilter?: any = undefined
 
     showDetails(measurementType: MeasurementTypes) {
         this.measurementType = measurementType
+    }
+
+    showOrHideFilter(filterComponent?: any) {
+        console.log("showOrHideFilter")
+        if (this.visibleFilter == filterComponent) {
+            this.visibleFilter = undefined
+        } else {
+            this.visibleFilter = filterComponent
+        }
     }
 
     divideBy60(x?: number): number | undefined {
@@ -53,6 +69,29 @@ export class AppComponent {
             sum += coverageHistogram[i]
         }
         return (part / sum * 100).toFixed(1) + "%"
+    }
+
+    getFilterButtonCaption(): string {
+        let caption = "Bitte Ort und Zeitraum wählen..."
+        if (currentFilter.selectedStation) {
+            caption = currentFilter.selectedStation.name
+            if (currentFilter.dateRangeFilter === DateRangeFilter.THIS_MONTH) {
+                caption += " für diesen Monat"
+            } else if (currentFilter.dateRangeFilter === DateRangeFilter.LAST_MONTH) {
+                caption += " für letzten Monat"
+            } else if (currentFilter.dateRangeFilter === DateRangeFilter.THIS_YEAR) {
+                caption += " für dieses Jahr"
+            } else if (currentFilter.dateRangeFilter === DateRangeFilter.LAST_YEAR) {
+                caption += " für letztes Jahr"
+            } else if (currentFilter.from) {
+                if (currentFilter.to) {
+                    caption += " von " + currentFilter.from + " bis " + currentFilter.to
+                } else {
+                    caption += " im Jahr " + currentFilter.from
+                }
+            }
+        }
+        return caption
     }
 }
 

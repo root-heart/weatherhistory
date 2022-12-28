@@ -6,7 +6,7 @@ import org.joda.time.LocalDate
 import java.math.BigDecimal
 
 enum class Interval {
-    YEAR, MONTH, DAY
+    DECADE, YEAR, MONTH, DAY
 }
 
 object MeasurementsTable : LongIdTable("MEASUREMENTS") {

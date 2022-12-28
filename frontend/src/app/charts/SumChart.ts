@@ -4,9 +4,10 @@ import {environment} from "../../environments/environment";
 import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
 import {HttpClient} from "@angular/common/http";
-import {Measurement} from "../SummaryData";
+import {Measurement, SummaryData} from "../SummaryData";
 import {MinAvgMaxSummary} from "./MinAvgMaxChart";
 import {Duration} from 'luxon'
+import {Observable} from "rxjs";
 
 export type Sum = {
     firstDay: Date,
@@ -25,15 +26,15 @@ export class SumChart {
         return x
     }
 
-    @Input() set filterComponent(c: StationAndDateFilterComponent) {
-        c.onFilterChanged.subscribe(event => {
-            let minAvgMaxData = event.details.map(m => {
+    @Input() set filterComponent(c: Observable<SummaryData | undefined>) {
+        c.subscribe(event => {
+            let minAvgMaxData = event?.details?.map(m => {
                 let s = m[this.sum] as number
                 return <Sum>{
                     firstDay: m.firstDay, sum: s == null ? null : this.valueConverter(s)
                 }
             })
-            this.setData(minAvgMaxData)
+            this.setData(minAvgMaxData || [])
         })
     }
 

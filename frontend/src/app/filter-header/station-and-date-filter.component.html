@@ -1,74 +1,33 @@
-<!--<div style="display: grid; grid-template-columns: repeat(4, 15rem);">-->
-<!--    <dl>-->
-<!--        <dt>Wetterstation</dt>-->
-<!--        <dd>Bremen</dd>-->
-<!--        <dd>Alfeld</dd>-->
-<!--        <dd>Freiburg</dd>-->
-<!--        <dd>Greifswald</dd>-->
-<!--        <dd>Mannheim</dd>-->
-<!--    </dl>-->
+<div class="map" leaflet [leafletOptions]="options">
+    <div *ngIf="stationsLayer !== undefined" [leafletLayer]="stationsLayer"></div>
+</div>
 
-<!--    <dl>-->
-<!--        <dt>Jahrzehnt</dt>-->
-<!--        <dd>1900 - 1909</dd>-->
-<!--        <dd>1910 - 1919</dd>-->
-<!--        <dd>1920 - 1929</dd>-->
-<!--        <dd>1930 - 1939</dd>-->
-<!--        <dd>1940 - 1949</dd>-->
-<!--        <dd>1950 - 1959</dd>-->
-<!--        <dd>1960 - 1969</dd>-->
-<!--        <dd>1970 - 1979</dd>-->
-<!--        <dd>1980 - 1989</dd>-->
-<!--        <dd>1990 - 1999</dd>-->
-<!--        <dd>2000 - 2009</dd>-->
-<!--        <dd>2010 - 2019</dd>-->
-<!--        <dd>2020 - 2029</dd>-->
-<!--    </dl>-->
-
-<!--    <dl>-->
-<!--        <dt>Jahr</dt>-->
-<!--        <dd>2010</dd>-->
-<!--        <dd>2011</dd>-->
-<!--        <dd>2012</dd>-->
-<!--        <dd>2013</dd>-->
-<!--        <dd>2014</dd>-->
-<!--        <dd>2015</dd>-->
-<!--        <dd>2016</dd>-->
-<!--        <dd>2017</dd>-->
-<!--        <dd>2018</dd>-->
-<!--        <dd>2019</dd>-->
-<!--    </dl>-->
-
-<!--    <dl>-->
-<!--        <dt>Monat</dt>-->
-<!--        <dd>Januar</dd>-->
-<!--        <dd>Februar</dd>-->
-<!--        <dd>März</dd>-->
-<!--        <dd>April</dd>-->
-<!--        <dd>Mai</dd>-->
-<!--        <dd>Juni</dd>-->
-<!--        <dd>Juli</dd>-->
-<!--        <dd>August</dd>-->
-<!--        <dd>September</dd>-->
-<!--        <dd>Oktober</dd>-->
-<!--        <dd>November</dd>-->
-<!--        <dd>Dezember</dd>-->
-<!--    </dl>-->
-<!--</div>-->
+<div style="font-size: 1.3rem">
+    <div class="date-range-filter" (click)="filter(DateRangeFilter.THIS_MONTH)">diesen Monat</div>
+    <div class="date-range-filter" (click)="filter(DateRangeFilter.LAST_MONTH)">vergangenen Monat</div>
+    <div class="date-range-filter" (click)="filter(DateRangeFilter.THIS_YEAR)">dieses Jahr</div>
+    <div class="date-range-filter" (click)="filter(DateRangeFilter.LAST_YEAR)">letztes Jahr</div>
+    <div class="date-range-filter" (click)="filter(DateRangeFilter.CUSTOM)">eigener Zeitraum:</div>
+</div>
 
 
-<ng-select [(ngModel)]="selectedStation" [items]="stations" groupBy="federalState" bindLabel="name" (change)="fireFilterChangedEvent()">
+<!--<ngx-slider (valueChange)="sliderValueChange()" (highValueChange)="sliderHighValueChange()" [(value)]=fromYear-->
+<!--            [(highValue)]=toYear [options]=sliderOptions></ngx-slider>-->
 
-    <ng-template ng-optgroup-tmp let-currentGroup="item">
-        {{currentGroup.federalState || 'Unnamed group'}}
-    </ng-template>
+<!--<fa-icon [icon]="faMapLocationDot"></fa-icon>-->
 
-    <ng-template ng-option-tmp let-currentStation="item">
-        {{currentStation.name}}
-    </ng-template>
-</ng-select>
+<!--<ng-select [(ngModel)]="selectedStation" [items]="stations" groupBy="federalState" bindLabel="name" (change)="fireFilterChangedEvent()">-->
 
-<input type="number" placeholder="Von" min="1800" max="2022" [formControl]="fromYear"
-       (change)="fireFilterChangedEvent()">
+<!--    <ng-template ng-optgroup-tmp let-currentGroup="item">-->
+<!--        {{currentGroup.federalState || 'Unnamed group'}}-->
+<!--    </ng-template>-->
+
+<!--    <ng-template ng-option-tmp let-currentStation="item">-->
+<!--        {{currentStation.name}}-->
+<!--    </ng-template>-->
+<!--</ng-select>-->
+
+<!--<input type="number" placeholder="Von" min="1800" max="2022" [formControl]="fromYear"-->
+<!--       (change)="fireFilterChangedEvent()">-->
 <!--<input type="number" placeholder="Bis" min="1900" max="2022" [formControl]="toYear"-->
 <!--       (change)="fireFilterChangedEvent()">-->

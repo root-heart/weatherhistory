@@ -12,13 +12,16 @@ import {MinAvgMaxChart} from "./charts/MinAvgMaxChart";
 import {SumChart} from "./charts/SumChart";
 import {HistogramChart} from "./charts/HistogramChart";
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
+import {LeafletModule} from "@asymmetrik/ngx-leaflet";
+import {NgxSliderModule} from "@angular-slider/ngx-slider";
+import { MapPopupComponent } from './filter-header/map-popup/map-popup.component';
 
 @NgModule({
     declarations: [
-        AppComponent, CloudinessChart, StationAndDateFilterComponent, MinAvgMaxChart, SumChart, HistogramChart,
+        AppComponent, CloudinessChart, StationAndDateFilterComponent, MinAvgMaxChart, SumChart, HistogramChart, MapPopupComponent,
     ],
     imports: [
-        BrowserAnimationsModule, BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule, MatTabsModule, FontAwesomeModule
+        LeafletModule, BrowserAnimationsModule, BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule, MatTabsModule, FontAwesomeModule, NgxSliderModule,
     ],
     providers: [],
     bootstrap: [AppComponent]
