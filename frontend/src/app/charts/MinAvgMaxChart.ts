@@ -108,6 +108,13 @@ export class MinAvgMaxChart {
             display: this.showAxes
         }
 
+        if (this.resolution == "daily") {
+            options.scales!.x!.time = {
+                unit: "day",
+                displayFormats: {day: "dd.MM."}
+            }
+        }
+
         const labels = data.map(d => d.firstDay);
 
         let config: ChartConfiguration = {

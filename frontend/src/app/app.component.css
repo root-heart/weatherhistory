@@ -5,40 +5,16 @@
     left: 0;
     right: 0;
 
-    /*display: grid;*/
-    /*grid-template-columns: minmax(20rem, 23vw) 1fr;*/
-    /*grid-template-rows: max-content 1fr;*/
-    /*grid-gap: 0.5vw 1vw;*/
     margin: 1vw;
 }
 
 header {
     grid-column: span 2;
     margin: 0 auto;
-    width: 50rem;
-    position: relative;
-}
-
-header > h1 {
+    width: 70rem;
     font-size: 1.5rem;
     border-bottom: 1px solid #555;
-}
-
-header button {
-    background: none;
-    font: inherit;
-    color: inherit;
-    border: 1px solid #555;
-}
-
-header station-and-date-filter {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-
-    /*visibility: hidden;*/
-    /*display: none;*/
+    position: relative;
 }
 
 header .date-filter {
@@ -47,7 +23,6 @@ header .date-filter {
     right: 0;
     top: 0;
     height: 20rem;
-    /*visibility: hidden;*/
 }
 
 .backdrop {
@@ -64,7 +39,7 @@ header .date-filter {
 
 main {
     display: grid;
-    grid-template-columns: repeat(3, 30vw);
+    grid-template-columns: repeat(3, 31vw);
     grid-auto-rows: 20vw;
     grid-gap: 1vw 2vw;
     justify-content: center;
@@ -94,4 +69,13 @@ section.chart-tile > .chart {
     display: block;
     /*height: calc(100%);*/
     /*height: 20rem;*/
+}
+
+.date-filter-list {
+    display: flex;
+    gap: 2rem;
+}
+
+.date-range-filter:hover {
+    cursor: pointer;
 }

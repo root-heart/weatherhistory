@@ -1,23 +1,50 @@
-<div class="backdrop"
-     [ngStyle]="{visibility: visibleFilter === undefined ? 'hidden' : 'visible'}"
-     (click)="showOrHideFilter(undefined)">
-</div>
-
 <header style="z-index: 1001">
-    <h1>
-        Wetterchroniken für
-
-        <button (click)="showOrHideFilter(map)">
-            {{getFilterButtonCaption()}}
-            <fa-icon [icon]="faMapLocationDot"></fa-icon>
-        </button>
-    </h1>
-
-    <div style="position: relative">
-        <station-and-date-filter [ngStyle]="{visibility: visibleFilter === map ? 'visible' : 'hidden'}" #map>
-        </station-and-date-filter>
-    </div>
+    Wetterchroniken für <map-dropdown #mapDropdown></map-dropdown>
 </header>
+
+<nav>
+    <div class="date-filter-list" style="font-size: 1.3rem">
+        <div class="date-range-filter" (click)="filter(DateRangeFilter.THIS_MONTH)">
+            <fa-icon [icon]="faSquareChecked"
+                     *ngIf="filterService.dateRangeFilter === DateRangeFilter.THIS_MONTH"></fa-icon>
+            <fa-icon [icon]="faSquare" *ngIf="filterService.dateRangeFilter !== DateRangeFilter.THIS_MONTH"></fa-icon>
+            aktueller Monat
+        </div>
+
+        <div class="date-range-filter" (click)="filter(DateRangeFilter.LAST_MONTH)">
+            <fa-icon [icon]="faSquareChecked"
+                     *ngIf="filterService.dateRangeFilter === DateRangeFilter.LAST_MONTH"></fa-icon>
+            <fa-icon [icon]="faSquare" *ngIf="filterService.dateRangeFilter !== DateRangeFilter.LAST_MONTH"></fa-icon>
+            vorheriger Monat
+        </div>
+
+        &#x25CF;
+
+        <div class="date-range-filter" (click)="filter(DateRangeFilter.THIS_YEAR)">
+            <fa-icon [icon]="faSquareChecked"
+                     *ngIf="filterService.dateRangeFilter === DateRangeFilter.THIS_YEAR"></fa-icon>
+            <fa-icon [icon]="faSquare" *ngIf="filterService.dateRangeFilter !== DateRangeFilter.THIS_YEAR"></fa-icon>
+            dieses Jahr
+        </div>
+
+        <div class="date-range-filter" (click)="filter(DateRangeFilter.LAST_YEAR)">
+            <fa-icon [icon]="faSquareChecked"
+                     *ngIf="filterService.dateRangeFilter === DateRangeFilter.LAST_YEAR"></fa-icon>
+            <fa-icon [icon]="faSquare" *ngIf="filterService.dateRangeFilter !== DateRangeFilter.LAST_YEAR"></fa-icon>
+            letztes Jahr
+        </div>
+
+
+        &#x25CF;
+
+        <div class="date-range-filter" (click)="filter(DateRangeFilter.CUSTOM)">
+            <fa-icon [icon]="faSquareChecked"
+                     *ngIf="filterService.dateRangeFilter === DateRangeFilter.CUSTOM"></fa-icon>
+            <fa-icon [icon]="faSquare" *ngIf="filterService.dateRangeFilter !== DateRangeFilter.CUSTOM"></fa-icon>
+            eigener Zeitraum
+        </div>
+    </div>
+</nav>
 
 <main>
     <section class="chart-tile">
@@ -34,7 +61,7 @@
         <min-avg-max-chart class="chart"
                            [color]="'hsl(0, 80%, 45%)'" [fill]="'hsla(0, 80%, 45%, 0.3)'"
                            [min]="'minTemperature'" [avg]="'avgTemperature'" [max]="'maxTemperature'"
-                           [filterComponent]=currentData
+                           [filterComponent]=currentData [resolution]="getChartResolution()"
                            (click)="showDetails('temperature')"></min-avg-max-chart>
     </section>
 
@@ -44,7 +71,7 @@
         <div class="summary">&#931; {{divideBy60(currentData?.value?.summary?.sunshineDuration)?.toFixed(1)}}h</div>
 
         <sum-chart class="chart" [fill]="'hsl(40, 100%, 50%)'" [sum]="'sunshineDuration'"
-                   [valueConverter]="divideBy60"
+                   [valueConverter]="divideBy60" [resolution]="getChartResolution()"
                    [filterComponent]=currentData></sum-chart>
     </section>
 
@@ -60,6 +87,7 @@
         </div>
 
         <sum-chart class="chart" [fill]="'hsl(240, 100%, 50%)'" [fill2]="'hsl(40, 0%, 80%)'" [sum]="'rainfall'"
+                   [resolution]="getChartResolution()"
                    [filterComponent]=currentData></sum-chart>
     </section>
 
@@ -73,7 +101,7 @@
         </div>
 
         <min-avg-max-chart class="chart" [color]="'hsl(270, 80%, 65%)'" [fill]="'hsla(270, 80%, 65%, 0.3)'"
-                           [avg]="'avgWindspeed'" [max]="'maxWindspeed'"
+                           [avg]="'avgWindspeed'" [max]="'maxWindspeed'" [resolution]="getChartResolution()"
                            [filterComponent]=currentData></min-avg-max-chart>
     </section>
 
@@ -103,6 +131,7 @@
 
         <min-avg-max-chart class="chart" [color]="'hsl(220, 80%, 30%)'" [fill]="'hsla(220, 80%, 30%, 0.3)'"
                            [min]="'minHumidity'" [avg]="'avgHumidity'" [max]="'maxHumidity'"
+                           [resolution]="getChartResolution()"
                            [filterComponent]=currentData></min-avg-max-chart>
     </section>
 
@@ -119,7 +148,7 @@
 
         <min-avg-max-chart class="chart" [color]="'hsl(220, 80%, 70%)'" [fill]="'hsla(220, 80%, 70%, 0.3)'"
                            [min]="'minDewPointTemperature'" [avg]="'avgDewPointTemperature'"
-                           [max]="'maxDewPointTemperature'"
+                           [max]="'maxDewPointTemperature'" [resolution]="getChartResolution()"
                            [filterComponent]=currentData></min-avg-max-chart>
     </section>
 
@@ -136,7 +165,7 @@
 
         <min-avg-max-chart class="chart" [color]="'hsl(120, 80%, 45%)'" [fill]="'hsla(120, 80%, 45%, 0.15)'"
                            [min]="'minAirPressure'" [avg]="'avgAirPressure'" [max]="'maxAirPressure'"
-                           [includeZero]=false
+                           [includeZero]=false [resolution]="getChartResolution()"
                            (click)="showDetails('airPressure')"
                            [filterComponent]=currentData></min-avg-max-chart>
     </section>
@@ -153,7 +182,7 @@
         </div>
 
         <min-avg-max-chart class="chart" [color]="'hsl(0, 0%, 70%)'" [fill]="'hsla(0, 0%, 70%, 0.3)'"
-                           [logarithmic]="true"
+                           [logarithmic]="true" [resolution]="getChartResolution()"
                            [ticks]="[{value: 10, label: '10'}, {value: 100, label: '100'}, {value: 1000, label: '1km'}, {value: 10000, label: '10km'}, {value: 100000, label: '100km'}]"
                            [min]="'minVisibility'" [avg]="'avgVisibility'" [max]="'maxVisibility'"
                            [filterComponent]=currentData></min-avg-max-chart>
@@ -173,6 +202,12 @@
             {{percentageOfCloudCoverage(currentData?.value?.summary?.cloudCoverage, [6, 7, 8, 9])}}
         </div>
 
-        <histogram-chart class="chart" [filterComponent]=currentData></histogram-chart>
+        <histogram-chart class="chart" [filterComponent]=currentData
+                         [resolution]="getChartResolution()"></histogram-chart>
     </section>
 </main>
+
+<div class="backdrop"
+     [ngStyle]="{visibility: mapDropdown.dropdownVisible ? 'visible' : 'hidden'}"
+     (click)="mapDropdown.dropdownVisible = false">
+</div>

@@ -33,10 +33,7 @@ export type SummaryData = {
 }
 
 type CurrentFilter = {
-    selectedStation?: WeatherStation,
-    dateRangeFilter?: DateRangeFilter,
-    from?: number,
-    to?: number
+
 }
 
 export enum DateRangeFilter {

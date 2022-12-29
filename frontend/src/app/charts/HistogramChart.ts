@@ -1,5 +1,5 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {StationAndDateFilterComponent} from "../filter-header/station-and-date-filter.component";
+import {MapDropdown} from "../filter-header/map-dropdown.component";
 import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartDataset, ChartOptions, registerables} from "chart.js";
 import ChartjsPluginStacked100 from "chartjs-plugin-stacked100";
@@ -85,6 +85,13 @@ export class HistogramChart {
             display: this.showAxes
         }
         options.scales!.x2 = {display: false}
+
+        if (this.resolution == "daily") {
+            options.scales!.x!.time = {
+                unit: "day",
+                displayFormats: {day: "dd.MM."}
+            }
+        }
 
         const labels = data.map(d => d.firstDay);
 

@@ -1,5 +1,5 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {FilterChangedEvent, StationAndDateFilterComponent} from "../filter-header/station-and-date-filter.component";
+import {FilterChangedEvent, MapDropdown} from "../filter-header/map-dropdown.component";
 import {environment} from "../../environments/environment";
 import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
@@ -79,6 +79,13 @@ export class SumChart {
             display: this.showAxes
         }
         options.scales!.x2 = {display: false}
+
+        if (this.resolution == "daily") {
+            options.scales!.x!.time = {
+                unit: "day",
+                displayFormats: {day: "dd.MM."}
+            }
+        }
 
         const labels = data.map(d => d.firstDay);
 

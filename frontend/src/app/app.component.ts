@@ -6,10 +6,14 @@ import {
     faCloudShowersHeavy,
     faCloudSun,
     faMapLocationDot,
-    faSnowflake,
-    faSun
+    faSnowflake, faSquareXmark,
+    faSun, faSquare
 } from '@fortawesome/free-solid-svg-icons';
-import {currentData, currentFilter, DateRangeFilter} from "./SummaryData";
+import {currentData, currentFilter, DateRangeFilter, SummaryData} from "./SummaryData";
+import {ChartResolution} from "./charts/BaseChart";
+import * as luxon from "luxon";
+import {environment} from "../environments/environment";
+import {FilterService} from "./filter.service";
 
 export type MeasurementTypes = "temperature" | "humidity" | "airPressure" | "visibility"
 
@@ -31,24 +35,16 @@ export class AppComponent {
     faCloud = faCloud
     faRain = faCloudShowersHeavy
     faSnow = faSnowflake
-    faMapLocationDot = faMapLocationDot
-    faCalendar = faCalendar
     currentData = currentData
-    currentFilter = currentFilter
+    faSquare = faSquare
+    faSquareChecked = faSquareXmark
+    DateRangeFilter = DateRangeFilter
 
-    visibleFilter?: any = undefined
+    constructor(public filterService: FilterService) {
+    }
 
     showDetails(measurementType: MeasurementTypes) {
         this.measurementType = measurementType
-    }
-
-    showOrHideFilter(filterComponent?: any) {
-        console.log("showOrHideFilter")
-        if (this.visibleFilter == filterComponent) {
-            this.visibleFilter = undefined
-        } else {
-            this.visibleFilter = filterComponent
-        }
     }
 
     divideBy60(x?: number): number | undefined {
@@ -71,27 +67,20 @@ export class AppComponent {
         return (part / sum * 100).toFixed(1) + "%"
     }
 
-    getFilterButtonCaption(): string {
-        let caption = "Bitte Ort und Zeitraum wählen..."
-        if (currentFilter.selectedStation) {
-            caption = currentFilter.selectedStation.name
-            if (currentFilter.dateRangeFilter === DateRangeFilter.THIS_MONTH) {
-                caption += " für diesen Monat"
-            } else if (currentFilter.dateRangeFilter === DateRangeFilter.LAST_MONTH) {
-                caption += " für letzten Monat"
-            } else if (currentFilter.dateRangeFilter === DateRangeFilter.THIS_YEAR) {
-                caption += " für dieses Jahr"
-            } else if (currentFilter.dateRangeFilter === DateRangeFilter.LAST_YEAR) {
-                caption += " für letztes Jahr"
-            } else if (currentFilter.from) {
-                if (currentFilter.to) {
-                    caption += " von " + currentFilter.from + " bis " + currentFilter.to
-                } else {
-                    caption += " im Jahr " + currentFilter.from
-                }
-            }
+
+
+    getChartResolution(): ChartResolution {
+        if (this.filterService.dateRangeFilter == DateRangeFilter.LAST_MONTH || this.filterService.dateRangeFilter == DateRangeFilter.THIS_MONTH) {
+            return "daily"
+        } else {
+            return "monthly"
         }
-        return caption
+    }
+
+
+    filter(range: DateRangeFilter) {
+        this.filterService.dateRangeFilter = range
+        this.filterService.fireFilterChangedEvent()
     }
 }
 
