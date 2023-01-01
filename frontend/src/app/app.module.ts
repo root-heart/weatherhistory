@@ -16,10 +16,12 @@ import {LeafletModule} from "@asymmetrik/ngx-leaflet";
 import {NgxSliderModule} from "@angular-slider/ngx-slider";
 import {MapPopupComponent} from './filter-header/map-popup/map-popup.component';
 import {FilterService} from "./filter.service";
+import {Dropdown} from './dropdown/dropdown.component';
+import {DateRangeDropdownComponent} from './date-range-dropdown/date-range-dropdown.component';
 
 @NgModule({
     declarations: [
-        AppComponent, CloudinessChart, MapDropdown, MinAvgMaxChart, SumChart, HistogramChart, MapPopupComponent
+        AppComponent, CloudinessChart, MapDropdown, MinAvgMaxChart, SumChart, HistogramChart, MapPopupComponent, Dropdown, DateRangeDropdownComponent
     ],
     imports: [
         LeafletModule, BrowserAnimationsModule, BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule, MatTabsModule, FontAwesomeModule, NgxSliderModule

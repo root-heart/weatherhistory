@@ -1,19 +1,18 @@
-import {Component, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, ViewChild} from '@angular/core';
 import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.component";
 import {
-    faCalendar,
     faCloud,
     faCloudShowersHeavy,
     faCloudSun,
-    faMapLocationDot,
-    faSnowflake, faSquareXmark,
-    faSun, faSquare
+    faSnowflake,
+    faSquare,
+    faSquareXmark,
+    faSun
 } from '@fortawesome/free-solid-svg-icons';
-import {currentData, currentFilter, DateRangeFilter, SummaryData} from "./SummaryData";
+import {currentData, DateRangeFilter} from "./SummaryData";
 import {ChartResolution} from "./charts/BaseChart";
-import * as luxon from "luxon";
-import {environment} from "../environments/environment";
 import {FilterService} from "./filter.service";
+import {DropdownService} from "./dropdown.service";
 
 export type MeasurementTypes = "temperature" | "humidity" | "airPressure" | "visibility"
 
@@ -22,7 +21,7 @@ export type MeasurementTypes = "temperature" | "humidity" | "airPressure" | "vis
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.css'],
 })
-export class AppComponent {
+export class AppComponent implements AfterViewInit {
     title = 'wetterchroniken.de/';
 
     @ViewChild('cloudinessChart')
@@ -35,12 +34,21 @@ export class AppComponent {
     faCloud = faCloud
     faRain = faCloudShowersHeavy
     faSnow = faSnowflake
-    currentData = currentData
     faSquare = faSquare
     faSquareChecked = faSquareXmark
+
+    currentData = currentData
+
+
     DateRangeFilter = DateRangeFilter
 
-    constructor(public filterService: FilterService) {
+    @ViewChild("dropdownBackground") dropdownBackground?: ElementRef
+
+    constructor(public filterService: FilterService, private dropdownService: DropdownService) {
+    }
+
+    ngAfterViewInit() {
+        this.dropdownService.dropdownBackground = this.dropdownBackground
     }
 
     showDetails(measurementType: MeasurementTypes) {
@@ -70,7 +78,7 @@ export class AppComponent {
 
 
     getChartResolution(): ChartResolution {
-        if (this.filterService.dateRangeFilter == DateRangeFilter.LAST_MONTH || this.filterService.dateRangeFilter == DateRangeFilter.THIS_MONTH) {
+        if (this.filterService.dateRangeFilter == DateRangeFilter.MONTHLY) {
             return "daily"
         } else {
             return "monthly"
@@ -81,6 +89,12 @@ export class AppComponent {
     filter(range: DateRangeFilter) {
         this.filterService.dateRangeFilter = range
         this.filterService.fireFilterChangedEvent()
+    }
+
+    getYears(): number[] {
+        let start = 1970
+        let end = 2023
+        return Array.from({length: (end - start)}, (v, k) => k + start)
     }
 }
 

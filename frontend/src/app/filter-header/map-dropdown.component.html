@@ -1,10 +1,12 @@
-<button (click)="dropdownVisible = !dropdownVisible">
-    {{filterService.selectedStation !== undefined ? filterService.selectedStation.name : "Bitte Ort wählen..."}}
-    <div style="position: relative">
-        <div class="dropdown" [ngStyle]="{visibility: dropdownVisible ? 'visible' : 'hidden'}">
-            <div class="map" leaflet [leafletOptions]="options">
-                <div *ngIf="stationsLayer !== undefined" [leafletLayer]="stationsLayer"></div>
-            </div>
+<dropdown>
+    <div button>
+        <fa-icon [icon]="faMapLocationDot"></fa-icon>
+        {{filterService.selectedStation !== undefined ? filterService.selectedStation.name : "Bitte Ort wählen..."}}
+    </div>
+
+    <div dropdown>
+        <div class="map" leaflet [leafletOptions]="options">
+            <div *ngIf="stationsLayer !== undefined" [leafletLayer]="stationsLayer"></div>
         </div>
     </div>
-</button>
+</dropdown>

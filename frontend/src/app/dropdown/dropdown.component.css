@@ -1,0 +1,48 @@
+:host {
+    display: inline-block;
+
+    position: relative;
+}
+
+button {
+    font: inherit;
+    color: inherit;
+    border: 1px solid #333;
+    text-align: left;
+    margin: 0;
+    padding: 0.5rem 1.5rem;
+    height: 100%;
+
+    width: 35rem;
+    background-color: inherit;
+    border-radius: 1rem;
+    display: block;
+}
+
+button:hover {
+    cursor: pointer;
+    background-color: #333;
+}
+
+button > fa-icon {
+    margin-right: 1rem;
+}
+
+button.dropdownVisible {
+    border-radius: 1rem 1rem 0 0;
+    background-color: #333;
+}
+
+.dropdown {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 35rem;
+
+    background-color: #333;
+    z-index: 1011;
+
+
+    padding: 0.5rem 1.5rem 3rem;
+    border-radius: 0 0 1rem 1rem;
+}

@@ -37,12 +37,12 @@ type CurrentFilter = {
 }
 
 export enum DateRangeFilter {
-    THIS_MONTH, LAST_MONTH, THIS_YEAR, LAST_YEAR, CUSTOM
+    MONTHLY, YEARLY, LONG_TERM
 }
 
 export const currentFilter: CurrentFilter = {
     selectedStation: undefined,
-    dateRangeFilter: DateRangeFilter.THIS_YEAR,
+    dateRangeFilter: DateRangeFilter.MONTHLY,
     from: undefined,
     to: undefined
 }

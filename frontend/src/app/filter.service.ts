@@ -1,4 +1,4 @@
-import * as luxon from "luxon";
+import {DateTime} from "luxon";
 import {environment} from "../environments/environment";
 import {currentData, DateRangeFilter, SummaryData} from "./SummaryData";
 import {WeatherStation} from "./WeatherStationService";
@@ -10,9 +10,9 @@ import {ApplicationRef, Injectable} from "@angular/core";
 })
 export class FilterService {
     selectedStation?: WeatherStation
-    dateRangeFilter: DateRangeFilter = DateRangeFilter.THIS_MONTH
-    from?: number
-    to?: number
+    dateRangeFilter: DateRangeFilter = DateRangeFilter.MONTHLY
+    from: DateTime = DateTime.now()
+    to: DateTime = DateTime.now()
 
     constructor(private http: HttpClient, private app: ApplicationRef) {
     }
@@ -21,18 +21,16 @@ export class FilterService {
         if (this.selectedStation) {
             let stationId = this.selectedStation.id
             let url = ""
-            if (this.dateRangeFilter === DateRangeFilter.THIS_MONTH) {
-                let from = luxon.DateTime.now().startOf("month").toFormat("yyyy/MM")
-                url = `${environment.apiServer}/stations/${stationId}/summary/${from}`
-            } else if (this.dateRangeFilter === DateRangeFilter.LAST_MONTH) {
-                let from = luxon.DateTime.now().minus({month: 1}).startOf("month").toFormat("yyyy/MM")
-                url = `${environment.apiServer}/stations/${stationId}/summary/${from}`
-            } else if (this.dateRangeFilter === DateRangeFilter.THIS_YEAR) {
-                let from = luxon.DateTime.now().startOf("year").toFormat("yyyy")
-                url = `${environment.apiServer}/stations/${stationId}/summary/${from}`
-            } else if (this.dateRangeFilter === DateRangeFilter.LAST_YEAR) {
-                let from = luxon.DateTime.now().minus({year: 1}).startOf("year").toFormat("yyyy")
-                url = `${environment.apiServer}/stations/${stationId}/summary/${from}`
+            if (this.dateRangeFilter === DateRangeFilter.MONTHLY) {
+                let fromString = this.from?.startOf("month").toFormat("yyyy/MM")
+                url = `${environment.apiServer}/stations/${stationId}/summary/${fromString}`
+            } else if (this.dateRangeFilter === DateRangeFilter.YEARLY) {
+                let fromString = this.from?.startOf("year").toFormat("yyyy")
+                url = `${environment.apiServer}/stations/${stationId}/summary/${fromString}`
+            } else if (this.dateRangeFilter === DateRangeFilter.LONG_TERM) {
+                let fromString = this.from?.startOf("year").toFormat("yyyy")
+                let toString = this.from?.endOf("year").toFormat("yyyy")
+                url = `${environment.apiServer}/stations/${stationId}/summary/${fromString}-${toString}`
             }
 
             console.log(`fetching data from ${url}`)
@@ -44,5 +42,17 @@ export class FilterService {
                     this.app.tick()
                 })
         }
+    }
+
+    get longTerm(): boolean {
+        return this.dateRangeFilter == DateRangeFilter.LONG_TERM
+    }
+
+    get monthly(): boolean {
+        return this.dateRangeFilter == DateRangeFilter.MONTHLY
+    }
+
+    get yearly(): boolean {
+        return this.dateRangeFilter == DateRangeFilter.YEARLY
     }
 }

@@ -1,49 +1,67 @@
-<header style="z-index: 1001">
-    Wetterchroniken für <map-dropdown #mapDropdown></map-dropdown>
+<header>
+    <h1>wetterchroniken</h1>
 </header>
 
 <nav>
-    <div class="date-filter-list" style="font-size: 1.3rem">
-        <div class="date-range-filter" (click)="filter(DateRangeFilter.THIS_MONTH)">
-            <fa-icon [icon]="faSquareChecked"
-                     *ngIf="filterService.dateRangeFilter === DateRangeFilter.THIS_MONTH"></fa-icon>
-            <fa-icon [icon]="faSquare" *ngIf="filterService.dateRangeFilter !== DateRangeFilter.THIS_MONTH"></fa-icon>
-            aktueller Monat
-        </div>
 
-        <div class="date-range-filter" (click)="filter(DateRangeFilter.LAST_MONTH)">
-            <fa-icon [icon]="faSquareChecked"
-                     *ngIf="filterService.dateRangeFilter === DateRangeFilter.LAST_MONTH"></fa-icon>
-            <fa-icon [icon]="faSquare" *ngIf="filterService.dateRangeFilter !== DateRangeFilter.LAST_MONTH"></fa-icon>
-            vorheriger Monat
-        </div>
+    <map-dropdown #mapDropdown></map-dropdown>
 
-        &#x25CF;
-
-        <div class="date-range-filter" (click)="filter(DateRangeFilter.THIS_YEAR)">
-            <fa-icon [icon]="faSquareChecked"
-                     *ngIf="filterService.dateRangeFilter === DateRangeFilter.THIS_YEAR"></fa-icon>
-            <fa-icon [icon]="faSquare" *ngIf="filterService.dateRangeFilter !== DateRangeFilter.THIS_YEAR"></fa-icon>
-            dieses Jahr
-        </div>
-
-        <div class="date-range-filter" (click)="filter(DateRangeFilter.LAST_YEAR)">
-            <fa-icon [icon]="faSquareChecked"
-                     *ngIf="filterService.dateRangeFilter === DateRangeFilter.LAST_YEAR"></fa-icon>
-            <fa-icon [icon]="faSquare" *ngIf="filterService.dateRangeFilter !== DateRangeFilter.LAST_YEAR"></fa-icon>
-            letztes Jahr
-        </div>
-
-
-        &#x25CF;
-
-        <div class="date-range-filter" (click)="filter(DateRangeFilter.CUSTOM)">
-            <fa-icon [icon]="faSquareChecked"
-                     *ngIf="filterService.dateRangeFilter === DateRangeFilter.CUSTOM"></fa-icon>
-            <fa-icon [icon]="faSquare" *ngIf="filterService.dateRangeFilter !== DateRangeFilter.CUSTOM"></fa-icon>
-            eigener Zeitraum
-        </div>
+    <div class="monthly" (click)="filter(DateRangeFilter.MONTHLY)">
+        <fa-icon [icon]="faSquareChecked"
+                 *ngIf="filterService.dateRangeFilter === DateRangeFilter.MONTHLY"></fa-icon>
+        <fa-icon [icon]="faSquare"
+                 *ngIf="filterService.dateRangeFilter !== DateRangeFilter.MONTHLY"></fa-icon>
+        <span>Monat</span>
+        <!--    <span>1999 - 2020</span>-->
     </div>
+
+    <div class="yearly" (click)="filter(DateRangeFilter.YEARLY)">
+        <fa-icon [icon]="faSquareChecked"
+                 *ngIf="filterService.dateRangeFilter === DateRangeFilter.YEARLY"></fa-icon>
+        <fa-icon [icon]="faSquare"
+                 *ngIf="filterService.dateRangeFilter !== DateRangeFilter.YEARLY"></fa-icon>
+        <span>Jahr</span>
+        <!--    <span>1999 - 2020</span>-->
+    </div>
+
+    <div class="long-term" (click)="filter(DateRangeFilter.LONG_TERM)">
+        <fa-icon [icon]="faSquareChecked"
+                 *ngIf="filterService.dateRangeFilter === DateRangeFilter.LONG_TERM"></fa-icon>
+        <fa-icon [icon]="faSquare"
+                 *ngIf="filterService.dateRangeFilter !== DateRangeFilter.LONG_TERM"></fa-icon>
+        <span>Langzeit</span>
+        <!--    <span>1999 - 2020</span>-->
+    </div>
+
+    <dropdown *ngIf="filterService.monthly" class="date-range">
+        <div button>
+            September 2022
+        </div>
+
+        <div dropdown
+             style="display: grid; grid-template-rows: calc(1.3rem * 12 * 1.4); font-size: 1.3rem; grid-template-columns: repeat(3, auto); line-height: 1.4">
+            <div style="">
+                <div>Januar</div>
+                <div>Februar</div>
+                <div>März</div>
+                <div>April</div>
+                <div>Mai</div>
+                <div>Juni</div>
+                <div>Juli</div>
+                <div>August</div>
+                <div>September</div>
+                <div>Oktober</div>
+                <div>November</div>
+                <div>Dezember</div>
+            </div>
+
+            <hr>
+
+            <div style="overflow-y: scroll">
+                <div *ngFor="let year of getYears()">{{year}}</div>
+            </div>
+        </div>
+    </dropdown>
 </nav>
 
 <main>
@@ -207,7 +225,4 @@
     </section>
 </main>
 
-<div class="backdrop"
-     [ngStyle]="{visibility: mapDropdown.dropdownVisible ? 'visible' : 'hidden'}"
-     (click)="mapDropdown.dropdownVisible = false">
-</div>
+<div class="dropdown-background" #dropdownBackground></div>

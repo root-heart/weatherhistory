@@ -1,6 +1,5 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 import {WeatherStation, WeatherStationList, WeatherStationService} from "../WeatherStationService";
-import {currentFilter, DateRangeFilter} from "../SummaryData";
 import {
     Icon,
     LatLng,
@@ -13,6 +12,7 @@ import {
     TileLayer
 } from "leaflet";
 import {FilterService} from "../filter.service";
+import {faMapLocationDot} from "@fortawesome/free-solid-svg-icons";
 
 export class FilterChangedEvent {
     station: WeatherStation
@@ -32,6 +32,8 @@ export class FilterChangedEvent {
     styleUrls: ['./map-dropdown.component.css']
 })
 export class MapDropdown implements OnInit {
+    @Input() background: HTMLElement | undefined
+
     stations: WeatherStationList = []
     options: MapOptions = {
         layers: getLayers(),
@@ -41,7 +43,7 @@ export class MapDropdown implements OnInit {
 
     stationsLayer?: Layer
 
-    dropdownVisible: boolean = false
+    faMapLocationDot = faMapLocationDot
 
     constructor(private weatherStationService: WeatherStationService, public filterService: FilterService) {
         weatherStationService.getWeatherStations().subscribe(data => this.setStations(data));
