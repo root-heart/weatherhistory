@@ -1,5 +1,4 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {MapDropdown} from "../filter-header/map-dropdown.component";
 import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartDataset, ChartOptions, registerables} from "chart.js";
 import ChartjsPluginStacked100 from "chartjs-plugin-stacked100";

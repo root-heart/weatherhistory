@@ -1,12 +1,8 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {FilterChangedEvent, MapDropdown} from "../filter-header/map-dropdown.component";
-import {environment} from "../../environments/environment";
 import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
 import {HttpClient} from "@angular/common/http";
 import {Measurement, SummaryData} from "../SummaryData";
-import {MinAvgMaxSummary} from "./MinAvgMaxChart";
-import {Duration} from 'luxon'
 import {Observable} from "rxjs";
 
 export type Sum = {

@@ -29,7 +29,7 @@ export class FilterService {
                 url = `${environment.apiServer}/stations/${stationId}/summary/${fromString}`
             } else if (this.dateRangeFilter === DateRangeFilter.LONG_TERM) {
                 let fromString = this.from?.startOf("year").toFormat("yyyy")
-                let toString = this.from?.endOf("year").toFormat("yyyy")
+                let toString = this.to?.endOf("year").toFormat("yyyy")
                 url = `${environment.apiServer}/stations/${stationId}/summary/${fromString}-${toString}`
             }
 
