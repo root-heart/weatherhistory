@@ -1,0 +1,5 @@
+<button
+        [ngClass]="isCurrentlySelected() ? 'selected' : ''"
+        (click)="clicked()">
+    <ng-content></ng-content>
+</button>
