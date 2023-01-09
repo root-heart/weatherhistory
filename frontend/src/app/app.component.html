@@ -23,7 +23,7 @@
         <min-avg-max-chart class="chart"
                            [color]="'hsl(0, 80%, 45%)'" [fill]="'hsla(0, 80%, 45%, 0.3)'"
                            [min]="'minTemperature'" [avg]="'avgTemperature'" [max]="'maxTemperature'"
-                           [filterComponent]=currentData [resolution]="getChartResolution()"
+                           [filterComponent]=currentData [resolution]="filterService.getChartResolution()"
                            (click)="showDetails('temperature')"></min-avg-max-chart>
     </section>
 
@@ -33,7 +33,7 @@
         <div class="summary">&#931; {{divideBy60(currentData?.value?.summary?.sunshineDuration)?.toFixed(1)}}h</div>
 
         <sum-chart class="chart" [fill]="'hsl(40, 100%, 50%)'" [sum]="'sunshineDuration'"
-                   [valueConverter]="divideBy60" [resolution]="getChartResolution()"
+                   [valueConverter]="divideBy60" [resolution]="filterService.getChartResolution()"
                    [filterComponent]=currentData></sum-chart>
     </section>
 
@@ -49,7 +49,7 @@
         </div>
 
         <sum-chart class="chart" [fill]="'hsl(240, 100%, 50%)'" [fill2]="'hsl(40, 0%, 80%)'" [sum]="'rainfall'"
-                   [resolution]="getChartResolution()"
+                   [resolution]="filterService.getChartResolution()"
                    [filterComponent]=currentData></sum-chart>
     </section>
 
@@ -63,7 +63,7 @@
         </div>
 
         <min-avg-max-chart class="chart" [color]="'hsl(270, 80%, 65%)'" [fill]="'hsla(270, 80%, 65%, 0.3)'"
-                           [avg]="'avgWindspeed'" [max]="'maxWindspeed'" [resolution]="getChartResolution()"
+                           [avg]="'avgWindspeed'" [max]="'maxWindspeed'" [resolution]="filterService.getChartResolution()"
                            [filterComponent]=currentData></min-avg-max-chart>
     </section>
 
@@ -93,7 +93,7 @@
 
         <min-avg-max-chart class="chart" [color]="'hsl(220, 80%, 30%)'" [fill]="'hsla(220, 80%, 30%, 0.3)'"
                            [min]="'minHumidity'" [avg]="'avgHumidity'" [max]="'maxHumidity'"
-                           [resolution]="getChartResolution()"
+                           [resolution]="filterService.getChartResolution()"
                            [filterComponent]=currentData></min-avg-max-chart>
     </section>
 
@@ -110,7 +110,7 @@
 
         <min-avg-max-chart class="chart" [color]="'hsl(220, 80%, 70%)'" [fill]="'hsla(220, 80%, 70%, 0.3)'"
                            [min]="'minDewPointTemperature'" [avg]="'avgDewPointTemperature'"
-                           [max]="'maxDewPointTemperature'" [resolution]="getChartResolution()"
+                           [max]="'maxDewPointTemperature'" [resolution]="filterService.getChartResolution()"
                            [filterComponent]=currentData></min-avg-max-chart>
     </section>
 
@@ -127,7 +127,7 @@
 
         <min-avg-max-chart class="chart" [color]="'hsl(120, 80%, 45%)'" [fill]="'hsla(120, 80%, 45%, 0.15)'"
                            [min]="'minAirPressure'" [avg]="'avgAirPressure'" [max]="'maxAirPressure'"
-                           [includeZero]=false [resolution]="getChartResolution()"
+                           [includeZero]=false [resolution]="filterService.getChartResolution()"
                            (click)="showDetails('airPressure')"
                            [filterComponent]=currentData></min-avg-max-chart>
     </section>
@@ -144,7 +144,7 @@
         </div>
 
         <min-avg-max-chart class="chart" [color]="'hsl(0, 0%, 70%)'" [fill]="'hsla(0, 0%, 70%, 0.3)'"
-                           [logarithmic]="true" [resolution]="getChartResolution()"
+                           [logarithmic]="true" [resolution]="filterService.getChartResolution()"
                            [ticks]="[{value: 10, label: '10'}, {value: 100, label: '100'}, {value: 1000, label: '1km'}, {value: 10000, label: '10km'}, {value: 100000, label: '100km'}]"
                            [min]="'minVisibility'" [avg]="'avgVisibility'" [max]="'maxVisibility'"
                            [filterComponent]=currentData></min-avg-max-chart>
@@ -165,7 +165,7 @@
         </div>
 
         <histogram-chart class="chart" [filterComponent]=currentData
-                         [resolution]="getChartResolution()"></histogram-chart>
+                         [resolution]="filterService.getChartResolution()"></histogram-chart>
     </section>
 </main>
 

@@ -1,38 +1,43 @@
-import {DateTime} from "luxon";
+import {DateTime, MonthNumbers} from "luxon";
 import {environment} from "../environments/environment";
 import {currentData, DateRangeFilter, SummaryData} from "./SummaryData";
 import {WeatherStation} from "./WeatherStationService";
 import {HttpClient} from "@angular/common/http";
 import {ApplicationRef, Injectable} from "@angular/core";
+import {BehaviorSubject} from "rxjs";
+import {ChartResolution} from "./charts/BaseChart";
+
+export type Month = ("jan" | "feb" | "mar" | "apr" | "may" | "jun" | "jul" | "aug" | "sep" | "oct" | "nov" | "dec")
+export type Season = ("3-5" | "6-8" | "9-11" | "12-2")
+
+export type DateRangeIdentifier = MonthNumbers | Season | "year" | "multipleYears"
 
 @Injectable({
     providedIn: 'root'
 })
 export class FilterService {
     selectedStation?: WeatherStation
-    dateRangeFilter: DateRangeFilter = DateRangeFilter.MONTHLY
-    from: DateTime = DateTime.now()
-    to: DateTime = DateTime.now()
+    dateRangeIdentifier: BehaviorSubject<DateRangeIdentifier> = new BehaviorSubject<DateRangeIdentifier>(1)
+    year: BehaviorSubject<number> = new BehaviorSubject(2022)
+    endYear: BehaviorSubject<number> = new BehaviorSubject(2022)
 
     constructor(private http: HttpClient, private app: ApplicationRef) {
+        this.dateRangeIdentifier.subscribe(r => this.fireFilterChangedEvent())
+        this.year.subscribe(r => this.fireFilterChangedEvent())
+        this.endYear.subscribe(r => this.fireFilterChangedEvent())
     }
 
     fireFilterChangedEvent(): void {
         if (this.selectedStation) {
             let stationId = this.selectedStation.id
-            let url = ""
-            if (this.dateRangeFilter === DateRangeFilter.MONTHLY) {
-                let fromString = this.from?.startOf("month").toFormat("yyyy/MM")
-                url = `${environment.apiServer}/stations/${stationId}/summary/${fromString}`
-            } else if (this.dateRangeFilter === DateRangeFilter.YEARLY) {
-                let fromString = this.from?.startOf("year").toFormat("yyyy")
-                url = `${environment.apiServer}/stations/${stationId}/summary/${fromString}`
-            } else if (this.dateRangeFilter === DateRangeFilter.LONG_TERM) {
-                let fromString = this.from?.startOf("year").toFormat("yyyy")
-                let toString = this.to?.endOf("year").toFormat("yyyy")
-                url = `${environment.apiServer}/stations/${stationId}/summary/${fromString}-${toString}`
+            let url = `${environment.apiServer}/stations/${stationId}/summary/`
+            if (this.dateRangeIdentifier.value == "year") {
+                url += `${this.year.value}`
+            } else if (this.dateRangeIdentifier.value == "multipleYears") {
+                url += `${this.year.value}-${this.endYear.value}`
+            } else {
+                url += `${this.year.value}/${this.dateRangeIdentifier.value}`
             }
-
             console.log(`fetching data from ${url}`)
             this.http
                 .get<SummaryData>(url)
@@ -44,15 +49,15 @@ export class FilterService {
         }
     }
 
-    get longTerm(): boolean {
-        return this.dateRangeFilter == DateRangeFilter.LONG_TERM
+    public getChartResolution(): ChartResolution {
+        if (this.dateRangeIdentifier.value == "multipleYears") {
+            return "yearly"
+        } else if (this.dateRangeIdentifier.value == "year") {
+            return "monthly"
+        } else {
+            return "daily"
+        }
     }
 
-    get monthly(): boolean {
-        return this.dateRangeFilter == DateRangeFilter.MONTHLY
-    }
-
-    get yearly(): boolean {
-        return this.dateRangeFilter == DateRangeFilter.YEARLY
-    }
 }
+

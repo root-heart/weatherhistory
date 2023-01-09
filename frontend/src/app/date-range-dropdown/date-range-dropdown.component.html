@@ -1,63 +1,69 @@
 <dropdown>
     <div button>
         <fa-icon [icon]="faCalendar"></fa-icon>
-        September 2022
+        {{filterService.dateRangeIdentifier.value}} {{filterService.year.value}}
     </div>
 
     <div dropdown class="date-range-dropdown">
-        <hr>
-
         <div class="grid four-columns month-selection">
-            <div>Januar</div>
-            <div>Februar</div>
-            <div>März</div>
-            <div>April</div>
-            <div>Mai</div>
-            <div>Juni</div>
-            <div>Juli</div>
-            <div>August</div>
-            <div>September</div>
-            <div>Oktober</div>
-            <div>November</div>
-            <div>Dezember</div>
+            <toggable-button [value]="1">Januar</toggable-button>
+            <toggable-button [value]="2">Februar</toggable-button>
+            <toggable-button [value]="3">März</toggable-button>
+            <toggable-button [value]="4">April</toggable-button>
+            <toggable-button [value]="5">Mai</toggable-button>
+            <toggable-button [value]="6">Juni</toggable-button>
+            <toggable-button [value]="7">Juli</toggable-button>
+            <toggable-button [value]="8">August</toggable-button>
+            <toggable-button [value]="9">September</toggable-button>
+            <toggable-button [value]="10">Oktober</toggable-button>
+            <toggable-button [value]="11">November</toggable-button>
+            <toggable-button [value]="12">Dezember</toggable-button>
         </div>
 
         <hr>
 
         <div class="grid four-columns season-selection">
-            <div>
+            <toggable-button [value]="'3-5'">
                 Frühling<br>
                 <span class="season-months">(Mär-Mai)</span>
-            </div>
-            <div>
+            </toggable-button>
+            <toggable-button [value]="'6-8'">
                 Sommer<br>
                 <span class="season-months">(Jun-Aug)</span>
-            </div>
-            <div>
+            </toggable-button>
+            <toggable-button [value]="'9-11'">
                 Herbst<br>
                 <span class="season-months">(Sep-Nov)</span>
-            </div>
-            <div>
+            </toggable-button>
+            <toggable-button [value]="'12-2'">
                 Winter<br>
                 <span class="season-months">(Dez-Feb)</span>
-            </div>
+            </toggable-button>
         </div>
 
         <hr>
 
         <div class="grid two-columns">
-            <div>Gesamtes Jahr</div>
-            <div>mehrere Jahre</div>
+            <toggable-button [value]="'year'">Gesamtes Jahr</toggable-button>
+            <toggable-button [value]="'multipleYears'">mehrere Jahre</toggable-button>
         </div>
 
         <hr>
 
         <div class="year-selection">
-            <fa-icon [icon]="bigMinus"></fa-icon>
-            <fa-icon [icon]="minus"></fa-icon>
-            <input value="2022" class="year">
-            <fa-icon [icon]="plus"></fa-icon>
-            <fa-icon [icon]="bigPlus"></fa-icon>
+            <button (click)="addToYears(-10)">
+                <fa-icon [icon]="bigMinus"></fa-icon>
+            </button>
+            <button (click)="addToYears(-1)">
+                <fa-icon [icon]="minus"></fa-icon>
+            </button>
+            <input [value]="filterService.year.value" class="year">
+            <button (click)="addToYears(1)">
+                <fa-icon [icon]="plus"></fa-icon>
+            </button>
+            <button (click)="addToYears(10)">
+                <fa-icon [icon]="bigPlus"></fa-icon>
+            </button>
         </div>
     </div>
 </dropdown>

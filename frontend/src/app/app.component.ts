@@ -79,12 +79,5 @@ export class AppComponent implements AfterViewInit {
 
 
 
-    getChartResolution(): ChartResolution {
-        if (this.filterService.dateRangeFilter == DateRangeFilter.MONTHLY) {
-            return "daily"
-        } else {
-            return "monthly"
-        }
-    }
 }
 

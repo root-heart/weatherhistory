@@ -6,7 +6,7 @@ export type MeasurementDataSet = ChartDataset & {
     tooltipValueFormatter?: any
 }
 
-export type ChartResolution = "daily" | "monthly"
+export type ChartResolution = "daily" | "monthly" | "yearly"
 
 export function getDefaultChartOptions(): ChartOptions {
     return {
