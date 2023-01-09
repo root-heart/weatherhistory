@@ -7,6 +7,13 @@ header {
     /*text-align: center;*/
 }
 
+header > hr {
+    border-style: unset;
+    margin: 0.5rem 0 1rem;
+    width: 60%;
+    border-bottom: 1px solid #e0e8ef;
+}
+
 nav {
     display: grid;
 
@@ -28,24 +35,17 @@ nav > h1 {
     grid-area: title;
 }
 
-header > hr {
-    border-style: unset;
-    margin: 0.5rem 0 1rem;
-    width: 60%;
-    border-bottom: 1px solid #e0e8ef;
-}
-
 nav map-dropdown {
     font-size: 1.5rem;
     /*grid-row: span 2;*/
     grid-area: map;
+    width: 30rem;
 }
 
-nav date-range-dropdown {
-    /*grid-template-areas:*/
-    /*        "monthly yearly longterm"*/
-    /*        "range range range";*/
+nav .date-range {
     grid-area: range;
+    font-size: 1.5rem;
+    width: 30rem;
 }
 
 nav .monthly {
@@ -58,17 +58,6 @@ nav .yearly {
 
 nav .long-term {
     grid-area: longterm;
-}
-
-nav .date-range {
-    grid-area: range;
-}
-
-nav hr {
-    display: inline;
-    margin: 0 1rem;
-    border-style: unset;
-    border-right: 1px solid #666;
 }
 
 nav .date-filter-list {

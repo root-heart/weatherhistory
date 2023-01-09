@@ -2,6 +2,8 @@
     display: inline-block;
 
     position: relative;
+    width: 100%;
+
 }
 
 button {
@@ -13,10 +15,11 @@ button {
     padding: 0.5rem 1.5rem;
     height: 100%;
 
-    width: 35rem;
     background-color: inherit;
     border-radius: 1rem;
     display: block;
+
+    width: 100%;
 }
 
 button:hover {
@@ -37,7 +40,7 @@ button.dropdownVisible {
     position: absolute;
     left: 0;
     top: 0;
-    width: 35rem;
+    width: 100%;
 
     background-color: #333;
     z-index: 1011;

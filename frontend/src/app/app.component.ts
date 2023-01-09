@@ -1,6 +1,7 @@
 import {AfterViewInit, Component, ElementRef, ViewChild} from '@angular/core';
 import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.component";
 import {
+    faCalendarWeek,
     faCloud,
     faCloudShowersHeavy,
     faCloudSun,
@@ -36,6 +37,7 @@ export class AppComponent implements AfterViewInit {
     faSnow = faSnowflake
     faSquare = faSquare
     faSquareChecked = faSquareXmark
+    faCalendar = faCalendarWeek
 
     currentData = currentData
 
@@ -83,18 +85,6 @@ export class AppComponent implements AfterViewInit {
         } else {
             return "monthly"
         }
-    }
-
-
-    filter(range: DateRangeFilter) {
-        this.filterService.dateRangeFilter = range
-        this.filterService.fireFilterChangedEvent()
-    }
-
-    getYears(): number[] {
-        let start = 1970
-        let end = 2023
-        return Array.from({length: (end - start)}, (v, k) => k + start)
     }
 }
 

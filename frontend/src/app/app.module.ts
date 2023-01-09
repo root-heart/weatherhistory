@@ -17,10 +17,12 @@ import {FilterService} from "./filter.service";
 import {Dropdown} from './dropdown/dropdown.component';
 import {DateRangeDropdownComponent} from './date-range-dropdown/date-range-dropdown.component';
 import {MapDropdown} from "./map-dropdown/map-dropdown.component";
+import { YearDropdownComponent } from './year-dropdown/year-dropdown.component';
+import { MonthDropdownComponent } from './month-dropdown/month-dropdown.component';
 
 @NgModule({
     declarations: [
-        AppComponent, CloudinessChart, MapDropdown, MinAvgMaxChart, SumChart, HistogramChart, Dropdown, DateRangeDropdownComponent
+        AppComponent, CloudinessChart, MapDropdown, MinAvgMaxChart, SumChart, HistogramChart, Dropdown, DateRangeDropdownComponent, YearDropdownComponent, MonthDropdownComponent
     ],
     imports: [
         LeafletModule, BrowserAnimationsModule, BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule, MatTabsModule, FontAwesomeModule, NgxSliderModule

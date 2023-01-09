@@ -1,0 +1,63 @@
+<dropdown>
+    <div button>
+        <fa-icon [icon]="faCalendar"></fa-icon>
+        September 2022
+    </div>
+
+    <div dropdown class="date-range-dropdown">
+        <hr>
+
+        <div class="grid four-columns month-selection">
+            <div>Januar</div>
+            <div>Februar</div>
+            <div>März</div>
+            <div>April</div>
+            <div>Mai</div>
+            <div>Juni</div>
+            <div>Juli</div>
+            <div>August</div>
+            <div>September</div>
+            <div>Oktober</div>
+            <div>November</div>
+            <div>Dezember</div>
+        </div>
+
+        <hr>
+
+        <div class="grid four-columns season-selection">
+            <div>
+                Frühling<br>
+                <span class="season-months">(Mär-Mai)</span>
+            </div>
+            <div>
+                Sommer<br>
+                <span class="season-months">(Jun-Aug)</span>
+            </div>
+            <div>
+                Herbst<br>
+                <span class="season-months">(Sep-Nov)</span>
+            </div>
+            <div>
+                Winter<br>
+                <span class="season-months">(Dez-Feb)</span>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="grid two-columns">
+            <div>Gesamtes Jahr</div>
+            <div>mehrere Jahre</div>
+        </div>
+
+        <hr>
+
+        <div class="year-selection">
+            <fa-icon [icon]="bigMinus"></fa-icon>
+            <fa-icon [icon]="minus"></fa-icon>
+            <input value="2022" class="year">
+            <fa-icon [icon]="plus"></fa-icon>
+            <fa-icon [icon]="bigPlus"></fa-icon>
+        </div>
+    </div>
+</dropdown>
