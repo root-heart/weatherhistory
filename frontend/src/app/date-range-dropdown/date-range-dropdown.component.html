@@ -1,7 +1,7 @@
 <dropdown>
     <div button>
         <fa-icon [icon]="faCalendar"></fa-icon>
-        {{filterService.dateRangeIdentifier.value}} {{filterService.year.value}}
+        {{getButtonCaption()}}
     </div>
 
     <div dropdown class="date-range-dropdown">

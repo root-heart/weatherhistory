@@ -7,6 +7,7 @@ import {
     faCalendarDays
 } from "@fortawesome/free-solid-svg-icons";
 import {FilterService} from "../filter.service";
+import {DateTime} from "luxon";
 
 @Component({
     selector: 'date-range-dropdown',
@@ -32,6 +33,15 @@ export class DateRangeDropdownComponent implements OnInit {
         this.filterService.year.next(this.filterService.year.value + value)
     }
 
-
+    getButtonCaption(): string {
+        if (this.filterService.dateRangeIdentifier.value == "multipleYears") {
+            return `von ${this.filterService.year.value} bis ${this.filterService.endYear.value}`
+        } else if (this.filterService.dateRangeIdentifier.value == "year") {
+            return `Jahr ${this.filterService.year.value}`
+        } else {
+            let monthName = DateTime.fromObject({month: this.filterService.dateRangeIdentifier.value as number}).toFormat("MMMM", {locale: "de-DE"})
+            return `${monthName} ${this.filterService.year.value}`
+        }
+    }
 }
 
