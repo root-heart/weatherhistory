@@ -3,55 +3,26 @@
     display: block;
 }
 
-header {
-    /*text-align: center;*/
-}
-
-header > hr {
-    border-style: unset;
-    margin: 0.5rem 0 1rem;
-    width: 60%;
-    border-bottom: 1px solid #e0e8ef;
-}
-
 nav {
     display: flex;
+    justify-content: center;
     margin: 1rem 0;
     grid-gap: 0.5rem 2rem;
 }
 
-nav > h1 {
-    font-size: 1.5rem;
-    font-weight: unset;
-    justify-self: center;
-    align-self: center;
-    display: inline;
-    grid-area: title;
-}
-
-map-dropdown {
-    font-size: 1.5rem;
-    width: 30rem;
-}
-
-nav .date-range {
-    font-size: 1.5rem;
-}
-
-
 fieldset {
+    width: 40rem;
+}
+
+hr {
     border: none;
-    border-top: 1px solid #666;
-
-    font-size: 1.1rem;
-    padding: 1rem 0;
+    border-bottom: var(--fine-border-line);
+    margin: 1rem 2vw;
 }
 
-legend {
-    padding-inline-start: 1rem;
-    padding-inline-end: 1rem;
-    margin-inline-start: 1rem;
-}
+/*map-dropdown {*/
+/*    width: 30rem;*/
+/*}*/
 
 .dropdown-background {
     position: fixed;
@@ -61,7 +32,7 @@ legend {
     right: 0;
     z-index: 888;
 
-    backdrop-filter: blur(0.2rem);
+    backdrop-filter: blur(0.5rem);
 }
 
 main {
@@ -80,13 +51,13 @@ section.chart-tile {
 section.chart-tile > h1 {
     grid-column: span 1;
     font-weight: normal;
-    font-size: 1.3rem;
+    font-size: 130%;
     align-self: end;
 }
 
 section.chart-tile > .summary {
     font-weight: lighter;
-    font-size: 0.8rem;
+    font-size: 80%;
     justify-self: right;
     align-self: end;
 }
@@ -95,5 +66,5 @@ section.chart-tile > .chart {
     grid-column: span 2;
     display: block;
     /*height: calc(100%);*/
-    /*height: 20rem;*/
+    height: 20rem;
 }

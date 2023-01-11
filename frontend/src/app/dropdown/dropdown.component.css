@@ -1,30 +1,14 @@
 :host {
     display: inline-block;
-
     position: relative;
     width: 100%;
-
 }
 
 button {
-    font: inherit;
-    color: inherit;
-    border: 1px solid #333;
     text-align: left;
-    margin: 0;
     padding: 0.5rem 1.5rem;
     height: 100%;
-
-    background-color: inherit;
-    border-radius: 1rem;
-    display: block;
-
     width: 100%;
-}
-
-button:hover {
-    cursor: pointer;
-    background-color: #333;
 }
 
 button > fa-icon {
@@ -32,8 +16,14 @@ button > fa-icon {
 }
 
 button.dropdownVisible {
-    border-radius: 1rem 1rem 0 0;
-    background-color: #333;
+    border-bottom: none;
+    border-radius: var(--input-border-radius) var(--input-border-radius) 0 0;
+    position: relative;
+    z-index: 1000;
+}
+
+button.dropdownVisible:hover {
+    background-color: var(--button-background-color);
 }
 
 .dropdown {
@@ -42,10 +32,18 @@ button.dropdownVisible {
     top: 0;
     width: 100%;
 
-    background-color: #333;
-    z-index: 1011;
+    background-color: var(--button-background-color);
+    z-index: 1000;
 
+    padding: 0 1.5rem 3rem;
+    border: var(--fine-border-line);
+    border-top: none;
+    border-bottom-left-radius: var(--input-border-radius);
+    border-bottom-right-radius: var(--input-border-radius);
+}
 
-    padding: 0.5rem 1.5rem 3rem;
-    border-radius: 0 0 1rem 1rem;
+hr {
+    margin: 0 0 0.5rem;
+    border: none;
+    border-bottom: var(--fine-border-line);
 }

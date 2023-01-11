@@ -1,11 +1,4 @@
 import {Component, OnInit} from '@angular/core';
-import {
-    faAngleLeft,
-    faAngleRight,
-    faAnglesLeft,
-    faAnglesRight,
-    faCalendarDays
-} from "@fortawesome/free-solid-svg-icons";
 import {FilterService} from "../filter.service";
 import {DateTime} from "luxon";
 
@@ -15,16 +8,6 @@ import {DateTime} from "luxon";
     styleUrls: ['./date-range-dropdown.component.css']
 })
 export class DateRangeDropdownComponent implements OnInit {
-    faCalendar = faCalendarDays
-
-    bigMinus = faAnglesLeft
-    minus = faAngleLeft
-    bigPlus = faAnglesRight
-    plus = faAngleRight
-
-    year1: number = 2000
-    year2: number = 2002
-
     constructor(public filterService: FilterService) {
     }
 
