@@ -19,10 +19,12 @@ import {DateRangeDropdownComponent} from './date-range-dropdown/date-range-dropd
 import {MapDropdown} from "./map-dropdown/map-dropdown.component";
 import { ToggableButtonComponent } from './toggable-button/toggable-button.component';
 import { RangeSliderComponent } from './range-slider/range-slider.component';
+import { YearSelectionComponent } from './year-selection/year-selection.component';
+import { MonthSelectionComponent } from './month-selection/month-selection.component';
 
 @NgModule({
     declarations: [
-        AppComponent, CloudinessChart, MapDropdown, MinAvgMaxChart, SumChart, HistogramChart, Dropdown, DateRangeDropdownComponent, ToggableButtonComponent, RangeSliderComponent
+        AppComponent, CloudinessChart, MapDropdown, MinAvgMaxChart, SumChart, HistogramChart, Dropdown, DateRangeDropdownComponent, ToggableButtonComponent, RangeSliderComponent, YearSelectionComponent, MonthSelectionComponent
     ],
     imports: [
         LeafletModule, BrowserAnimationsModule, BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule, MatTabsModule, FontAwesomeModule, NgxSliderModule

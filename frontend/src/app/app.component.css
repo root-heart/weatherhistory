@@ -15,13 +15,7 @@ header > hr {
 }
 
 nav {
-    display: grid;
-
-    grid-template-areas:
-            "none monthly yearly longterm"
-            "map range range range";
-    grid-auto-columns: max-content;
-    grid-auto-rows: max-content;
+    display: flex;
     margin: 1rem 0;
     grid-gap: 0.5rem 2rem;
 }
@@ -35,39 +29,28 @@ nav > h1 {
     grid-area: title;
 }
 
-nav map-dropdown {
+map-dropdown {
     font-size: 1.5rem;
-    /*grid-row: span 2;*/
-    grid-area: map;
     width: 30rem;
 }
 
 nav .date-range {
-    grid-area: range;
     font-size: 1.5rem;
-    width: 30rem;
 }
 
-nav .monthly {
-    grid-area: monthly;
+
+fieldset {
+    border: none;
+    border-top: 1px solid #666;
+
+    font-size: 1.1rem;
+    padding: 1rem 0;
 }
 
-nav .yearly {
-    grid-area: yearly;
-}
-
-nav .long-term {
-    grid-area: longterm;
-}
-
-nav .date-filter-list {
-    display: grid;
-    grid-template-columns: repeat(3, 12rem);
-}
-
-nav .date-filter-list > * {
-    /*align-self: start;*/
-    align-self: center;
+legend {
+    padding-inline-start: 1rem;
+    padding-inline-end: 1rem;
+    margin-inline-start: 1rem;
 }
 
 .dropdown-background {
@@ -83,7 +66,7 @@ nav .date-filter-list > * {
 
 main {
     display: grid;
-    grid-template-columns: repeat(3, 31vw);
+    grid-template-columns: repeat(5, 17vw);
     grid-auto-rows: 20vw;
     grid-gap: 1vw 2vw;
     justify-content: center;

@@ -22,6 +22,8 @@ export class DateRangeDropdownComponent implements OnInit {
     bigPlus = faAnglesRight
     plus = faAngleRight
 
+    year1: number = 2000
+    year2: number = 2002
 
     constructor(public filterService: FilterService) {
     }
@@ -29,9 +31,6 @@ export class DateRangeDropdownComponent implements OnInit {
     ngOnInit(): void {
     }
 
-    addToYears(value: (-10 | -1 | 1 | 10)) {
-        this.filterService.year.next(this.filterService.year.value + value)
-    }
 
     getButtonCaption(): string {
         if (this.filterService.dateRangeIdentifier.value == "multipleYears") {

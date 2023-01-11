@@ -1,11 +1,12 @@
-dropdown {
-    width: 100%;
+:host {
+    display: grid;
+    grid-template-columns: 6rem 13rem 3rem 13rem;
+    grid-gap: 0.5rem 1rem;
 }
 
-.date-range-dropdown {
-    font-size: 1.1rem;
-    /*line-height: 1.4;*/
-    aspect-ratio: 1;
+label {
+    text-align: right;
+    margin: auto 0;
 }
 
 .grid {
@@ -15,68 +16,10 @@ dropdown {
     text-align: center;
 }
 
-.two-columns {
-    grid-template-columns: repeat(2, 1fr);
-}
-
 .four-columns {
     grid-template-columns: repeat(4, 1fr);
 }
 
 .month-selection {
-    grid-template-rows: repeat(3, max-content);
-    grid-auto-flow: column;
-}
-
-.season-selection {
-}
-
-.season-months {
-    font-size: 0.7rem;
-}
-
-.date-range-dropdown > hr {
-    display: block;
-    grid-column: span 4;
-    margin: 0.6rem 5rem;
-    border-style: unset;
-    border-bottom: 1px solid #666;
-}
-
-.date-range-dropdown > div {
-    justify-self: center;
-}
-
-.date-range-dropdown > input {
-    font-size: 2rem;
-    padding: 0.5rem;
-    margin: 0.3rem 2rem;
-}
-
-.year-selection {
-    display: flex;
-    justify-content: center;
-    gap: 0.3rem;
-    /*font-size: 2rem;*/
-    padding: 0.5rem;
-    margin: 0.3rem 2rem;
-}
-
-.year-selection > fa-icon {
-    margin: auto 0;
-}
-
-.year-selection > button {
-    padding: 0.3rem;
-}
-
-.year {
-    width: 5rem;
-    font-size: inherit;
-    text-align: center;
-    background-color: #444;
-    border: none;
-    color: inherit;
-    border-radius: 0.5rem;
-    padding: 0.3rem;
+    grid-column: span 2;
 }
