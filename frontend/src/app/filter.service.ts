@@ -53,16 +53,15 @@ export class FilterService {
     }
 
     public getChartResolution(): ChartResolution {
-        if (this.endYear.value - this.year.value > 5) {
+        let yearDifference = this.endYear.value - this.year.value;
+        if (yearDifference > 5) {
             return "yearly"
         } else {
             let intervals = this.getIntervals();
-            if (intervals.length > 1) {
-                return "monthly"
-            } else if (intervals.length == 1 && intervals[0].end - intervals[0].start > 2) {
-                return "monthly"
-            } else {
+            if (intervals.length == 1 && intervals[0].end - intervals[0].start <= 2) {
                 return "daily"
+            } else {
+                return "monthly"
             }
         }
     }
