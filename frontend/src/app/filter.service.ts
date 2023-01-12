@@ -1,12 +1,11 @@
-import {DateTime, MonthNumbers} from "luxon";
+import {DateTime} from "luxon";
 import {environment} from "../environments/environment";
-import {currentData, DateRangeFilter, SummaryData} from "./SummaryData";
+import {currentData, SummaryData} from "./SummaryData";
 import {WeatherStation} from "./WeatherStationService";
 import {HttpClient} from "@angular/common/http";
 import {ApplicationRef, Injectable} from "@angular/core";
 import {BehaviorSubject} from "rxjs";
 import {ChartResolution} from "./charts/BaseChart";
-
 
 @Injectable({
     providedIn: 'root'
@@ -37,9 +36,8 @@ export class FilterService {
             }
 
             if (!this.wholeYear.value) {
-                let monthNumbers = this.months
-                    .map((s, index) => s.value ? "" + (index + 1) : null)
-                    .filter(i => i !== null)
+                let monthNumbers = this.getIntervals()
+                    .map(interval => interval.getNumbersString())
                     .join(",")
                 url += `/${monthNumbers}`
             }
@@ -64,5 +62,60 @@ export class FilterService {
         }
     }
 
+
+    public getIntervals(): MonthInterval[] {
+        let interval = new MonthInterval(0, 0)
+        let intervals: MonthInterval[] = []
+        for (let i = 0; i < 12; i++) {
+            if (this.months[i].value && interval.start == 0) {
+                interval.start = i + 1
+            } else if (!this.months[i].value && interval.start != 0) {
+                interval.end = i
+                intervals.push(interval)
+                interval = new MonthInterval(0, 0)
+            }
+        }
+        if (interval.start > 0) {
+            interval.end = 12
+            intervals.push(interval)
+        }
+        return intervals
+    }
+
 }
 
+export class MonthInterval {
+    start: number
+    end: number
+
+
+    constructor(start: number, end: number) {
+        this.start = start;
+        this.end = end;
+    }
+
+    getNumbersString(): string {
+        if (this.start == this.end) {
+            return "" + this.start
+        } else if (this.end == this.start + 1) {
+            return `${this.start},${this.end}`
+        } else {
+            return `${this.start}-${this.end}`
+        }
+    }
+
+    getString(monthNamePattern: string): string {
+        if (this.start == this.end) {
+            return MonthInterval.getMonthName(this.start, monthNamePattern)
+        } else if (this.end == this.start + 1) {
+            return MonthInterval.getMonthName(this.start, monthNamePattern) + ", " + MonthInterval.getMonthName(this.end, monthNamePattern)
+        } else {
+            return MonthInterval.getMonthName(this.start, monthNamePattern) + " - " + MonthInterval.getMonthName(this.end, monthNamePattern)
+        }
+    }
+
+    static getMonthName(monthNumber: number, monthNamePattern: string): string {
+        return DateTime.fromObject({month: monthNumber}).toFormat(monthNamePattern, {locale: "de-DE"})
+    }
+
+}

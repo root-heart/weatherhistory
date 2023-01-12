@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {FilterService} from "../filter.service";
-import {DateTime, MonthNumbers} from "luxon";
+import {DateTime} from "luxon";
 
 @Component({
     selector: 'date-range-dropdown',
@@ -22,12 +22,10 @@ export class DateRangeDropdownComponent implements OnInit {
         if (this.filterService.wholeYear.value) {
             return "Gesamtes Jahr"
         }
-        return this.filterService.months
-                .map((s, index) => s.value ? (index + 1) : null)
-                .filter(i => i !== null)
-                .map(monthNumber => DateTime.fromObject({month: monthNumber ?? 0}))
-                .map(dateTime => dateTime.toFormat("MMM", {locale: "de-DE"}))
-                .join(",")
+        return this.filterService.getIntervals()
+            .map(interval => interval.getString("MMM"))
+            .join(", ")
     }
+
 }
 
