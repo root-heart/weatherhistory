@@ -1,29 +1,32 @@
-import {Component, Input, OnInit} from '@angular/core';
-import {DateRangeIdentifier, FilterService} from "../filter.service";
+import {Component, Input} from '@angular/core';
+import {faSquare, faSquareCheck} from "@fortawesome/free-solid-svg-icons";
+import {BehaviorSubject} from "rxjs";
 
 @Component({
     selector: 'toggable-button',
     templateUrl: './toggable-button.component.html',
     styleUrls: ['./toggable-button.component.css']
 })
-export class ToggableButtonComponent implements OnInit {
+export class ToggableButtonComponent {
     @Input()
-    value?: DateRangeIdentifier
+    subject?: BehaviorSubject<boolean>
 
-    constructor(private filterService: FilterService) {
-    }
+    @Input()
+    enabled?: boolean = true
 
-    ngOnInit(): void {
+    checked = faSquareCheck
+    unchecked = faSquare
 
+    constructor() {
     }
 
     clicked(): void {
-        if (this.value) {
-            this.filterService.dateRangeIdentifier.next(this.value)
+        if (this.enabled) {
+            this.subject?.next(!this.subject.value)
         }
     }
 
     isCurrentlySelected(): boolean {
-        return this.filterService.dateRangeIdentifier.value === this.value
+        return this.subject?.value ?? false;
     }
 }

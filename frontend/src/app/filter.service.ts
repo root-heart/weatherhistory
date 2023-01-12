@@ -7,36 +7,41 @@ import {ApplicationRef, Injectable} from "@angular/core";
 import {BehaviorSubject} from "rxjs";
 import {ChartResolution} from "./charts/BaseChart";
 
-export type Month = ("jan" | "feb" | "mar" | "apr" | "may" | "jun" | "jul" | "aug" | "sep" | "oct" | "nov" | "dec")
-export type Season = ("3-5" | "6-8" | "9-11" | "12-2")
-
-export type DateRangeIdentifier = MonthNumbers | Season | "year" | "multipleYears"
 
 @Injectable({
     providedIn: 'root'
 })
 export class FilterService {
     selectedStation?: WeatherStation
-    dateRangeIdentifier: BehaviorSubject<DateRangeIdentifier> = new BehaviorSubject<DateRangeIdentifier>(1)
     year: BehaviorSubject<number> = new BehaviorSubject(2022)
     endYear: BehaviorSubject<number> = new BehaviorSubject(2022)
+    wholeYear: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true)
+    months = Array<BehaviorSubject<boolean>>(12)
 
     constructor(private http: HttpClient, private app: ApplicationRef) {
-        this.dateRangeIdentifier.subscribe(r => this.fireFilterChangedEvent())
+        this.wholeYear.subscribe(r => this.fireFilterChangedEvent())
         this.year.subscribe(r => this.fireFilterChangedEvent())
         this.endYear.subscribe(r => this.fireFilterChangedEvent())
+        for (let i = 0; i < 12; i++) {
+            this.months[i] = new BehaviorSubject<boolean>(false)
+        }
+        this.months.forEach(m => m.subscribe(r => this.fireFilterChangedEvent()))
     }
 
     fireFilterChangedEvent(): void {
         if (this.selectedStation) {
             let stationId = this.selectedStation.id
-            let url = `${environment.apiServer}/stations/${stationId}/summary/`
-            if (this.dateRangeIdentifier.value == "year") {
-                url += `${this.year.value}`
-            } else if (this.dateRangeIdentifier.value == "multipleYears") {
-                url += `${this.year.value}-${this.endYear.value}`
-            } else {
-                url += `${this.year.value}/${this.dateRangeIdentifier.value}`
+            let url = `${environment.apiServer}/stations/${stationId}/summary/${this.year.value}`
+            if (this.endYear.value !== this.year.value) {
+                url += `-${this.endYear.value}`
+            }
+
+            if (!this.wholeYear.value) {
+                let monthNumbers = this.months
+                    .map((s, index) => s.value ? "" + (index + 1) : null)
+                    .filter(i => i !== null)
+                    .join(",")
+                url += `/${monthNumbers}`
             }
             console.log(`fetching data from ${url}`)
             this.http
@@ -50,9 +55,9 @@ export class FilterService {
     }
 
     public getChartResolution(): ChartResolution {
-        if (this.dateRangeIdentifier.value == "multipleYears") {
-            return "yearly"
-        } else if (this.dateRangeIdentifier.value == "year") {
+        if (this.year.value != this.endYear.value) {
+            // return "yearly"
+            // } else if (this.dateRangeIdentifier.value == "year") {
             return "monthly"
         } else {
             return "daily"

@@ -4,24 +4,18 @@
 <year-selection [year]="filterService.endYear"></year-selection>
 
 <label id="months-filter-label">Monate</label>
-<dropdown style="grid-column: span 3; font-size: 70%;">
-    <div button>Alle</div>
+<dropdown style="grid-column: span 3">
+    <div button>{{getButtonName()}}</div>
 
-    <div dropdown style="display: flex">
-        <div class="grid four-columns">
-            <toggable-button [value]="1">Januar</toggable-button>
-            <toggable-button [value]="2">Februar</toggable-button>
-            <toggable-button [value]="3">März</toggable-button>
-            <toggable-button [value]="4">April</toggable-button>
-            <toggable-button [value]="5">Mai</toggable-button>
-            <toggable-button [value]="6">Juni</toggable-button>
-            <toggable-button [value]="7">Juli</toggable-button>
-            <toggable-button [value]="8">August</toggable-button>
-            <toggable-button [value]="9">September</toggable-button>
-            <toggable-button [value]="10">Oktober</toggable-button>
-            <toggable-button [value]="11">November</toggable-button>
-            <toggable-button [value]="12">Dezember</toggable-button>
-            <toggable-button style="grid-column: span 4">Gesamtes Jahr</toggable-button>
+    <div dropdown>
+        <toggable-button style="margin-bottom: 0.5rem" [subject]="filterService.wholeYear">Gesamtes Jahr</toggable-button>
+
+        <div class="grid">
+            <toggable-button *ngFor="let i of [0,1,2,3,4,5,6,7,8,9,10,11]"
+                             [enabled]="!filterService.wholeYear.value"
+                             [subject]="filterService.months[i]">
+                {{getMonthName(i + 1)}}
+            </toggable-button>
         </div>
     </div>
 </dropdown>

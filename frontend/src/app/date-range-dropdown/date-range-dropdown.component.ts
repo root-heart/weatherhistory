@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {FilterService} from "../filter.service";
-import {DateTime} from "luxon";
+import {DateTime, MonthNumbers} from "luxon";
 
 @Component({
     selector: 'date-range-dropdown',
@@ -14,16 +14,20 @@ export class DateRangeDropdownComponent implements OnInit {
     ngOnInit(): void {
     }
 
+    getMonthName(monthNumber: number): string {
+        return DateTime.fromObject({month: monthNumber}).toFormat("MMMM", {locale: "de-DE"})
+    }
 
-    getButtonCaption(): string {
-        if (this.filterService.dateRangeIdentifier.value == "multipleYears") {
-            return `von ${this.filterService.year.value} bis ${this.filterService.endYear.value}`
-        } else if (this.filterService.dateRangeIdentifier.value == "year") {
-            return `Jahr ${this.filterService.year.value}`
-        } else {
-            let monthName = DateTime.fromObject({month: this.filterService.dateRangeIdentifier.value as number}).toFormat("MMMM", {locale: "de-DE"})
-            return `${monthName} ${this.filterService.year.value}`
+    getButtonName(): string {
+        if (this.filterService.wholeYear.value) {
+            return "Gesamtes Jahr"
         }
+        return this.filterService.months
+                .map((s, index) => s.value ? (index + 1) : null)
+                .filter(i => i !== null)
+                .map(monthNumber => DateTime.fromObject({month: monthNumber ?? 0}))
+                .map(dateTime => dateTime.toFormat("MMM", {locale: "de-DE"}))
+                .join(",")
     }
 }
 

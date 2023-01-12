@@ -12,12 +12,12 @@ label {
 .grid {
     display: grid;
     grid-gap: 0.2rem;
-    justify-items: center;
-    text-align: center;
+    grid-template-columns: repeat(3, 1fr);
+    justify-items: stretch;
+    text-align: left;
 }
 
 .four-columns {
-    grid-template-columns: repeat(4, 1fr);
 }
 
 .month-selection {
