@@ -1,6 +1,6 @@
 :host {
     display: grid;
-    grid-template-columns: 6rem 13rem 3rem 13rem;
+    grid-template-columns: 6rem 10rem 3rem 10rem;
     grid-gap: 0.5rem 1rem;
 }
 
