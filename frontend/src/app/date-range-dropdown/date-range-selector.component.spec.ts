@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DateRangeDropdownComponent } from './date-range-dropdown.component';
+import { DateRangeSelector } from './date-range-selector.component';
 
 describe('DateRangeDropdownComponent', () => {
-  let component: DateRangeDropdownComponent;
-  let fixture: ComponentFixture<DateRangeDropdownComponent>;
+  let component: DateRangeSelector;
+  let fixture: ComponentFixture<DateRangeSelector>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ DateRangeDropdownComponent ]
+      declarations: [ DateRangeSelector ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(DateRangeDropdownComponent);
+    fixture = TestBed.createComponent(DateRangeSelector);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -15,16 +15,16 @@ import {LeafletModule} from "@asymmetrik/ngx-leaflet";
 import {NgxSliderModule} from "@angular-slider/ngx-slider";
 import {FilterService} from "./filter.service";
 import {Dropdown} from './dropdown/dropdown.component';
-import {DateRangeDropdownComponent} from './date-range-dropdown/date-range-dropdown.component';
+import {DateRangeSelector} from './date-range-dropdown/date-range-selector.component';
 import {MapDropdown} from "./map-dropdown/map-dropdown.component";
-import { ToggableButtonComponent } from './toggable-button/toggable-button.component';
-import { RangeSliderComponent } from './range-slider/range-slider.component';
-import { YearSelectionComponent } from './year-selection/year-selection.component';
-import { MonthSelectionComponent } from './month-selection/month-selection.component';
+import {ToggableButtonComponent} from './toggable-button/toggable-button.component';
+import {RangeSliderComponent} from './range-slider/range-slider.component';
+import {YearSelectionComponent} from './year-selection/year-selection.component';
+import {MonthSelectionComponent} from './month-selection/month-selection.component';
 
 @NgModule({
     declarations: [
-        AppComponent, CloudinessChart, MapDropdown, MinAvgMaxChart, SumChart, HistogramChart, Dropdown, DateRangeDropdownComponent, ToggableButtonComponent, RangeSliderComponent, YearSelectionComponent, MonthSelectionComponent
+        AppComponent, CloudinessChart, MapDropdown, MinAvgMaxChart, SumChart, HistogramChart, Dropdown, DateRangeSelector, ToggableButtonComponent, RangeSliderComponent, YearSelectionComponent, MonthSelectionComponent
     ],
     imports: [
         LeafletModule, BrowserAnimationsModule, BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule, MatTabsModule, FontAwesomeModule, NgxSliderModule

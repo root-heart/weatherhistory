@@ -3,11 +3,11 @@ import {FilterService} from "../filter.service";
 import {DateTime} from "luxon";
 
 @Component({
-    selector: 'date-range-dropdown',
-    templateUrl: './date-range-dropdown.component.html',
-    styleUrls: ['./date-range-dropdown.component.css']
+    selector: 'date-range-selector',
+    templateUrl: './date-range-selector.component.html',
+    styleUrls: ['./date-range-selector.component.css']
 })
-export class DateRangeDropdownComponent implements OnInit {
+export class DateRangeSelector implements OnInit {
     constructor(public filterService: FilterService) {
     }
 
