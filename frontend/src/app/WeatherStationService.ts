@@ -8,6 +8,7 @@ export type WeatherStation = {
     federalState: string,
     latitude: number,
     longitude: number,
+    height: number
 }
 
 export type WeatherStationList = Array<WeatherStation>;

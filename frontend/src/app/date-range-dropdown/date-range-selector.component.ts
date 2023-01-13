@@ -22,7 +22,11 @@ export class DateRangeSelector implements OnInit {
         if (this.filterService.wholeYear.value) {
             return "Gesamtes Jahr"
         }
-        return this.filterService.getIntervals()
+        let intervals = this.filterService.getIntervals();
+        if (intervals.length == 0 || intervals.length == 1 && intervals[0].start == 1 && intervals[0].end == 12) {
+            return "Gesamtes Jahr"
+        }
+        return intervals
             .map(interval => interval.getString("MMM"))
             .join(", ")
     }

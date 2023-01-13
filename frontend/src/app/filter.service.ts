@@ -58,7 +58,7 @@ export class FilterService {
             return "yearly"
         } else {
             let intervals = this.getIntervals();
-            if (intervals.length == 1 && intervals[0].end - intervals[0].start <= 2) {
+            if (!this.wholeYear.value && intervals.length == 1 && intervals[0].end - intervals[0].start <= 2) {
                 return "daily"
             } else {
                 return "monthly"

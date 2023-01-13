@@ -4,6 +4,8 @@
 
     --fine-border-line: 1px solid #666;
     --input-border-radius: 0.5rem;
+
+    --component-grid-row-height: 2rem;
 }
 
 * {
