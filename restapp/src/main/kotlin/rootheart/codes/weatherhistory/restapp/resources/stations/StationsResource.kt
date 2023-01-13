@@ -9,20 +9,20 @@ import io.ktor.server.routing.route
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.LocalDate
-import rootheart.codes.weatherhistory.database.Histogram
 import rootheart.codes.weatherhistory.database.Interval
 import rootheart.codes.weatherhistory.database.MeasurementColumns
 import rootheart.codes.weatherhistory.database.MeasurementsTable
 import rootheart.codes.weatherhistory.database.StationDao
-import rootheart.codes.weatherhistory.restapp.DATE_TIME_FORMAT
 import rootheart.codes.weatherhistory.restapp.optPathParam
-import rootheart.codes.weatherhistory.restapp.optQueryParam
 import rootheart.codes.weatherhistory.restapp.requiredPathParam
+import java.lang.IllegalArgumentException
 
 fun Routing.stationsResource() {
     route("stations") {
@@ -34,48 +34,49 @@ fun Routing.stationsResource() {
                 call.respond(StationDao.findById(stationId) ?: HttpStatusCode.NotFound)
             }
 
-            get("{measurementType}/{year?}/{month?}/{day?}") {
+            get("{measurementType}/{years?}/{months?}") {
                 val stationId = requiredPathParam("stationId") { it.toLong() }
                 val columns = requiredPathParam("measurementType") { measurementTypeColumnsMapping[it] }
-                val year = optPathParam("year") { it.toInt() }
-                val fromQueryParam = optQueryParam("from") { DATE_TIME_FORMAT.parseLocalDate(it) }
-                if (year != null) {
-                    val month = optPathParam("month") { it.toInt() }
-                    if (month != null) {
-                        val day = optPathParam("day") { it.toInt() }
-                        if (day != null) {
-                            val firstDay = LocalDate(year, month, day)
-                            val lastDay = firstDay.plusDays(1)
-                            val summary = columns.select(stationId, firstDay, lastDay, Interval.DAY, columns::toMap)
-                            val details = columns.select(stationId, firstDay, lastDay, Interval.DAY, columns::toMap)
-                            val x = if (summary.isEmpty()) emptyMap() else summary[0]
-                            call.respond(mapOf("summary" to x, "details" to details))
-                        } else {
-                            val firstDay = LocalDate(year, month, 1)
-                            val lastDay = firstDay.plusMonths(1)
-                            val summary = columns.select(stationId, firstDay, lastDay, Interval.MONTH, columns::toMap)
-                            val details = columns.select(stationId, firstDay, lastDay, Interval.DAY, columns::toMap)
-                            val x = if (summary.isEmpty()) emptyMap() else summary[0]
-                            call.respond(mapOf("summary" to x, "details" to details))
-                        }
+                val years = requiredPathParam("years") { toInterval(it) }
+                val months = optPathParam("months") { toIntervalList(it) }
+                val monthsList = months?.map { it.elements() }?.flatten() ?: (1..12).distinct()
+
+                val yearDifference = years.end - years.start
+                val resolution = if (yearDifference > 5) {
+                    Interval.YEAR
+                } else {
+                    if (yearDifference == 0 && months != null && months.size == 1 && months[0].end - months[0].start <= 2) {
+                        Interval.DAY
                     } else {
-                        val firstDay = LocalDate(year, 1, 1)
-                        val lastDay = firstDay.plusYears(1)
-                        val summary = columns.select(stationId, firstDay, lastDay, Interval.YEAR, columns::toMap)
-                        val details = columns.select(stationId, firstDay, lastDay, Interval.MONTH, columns::toMap)
-                        val x = if (summary.isEmpty()) emptyMap() else summary[0]
-                        call.respond(mapOf("summary" to x, "details" to details))
+                        Interval.MONTH
                     }
-                } else if (fromQueryParam != null) {
-                    val lastDay = optQueryParam("to") { DATE_TIME_FORMAT.parseLocalDate(it) } ?: LocalDate.now()
-                    val summary = columns.select(stationId, fromQueryParam, lastDay, Interval.YEAR, columns::toMap)
-                    val details = columns.select(stationId, fromQueryParam, lastDay, Interval.DAY, columns::toMap)
-                    val x = if (summary.isEmpty()) emptyMap() else summary[0]
-                    call.respond(mapOf("summary" to x, "details" to details))
                 }
+
+                val data =  columns.select(stationId, years.start, years.end, monthsList, resolution, columns::toMap)
+                call.respond(mapOf("summary" to data, "details" to data))
             }
         }
     }
+}
+
+private data class NumberInterval(val start: Int, val end: Int) {
+    fun elements(): List<Int> = (start..end).distinct()
+}
+
+private val intervalRegex = Regex("(?<start>\\d+)(-(?<end>\\d+))?")
+private fun toInterval(string: String): NumberInterval {
+    val found = intervalRegex.find(string)
+    if (found != null) {
+        val groups = found.groups as MatchNamedGroupCollection
+        val start = groups["start"]!!.value.toInt()
+        val end = groups["end"]?.value?.toInt() ?: start
+        return NumberInterval(start, end)
+    }
+    throw IllegalArgumentException()
+}
+
+private fun toIntervalList(string: String): List<NumberInterval> {
+    return string.split(',').map { it.trim() }.map { toInterval(it) }
 }
 
 val measurementTypeColumnsMapping = mapOf("temperature" to MeasurementsTable.temperatures,
@@ -95,16 +96,25 @@ private val requestResolutionToIntervalMapping =
 
 private fun MeasurementColumns.toMap(row: ResultRow): Map<String, Any?> {
     val map = HashMap<String, Any?>()
-    map["firstDay"] = row[MeasurementsTable.firstDay].toLocalDate()
+    map["firstDay"] =
+            LocalDate(row[MeasurementsTable.year], row[MeasurementsTable.month] ?: 1, row[MeasurementsTable.day] ?: 1)
     columns.forEach { map[it.second] = row[it.first] }
     return map
 }
 
-private fun <T> MeasurementColumns.select(stationId: Long, startInclusive: LocalDate, endExclusive: LocalDate,
+//private fun <T> MeasurementColumns.select(stationId: Long, startInclusive: LocalDate, endExclusive: LocalDate,
+//                                          resolution: Interval, mapper: (ResultRow) -> T) = transaction {
+//    fields.select(MeasurementsTable.stationId.eq(stationId).and(MeasurementsTable.interval.eq(resolution))
+//                          .and(MeasurementsTable.firstDay.greaterEq(startInclusive.toDateTimeAtStartOfDay()))
+//                          .and(MeasurementsTable.firstDay.less(endExclusive.toDateTimeAtStartOfDay()))).map(mapper)
+//}
+
+private fun <T> MeasurementColumns.select(stationId: Long, yearFrom: Int, yearTo: Int, months: List<Int>,
                                           resolution: Interval, mapper: (ResultRow) -> T) = transaction {
     fields.select(MeasurementsTable.stationId.eq(stationId).and(MeasurementsTable.interval.eq(resolution))
-                          .and(MeasurementsTable.firstDay.greaterEq(startInclusive.toDateTimeAtStartOfDay()))
-                          .and(MeasurementsTable.firstDay.less(endExclusive.toDateTimeAtStartOfDay()))).map(mapper)
+                          .and(MeasurementsTable.year.greaterEq(yearFrom))
+                          .and(MeasurementsTable.year.lessEq(yearTo))
+                          .and(MeasurementsTable.month.inList(months))).map(mapper)
 }
 
 data class DayClassHistogram(val icyDays: Int, val frostyDays: Int, val vegetationDays: Int, val summerDays: Int,

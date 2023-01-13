@@ -11,7 +11,10 @@ enum class Interval {
 
 object MeasurementsTable : LongIdTable("MEASUREMENTS") {
     val stationId = reference("STATION_ID", StationsTable).index("FK_IDX_MEASUREMENT_STATION")
-    val firstDay = date("FIRST_DAY")
+//    val firstDay = date("FIRST_DAY")
+    val year = integer("YEAR")
+    val month = integer("MONTH").nullable()
+    val day = integer("DAY").nullable()
     val interval = enumerationByName("INTERVAL", 5, Interval::class)
 
     val temperatures = MinAvgMaxColumns(
@@ -99,13 +102,13 @@ object MeasurementsTable : LongIdTable("MEASUREMENTS") {
                                             visibility.avg to "avgVisibility",
                                             visibility.max to "maxVisibility")
     init {
-        index(isUnique = true, stationId, firstDay, interval)
+        index(isUnique = true, stationId, year, month, day, interval)
     }
 }
 
 // TODO Place this class and its children somewhere else as this is more or less to "JSONify" the data.
 open class MeasurementColumns(vararg val columns: Pair<Column<*>, String>) {
-    val fields get() = MeasurementsTable.slice(columns.map { p -> p.first }.toList() + MeasurementsTable.firstDay)
+    val fields get() = MeasurementsTable.slice(columns.map { p -> p.first }.toList() + MeasurementsTable.year + MeasurementsTable.month + MeasurementsTable.day)
 }
 
 class MinAvgMaxColumns<N : Number>(val min: Column<N?>,

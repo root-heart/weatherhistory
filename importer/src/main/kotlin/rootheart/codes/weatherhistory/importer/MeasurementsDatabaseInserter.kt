@@ -24,7 +24,9 @@ fun insertMeasurementsIntoDatabase(measurements: List<Measurement>) = transactio
     val stationIdById = transaction { query.map { row -> row[StationsTable.id] }.associateBy { it.value } }
     MeasurementsTable.batchInsert(measurements) {
         this[MeasurementsTable.stationId] = stationIdById[it.stationId]!!
-        this[MeasurementsTable.firstDay] = it.firstDayDateTime
+        this[MeasurementsTable.year] = it.firstDayDateTime.year
+        this[MeasurementsTable.month] = it.firstDayDateTime.monthOfYear
+        this[MeasurementsTable.day] = it.firstDayDateTime.dayOfMonth
         this[MeasurementsTable.interval] = it.interval
 
         copyMinAvgMax(it.temperatures, MeasurementsTable.temperatures)

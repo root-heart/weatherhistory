@@ -101,8 +101,6 @@ export class MonthInterval {
     getNumbersString(): string {
         if (this.start == this.end) {
             return "" + this.start
-        } else if (this.end == this.start + 1) {
-            return `${this.start},${this.end}`
         } else {
             return `${this.start}-${this.end}`
         }
