@@ -1,5 +1,7 @@
 import {BehaviorSubject, Subject} from "rxjs";
 import {WeatherStation} from "./WeatherStationService";
+import {DateTime} from "luxon";
+import {ChartResolution} from "./charts/BaseChart";
 
 export type Measurement = {
     maxTemperature?: number,
@@ -18,45 +20,21 @@ export type Measurement = {
     minHumidity?: number,
     sunshineDuration?: number,
     avgWindspeed?: number,
-    firstDay: Date,
+    // It does not matter if I use a Date here. TypeScript will stupidly create a Measurement with a string for the
+    // property firstDay. So when processing this Measurement in other places in the code, I will see a member of
+    // type Date but with a string in it.
+    // In every other language I know it is not possible to do so, how sick is this...??
+    firstDay: string,
     minTemperature?: number,
     minVisibility?: number,
     avgVisibility?: number,
     maxHumidity?: number,
     avgTemperature?: number
-
 }
 
 export type SummaryData = {
     summary: Measurement,
-    details: Measurement[]
+    details: Measurement[],
+    resolution: ChartResolution
 }
 
-type CurrentFilter = {
-
-}
-
-export enum DateRangeFilter {
-    MONTHLY, YEARLY, LONG_TERM
-}
-
-export const currentFilter: CurrentFilter = {
-    selectedStation: undefined,
-    dateRangeFilter: DateRangeFilter.MONTHLY,
-    from: undefined,
-    to: undefined
-}
-
-export const currentData = new BehaviorSubject<SummaryData | undefined>(undefined)
-
-function abc() {
-    let s: SummaryData = {
-        summary: {
-            firstDay: new Date(2022, 1, 1),
-            cloudCoverage: [1]
-        },
-        details: [
-            {firstDay: new Date(0)}
-        ]
-    }
-}

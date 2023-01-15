@@ -10,8 +10,6 @@ import {
     faSquareXmark,
     faSun
 } from '@fortawesome/free-solid-svg-icons';
-import {currentData, DateRangeFilter} from "./SummaryData";
-import {ChartResolution} from "./charts/BaseChart";
 import {FilterService} from "./filter.service";
 import {DropdownService} from "./dropdown.service";
 
@@ -39,10 +37,6 @@ export class AppComponent implements AfterViewInit {
     faSquareChecked = faSquareXmark
     faCalendar = faCalendarWeek
 
-    currentData = currentData
-
-
-    DateRangeFilter = DateRangeFilter
 
     @ViewChild("dropdownBackground") dropdownBackground?: ElementRef
 

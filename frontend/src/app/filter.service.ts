@@ -1,11 +1,10 @@
 import {DateTime} from "luxon";
 import {environment} from "../environments/environment";
-import {currentData, SummaryData} from "./SummaryData";
+import {SummaryData} from "./SummaryData";
 import {WeatherStation} from "./WeatherStationService";
 import {HttpClient} from "@angular/common/http";
 import {ApplicationRef, Injectable} from "@angular/core";
 import {BehaviorSubject} from "rxjs";
-import {ChartResolution} from "./charts/BaseChart";
 
 @Injectable({
     providedIn: 'root'
@@ -16,6 +15,7 @@ export class FilterService {
     endYear: BehaviorSubject<number> = new BehaviorSubject(2022)
     wholeYear: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true)
     months = Array<BehaviorSubject<boolean>>(12)
+    currentData = new BehaviorSubject<SummaryData | undefined>(undefined)
 
     constructor(private http: HttpClient, private app: ApplicationRef) {
         this.wholeYear.subscribe(r => this.fireFilterChangedEvent())
@@ -45,27 +45,12 @@ export class FilterService {
             this.http
                 .get<SummaryData>(url)
                 .subscribe(data => {
-                    currentData.next(data)
+                    this.currentData.next(data)
                     // hmm, something in angular does not work, so i have to refresh everything on my own here...
                     this.app.tick()
                 })
         }
     }
-
-    public getChartResolution(): ChartResolution {
-        let yearDifference = this.endYear.value - this.year.value;
-        if (yearDifference > 5) {
-            return "yearly"
-        } else {
-            let intervals = this.getIntervals();
-            if (!this.wholeYear.value && intervals.length == 1 && intervals[0].end - intervals[0].start <= 2) {
-                return "daily"
-            } else {
-                return "monthly"
-            }
-        }
-    }
-
 
     public getIntervals(): MonthInterval[] {
         let interval = new MonthInterval(0, 0)

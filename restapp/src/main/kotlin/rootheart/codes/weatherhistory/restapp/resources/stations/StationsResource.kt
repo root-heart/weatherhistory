@@ -7,6 +7,7 @@ import io.ktor.server.routing.Routing
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
@@ -39,21 +40,63 @@ fun Routing.stationsResource() {
                 val columns = requiredPathParam("measurementType") { measurementTypeColumnsMapping[it] }
                 val years = requiredPathParam("years") { toInterval(it) }
                 val months = optPathParam("months") { toIntervalList(it) }
-                val monthsList = months?.map { it.elements() }?.flatten() ?: (1..12).distinct()
 
                 val yearDifference = years.end - years.start
-                val resolution = if (yearDifference > 5) {
-                    Interval.YEAR
-                } else {
-                    if (yearDifference == 0 && months != null && months.size == 1 && months[0].end - months[0].start <= 2) {
-                        Interval.DAY
+                if (months == null) {
+                    val resolution = if (yearDifference > 12) {
+                        Interval.YEAR
                     } else {
                         Interval.MONTH
                     }
-                }
 
-                val data =  columns.select(stationId, years.start, years.end, monthsList, resolution, columns::toMap)
-                call.respond(mapOf("summary" to data, "details" to data))
+
+                    val data = transaction {
+                        columns.fields //select(stationId, years.start, years.end, monthsList, resolution, columns::toMap)
+                                .select(MeasurementsTable.stationId.eq(stationId)
+                                                .and(MeasurementsTable.interval.eq(resolution))
+                                                .and(MeasurementsTable.year.greaterEq(years.start))
+                                                .and(MeasurementsTable.year.lessEq(years.end)))
+                                .orderBy(MeasurementsTable.year to SortOrder.ASC,
+                                         MeasurementsTable.month to SortOrder.ASC,
+                                         MeasurementsTable.day to SortOrder.ASC)
+                                .map(columns::toMap)
+                    }
+                    call.respond(mapOf("summary" to data, "details" to data, "resolution" to if (resolution == Interval.YEAR) "year" else "month"))
+                } else {
+                    val monthsList = months.map { it.elements() }.flatten()
+                    val monthsCount = monthsList.size * (yearDifference + 1)
+                    if (monthsCount > 100) {
+                        // TODO generate one value aggregated per year
+                    } else if (monthsCount > 5) {
+                        val data = transaction {
+                            columns.fields //select(stationId, years.start, years.end, monthsList, resolution, columns::toMap)
+                                    .select(MeasurementsTable.stationId.eq(stationId)
+                                                    .and(MeasurementsTable.interval.eq(Interval.MONTH))
+                                                    .and(MeasurementsTable.year.greaterEq(years.start))
+                                                    .and(MeasurementsTable.year.lessEq(years.end))
+                                                    .and(MeasurementsTable.month.inList(monthsList)))
+                                    .orderBy(MeasurementsTable.year to SortOrder.ASC,
+                                             MeasurementsTable.month to SortOrder.ASC,
+                                             MeasurementsTable.day to SortOrder.ASC)
+                                    .map(columns::toMap)
+                        }
+                        call.respond(mapOf("summary" to data, "details" to data, "resolution" to "month"))
+                    } else {
+                        val data = transaction {
+                            columns.fields //select(stationId, years.start, years.end, monthsList, resolution, columns::toMap)
+                                    .select(MeasurementsTable.stationId.eq(stationId)
+                                                    .and(MeasurementsTable.interval.eq(Interval.DAY))
+                                                    .and(MeasurementsTable.year.greaterEq(years.start))
+                                                    .and(MeasurementsTable.year.lessEq(years.end))
+                                                    .and(MeasurementsTable.month.inList(monthsList)))
+                                    .orderBy(MeasurementsTable.year to SortOrder.ASC,
+                                             MeasurementsTable.month to SortOrder.ASC,
+                                             MeasurementsTable.day to SortOrder.ASC)
+                                    .map(columns::toMap)
+                        }
+                        call.respond(mapOf("summary" to data, "details" to data, "resolution" to "day"))
+                    }
+                }
             }
         }
     }
@@ -114,7 +157,11 @@ private fun <T> MeasurementColumns.select(stationId: Long, yearFrom: Int, yearTo
     fields.select(MeasurementsTable.stationId.eq(stationId).and(MeasurementsTable.interval.eq(resolution))
                           .and(MeasurementsTable.year.greaterEq(yearFrom))
                           .and(MeasurementsTable.year.lessEq(yearTo))
-                          .and(MeasurementsTable.month.inList(months))).map(mapper)
+                          .and(MeasurementsTable.month.inList(months)))
+            .orderBy(MeasurementsTable.year to SortOrder.ASC,
+                     MeasurementsTable.month to SortOrder.ASC,
+                     MeasurementsTable.day to SortOrder.ASC)
+            .map(mapper)
 }
 
 data class DayClassHistogram(val icyDays: Int, val frostyDays: Int, val vegetationDays: Int, val summerDays: Int,

@@ -1,12 +1,13 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
-import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
+import {ChartResolution, getDefaultChartOptions, getXScale} from "./BaseChart";
 import 'chartjs-adapter-luxon';
 import {Measurement, SummaryData} from "../SummaryData";
 import {Observable} from "rxjs";
+import {DateTime} from "luxon";
 
 export type MinAvgMaxSummary = {
-    firstDay: Date,
+    firstDay: string,
     min: number,
     avg: number,
     max: number,
@@ -17,7 +18,7 @@ export type MinAvgMaxSummary = {
  * properties are set
  */
 @Component({
-    selector: "min-avg-max-chart[filterComponent]",
+    selector: "min-avg-max-chart",
     template: "<canvas #chart></canvas>"
 })
 export class MinAvgMaxChart {
@@ -34,23 +35,26 @@ export class MinAvgMaxChart {
     @Input() maxValue?: number
     @Input() ticks?: Array<{ value: number, label: string }>
 
-    @Input() set filterComponent(c: Observable<SummaryData | undefined>) {
-        c.subscribe(event => {
-            let minAvgMaxData = event?.details?.map(m => {
-                return <MinAvgMaxSummary>{
-                    firstDay: m.firstDay,
-                    min: this.min ? m[this.min] : 0,
-                    avg: this.avg ? m[this.avg] : 0,
-                    max: this.max ? m[this.max] : 0
-                }
-            })
-            this.setData(minAvgMaxData || [])
+    @Input() set dataSource(c: Observable<SummaryData | undefined>) {
+        c.subscribe(summaryData => {
+            if (summaryData) {
+                let minAvgMaxData = summaryData.details.map(m => {
+                    return <MinAvgMaxSummary>{
+                        firstDay: m.firstDay,
+                        min: this.min ? m[this.min] : 0,
+                        avg: this.avg ? m[this.avg] : 0,
+                        max: this.max ? m[this.max] : 0
+                    }
+                })
+                this.setData(minAvgMaxData, summaryData.resolution)
+            } else {
+                this.setData([], "month")
+            }
         })
     }
 
     @Input() includeZero: boolean = true
     @Input() showAxes: boolean = true
-    @Input() resolution: ChartResolution = "monthly"
 
     @ViewChild("chart") private canvas?: ElementRef
     private chart?: Chart
@@ -59,7 +63,7 @@ export class MinAvgMaxChart {
         Chart.register(...registerables);
     }
 
-    public setData(data: Array<MinAvgMaxSummary>): void {
+    public setData(data: Array<MinAvgMaxSummary>, resolution: ChartResolution): void {
         if (this.chart) {
             this.chart.destroy();
         }
@@ -96,24 +100,7 @@ export class MinAvgMaxChart {
             }
         }
 
-        options.scales!.x = {
-            type: "time",
-            time: {
-                unit: "month",
-                displayFormats: {
-                    month: "MMM"
-                }
-            },
-            ticks: {minRotation: 0, maxRotation: 0, sampleSize: 12},
-            display: this.showAxes
-        }
-
-        if (this.resolution == "daily") {
-            options.scales!.x!.time = {
-                unit: "day",
-                displayFormats: {day: "dd.MM."}
-            }
-        }
+        getXScale(data, resolution, options, this.showAxes)
 
         const labels = data.map(d => d.firstDay);
 

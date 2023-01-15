@@ -1,42 +1,45 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
+import {ChartResolution, getDefaultChartOptions, getXScale} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
 import {HttpClient} from "@angular/common/http";
 import {Measurement, SummaryData} from "../SummaryData";
 import {Observable} from "rxjs";
 
 export type Sum = {
-    firstDay: Date,
+    firstDay: string,
     sum: number
 }
 
 @Component({
-    selector: "sum-chart[filterComponent]",
+    selector: "sum-chart",
     template: "<canvas #chart></canvas>"
 })
 export class SumChart {
     @Input() fill: string = "#cc3333"
     @Input() fill2: string = "#3333cc"
     @Input() sum: keyof Measurement = "sunshineDuration"
-    @Input() valueConverter: (x?: number) => number | undefined = function (x) {
-        return x
-    }
+    @Input() valueConverter: (x?: number) => number | undefined = x => x
 
-    @Input() set filterComponent(c: Observable<SummaryData | undefined>) {
-        c.subscribe(event => {
-            let minAvgMaxData = event?.details?.map(m => {
-                let s = m[this.sum] as number
-                return <Sum>{
-                    firstDay: m.firstDay, sum: s == null ? null : this.valueConverter(s)
-                }
-            })
-            this.setData(minAvgMaxData || [])
+    @Input() set dataSource(c: Observable<SummaryData | undefined>) {
+        c.subscribe(summaryData => {
+            if (summaryData) {
+                let minAvgMaxData = summaryData.details.map(m => {
+                    let s = m[this.sum] as number
+                    return <Sum>{
+                        firstDay: m.firstDay,
+                        sum: s == null ? null : this.valueConverter(s)
+                    }
+                })
+                this.setData(minAvgMaxData, summaryData.resolution)
+            } else {
+                this.setData([], "month")
+            }
         })
     }
 
     @Input() includeZero: boolean = true
     @Input() showAxes: boolean = true
-    @Input() resolution: ChartResolution = "monthly"
+    // @Input() resolution: ChartResolution = "monthly"
 
     @ViewChild("chart") private canvas?: ElementRef
     private chart?: Chart
@@ -45,7 +48,7 @@ export class SumChart {
         Chart.register(...registerables);
     }
 
-    public setData(data: Array<Sum>): void {
+    public setData(data: Array<Sum>, resolution: ChartResolution): void {
         if (this.chart) {
             this.chart.destroy();
         }
@@ -61,27 +64,9 @@ export class SumChart {
             beginAtZero: this.includeZero,
             display: this.showAxes
         }
-        options.scales!.x = {
-            type: "time",
-            time: {
-                unit: "month",
-                displayFormats: {
-                    month: "MMM",
-                    round: "day",
-                    bound: "ticks"
-                }
-            },
-            ticks: {minRotation: 0, maxRotation: 0, sampleSize: 12},
-            display: this.showAxes
-        }
         options.scales!.x2 = {display: false}
 
-        if (this.resolution == "daily") {
-            options.scales!.x!.time = {
-                unit: "day",
-                displayFormats: {day: "dd.MM."}
-            }
-        }
+        getXScale(data, resolution, options, this.showAxes)
 
         const labels = data.map(d => d.firstDay);
 

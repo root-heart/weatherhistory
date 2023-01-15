@@ -15,76 +15,76 @@
     </fieldset>
 </nav>
 
-    <hr>
+<hr>
 
 <main>
     <section class="chart-tile">
         <h1>Temperatur</h1>
 
-        <div class="summary">
-            &#x2b9f; {{currentData?.value?.summary?.minTemperature?.toFixed(1)}}°C
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#8960; {{currentData?.value?.summary?.avgTemperature?.toFixed(1)}}°C
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{currentData?.value?.summary?.maxTemperature?.toFixed(1)}}°C
-        </div>
+        <!--        <div class="summary">-->
+        <!--            &#x2b9f; {{currentData?.value?.summary?.minTemperature?.toFixed(1)}}°C-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            &#8960; {{currentData?.value?.summary?.avgTemperature?.toFixed(1)}}°C-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            &#x2b9d; {{currentData?.value?.summary?.maxTemperature?.toFixed(1)}}°C-->
+        <!--        </div>-->
 
-        <min-avg-max-chart class="chart" [showAxes]="false"
+        <min-avg-max-chart class="chart" [dataSource]="filterService.currentData"
                            [color]="'hsl(0, 80%, 45%)'" [fill]="'hsla(0, 80%, 45%, 0.3)'"
-                           [min]="'minTemperature'" [avg]="'avgTemperature'" [max]="'maxTemperature'"
-                           [filterComponent]=currentData [resolution]="filterService.getChartResolution()"
-                           (click)="showDetails('temperature')"></min-avg-max-chart>
+                           [min]="'minTemperature'" [avg]="'avgTemperature'"
+                           [max]="'maxTemperature'"></min-avg-max-chart>
     </section>
 
     <section class="chart-tile">
         <h1>Sonnenschein</h1>
 
-        <div class="summary">&#931; {{divideBy60(currentData?.value?.summary?.sunshineDuration)?.toFixed(1)}}h</div>
+        <div class="summary">
+            &#931; {{divideBy60(filterService.currentData?.value?.summary?.sunshineDuration)?.toFixed(1)}}h
+        </div>
 
         <sum-chart class="chart" [fill]="'hsl(40, 100%, 50%)'" [sum]="'sunshineDuration'"
-                   [valueConverter]="divideBy60" [resolution]="filterService.getChartResolution()"
-                   [filterComponent]=currentData></sum-chart>
+                   [dataSource]="filterService.currentData"
+                   [valueConverter]="divideBy60"></sum-chart>
     </section>
 
     <section class="chart-tile">
         <h1>Niederschlag</h1>
 
-        <div class="summary">
-            <fa-icon [icon]="faRain"></fa-icon>
-            {{currentData?.value?.summary?.rainfall?.toFixed(1)}}l/m²
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            <fa-icon [icon]="faSnow"></fa-icon>
-            {{currentData?.value?.summary?.snowfall?.toFixed(1)}}mm
-        </div>
+        <!--        <div class="summary">-->
+        <!--            <fa-icon [icon]="faRain"></fa-icon>-->
+        <!--            {{currentData?.value?.summary?.rainfall?.toFixed(1)}}l/m²-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            <fa-icon [icon]="faSnow"></fa-icon>-->
+        <!--            {{currentData?.value?.summary?.snowfall?.toFixed(1)}}mm-->
+        <!--        </div>-->
 
         <sum-chart class="chart" [fill]="'hsl(240, 100%, 50%)'" [fill2]="'hsl(40, 0%, 80%)'" [sum]="'rainfall'"
-                   [resolution]="filterService.getChartResolution()"
-                   [filterComponent]=currentData></sum-chart>
+                   [dataSource]="filterService.currentData"></sum-chart>
     </section>
 
     <section class="chart-tile">
         <h1>Wind</h1>
 
-        <div class="summary">
-            &#8960; {{currentData?.value?.summary?.avgWindspeed?.toFixed(1)}}m/s
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{currentData?.value?.summary?.maxWindspeed?.toFixed(1)}}m/s
-        </div>
+        <!--        <div class="summary">-->
+        <!--            &#8960; {{currentData?.value?.summary?.avgWindspeed?.toFixed(1)}}m/s-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            &#x2b9d; {{currentData?.value?.summary?.maxWindspeed?.toFixed(1)}}m/s-->
+        <!--        </div>-->
 
         <min-avg-max-chart class="chart" [color]="'hsl(270, 80%, 65%)'" [fill]="'hsla(270, 80%, 65%, 0.3)'"
-                           [avg]="'avgWindspeed'" [max]="'maxWindspeed'" [resolution]="filterService.getChartResolution()"
-                           [filterComponent]=currentData></min-avg-max-chart>
+                           [avg]="'avgWindspeed'" [max]="'maxWindspeed'"
+                           [dataSource]="filterService.currentData"></min-avg-max-chart>
     </section>
 
 
     <section class="chart-tile">
         <h1>Windrichtung</h1>
 
-        <div class="summary">
-            &#8960; {{currentData?.value?.summary?.avgWindspeed?.toFixed(1)}}m/s
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{currentData?.value?.summary?.maxWindspeed?.toFixed(1)}}m/s
-        </div>
+        <!--        <div class="summary">-->
+        <!--            &#8960; {{currentData?.value?.summary?.avgWindspeed?.toFixed(1)}}m/s-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            &#x2b9d; {{currentData?.value?.summary?.maxWindspeed?.toFixed(1)}}m/s-->
+        <!--        </div>-->
 
         <div></div>
     </section>
@@ -92,89 +92,84 @@
     <section class="chart-tile">
         <h1>Luftfeuchtigkeit</h1>
 
-        <div class="summary">
-            &#x2b9f; {{currentData?.value?.summary?.minHumidity?.toFixed(1)}}%
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#8960; {{currentData?.value?.summary?.avgHumidity?.toFixed(1)}}%
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{currentData?.value?.summary?.maxHumidity?.toFixed(1)}}%
-        </div>
+        <!--        <div class="summary">-->
+        <!--            &#x2b9f; {{currentData?.value?.summary?.minHumidity?.toFixed(1)}}%-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            &#8960; {{currentData?.value?.summary?.avgHumidity?.toFixed(1)}}%-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            &#x2b9d; {{currentData?.value?.summary?.maxHumidity?.toFixed(1)}}%-->
+        <!--        </div>-->
 
         <min-avg-max-chart class="chart" [color]="'hsl(220, 80%, 30%)'" [fill]="'hsla(220, 80%, 30%, 0.3)'"
                            [min]="'minHumidity'" [avg]="'avgHumidity'" [max]="'maxHumidity'"
-                           [resolution]="filterService.getChartResolution()"
-                           [filterComponent]=currentData></min-avg-max-chart>
+                           [dataSource]="filterService.currentData"></min-avg-max-chart>
     </section>
 
     <section class="chart-tile">
         <h1>Taupunkt</h1>
 
-        <div class="summary">
-            &#x2b9f; {{currentData?.value?.summary?.minDewPointTemperature?.toFixed(1)}}°C
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#8960; {{currentData?.value?.summary?.avgDewPointTemperature?.toFixed(1)}}°C
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{currentData?.value?.summary?.maxDewPointTemperature?.toFixed(1)}}°C
-        </div>
+        <!--        <div class="summary">-->
+        <!--            &#x2b9f; {{currentData?.value?.summary?.minDewPointTemperature?.toFixed(1)}}°C-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            &#8960; {{currentData?.value?.summary?.avgDewPointTemperature?.toFixed(1)}}°C-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            &#x2b9d; {{currentData?.value?.summary?.maxDewPointTemperature?.toFixed(1)}}°C-->
+        <!--        </div>-->
 
         <min-avg-max-chart class="chart" [color]="'hsl(220, 80%, 70%)'" [fill]="'hsla(220, 80%, 70%, 0.3)'"
                            [min]="'minDewPointTemperature'" [avg]="'avgDewPointTemperature'"
-                           [max]="'maxDewPointTemperature'" [resolution]="filterService.getChartResolution()"
-                           [filterComponent]=currentData></min-avg-max-chart>
+                           [max]="'maxDewPointTemperature'"
+                           [dataSource]="filterService.currentData"></min-avg-max-chart>
     </section>
 
     <section class="chart-tile">
         <h1>Luftdruck</h1>
 
-        <div class="summary">
-            &#x2b9f; {{currentData?.value?.summary?.minAirPressure?.toFixed(1)}}hPa
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#8960; {{currentData?.value?.summary?.avgAirPressure?.toFixed(1)}}hPa
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{currentData?.value?.summary?.maxAirPressure?.toFixed(1)}}hPa
-        </div>
+        <!--        <div class="summary">-->
+        <!--            &#x2b9f; {{currentData?.value?.summary?.minAirPressure?.toFixed(1)}}hPa-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            &#8960; {{currentData?.value?.summary?.avgAirPressure?.toFixed(1)}}hPa-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            &#x2b9d; {{currentData?.value?.summary?.maxAirPressure?.toFixed(1)}}hPa-->
+        <!--        </div>-->
 
         <min-avg-max-chart class="chart" [color]="'hsl(120, 80%, 45%)'" [fill]="'hsla(120, 80%, 45%, 0.15)'"
                            [min]="'minAirPressure'" [avg]="'avgAirPressure'" [max]="'maxAirPressure'"
-                           [includeZero]=false [resolution]="filterService.getChartResolution()"
-                           (click)="showDetails('airPressure')"
-                           [filterComponent]=currentData></min-avg-max-chart>
+                           [includeZero]=false [dataSource]="filterService.currentData"></min-avg-max-chart>
     </section>
 
     <section class="chart-tile">
         <h1>Sichtweite</h1>
 
-        <div class="summary">
-            &#x2b9f; {{currentData?.value?.summary?.minVisibility?.toFixed(0)}}m
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#8960; {{currentData?.value?.summary?.avgVisibility?.toFixed(0)}}m
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{currentData?.value?.summary?.maxVisibility?.toFixed(0)}}m
-        </div>
+        <!--        <div class="summary">-->
+        <!--            &#x2b9f; {{currentData?.value?.summary?.minVisibility?.toFixed(0)}}m-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            &#8960; {{currentData?.value?.summary?.avgVisibility?.toFixed(0)}}m-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            &#x2b9d; {{currentData?.value?.summary?.maxVisibility?.toFixed(0)}}m-->
+        <!--        </div>-->
 
         <min-avg-max-chart class="chart" [color]="'hsl(0, 0%, 70%)'" [fill]="'hsla(0, 0%, 70%, 0.3)'"
-                           [logarithmic]="true" [resolution]="filterService.getChartResolution()"
+                           [logarithmic]="true" [dataSource]="filterService.currentData"
                            [ticks]="[{value: 10, label: '10'}, {value: 100, label: '100'}, {value: 1000, label: '1km'}, {value: 10000, label: '10km'}, {value: 100000, label: '100km'}]"
-                           [min]="'minVisibility'" [avg]="'avgVisibility'" [max]="'maxVisibility'"
-                           [filterComponent]=currentData></min-avg-max-chart>
+                           [min]="'minVisibility'" [avg]="'avgVisibility'" [max]="'maxVisibility'"></min-avg-max-chart>
     </section>
 
     <section class="chart-tile">
         <h1>Bewölkung</h1>
 
-        <div class="summary">
-            <fa-icon [icon]="faSun"></fa-icon>
-            {{percentageOfCloudCoverage(currentData?.value?.summary?.cloudCoverage, [0, 1, 2])}}
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            <fa-icon [icon]="faCloudSun"></fa-icon>
-            {{percentageOfCloudCoverage(currentData?.value?.summary?.cloudCoverage, [3, 4, 5])}}
-            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            <fa-icon [icon]="faCloud"></fa-icon>
-            {{percentageOfCloudCoverage(currentData?.value?.summary?.cloudCoverage, [6, 7, 8, 9])}}
-        </div>
+        <!--        <div class="summary">-->
+        <!--            <fa-icon [icon]="faSun"></fa-icon>-->
+        <!--            {{percentageOfCloudCoverage(currentData?.value?.summary?.cloudCoverage, [0, 1, 2])}}-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            <fa-icon [icon]="faCloudSun"></fa-icon>-->
+        <!--            {{percentageOfCloudCoverage(currentData?.value?.summary?.cloudCoverage, [3, 4, 5])}}-->
+        <!--            &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;-->
+        <!--            <fa-icon [icon]="faCloud"></fa-icon>-->
+        <!--            {{percentageOfCloudCoverage(currentData?.value?.summary?.cloudCoverage, [6, 7, 8, 9])}}-->
+        <!--        </div>-->
 
-        <histogram-chart class="chart" [filterComponent]=currentData
-                         [resolution]="filterService.getChartResolution()"></histogram-chart>
+        <histogram-chart [dataSource]="filterService.currentData" class="chart"></histogram-chart>
     </section>
 </main>
 
