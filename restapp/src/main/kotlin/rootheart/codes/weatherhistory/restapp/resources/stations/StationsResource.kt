@@ -64,88 +64,70 @@ fun Routing.stationsResource() {
                     call.respond(mapOf("summary" to data,
                                        "details" to data,
                                        "resolution" to if (resolution == Interval.YEAR) "year" else "month"))
+                } else if (yearDifference == 0) {
+                    val monthsList = months.map { it.elements() }.flatten()
+                    val data = transaction {
+                        columns.fields //select(stationId, years.start, years.end, monthsList, resolution, columns::toMap)
+                                .select(MeasurementsTable.stationId.eq(stationId)
+                                                .and(MeasurementsTable.interval.eq(Interval.MONTH))
+                                                .and(MeasurementsTable.year.greaterEq(years.start))
+                                                .and(MeasurementsTable.year.lessEq(years.end))
+                                                .and(MeasurementsTable.month.inList(monthsList)))
+                                .orderBy(MeasurementsTable.year to SortOrder.ASC,
+                                         MeasurementsTable.month to SortOrder.ASC,
+                                         MeasurementsTable.day to SortOrder.ASC)
+                                .map(columns::toMap)
+                    }
+                    call.respond(mapOf("summary" to data,
+                                       "details" to data,
+                                       "resolution" to "month"))
                 } else {
                     val monthsList = months.map { it.elements() }.flatten()
-                    val monthsCount = monthsList.size * (yearDifference + 1)
-                    if (monthsCount > 100) {
-                        if (columns == MeasurementsTable.summaryColumns) {
-                            val data = transaction {
-                                val fields = mapOf(MeasurementsTable.year to "year",
-                                                   MeasurementsTable.temperatures.min.min() to "minTemperature",
-                                                   MeasurementsTable.temperatures.avg.avg() to "avgTemperature",
-                                                   MeasurementsTable.temperatures.max.max() to "maxTemperature",
-                                                   MeasurementsTable.dewPointTemperatures.min.min() to "minDewPointTemperature",
-                                                   MeasurementsTable.dewPointTemperatures.avg.avg() to "avgDewPointTemperature",
-                                                   MeasurementsTable.dewPointTemperatures.max.max() to "maxDewPointTemperature",
-                                                   MeasurementsTable.humidity.min.min() to "minHumidity",
-                                                   MeasurementsTable.humidity.avg.avg() to "avgHumidity",
-                                                   MeasurementsTable.humidity.max.max() to "maxHumidity",
-                                                   MeasurementsTable.airPressure.min.min() to "minAirPressure",
-                                                   MeasurementsTable.airPressure.avg.avg() to "avgAirPressure",
-                                                   MeasurementsTable.airPressure.max.max() to "maxAirPressure",
-                                        // TODO how to aggregate cloudCoverage.histogram to "cloudCoverage", ??
-                                                   MeasurementsTable.sunshineDuration.sum.sum() to "sunshineDuration",
-                                                   MeasurementsTable.rainfall.sum.sum() to "rainfall",
-                                                   MeasurementsTable.snowfall.sum.sum() to "snowfall",
-                                                   MeasurementsTable.windSpeed.avg.avg() to "avgWindspeed",
-                                                   MeasurementsTable.windSpeed.max.max() to "maxWindspeed",
-                                                   MeasurementsTable.visibility.min.min() to "minVisibility",
-                                                   MeasurementsTable.visibility.avg.avg() to "avgVisibility",
-                                                   MeasurementsTable.visibility.max.max() to "maxVisibility")
-
-                                val query = MeasurementsTable.slice(fields.keys.toList())
-                                        .select(MeasurementsTable.stationId.eq(stationId)
-                                                        .and(MeasurementsTable.interval.eq(Interval.MONTH))
-                                                        .and(MeasurementsTable.year.greaterEq(years.start))
-                                                        .and(MeasurementsTable.year.lessEq(years.end))
-                                                        .and(MeasurementsTable.month.inList(monthsList)))
-                                        .orderBy(MeasurementsTable.year to SortOrder.ASC)
-                                        .groupBy(MeasurementsTable.year)
-                                query.map { row ->
-                                    val resultRowMap = HashMap<String, Any?>()
-                                    resultRowMap["firstDay"] = LocalDate(row[MeasurementsTable.year], 1, 1)
-                                    fields.forEach { (field, name) ->
-                                        resultRowMap[name] = row[field]
-                                    }
-                                    resultRowMap
-                                }
-                            }
-                            call.respond(mapOf("summary" to data,
-                                               "details" to data,
-                                               "resolution" to "year"))
-                        }
-                    } else if (monthsCount > 5) {
+                    if (columns == MeasurementsTable.summaryColumns) {
                         val data = transaction {
-                            columns.fields //select(stationId, years.start, years.end, monthsList, resolution, columns::toMap)
+                            val fields = mapOf(MeasurementsTable.year to "year",
+                                               MeasurementsTable.temperatures.min.min() to "minTemperature",
+                                               MeasurementsTable.temperatures.avg.avg() to "avgTemperature",
+                                               MeasurementsTable.temperatures.max.max() to "maxTemperature",
+                                               MeasurementsTable.dewPointTemperatures.min.min() to "minDewPointTemperature",
+                                               MeasurementsTable.dewPointTemperatures.avg.avg() to "avgDewPointTemperature",
+                                               MeasurementsTable.dewPointTemperatures.max.max() to "maxDewPointTemperature",
+                                               MeasurementsTable.humidity.min.min() to "minHumidity",
+                                               MeasurementsTable.humidity.avg.avg() to "avgHumidity",
+                                               MeasurementsTable.humidity.max.max() to "maxHumidity",
+                                               MeasurementsTable.airPressure.min.min() to "minAirPressure",
+                                               MeasurementsTable.airPressure.avg.avg() to "avgAirPressure",
+                                               MeasurementsTable.airPressure.max.max() to "maxAirPressure",
+//                                               MeasurementsTable.cloudCoverage.histogram.sum() to "cloudCoverage",
+                                               MeasurementsTable.sunshineDuration.sum.sum() to "sunshineDuration",
+                                               MeasurementsTable.rainfall.sum.sum() to "rainfall",
+                                               MeasurementsTable.snowfall.sum.sum() to "snowfall",
+                                               MeasurementsTable.windSpeed.avg.avg() to "avgWindspeed",
+                                               MeasurementsTable.windSpeed.max.max() to "maxWindspeed",
+                                               MeasurementsTable.visibility.min.min() to "minVisibility",
+                                               MeasurementsTable.visibility.avg.avg() to "avgVisibility",
+                                               MeasurementsTable.visibility.max.max() to "maxVisibility")
+
+                            val query = MeasurementsTable.slice(fields.keys.toList())
                                     .select(MeasurementsTable.stationId.eq(stationId)
                                                     .and(MeasurementsTable.interval.eq(Interval.MONTH))
                                                     .and(MeasurementsTable.year.greaterEq(years.start))
                                                     .and(MeasurementsTable.year.lessEq(years.end))
                                                     .and(MeasurementsTable.month.inList(monthsList)))
-                                    .orderBy(MeasurementsTable.year to SortOrder.ASC,
-                                             MeasurementsTable.month to SortOrder.ASC,
-                                             MeasurementsTable.day to SortOrder.ASC)
-                                    .map(columns::toMap)
+                                    .orderBy(MeasurementsTable.year to SortOrder.ASC)
+                                    .groupBy(MeasurementsTable.year)
+                            query.map { row ->
+                                val resultRowMap = HashMap<String, Any?>()
+                                resultRowMap["firstDay"] = LocalDate(row[MeasurementsTable.year], 1, 1)
+                                fields.forEach { (field, name) ->
+                                    resultRowMap[name] = row[field]
+                                }
+                                resultRowMap
+                            }
                         }
                         call.respond(mapOf("summary" to data,
                                            "details" to data,
-                                           "resolution" to "month"))
-                    } else {
-                        val data = transaction {
-                            columns.fields //select(stationId, years.start, years.end, monthsList, resolution, columns::toMap)
-                                    .select(MeasurementsTable.stationId.eq(stationId)
-                                                    .and(MeasurementsTable.interval.eq(Interval.DAY))
-                                                    .and(MeasurementsTable.year.greaterEq(years.start))
-                                                    .and(MeasurementsTable.year.lessEq(years.end))
-                                                    .and(MeasurementsTable.month.inList(monthsList)))
-                                    .orderBy(MeasurementsTable.year to SortOrder.ASC,
-                                             MeasurementsTable.month to SortOrder.ASC,
-                                             MeasurementsTable.day to SortOrder.ASC)
-                                    .map(columns::toMap)
-                        }
-                        call.respond(mapOf("summary" to data,
-                                           "details" to data,
-                                           "resolution" to "day"))
+                                           "resolution" to "year"))
                     }
                 }
             }
