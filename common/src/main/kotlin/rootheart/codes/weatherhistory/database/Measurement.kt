@@ -80,27 +80,6 @@ object MeasurementsTable : LongIdTable("MEASUREMENTS") {
             intArrayNullable("DETAILED_VISIBILITY_METERS")
     )
 
-    val summaryColumns = MeasurementColumns(temperatures.min to "minTemperature",
-                                            temperatures.avg to "avgTemperature",
-                                            temperatures.max to "maxTemperature",
-                                            dewPointTemperatures.min to "minDewPointTemperature",
-                                            dewPointTemperatures.avg to "avgDewPointTemperature",
-                                            dewPointTemperatures.max to "maxDewPointTemperature",
-                                            humidity.min to "minHumidity",
-                                            humidity.avg to "avgHumidity",
-                                            humidity.max to "maxHumidity",
-                                            airPressure.min to "minAirPressure",
-                                            airPressure.avg to "avgAirPressure",
-                                            airPressure.max to "maxAirPressure",
-                                            cloudCoverage.histogram to "cloudCoverage",
-                                            sunshineDuration.sum to "sunshineDuration",
-                                            rainfall.sum to "rainfall",
-                                            snowfall.sum to "snowfall",
-                                            windSpeed.avg to "avgWindspeed",
-                                            windSpeed.max to "maxWindspeed",
-                                            visibility.min to "minVisibility",
-                                            visibility.avg to "avgVisibility",
-                                            visibility.max to "maxVisibility")
     init {
         index(isUnique = true, stationId, year, month, day, interval)
     }

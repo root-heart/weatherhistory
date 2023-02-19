@@ -11,8 +11,8 @@ import java.nio.charset.Charset
 private val log = KotlinLogging.logger {}
 
 private val stationFilter: (Station) -> Boolean = {
-    it.externalId in setOf("00691", "01443", "05906", "01757", "07367")
-//    it.hasRecentData && it.hasTemperatureData && it.hasSunshineData && it.hasCloudinessData && it.hasAirPressureData && it.hasWindData
+//    it.externalId in setOf("00691", "01443", "05906", "01757", "07367")
+    it.hasRecentData && it.hasTemperatureData && it.hasSunshineData && it.hasCloudinessData && it.hasAirPressureData && it.hasWindData
 }
 
 @DelicateCoroutinesApi
@@ -41,8 +41,8 @@ fun importStations(stationsFiles: Collection<StationsFile>) {
                             federalState = line.substring(102).trim { it <= ' ' })
                 }
                 when (stationsFile.measurementType) {
-                    MeasurementType.CLOUD_COVERAGE  -> station.hasCloudinessData = true
-                    MeasurementType.AIR_TEMPERATURE -> station.hasTemperatureData = true
+                    MeasurementType.CLOUD_COVERAGE    -> station.hasCloudinessData = true
+                    MeasurementType.AIR_TEMPERATURE   -> station.hasTemperatureData = true
                     MeasurementType.SUNSHINE_DURATION -> station.hasSunshineData = true
                     MeasurementType.DEW_POINT         -> station.hasTemperatureData = true
                     MeasurementType.MAX_WIND_SPEED    -> station.hasWindData = true

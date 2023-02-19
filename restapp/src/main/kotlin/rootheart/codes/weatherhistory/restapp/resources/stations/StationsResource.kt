@@ -1,19 +1,16 @@
 package rootheart.codes.weatherhistory.restapp.resources.stations
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
+import io.ktor.server.application.*
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.LocalDate
 import rootheart.codes.common.collections.nullsafeAvgDecimal
@@ -22,10 +19,7 @@ import rootheart.codes.common.collections.nullsafeMax
 import rootheart.codes.common.collections.nullsafeMin
 import rootheart.codes.common.collections.nullsafeSumDecimals
 import rootheart.codes.common.collections.nullsafeSumInts
-import rootheart.codes.weatherhistory.database.Interval
-import rootheart.codes.weatherhistory.database.MeasurementColumns
-import rootheart.codes.weatherhistory.database.MeasurementsTable
-import rootheart.codes.weatherhistory.database.StationDao
+import rootheart.codes.weatherhistory.database.*
 import rootheart.codes.weatherhistory.restapp.optPathParam
 import rootheart.codes.weatherhistory.restapp.requiredPathParam
 import java.math.BigDecimal
@@ -40,63 +34,32 @@ fun Routing.stationsResource() {
                 call.respond(StationDao.findById(stationId) ?: HttpStatusCode.NotFound)
             }
 
-            get("{measurementType}/{years?}/{months?}") {
+            get("summary/{years?}/{months?}") {
                 val stationId = requiredPathParam("stationId") { it.toLong() }
-                val columns = requiredPathParam("measurementType") { measurementTypeColumnsMapping[it] }
+
                 val years = requiredPathParam("years") { toInterval(it) }
                 val months = optPathParam("months") { toIntervalList(it) }
 
-                val yearDifference = years.end - years.start
-                if (months == null) {
-                    val resolution = if (yearDifference > 12) {
-                        Interval.YEAR
-                    } else {
-                        Interval.MONTH
-                    }
-                    val data = transaction {
-                        columns.fields //select(stationId, years.start, years.end, monthsList, resolution, columns::toMap)
-                                .select(MeasurementsTable.stationId.eq(stationId)
-                                                .and(MeasurementsTable.interval.eq(resolution))
-                                                .and(MeasurementsTable.year.greaterEq(years.start))
-                                                .and(MeasurementsTable.year.lessEq(years.end)))
-                                .orderBy(MeasurementsTable.year to SortOrder.ASC,
-                                         MeasurementsTable.month to SortOrder.ASC,
-                                         MeasurementsTable.day to SortOrder.ASC)
-                                .map(columns::toMap)
-                    }
-                    call.respond(mapOf("summary" to data,
-                                       "details" to data,
-                                       "resolution" to if (resolution == Interval.YEAR) "year" else "month"))
-                } else if (yearDifference == 0) {
+                var condition = MeasurementsTable.stationId.eq(stationId)
+                        .and(MeasurementsTable.year.greaterEq(years.start))
+                        .and(MeasurementsTable.year.lessEq(years.end))
+                if (months != null) {
                     val monthsList = months.map { it.elements() }.flatten()
-                    val data = transaction {
-                        columns.fields //select(stationId, years.start, years.end, monthsList, resolution, columns::toMap)
-                                .select(MeasurementsTable.stationId.eq(stationId)
-                                                .and(MeasurementsTable.interval.eq(Interval.MONTH))
-                                                .and(MeasurementsTable.year.greaterEq(years.start))
-                                                .and(MeasurementsTable.year.lessEq(years.end))
-                                                .and(MeasurementsTable.month.inList(monthsList)))
-                                .orderBy(MeasurementsTable.year to SortOrder.ASC,
-                                         MeasurementsTable.month to SortOrder.ASC,
-                                         MeasurementsTable.day to SortOrder.ASC)
-                                .map(columns::toMap)
-                    }
-                    call.respond(mapOf("summary" to data,
-                                       "details" to data,
-                                       "resolution" to "month"))
-                } else {
-                    val monthsList = months.map { it.elements() }.flatten()
-                    if (columns == MeasurementsTable.summaryColumns) {
-                        val data = transaction {
-                            columns.fields
-                                    .select(MeasurementsTable.stationId.eq(stationId)
-                                                    .and(MeasurementsTable.interval.eq(Interval.MONTH))
-                                                    .and(MeasurementsTable.year.greaterEq(years.start))
-                                                    .and(MeasurementsTable.year.lessEq(years.end))
-                                                    .and(MeasurementsTable.month.inList(monthsList)))
-                                    .orderBy(MeasurementsTable.year to SortOrder.ASC)
-                                    .map(columns::toSummarizedData)
-                        }
+                    condition = condition.and(MeasurementsTable.month.inList(monthsList))
+                }
+
+                val response = transaction {
+                    val resolution = getBestResolution(condition)
+                    val query = dataColumns.fields
+                            .select(condition.and(MeasurementsTable.interval.eq(resolution)))
+                            .orderBy(MeasurementsTable.year to SortOrder.ASC,
+                                     MeasurementsTable.month to SortOrder.ASC,
+                                     MeasurementsTable.day to SortOrder.ASC)
+                    if (years.difference >= 1 && months != null && resolution == Interval.YEAR) {
+                        // TODO check if the result would really contain more than one year
+                        // if the result would contain only one year of data, the resolution might be determined as in the
+                        // else branch and the custom aggregation of data would be unnecessary
+                        val data = query.map(::toSummarizedData)
                         val grouped = data.groupBy { it.firstDay }
                                 .mapValues { (firstDay, list) ->
                                     val cloudCoverages = list.map { it.cloudCoverage }
@@ -137,19 +100,82 @@ fun Routing.stationsResource() {
                                 }
 
                         val list = grouped.values.toList().sortedBy { it.firstDay }
-                        call.respond(mapOf("summary" to list,
-                                           "details" to list,
-                                           "resolution" to "year"))
+                        return@transaction mapOf("summary" to list,
+                                                 "details" to list,
+                                                 "resolution" to "year")
+                    } else {
+                        val data = query.map(dataColumns::toMap)
+                        val resolutionString = when (resolution) {
+                            Interval.YEAR  -> "year"
+                            Interval.MONTH -> "month"
+                            else           -> "day"
+                        }
+                        return@transaction mapOf("summary" to data,
+                                                 "details" to data,
+                                                 "resolution" to resolutionString)
                     }
                 }
+                call.respond(response)
             }
         }
     }
 }
 
-private class YearAccumulator(val summary: SummarizedYearData)
+data class CountPerInterval(val interval: Interval, val yearCount: Int, val minMonth: Int?, val maxMonth: Int?)
+
+private fun getBestResolution(condition: Op<Boolean>): Interval {
+    val countsPerResolution = MeasurementsTable.slice(MeasurementsTable.interval,
+                                                      MeasurementsTable.year.countDistinct(),
+                                                      MeasurementsTable.month.min(),
+                                                      MeasurementsTable.month.max())
+            .select(condition)
+            .groupBy(MeasurementsTable.interval)
+            .map {
+                CountPerInterval(interval = it[MeasurementsTable.interval],
+                                 yearCount = it[MeasurementsTable.year.countDistinct()],
+                                 minMonth = it[MeasurementsTable.month.min()],
+                                 maxMonth = it[MeasurementsTable.month.max()])
+            }
+            .associateBy { it.interval }
+
+    // wenn nur ein Jahr und maximal zwei aufeinanderfolgende Monate -> Tag
+    // wenn nur ein Jahr und mehr als zwei Monate oder zwei nicht aufeinanderfolgende Monate -> Monat
+    // sonst -> Jahr
+    val countsForDailyResolution = countsPerResolution[Interval.DAY]
+    if (countsForDailyResolution?.yearCount == 1 && countsForDailyResolution.maxMonth != null && countsForDailyResolution.minMonth != null && countsForDailyResolution.maxMonth - countsForDailyResolution.minMonth <= 2) {
+        return Interval.DAY
+    }
+    val countsForMonthlyResolution = countsPerResolution[Interval.MONTH]
+    if (countsForMonthlyResolution?.yearCount == 1) {
+        return Interval.MONTH
+    }
+    return Interval.YEAR
+}
+
+private val dataColumns = MeasurementColumns(MeasurementsTable.temperatures.min to "minTemperature",
+                                             MeasurementsTable.temperatures.avg to "avgTemperature",
+                                             MeasurementsTable.temperatures.max to "maxTemperature",
+                                             MeasurementsTable.dewPointTemperatures.min to "minDewPointTemperature",
+                                             MeasurementsTable.dewPointTemperatures.avg to "avgDewPointTemperature",
+                                             MeasurementsTable.dewPointTemperatures.max to "maxDewPointTemperature",
+                                             MeasurementsTable.humidity.min to "minHumidity",
+                                             MeasurementsTable.humidity.avg to "avgHumidity",
+                                             MeasurementsTable.humidity.max to "maxHumidity",
+                                             MeasurementsTable.airPressure.min to "minAirPressure",
+                                             MeasurementsTable.airPressure.avg to "avgAirPressure",
+                                             MeasurementsTable.airPressure.max to "maxAirPressure",
+                                             MeasurementsTable.cloudCoverage.histogram to "cloudCoverage",
+                                             MeasurementsTable.sunshineDuration.sum to "sunshineDuration",
+                                             MeasurementsTable.rainfall.sum to "rainfall",
+                                             MeasurementsTable.snowfall.sum to "snowfall",
+                                             MeasurementsTable.windSpeed.avg to "avgWindspeed",
+                                             MeasurementsTable.windSpeed.max to "maxWindspeed",
+                                             MeasurementsTable.visibility.min to "minVisibility",
+                                             MeasurementsTable.visibility.avg to "avgVisibility",
+                                             MeasurementsTable.visibility.max to "maxVisibility")
 
 private data class NumberInterval(val start: Int, val end: Int) {
+    val difference get() = end - start
     fun elements(): List<Int> = (start..end).distinct()
 }
 
@@ -169,56 +195,39 @@ private fun toIntervalList(string: String): List<NumberInterval> {
     return string.split(',').map { it.trim() }.map { toInterval(it) }
 }
 
-val measurementTypeColumnsMapping = mapOf("temperature" to MeasurementsTable.temperatures,
-                                          "air-pressure" to MeasurementsTable.airPressure,
-                                          "dew-point-temperature" to MeasurementsTable.dewPointTemperatures,
-                                          "humidity" to MeasurementsTable.humidity,
-                                          "visibility" to MeasurementsTable.visibility,
-                                          "wind-speed" to MeasurementsTable.windSpeed,
-                                          "sunshine-duration" to MeasurementsTable.sunshineDuration,
-                                          "rainfall" to MeasurementsTable.rainfall,
-                                          "snowfall" to MeasurementsTable.snowfall,
-                                          "cloud-coverage" to MeasurementsTable.cloudCoverage,
-                                          "summary" to MeasurementsTable.summaryColumns)
-
 private fun MeasurementColumns.toMap(row: ResultRow): Map<String, Any?> {
     val map = HashMap<String, Any?>()
-    map["firstDay"] =
-            LocalDate(row[MeasurementsTable.year], row[MeasurementsTable.month] ?: 1, row[MeasurementsTable.day] ?: 1)
+    map["firstDay"] = LocalDate(row[MeasurementsTable.year],
+                                row[MeasurementsTable.month] ?: 1,
+                                row[MeasurementsTable.day] ?: 1)
     columns.forEach { map[it.second] = row[it.first] }
     return map
 }
 
-private fun MeasurementColumns.toSummarizedData(row: ResultRow): SummarizedYearData {
-    return SummarizedYearData(
-            firstDay = LocalDate(row[MeasurementsTable.year], 1, 1),
-            minTemperature = row[MeasurementsTable.temperatures.min],
-            avgTemperature = row[MeasurementsTable.temperatures.avg],
-            maxTemperature = row[MeasurementsTable.temperatures.max],
-            minDewPointTemperature = row[MeasurementsTable.dewPointTemperatures.min],
-            avgDewPointTemperature = row[MeasurementsTable.dewPointTemperatures.avg],
-            maxDewPointTemperature = row[MeasurementsTable.dewPointTemperatures.max],
-            minHumidity = row[MeasurementsTable.humidity.min],
-            avgHumidity = row[MeasurementsTable.humidity.avg],
-            maxHumidity = row[MeasurementsTable.humidity.max],
-            minAirPressure = row[MeasurementsTable.airPressure.min],
-            avgAirPressure = row[MeasurementsTable.airPressure.avg],
-            maxAirPressure = row[MeasurementsTable.airPressure.max],
-            cloudCoverage = row[MeasurementsTable.cloudCoverage.histogram].toList(),
-            sunshineDuration = row[MeasurementsTable.sunshineDuration.sum],
-            rainfall = row[MeasurementsTable.rainfall.sum],
-            snowfall = row[MeasurementsTable.snowfall.sum],
-            avgWindspeed = row[MeasurementsTable.windSpeed.avg],
-            maxWindspeed = row[MeasurementsTable.windSpeed.max],
-            minVisibility = row[MeasurementsTable.visibility.min],
-            avgVisibility = row[MeasurementsTable.visibility.avg],
-            maxVisibility = row[MeasurementsTable.visibility.max],
-    )
+private fun toSummarizedData(row: ResultRow): SummarizedYearData {
+    return SummarizedYearData(firstDay = LocalDate(row[MeasurementsTable.year], 1, 1),
+                              minTemperature = row[MeasurementsTable.temperatures.min],
+                              avgTemperature = row[MeasurementsTable.temperatures.avg],
+                              maxTemperature = row[MeasurementsTable.temperatures.max],
+                              minDewPointTemperature = row[MeasurementsTable.dewPointTemperatures.min],
+                              avgDewPointTemperature = row[MeasurementsTable.dewPointTemperatures.avg],
+                              maxDewPointTemperature = row[MeasurementsTable.dewPointTemperatures.max],
+                              minHumidity = row[MeasurementsTable.humidity.min],
+                              avgHumidity = row[MeasurementsTable.humidity.avg],
+                              maxHumidity = row[MeasurementsTable.humidity.max],
+                              minAirPressure = row[MeasurementsTable.airPressure.min],
+                              avgAirPressure = row[MeasurementsTable.airPressure.avg],
+                              maxAirPressure = row[MeasurementsTable.airPressure.max],
+                              cloudCoverage = row[MeasurementsTable.cloudCoverage.histogram].toList(),
+                              sunshineDuration = row[MeasurementsTable.sunshineDuration.sum],
+                              rainfall = row[MeasurementsTable.rainfall.sum],
+                              snowfall = row[MeasurementsTable.snowfall.sum],
+                              avgWindspeed = row[MeasurementsTable.windSpeed.avg],
+                              maxWindspeed = row[MeasurementsTable.windSpeed.max],
+                              minVisibility = row[MeasurementsTable.visibility.min],
+                              avgVisibility = row[MeasurementsTable.visibility.avg],
+                              maxVisibility = row[MeasurementsTable.visibility.max])
 }
-
-data class DayClassHistogram(val icyDays: Int, val frostyDays: Int, val vegetationDays: Int, val summerDays: Int,
-                             val hotDays: Int, val desertDays: Int, val tropicNights: Int)
-
 
 data class SummarizedYearData(
         val firstDay: LocalDate,
