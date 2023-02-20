@@ -11,10 +11,10 @@ enum class Interval {
 
 object MeasurementsTable : LongIdTable("MEASUREMENTS") {
     val stationId = reference("STATION_ID", StationsTable).index("FK_IDX_MEASUREMENT_STATION")
-//    val firstDay = date("FIRST_DAY")
     val year = integer("YEAR")
     val month = integer("MONTH").nullable()
     val day = integer("DAY").nullable()
+    val firstDay = date("FIRST_DAY")
     val interval = enumerationByName("INTERVAL", 5, Interval::class)
 
     val temperatures = MinAvgMaxColumns(
