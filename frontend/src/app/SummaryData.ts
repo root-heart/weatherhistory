@@ -32,8 +32,42 @@ export type Measurement = {
     avgTemperature?: number
 }
 
+export type SummarizedMeasurement = {
+    minTemperature?: number,
+    avgTemperature?: number,
+    maxTemperature?: number,
+    minDewPointTemperature?: number,
+    avgDewPointTemperature?: number,
+    maxDewPointTemperature?: number,
+    minHumidity?: number,
+    avgHumidity?: number,
+    maxHumidity?: number,
+    minAirPressure?: number,
+    avgAirPressure?: number,
+    maxAirPressure?: number,
+    cloudCoverage: number[],
+    minSunshineDuration?: number,
+    avgSunshineDuration?: number,
+    maxSunshineDuration?: number,
+    sumSunshineDuration?: number,
+    minRainfall?: number,
+    avgRainfall?: number,
+    maxRainfall?: number,
+    sumRainfall?: number,
+    minSnowfall?: number,
+    avgSnowfall?: number,
+    maxSnowfall?: number,
+    sumSnowfall?: number,
+    avgWindspeed?: number,
+    maxWindspeed?: number,
+    minVisibility?: number,
+    avgVisibility?: number,
+    maxVisibility?: number,
+}
+
+
 export type SummaryData = {
-    summary: Measurement,
+    summary: SummarizedMeasurement,
     details: Measurement[],
     resolution: ChartResolution
 }

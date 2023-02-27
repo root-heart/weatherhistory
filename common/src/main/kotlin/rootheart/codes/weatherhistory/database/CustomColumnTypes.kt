@@ -12,10 +12,13 @@ fun Table.decimalArray(name: String): Column<Array<BigDecimal?>> =
 fun Table.intArray(name: String): Column<Array<Int>> =
     registerColumn(name, IntArrayColumnType())
 
-fun Table.intArrayNullable(name: String): Column<Array<Int?>> =
+fun Table.intArrayNullable(name: String): Column<Array<Int?>?> =
     registerColumn(name, IntArrayColumnType())
 
-class DecimalArrayColumnType : ColumnType() {
+fun Table.decimalArrayNullable(name: String): Column<Array<BigDecimal?>?> =
+    registerColumn(name, DecimalArrayColumnType())
+
+class DecimalArrayColumnType : ColumnType(true) {
     override fun sqlType(): String = "TEXT"
 
     override fun valueToDB(value: Any?) = if (value is Array<*>) {
@@ -43,7 +46,7 @@ class DecimalArrayColumnType : ColumnType() {
     }
 }
 
-class IntArrayColumnType(nullable: Boolean = true) : ColumnType() {
+class IntArrayColumnType() : ColumnType(true) {
     override fun sqlType(): String = "TEXT"
 
     override fun valueToDB(value: Any?): Any? {

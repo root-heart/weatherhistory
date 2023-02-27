@@ -5,20 +5,14 @@ import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.transactions.transaction
-import rootheart.codes.weatherhistory.database.AvgMaxColumns
-import rootheart.codes.weatherhistory.database.Decimals
-import rootheart.codes.weatherhistory.database.DecimalsColumns
-import rootheart.codes.weatherhistory.database.Integers
-import rootheart.codes.weatherhistory.database.IntegersColumns
-import rootheart.codes.weatherhistory.database.Measurement
-import rootheart.codes.weatherhistory.database.MeasurementsTable
-import rootheart.codes.weatherhistory.database.MinAvgMax
-import rootheart.codes.weatherhistory.database.MinAvgMaxColumns
-import rootheart.codes.weatherhistory.database.StationsTable
+import rootheart.codes.common.collections.AvgMax
+import rootheart.codes.common.collections.MinAvgMax
+import rootheart.codes.common.collections.MinMaxSumDetails
+import rootheart.codes.weatherhistory.database.*
 
 private val log = KotlinLogging.logger {}
 
-fun insertMeasurementsIntoDatabase(measurements: List<Measurement>) = transaction {
+fun insertMeasurementsIntoDatabase(measurements: List<MeasurementEntity>) = transaction {
     val stationIds = measurements.mapNotNull { it.stationId }.distinct()
     val query = StationsTable.select { StationsTable.id.inList(stationIds) }
     val stationIdById = transaction { query.map { row -> row[StationsTable.id] }.associateBy { it.value } }
@@ -29,17 +23,17 @@ fun insertMeasurementsIntoDatabase(measurements: List<Measurement>) = transactio
         this[MeasurementsTable.day] = it.firstDayDateTime.dayOfMonth
         this[MeasurementsTable.interval] = it.interval
 
-        copyMinAvgMax(it.temperatures, MeasurementsTable.temperatures)
-        copyMinAvgMax(it.dewPointTemperatures, MeasurementsTable.dewPointTemperatures)
+        copyMinAvgMax(it.temperature, MeasurementsTable.temperatures)
+        copyMinAvgMax(it.dewPointTemperature, MeasurementsTable.dewPointTemperatures)
         copyMinAvgMax(it.humidity, MeasurementsTable.humidity)
         copyMinAvgMax(it.airPressure, MeasurementsTable.airPressure)
         copyMinAvgMax(it.visibility, MeasurementsTable.visibility)
-        copyAvgMax(it.wind, MeasurementsTable.windSpeed)
+        copyAvgMax(it.windSpeed, MeasurementsTable.windSpeed)
 
-        this[MeasurementsTable.cloudCoverage.histogram] = it.cloudCoverage.histogram
+        this[MeasurementsTable.cloudCoverage.histogram] = it.cloudCoverage.histogram ?: Array(0) { 0 }
         this[MeasurementsTable.cloudCoverage.details] = it.cloudCoverage.details
 
-        copySum(it.sunshineDuration, MeasurementsTable.sunshineDuration)
+        copySum(it.sunshine, MeasurementsTable.sunshine)
         copySum(it.rainfall, MeasurementsTable.rainfall)
         copySum(it.snowfall, MeasurementsTable.snowfall)
 
@@ -48,25 +42,28 @@ fun insertMeasurementsIntoDatabase(measurements: List<Measurement>) = transactio
     log.info { "Inserted ${measurements.size} objects into the database" }
 }
 
-private fun <N : Number> BatchInsertStatement.copyMinAvgMax(from: MinAvgMax<N?>, to: MinAvgMaxColumns<N>) {
+private fun <N : Number> BatchInsertStatement.copyMinAvgMax(from: MinAvgMax<N>, to: MinAvgMaxDetailsColumns<N>) {
     this[to.min] = from.min
+    this[to.minDay] = from.minDay?.toDateTimeAtStartOfDay()
     this[to.avg] = from.avg
     this[to.max] = from.max
+    this[to.maxDay] = from.maxDay?.toDateTimeAtStartOfDay()
     this[to.details] = from.details
 }
 
-private fun <N : Number> BatchInsertStatement.copyAvgMax(from: MinAvgMax<N?>, to: AvgMaxColumns<N>) {
+private fun <N : Number> BatchInsertStatement.copyAvgMax(from: AvgMax<N>, to: AvgMaxDetailsColumns<N>) {
     this[to.avg] = from.avg
     this[to.max] = from.max
+    this[to.maxDay] = from.maxDay?.toDateTimeAtStartOfDay()
     this[to.details] = from.details
 }
 
-private fun BatchInsertStatement.copySum(from: Integers, to: IntegersColumns) {
+private fun <N : Number> BatchInsertStatement.copySum(from: MinMaxSumDetails<N>, to: MinMaxSumDetailsColumns<N>) {
+    this[to.min] = from.min
+    this[to.minDay] = from.minDay?.toDateTimeAtStartOfDay()
+    this[to.max] = from.max
+    this[to.maxDay] = from.maxDay?.toDateTimeAtStartOfDay()
     this[to.sum] = from.sum
-    this[to.details] = from.values
+    this[to.details] = from.details
 }
 
-private fun BatchInsertStatement.copySum(from: Decimals, to: DecimalsColumns) {
-    this[to.sum] = from.sum
-    this[to.details] = from.values
-}

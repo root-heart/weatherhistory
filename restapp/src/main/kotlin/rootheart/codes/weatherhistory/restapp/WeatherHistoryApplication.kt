@@ -45,7 +45,7 @@ val DATE_TIME_FORMAT = org.joda.time.format.DateTimeFormat.forPattern("yyyy-MM-d
 
 private class LocalDateTypeAdapter : TypeAdapter<LocalDate>() {
     override fun write(out: JsonWriter?, value: LocalDate?) {
-        out?.value(DATE_TIME_FORMAT.print(value))
+        out?.value(if (value == null) "null" else DATE_TIME_FORMAT.print(value))
     }
 
     override fun read(`in`: JsonReader?): LocalDate {

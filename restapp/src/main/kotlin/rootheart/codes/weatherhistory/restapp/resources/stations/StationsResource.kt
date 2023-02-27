@@ -19,16 +19,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.LocalDate
 import org.joda.time.Months
 import org.joda.time.Years
-import rootheart.codes.common.collections.nullsafeAvgDecimal
-import rootheart.codes.common.collections.nullsafeAvgInt
-import rootheart.codes.common.collections.nullsafeMax
-import rootheart.codes.common.collections.nullsafeMin
-import rootheart.codes.common.collections.nullsafeSumDecimals
-import rootheart.codes.common.collections.nullsafeSumInts
-import rootheart.codes.weatherhistory.database.Interval
-import rootheart.codes.weatherhistory.database.MeasurementColumns
-import rootheart.codes.weatherhistory.database.MeasurementsTable
-import rootheart.codes.weatherhistory.database.StationDao
+import rootheart.codes.common.collections.*
+import rootheart.codes.weatherhistory.database.*
 import rootheart.codes.weatherhistory.restapp.optPathParam
 import rootheart.codes.weatherhistory.restapp.requiredPathParam
 import java.math.BigDecimal
@@ -81,15 +73,15 @@ fun Routing.stationsResource() {
                         Interval.YEAR
                     }
 
-                    var data = MeasurementsTable.slice(dataColumns)
+                    var measurements = MeasurementsTable.slice(dataColumns)
                             .select(condition.and(MeasurementsTable.interval.eq(resolution)))
                             .map(::toJson)
                             .sortedBy { it.firstDay }
 
                     if (customAggregation) {
-                        data = data.groupBy { it.firstDay.year }
-                                .mapValues { (year, list) ->
-                                    val cloudCoverages = list.map { it.cloudCoverage }
+                        measurements = measurements.groupBy { it.firstDay.year }
+                                .mapValues { (year, measurements) ->
+                                    val cloudCoverages = measurements.map { it.cloudCoverage }
                                     val sumCloudCoverages = listOf(
                                             cloudCoverages.sumOf { it[0] },
                                             cloudCoverages.sumOf { it[1] },
@@ -102,39 +94,58 @@ fun Routing.stationsResource() {
                                             cloudCoverages.sumOf { it[8] },
                                             cloudCoverages.sumOf { it[9] },
                                     )
-                                    MeasurementJson(firstDay = LocalDate(year, 1, 1),
-                                                    minTemperature = list.nullsafeMin { it.minTemperature },
-                                                    avgTemperature = list.nullsafeAvgDecimal { it.avgTemperature },
-                                                    maxTemperature = list.nullsafeMax { it.maxTemperature },
-                                                    minDewPointTemperature = list.nullsafeMin { it.minTemperature },
-                                                    avgDewPointTemperature = list.nullsafeAvgDecimal { it.avgTemperature },
-                                                    maxDewPointTemperature = list.nullsafeMax { it.maxTemperature },
-                                                    minHumidity = list.nullsafeMin { it.minTemperature },
-                                                    avgHumidity = list.nullsafeAvgDecimal { it.avgTemperature },
-                                                    maxHumidity = list.nullsafeMax { it.maxTemperature },
-                                                    minAirPressure = list.nullsafeMin { it.minTemperature },
-                                                    avgAirPressure = list.nullsafeAvgDecimal { it.avgTemperature },
-                                                    maxAirPressure = list.nullsafeMax { it.maxTemperature },
-                                                    cloudCoverage = sumCloudCoverages,
-                                                    sunshineDuration = list.nullsafeSumInts { it.sunshineDuration },
-                                                    rainfall = list.nullsafeSumDecimals { it.rainfall },
-                                                    snowfall = list.nullsafeSumDecimals { it.snowfall },
-                                                    avgWindspeed = list.nullsafeAvgDecimal { it.avgWindspeed },
-                                                    maxWindspeed = list.nullsafeMax { it.maxWindspeed },
-                                                    minVisibility = list.nullsafeMin { it.minVisibility },
-                                                    avgVisibility = list.nullsafeAvgInt { it.avgVisibility },
-                                                    maxVisibility = list.nullsafeMax { it.maxVisibility })
+
+                                    MeasurementJson(
+                                            firstDay = LocalDate(year, 1, 1),
+                                            temperature = measurements.minAvgMaxDecimals { it.temperature },
+                                            dewPointTemperature = measurements.minAvgMaxDecimals { it.dewPointTemperature },
+                                            humidity = measurements.minAvgMaxDecimals { it.humidity },
+                                            airPressure = measurements.minAvgMaxDecimals { it.airPressure },
+
+                                            cloudCoverage = sumCloudCoverages,
+                                            sunshine = measurements.minMaxSumInts { it.sunshine },
+                                            rainfall = measurements.minMaxSumDecimals { it.rainfall },
+                                            snowfall = measurements.minMaxSumDecimals { it.snowfall },
+                                            windSpeed = measurements.avgMaxDecimals { it.windSpeed },
+                                            visibility = measurements.minAvgMaxInts { it.visibility })
                                 }
                                 .values
                                 .sortedBy { it.firstDay }
                     }
 
-                    return@transaction data
+                    val cloudCoverages = measurements.map { it.cloudCoverage }
+                    val sumCloudCoverages = listOf(
+                            cloudCoverages.sumOf { it[0] },
+                            cloudCoverages.sumOf { it[1] },
+                            cloudCoverages.sumOf { it[2] },
+                            cloudCoverages.sumOf { it[3] },
+                            cloudCoverages.sumOf { it[4] },
+                            cloudCoverages.sumOf { it[5] },
+                            cloudCoverages.sumOf { it[6] },
+                            cloudCoverages.sumOf { it[7] },
+                            cloudCoverages.sumOf { it[8] },
+                            cloudCoverages.sumOf { it[9] },
+                    )
+                    val summarizedMeasurements = SummarizedMeasurementJson(
+                            temperature = measurements.minAvgMaxDecimals { it.temperature },
+                            dewPointTemperature = measurements.minAvgMaxDecimals { it.dewPointTemperature },
+                            humidity = measurements.minAvgMaxDecimals { it.humidity },
+                            airPressure = measurements.minAvgMaxDecimals { it.airPressure },
+
+                            cloudCoverage = sumCloudCoverages,
+                            sunshine = measurements.minMaxSumInts { it.sunshine },
+
+                            rainfall = measurements.minMaxSumDecimals { it.rainfall },
+                            snowfall = measurements.minMaxSumDecimals { it.snowfall },
+                            windSpeed = measurements.avgMaxDecimals { it.windSpeed },
+                            visibility = measurements.minAvgMaxInts { it.visibility })
+
+                    return@transaction mapOf("summary" to summarizedMeasurements,
+                                             "details" to measurements,
+                                             "resolution" to if (resolution == Interval.DAY) "day" else if (resolution == Interval.MONTH) "month" else "year")
                 }
 
-                call.respond(mapOf("summary" to data,
-                                   "details" to data,
-                                   "resolution" to "day"))
+                call.respond(data)
             }
         }
     }
@@ -147,26 +158,52 @@ private data class FirstAndLastDay(val firstDay: LocalDate, val lastDay: LocalDa
 
 private val dataColumns = listOf(MeasurementsTable.firstDay,
                                  MeasurementsTable.temperatures.min,
+                                 MeasurementsTable.temperatures.minDay,
                                  MeasurementsTable.temperatures.avg,
                                  MeasurementsTable.temperatures.max,
+                                 MeasurementsTable.temperatures.maxDay,
                                  MeasurementsTable.dewPointTemperatures.min,
+                                 MeasurementsTable.dewPointTemperatures.minDay,
                                  MeasurementsTable.dewPointTemperatures.avg,
                                  MeasurementsTable.dewPointTemperatures.max,
+                                 MeasurementsTable.dewPointTemperatures.maxDay,
                                  MeasurementsTable.humidity.min,
+                                 MeasurementsTable.humidity.minDay,
                                  MeasurementsTable.humidity.avg,
                                  MeasurementsTable.humidity.max,
+                                 MeasurementsTable.humidity.maxDay,
                                  MeasurementsTable.airPressure.min,
+                                 MeasurementsTable.airPressure.minDay,
                                  MeasurementsTable.airPressure.avg,
                                  MeasurementsTable.airPressure.max,
+                                 MeasurementsTable.airPressure.maxDay,
                                  MeasurementsTable.cloudCoverage.histogram,
-                                 MeasurementsTable.sunshineDuration.sum,
+                                 MeasurementsTable.sunshine.min,
+                                 MeasurementsTable.sunshine.minDay,
+                                 MeasurementsTable.sunshine.max,
+                                 MeasurementsTable.sunshine.maxDay,
+                                 MeasurementsTable.sunshine.sum,
+                                 MeasurementsTable.sunshine.details,
+                                 MeasurementsTable.rainfall.min,
+                                 MeasurementsTable.rainfall.minDay,
+                                 MeasurementsTable.rainfall.max,
+                                 MeasurementsTable.rainfall.maxDay,
                                  MeasurementsTable.rainfall.sum,
+                                 MeasurementsTable.rainfall.details,
+                                 MeasurementsTable.snowfall.min,
+                                 MeasurementsTable.snowfall.minDay,
+                                 MeasurementsTable.snowfall.max,
+                                 MeasurementsTable.snowfall.maxDay,
                                  MeasurementsTable.snowfall.sum,
+                                 MeasurementsTable.snowfall.details,
                                  MeasurementsTable.windSpeed.avg,
                                  MeasurementsTable.windSpeed.max,
+                                 MeasurementsTable.windSpeed.maxDay,
                                  MeasurementsTable.visibility.min,
+                                 MeasurementsTable.visibility.minDay,
                                  MeasurementsTable.visibility.avg,
-                                 MeasurementsTable.visibility.max)
+                                 MeasurementsTable.visibility.max,
+                                 MeasurementsTable.visibility.maxDay)
 
 private data class NumberInterval(val start: Int, val end: Int) {
     fun elements(): List<Int> = (start..end).distinct()
@@ -188,61 +225,53 @@ private fun toIntervalList(string: String): List<NumberInterval> {
     return string.split(',').map { it.trim() }.map { toInterval(it) }
 }
 
-private fun MeasurementColumns.toMap(row: ResultRow): Map<String, Any?> {
-    val map = HashMap<String, Any?>()
-    map["firstDay"] = LocalDate(row[MeasurementsTable.year],
-                                row[MeasurementsTable.month] ?: 1,
-                                row[MeasurementsTable.day] ?: 1)
-    columns.forEach { map[it.second] = row[it.first] }
-    return map
+private fun toJson(row: ResultRow): MeasurementJson = with(MeasurementsTable) {
+    MeasurementJson(
+            firstDay = row[firstDay].toLocalDate(),
+            temperature = temperatures.toJson(row),
+            dewPointTemperature = dewPointTemperatures.toJson(row),
+            humidity = humidity.toJson(row),
+            airPressure = airPressure.toJson(row),
+            cloudCoverage = row[cloudCoverage.histogram].toList(),
+            sunshine = sunshine.toJson(row),
+            rainfall = rainfall.toJson(row),
+            snowfall = snowfall.toJson(row),
+            windSpeed = windSpeed.toJson(row),
+            visibility = visibility.toJson(row))
 }
 
-private fun toJson(row: ResultRow): MeasurementJson {
-    return MeasurementJson(firstDay = row[MeasurementsTable.firstDay].toLocalDate(),
-                           minTemperature = row[MeasurementsTable.temperatures.min],
-                           avgTemperature = row[MeasurementsTable.temperatures.avg],
-                           maxTemperature = row[MeasurementsTable.temperatures.max],
-                           minDewPointTemperature = row[MeasurementsTable.dewPointTemperatures.min],
-                           avgDewPointTemperature = row[MeasurementsTable.dewPointTemperatures.avg],
-                           maxDewPointTemperature = row[MeasurementsTable.dewPointTemperatures.max],
-                           minHumidity = row[MeasurementsTable.humidity.min],
-                           avgHumidity = row[MeasurementsTable.humidity.avg],
-                           maxHumidity = row[MeasurementsTable.humidity.max],
-                           minAirPressure = row[MeasurementsTable.airPressure.min],
-                           avgAirPressure = row[MeasurementsTable.airPressure.avg],
-                           maxAirPressure = row[MeasurementsTable.airPressure.max],
-                           cloudCoverage = row[MeasurementsTable.cloudCoverage.histogram].toList(),
-                           sunshineDuration = row[MeasurementsTable.sunshineDuration.sum],
-                           rainfall = row[MeasurementsTable.rainfall.sum],
-                           snowfall = row[MeasurementsTable.snowfall.sum],
-                           avgWindspeed = row[MeasurementsTable.windSpeed.avg],
-                           maxWindspeed = row[MeasurementsTable.windSpeed.max],
-                           minVisibility = row[MeasurementsTable.visibility.min],
-                           avgVisibility = row[MeasurementsTable.visibility.avg],
-                           maxVisibility = row[MeasurementsTable.visibility.max])
-}
 
-data class MeasurementJson(
-        val firstDay: LocalDate,
-        val minTemperature: BigDecimal?,
-        val avgTemperature: BigDecimal?,
-        val maxTemperature: BigDecimal?,
-        val minDewPointTemperature: BigDecimal?,
-        val avgDewPointTemperature: BigDecimal?,
-        val maxDewPointTemperature: BigDecimal?,
-        val minHumidity: BigDecimal?,
-        val avgHumidity: BigDecimal?,
-        val maxHumidity: BigDecimal?,
-        val minAirPressure: BigDecimal?,
-        val avgAirPressure: BigDecimal?,
-        val maxAirPressure: BigDecimal?,
+private fun <T : Number> MinAvgMaxDetailsColumns<T>.toJson(row: ResultRow) =
+    MinAvgMax(min = row[min],
+              minDay = row[minDay]?.toLocalDate(),
+              avg = row[avg],
+              max = row[max],
+              maxDay = row[maxDay]?.toLocalDate())
+
+private fun <T : Number> AvgMaxDetailsColumns<T>.toJson(row: ResultRow) =
+    AvgMax(avg = row[avg],
+           max = row[max],
+           maxDay = row[maxDay]?.toLocalDate())
+
+private fun <N : Number> MinMaxSumDetailsColumns<N>.toJson(row: ResultRow) =
+    MinMaxSumDetails(min = row[min],
+                     minDay = row[minDay]?.toLocalDate(),
+                     max = row[max],
+                     maxDay = row[maxDay]?.toLocalDate(),
+                     sum = row[sum],
+                     details = row[details]
+    )
+
+
+data class SummarizedMeasurementJson(
+        val temperature: MinAvgMax<BigDecimal>?,
+        val dewPointTemperature: MinAvgMax<BigDecimal>?,
+        val humidity: MinAvgMax<BigDecimal>?,
+        val airPressure: MinAvgMax<BigDecimal>?,
         val cloudCoverage: List<Int>,
-        val sunshineDuration: Int?,
-        val rainfall: BigDecimal?,
-        val snowfall: BigDecimal?,
-        val avgWindspeed: BigDecimal?,
-        val maxWindspeed: BigDecimal?,
-        val minVisibility: Int?,
-        val avgVisibility: Int?,
-        val maxVisibility: Int?,
+        val sunshine: MinMaxSumDetails<Int>?,
+        val rainfall: MinMaxSumDetails<BigDecimal>?,
+        val snowfall: MinMaxSumDetails<BigDecimal>?,
+        val windSpeed: AvgMax<BigDecimal>?,
+        val visibility: MinAvgMax<Int>?,
 )
