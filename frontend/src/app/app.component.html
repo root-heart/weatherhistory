@@ -22,30 +22,27 @@
         <h1>Temperatur</h1>
 
         <div class="summary">
-            &#x2b9f; {{filterService.currentData?.value?.summary?.minTemperature?.toFixed(1)}}°C
+            &#x2b9f; {{filterService.currentData?.value?.summary?.temperature?.min?.toFixed(1)}}°C
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#8960; {{filterService.currentData?.value?.summary?.avgTemperature?.toFixed(1)}}°C
+            &#8960; {{filterService.currentData?.value?.summary?.temperature?.avg?.toFixed(1)}}°C
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{filterService.currentData?.value?.summary?.maxTemperature?.toFixed(1)}}°C
+            &#x2b9d; {{filterService.currentData?.value?.summary?.temperature?.max?.toFixed(1)}}°C
         </div>
 
-        <min-avg-max-chart class="chart" [dataSource]="filterService.currentData"
-                           [color]="'hsl(0, 80%, 45%)'" [fill]="'hsla(0, 80%, 45%, 0.3)'"
-                           [min]="'minTemperature'" [avg]="'avgTemperature'"
-                           [max]="'maxTemperature'"></min-avg-max-chart>
+        <min-avg-max-chart class="chart" [dataSource]="filterService.currentData" [property]="'temperature'"
+                           [color]="'hsl(0, 80%, 45%)'" [fill]="'hsla(0, 80%, 45%, 0.3)'"></min-avg-max-chart>
     </section>
 
     <section class="chart-tile">
         <h1>Sonnenschein</h1>
 
         <div class="summary">
-            &#931; {{divideBy60(filterService.currentData?.value?.summary?.sumSunshineDuration)?.toFixed(1)}}h
-            &#8960; {{divideBy60(filterService.currentData?.value?.summary?.avgSunshineDuration)?.toFixed(1)}}h
+            &#931; {{divideBy60(filterService.currentData?.value?.summary?.sunshineDuration?.sum)?.toFixed(1)}}h
+            &#8960; {{divideBy60(filterService.currentData?.value?.summary?.sunshineDuration?.sum)?.toFixed(1)}}h
         </div>
 
         <sum-chart class="chart" [fill]="'hsl(40, 100%, 50%)'" [sum]="'sunshineDuration'"
-                   [dataSource]="filterService.currentData"
-                   [valueConverter]="divideBy60"></sum-chart>
+                   [dataSource]="filterService.currentData" [valueConverter]="divideBy60"></sum-chart>
     </section>
 
     <section class="chart-tile">
@@ -53,10 +50,10 @@
 
         <div class="summary">
             <fa-icon [icon]="faRain"></fa-icon>
-            {{filterService.currentData?.value?.summary?.sumRainfall?.toFixed(1)}}l/m²
+            {{filterService.currentData?.value?.summary?.rainfall?.sum?.toFixed(1)}}l/m²
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
             <fa-icon [icon]="faSnow"></fa-icon>
-            {{filterService.currentData?.value?.summary?.sumSnowfall?.toFixed(1)}}mm
+            {{filterService.currentData?.value?.summary?.snowfall?.sum?.toFixed(1)}}mm
         </div>
 
         <sum-chart class="chart" [fill]="'hsl(240, 100%, 50%)'" [fill2]="'hsl(40, 0%, 80%)'" [sum]="'rainfall'"
@@ -67,14 +64,13 @@
         <h1>Wind</h1>
 
         <div class="summary">
-            &#8960; {{filterService.currentData?.value?.summary?.avgWindspeed?.toFixed(1)}}m/s
+            &#8960; {{filterService.currentData?.value?.summary?.windSpeed?.avg?.toFixed(1)}}m/s
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{filterService.currentData?.value?.summary?.maxWindspeed?.toFixed(1)}}m/s
+            &#x2b9d; {{filterService.currentData?.value?.summary?.windSpeed?.max?.toFixed(1)}}m/s
         </div>
 
         <min-avg-max-chart class="chart" [color]="'hsl(270, 80%, 65%)'" [fill]="'hsla(270, 80%, 65%, 0.3)'"
-                           [avg]="'avgWindspeed'" [max]="'maxWindspeed'"
-                           [dataSource]="filterService.currentData"></min-avg-max-chart>
+                           [property]="'temperature'" [dataSource]="filterService.currentData"></min-avg-max-chart>
     </section>
 
 
@@ -82,9 +78,9 @@
         <h1>Windrichtung</h1>
 
         <div class="summary">
-            &#8960; {{filterService.currentData?.value?.summary?.avgWindspeed?.toFixed(1)}}m/s
+            &#8960; {{filterService.currentData?.value?.summary?.windSpeed?.avg?.toFixed(1)}}m/s
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{filterService.currentData?.value?.summary?.maxWindspeed?.toFixed(1)}}m/s
+            &#x2b9d; {{filterService.currentData?.value?.summary?.windSpeed?.max?.toFixed(1)}}m/s
         </div>
 
         <div></div>
@@ -94,66 +90,62 @@
         <h1>Luftfeuchtigkeit</h1>
 
         <div class="summary">
-            &#x2b9f; {{filterService.currentData?.value?.summary?.minHumidity?.toFixed(1)}}%
+            &#x2b9f; {{filterService.currentData?.value?.summary?.humidity?.min?.toFixed(1)}}%
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#8960; {{filterService.currentData?.value?.summary?.avgHumidity?.toFixed(1)}}%
+            &#8960; {{filterService.currentData?.value?.summary?.humidity?.avg?.toFixed(1)}}%
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{filterService.currentData?.value?.summary?.maxHumidity?.toFixed(1)}}%
+            &#x2b9d; {{filterService.currentData?.value?.summary?.humidity?.max?.toFixed(1)}}%
         </div>
 
         <min-avg-max-chart class="chart" [color]="'hsl(220, 80%, 30%)'" [fill]="'hsla(220, 80%, 30%, 0.3)'"
-                           [min]="'minHumidity'" [avg]="'avgHumidity'" [max]="'maxHumidity'"
-                           [dataSource]="filterService.currentData"></min-avg-max-chart>
+                           [property]="'humidity'" [dataSource]="filterService.currentData"></min-avg-max-chart>
     </section>
 
     <section class="chart-tile">
         <h1>Taupunkt</h1>
 
         <div class="summary">
-            &#x2b9f; {{filterService.currentData?.value?.summary?.minDewPointTemperature?.toFixed(1)}}°C
+            &#x2b9f; {{filterService.currentData?.value?.summary?.dewPointTemperature?.min?.toFixed(1)}}°C
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#8960; {{filterService.currentData?.value?.summary?.avgDewPointTemperature?.toFixed(1)}}°C
+            &#8960; {{filterService.currentData?.value?.summary?.dewPointTemperature?.avg?.toFixed(1)}}°C
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{filterService.currentData?.value?.summary?.maxDewPointTemperature?.toFixed(1)}}°C
+            &#x2b9d; {{filterService.currentData?.value?.summary?.dewPointTemperature?.max?.toFixed(1)}}°C
         </div>
 
         <min-avg-max-chart class="chart" [color]="'hsl(220, 80%, 70%)'" [fill]="'hsla(220, 80%, 70%, 0.3)'"
-                           [min]="'minDewPointTemperature'" [avg]="'avgDewPointTemperature'"
-                           [max]="'maxDewPointTemperature'"
-                           [dataSource]="filterService.currentData"></min-avg-max-chart>
+                           [property]="'dewPointTemperature'" [dataSource]="filterService.currentData"></min-avg-max-chart>
     </section>
 
     <section class="chart-tile">
         <h1>Luftdruck</h1>
 
         <div class="summary">
-            &#x2b9f; {{filterService.currentData?.value?.summary?.minAirPressure?.toFixed(1)}}hPa
+            &#x2b9f; {{filterService.currentData?.value?.summary?.airPressure?.min?.toFixed(1)}}hPa
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#8960; {{filterService.currentData?.value?.summary?.avgAirPressure?.toFixed(1)}}hPa
+            &#8960; {{filterService.currentData?.value?.summary?.airPressure?.avg?.toFixed(1)}}hPa
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{filterService.currentData?.value?.summary?.maxAirPressure?.toFixed(1)}}hPa
+            &#x2b9d; {{filterService.currentData?.value?.summary?.airPressure?.max?.toFixed(1)}}hPa
         </div>
 
         <min-avg-max-chart class="chart" [color]="'hsl(120, 80%, 45%)'" [fill]="'hsla(120, 80%, 45%, 0.15)'"
-                           [min]="'minAirPressure'" [avg]="'avgAirPressure'" [max]="'maxAirPressure'"
-                           [includeZero]=false [dataSource]="filterService.currentData"></min-avg-max-chart>
+                           [property]="'airPressure'" [includeZero]=false [dataSource]="filterService.currentData"></min-avg-max-chart>
     </section>
 
     <section class="chart-tile">
         <h1>Sichtweite</h1>
 
         <div class="summary">
-            &#x2b9f; {{filterService.currentData?.value?.summary?.minVisibility?.toFixed(0)}}m
+            &#x2b9f; {{filterService.currentData?.value?.summary?.visibility?.min?.toFixed(0)}}m
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#8960; {{filterService.currentData?.value?.summary?.avgVisibility?.toFixed(0)}}m
+            &#8960; {{filterService.currentData?.value?.summary?.visibility?.avg?.toFixed(0)}}m
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{filterService.currentData?.value?.summary?.maxVisibility?.toFixed(0)}}m
+            &#x2b9d; {{filterService.currentData?.value?.summary?.visibility?.max?.toFixed(0)}}m
         </div>
 
         <min-avg-max-chart class="chart" [color]="'hsl(0, 0%, 70%)'" [fill]="'hsla(0, 0%, 70%, 0.3)'"
                            [logarithmic]="true" [dataSource]="filterService.currentData"
                            [ticks]="[{value: 10, label: '10'}, {value: 100, label: '100'}, {value: 1000, label: '1km'}, {value: 10000, label: '10km'}, {value: 100000, label: '100km'}]"
-                           [min]="'minVisibility'" [avg]="'avgVisibility'" [max]="'maxVisibility'"></min-avg-max-chart>
+                           [property]="'visibility'"></min-avg-max-chart>
     </section>
 
     <section class="chart-tile">

@@ -3,66 +3,56 @@ import {WeatherStation} from "./WeatherStationService";
 import {DateTime} from "luxon";
 import {ChartResolution} from "./charts/BaseChart";
 
+export type AvgMaxDetails = {
+    avg: number,
+    max: number, maxDay?: Date,
+    details?: number[]
+}
+
+export type MinAvgMaxDetails = {
+    min: number, minDay?: Date,
+    avg: number,
+    max: number, maxDay?: Date,
+    details: number[]
+}
+
+export type MinMaxSumDetails = {
+    min?: number, minDay: Date,
+    max?: number, maxDay: Date,
+    sum?: number,
+    details?: number[]
+}
+
 export type Measurement = {
-    maxTemperature?: number,
-    rainfall?: number,
-    maxVisibility?: number,
-    snowfall?: number,
-    minDewPointTemperature?: number,
-    avgAirPressure?: number,
-    maxAirPressure?: number,
-    cloudCoverage?: number[],
-    minAirPressure?: number,
-    avgDewPointTemperature?: number,
-    avgHumidity?: number,
-    maxWindspeed?: number,
-    maxDewPointTemperature?: number,
-    minHumidity?: number,
-    sunshineDuration?: number,
-    avgWindspeed?: number,
     // It does not matter if I use a Date here. TypeScript will stupidly create a Measurement with a string for the
     // property firstDay. So when processing this Measurement in other places in the code, I will see a member of
     // type Date but with a string in it.
     // In every other language I know it is not possible to do so, how sick is this...??
     firstDay: string,
-    minTemperature?: number,
-    minVisibility?: number,
-    avgVisibility?: number,
-    maxHumidity?: number,
-    avgTemperature?: number
+
+    temperature: MinAvgMaxDetails,
+    dewPointTemperature: MinAvgMaxDetails,
+    humidity: MinAvgMaxDetails,
+    airPressure: MinAvgMaxDetails,
+    cloudCoverage: number[],
+    sunshineDuration: MinMaxSumDetails,
+    rainfall: MinMaxSumDetails,
+    snowfall: MinMaxSumDetails,
+    windSpeed: AvgMaxDetails,
+    visibility: MinAvgMaxDetails,
 }
 
 export type SummarizedMeasurement = {
-    minTemperature?: number,
-    avgTemperature?: number,
-    maxTemperature?: number,
-    minDewPointTemperature?: number,
-    avgDewPointTemperature?: number,
-    maxDewPointTemperature?: number,
-    minHumidity?: number,
-    avgHumidity?: number,
-    maxHumidity?: number,
-    minAirPressure?: number,
-    avgAirPressure?: number,
-    maxAirPressure?: number,
+    temperature: MinAvgMaxDetails,
+    dewPointTemperature: MinAvgMaxDetails,
+    humidity: MinAvgMaxDetails,
+    airPressure: MinAvgMaxDetails,
     cloudCoverage: number[],
-    minSunshineDuration?: number,
-    avgSunshineDuration?: number,
-    maxSunshineDuration?: number,
-    sumSunshineDuration?: number,
-    minRainfall?: number,
-    avgRainfall?: number,
-    maxRainfall?: number,
-    sumRainfall?: number,
-    minSnowfall?: number,
-    avgSnowfall?: number,
-    maxSnowfall?: number,
-    sumSnowfall?: number,
-    avgWindspeed?: number,
-    maxWindspeed?: number,
-    minVisibility?: number,
-    avgVisibility?: number,
-    maxVisibility?: number,
+    sunshineDuration: MinMaxSumDetails,
+    rainfall: MinMaxSumDetails,
+    snowfall: MinMaxSumDetails,
+    windSpeed: AvgMaxDetails,
+    visibility: MinAvgMaxDetails,
 }
 
 

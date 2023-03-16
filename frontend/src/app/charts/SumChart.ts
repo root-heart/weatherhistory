@@ -2,13 +2,18 @@ import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import {ChartResolution, getDefaultChartOptions, getXScale} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
 import {HttpClient} from "@angular/common/http";
-import {Measurement, SummaryData} from "../SummaryData";
+import {Measurement, MinAvgMaxDetails, MinMaxSumDetails, SummaryData} from "../SummaryData";
 import {Observable} from "rxjs";
 
 export type Sum = {
     firstDay: string,
     sum: number
 }
+
+type MinMaxSumDetailsProperty = {
+    [K in keyof Measurement]: Measurement[K] extends MinMaxSumDetails ? K : never
+}[keyof Measurement]
+
 
 @Component({
     selector: "sum-chart",
@@ -17,19 +22,26 @@ export type Sum = {
 export class SumChart {
     @Input() fill: string = "#cc3333"
     @Input() fill2: string = "#3333cc"
-    @Input() sum: keyof Measurement = "sunshineDuration"
+    @Input() sum?: MinMaxSumDetailsProperty
     @Input() valueConverter: (x?: number) => number | undefined = x => x
 
     @Input() set dataSource(c: Observable<SummaryData | undefined>) {
         c.subscribe(summaryData => {
             if (summaryData) {
-                let minAvgMaxData = summaryData.details.map(m => {
-                    let s = m[this.sum] as number
-                    return <Sum>{
-                        firstDay: m.firstDay,
-                        sum: s == null ? null : this.valueConverter(s)
-                    }
-                })
+                let minAvgMaxData = summaryData.details
+                    .map(m => {
+                        if (this.sum) {
+                            let s = m[this.sum].sum
+                            return <Sum>{
+                                firstDay: m.firstDay,
+                                sum: s == null ? null : this.valueConverter(s)
+                            }
+                        } else {
+                            return null
+                        }
+                    })
+                    .filter(d => d !== null && d !== undefined)
+                    .map(d => d!)
                 this.setData(minAvgMaxData, summaryData.resolution)
             } else {
                 this.setData([], "month")
