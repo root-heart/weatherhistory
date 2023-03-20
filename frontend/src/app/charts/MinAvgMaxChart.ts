@@ -2,7 +2,14 @@ import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
 import {ChartResolution, getDefaultChartOptions, getXScale} from "./BaseChart";
 import 'chartjs-adapter-luxon';
-import {AvgMaxDetails, Measurement, MinAvgMaxDetails, SummaryData} from "../SummaryData";
+import {
+    AvgMaxDetails,
+    DailyMeasurement,
+    MinAvgMaxDetails,
+    MonthlySummary,
+    SummarizedMeasurement,
+    SummaryData, YearlySummary
+} from "../data-classes";
 import {Observable} from "rxjs";
 import {DateTime} from "luxon";
 
@@ -15,12 +22,12 @@ export type MinAvgMaxSummary = {
 
 
 type MinAvgMaxDetailsProperty = {
-    [K in keyof Measurement]: Measurement[K] extends MinAvgMaxDetails ? K : never
-}[keyof Measurement]
+    [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends MinAvgMaxDetails ? K : never
+}[keyof SummarizedMeasurement]
 
 type AvgMaxDetailsProperty = {
-    [K in keyof Measurement]: Measurement[K] extends AvgMaxDetails ? K : never
-}[keyof Measurement]
+    [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends AvgMaxDetails ? K : never
+}[keyof SummarizedMeasurement]
 
 /**
  * If either filterComponent or path are not defined, this selector will not match. This ensures that at least these
@@ -42,17 +49,25 @@ export class MinAvgMaxChart {
     @Input() ticks?: Array<{ value: number, label: string }>
 
     @Input() set dataSource(c: Observable<SummaryData | undefined>) {
-        let values = (m:Measurement) => m.temperature
         c.subscribe(summaryData => {
             if (summaryData) {
+                // TODO this is duplicated in the other chart classes
+                let dateFunction: (m: DailyMeasurement | MonthlySummary | YearlySummary) => string
+                if (summaryData.details[0] instanceof DailyMeasurement) {
+                    dateFunction = (m: DailyMeasurement) => m.date!
+                } else if (summaryData.details[0] instanceof MonthlySummary) {
+                    dateFunction = (m: MonthlySummary) => m.year + "-" + m.month
+                } else {
+                    dateFunction = (m: YearlySummary) => "" + m.year
+                }
                 let minAvgMaxData: MinAvgMaxSummary[] = summaryData.details
                     .map(m => {
                         if (m && this.property) {
                             return {
-                                firstDay: m.firstDay,
-                                min: m[this.property].min,
-                                avg: m[this.property].avg,
-                                max: m[this.property].max
+                                firstDay: dateFunction(m),
+                                min: m.measurements![this.property!].min,
+                                avg: m.measurements![this.property!].avg,
+                                max: m.measurements![this.property!].max
                             }
                         } else {
                             return null

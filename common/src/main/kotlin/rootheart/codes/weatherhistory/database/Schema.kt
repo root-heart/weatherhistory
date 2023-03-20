@@ -6,6 +6,8 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import rootheart.codes.weatherhistory.database.daily.DailyMeasurementTable
+import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurementsTable
 import java.util.*
 import javax.sql.DataSource
 import kotlin.reflect.KProperty1
@@ -47,14 +49,14 @@ object WeatherDb {
     fun createTables() {
         Database.connect(dataSource)
         transaction {
-            SchemaUtils.create(StationsTable, MeasurementsTable)
+            SchemaUtils.create(StationsTable, SummarizedMeasurementsTable, DailyMeasurementTable)
         }
     }
 
     fun dropTables() {
         Database.connect(dataSource)
         transaction {
-            SchemaUtils.drop(MeasurementsTable, StationsTable)
+            SchemaUtils.drop(SummarizedMeasurementsTable, DailyMeasurementTable, StationsTable)
         }
     }
 }

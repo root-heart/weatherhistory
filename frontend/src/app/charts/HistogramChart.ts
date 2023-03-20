@@ -3,7 +3,7 @@ import {ChartResolution, getDefaultChartOptions, getXScale} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartDataset, ChartOptions, registerables} from "chart.js";
 import ChartjsPluginStacked100 from "chartjs-plugin-stacked100";
 import {Observable} from "rxjs";
-import {SummaryData} from "../SummaryData";
+import {DailyMeasurement, MonthlySummary, SummaryData, YearlySummary} from "../data-classes";
 
 export type Histogram = {
     firstDay: string,
@@ -19,13 +19,22 @@ export class HistogramChart {
     @Input() fill2: string = "#3333cc"
     @Input() path: string = "cloud-coverage"
 
-    @Input() set dataSource(c: Observable<SummaryData | undefined>) {
+    @Input() set dataSource(c: Observable<SummaryData  | undefined>) {
         c.subscribe(summaryData => {
             if (summaryData) {
+                // TODO this is duplicated in the other chart classes
+                let dateFunction: (m: DailyMeasurement | MonthlySummary | YearlySummary) => string
+                if (summaryData.details[0] instanceof DailyMeasurement) {
+                    dateFunction = (m: DailyMeasurement) => m.date!
+                } else if (summaryData.details[0] instanceof MonthlySummary) {
+                    dateFunction = (m: MonthlySummary) => m.year + "-" + m.month
+                } else {
+                    dateFunction = (m: YearlySummary) => "" + m.year
+                }
                 let data = summaryData.details?.map(m => {
                     return <Histogram>{
-                        firstDay: m.firstDay,
-                        histogram: m.cloudCoverage
+                        firstDay: dateFunction(m),
+                        histogram: m.measurements!.cloudCoverageHistogram
                     }
                 })
                 this.setData(data, summaryData.resolution)
@@ -80,7 +89,7 @@ export class HistogramChart {
         options.scales!.x2 = {display: false}
 
         const labels = data.map(d => d.firstDay);
-
+        // TODO this does not work yet
         const lengths = data.map(d => d.histogram).map(h => h.length);
         let maxLength = Math.max.apply(null, lengths)
         let datasets: ChartDataset[] = []

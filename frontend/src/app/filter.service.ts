@@ -1,6 +1,6 @@
 import {DateTime} from "luxon";
 import {environment} from "../environments/environment";
-import {SummaryData} from "./SummaryData";
+import {SummaryData} from "./data-classes";
 import {WeatherStation} from "./WeatherStationService";
 import {HttpClient} from "@angular/common/http";
 import {ApplicationRef, Injectable} from "@angular/core";
@@ -45,6 +45,7 @@ export class FilterService {
             this.http
                 .get<SummaryData>(url)
                 .subscribe(data => {
+                    console.log(data.details.map(x => x.measurements))
                     this.currentData.next(data)
                     // hmm, something in angular does not work, so i have to refresh everything on my own here...
                     this.app.tick()

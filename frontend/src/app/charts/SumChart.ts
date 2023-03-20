@@ -2,7 +2,14 @@ import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import {ChartResolution, getDefaultChartOptions, getXScale} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
 import {HttpClient} from "@angular/common/http";
-import {Measurement, MinAvgMaxDetails, MinMaxSumDetails, SummaryData} from "../SummaryData";
+import {
+    DailyMeasurement,
+    MinMaxSumDetails,
+    MonthlySummary,
+    SummarizedMeasurement,
+    SummaryData,
+    YearlySummary
+} from "../data-classes";
 import {Observable} from "rxjs";
 
 export type Sum = {
@@ -11,8 +18,8 @@ export type Sum = {
 }
 
 type MinMaxSumDetailsProperty = {
-    [K in keyof Measurement]: Measurement[K] extends MinMaxSumDetails ? K : never
-}[keyof Measurement]
+    [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends MinMaxSumDetails ? K : never
+}[keyof SummarizedMeasurement]
 
 
 @Component({
@@ -28,12 +35,21 @@ export class SumChart {
     @Input() set dataSource(c: Observable<SummaryData | undefined>) {
         c.subscribe(summaryData => {
             if (summaryData) {
+                // TODO this is duplicated in the other chart classes
+                let dateFunction: (m: DailyMeasurement | MonthlySummary | YearlySummary) => string
+                if (summaryData.details[0] instanceof DailyMeasurement) {
+                    dateFunction = (m: DailyMeasurement) => m.date!
+                } else if (summaryData.details[0] instanceof MonthlySummary) {
+                    dateFunction = (m: MonthlySummary) => m.year + "-" + m.month
+                } else {
+                    dateFunction = (m: YearlySummary) => "" + m.year
+                }
                 let minAvgMaxData = summaryData.details
                     .map(m => {
                         if (this.sum) {
-                            let s = m[this.sum].sum
+                            let s = m.measurements![this.sum].sum
                             return <Sum>{
-                                firstDay: m.firstDay,
+                                firstDay: dateFunction(m),
                                 sum: s == null ? null : this.valueConverter(s)
                             }
                         } else {

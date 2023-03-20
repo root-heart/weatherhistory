@@ -1,16 +1,15 @@
 package rootheart.codes.common.collections
 
 import org.joda.time.LocalDate
-import rootheart.codes.weatherhistory.database.MeasurementJson
 import java.math.BigDecimal
 
-class AvgMax<N : Number>(
+class AvgMaxDetails<N : Number>(
         var avg: N? = null,
         var max: N? = null,
         var maxDay: LocalDate? = null,
         var details: Array<N?>? = null)
 
-class MinAvgMax<N : Number>(
+class MinAvgMaxDetails<N : Number>(
         var min: N? = null,
         var minDay: LocalDate? = null,
         var avg: N? = null,
@@ -28,12 +27,12 @@ class MinMaxSumDetails<N : Number>(
 
 class Histogram(var histogram: Array<Int>? = null, var details: Array<Int?>? = null)
 
-inline fun <reified T> List<T>.minAvgMaxDecimals(selector: (T) -> MinAvgMax<BigDecimal>): MinAvgMax<BigDecimal> {
+inline fun <reified T> List<T>.minAvgMaxDecimals(selector: (T) -> MinAvgMaxDetails<BigDecimal>): MinAvgMaxDetails<BigDecimal> {
     val notNullValues = mapNotNull { selector(it) }
     val minMeasurement = notNullValues.filter { it.min != null }.minByOrNull { it.min!! }
     val maxMeasurement = notNullValues.filter { it.max != null }.maxByOrNull { it.max!! }
     val details = notNullValues.map { it.avg }.toTypedArray()
-    return MinAvgMax(
+    return MinAvgMaxDetails(
             min = minMeasurement?.min,
             minDay = minMeasurement?.minDay,
             avg = nullsafeAvgDecimal { selector(it).avg },
@@ -43,11 +42,11 @@ inline fun <reified T> List<T>.minAvgMaxDecimals(selector: (T) -> MinAvgMax<BigD
     )
 }
 
-fun <T> List<T>.avgMaxDecimals(selector: (T) -> AvgMax<BigDecimal>): AvgMax<BigDecimal> {
+fun <T> List<T>.avgMaxDecimals(selector: (T) -> AvgMaxDetails<BigDecimal>): AvgMaxDetails<BigDecimal> {
     val notNullValues = mapNotNull { selector(it) }
     val maxMeasurement = notNullValues.filter { it.max != null }.maxByOrNull { it.max!! }
     val details = notNullValues.map { it.avg }.toTypedArray()
-    return AvgMax(
+    return AvgMaxDetails(
             avg = nullsafeAvgDecimal { selector(it).avg },
             max = maxMeasurement?.max,
             maxDay = maxMeasurement?.maxDay,
@@ -55,12 +54,12 @@ fun <T> List<T>.avgMaxDecimals(selector: (T) -> AvgMax<BigDecimal>): AvgMax<BigD
     )
 }
 
-fun <T> List<T>.minAvgMaxInts(selector: (T) -> MinAvgMax<Int>): MinAvgMax<Int> {
+fun <T> List<T>.minAvgMaxInts(selector: (T) -> MinAvgMaxDetails<Int>): MinAvgMaxDetails<Int> {
     val notNullValues = mapNotNull { selector(it) }
     val minMeasurement = notNullValues.filter { it.min != null }.minByOrNull { it.min!! }
     val maxMeasurement = notNullValues.filter { it.max != null }.maxByOrNull { it.max!! }
     val details = notNullValues.map { it.avg }.toTypedArray()
-    return MinAvgMax(
+    return MinAvgMaxDetails(
             min = minMeasurement?.min,
             minDay = minMeasurement?.minDay,
             avg = nullsafeAvgInt { selector(it).avg },
