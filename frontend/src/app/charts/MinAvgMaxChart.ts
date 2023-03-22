@@ -42,7 +42,7 @@ export class MinAvgMaxChart {
     @Input() fill: string = "#cc333320"
     @Input() lineWidth: number = 2
 
-    @Input() property?: MinAvgMaxDetailsProperty
+    @Input() property?: MinAvgMaxDetailsProperty | AvgMaxDetailsProperty
     @Input() logarithmic: boolean = false
     @Input() minValue?: number
     @Input() maxValue?: number
@@ -63,11 +63,12 @@ export class MinAvgMaxChart {
                 let minAvgMaxData: MinAvgMaxSummary[] = summaryData.details
                     .map(m => {
                         if (m && this.property) {
+                            let measurement = m.measurements![this.property!]
                             return {
                                 firstDay: dateFunction(m),
-                                min: m.measurements![this.property!].min,
-                                avg: m.measurements![this.property!].avg,
-                                max: m.measurements![this.property!].max
+                                min: "min" in measurement ? measurement.min : 0,
+                                avg: measurement.avg,
+                                max: measurement.max
                             }
                         } else {
                             return null
