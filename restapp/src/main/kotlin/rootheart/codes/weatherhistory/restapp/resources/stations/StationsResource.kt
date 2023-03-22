@@ -190,7 +190,10 @@ fun SummarizedMeasurementsTable.toMonthlySummary(row: ResultRow) =
                                              rainfallMillimeters = rainfallMillimeters.toEntity(row),
                                              snowfallMillimeters = snowfallMillimeters.toEntity(row),
                                              windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
-                                             visibilityMeters = visibilityMeters.toEntity(row)))
+                                             visibilityMeters = visibilityMeters.toEntity(row),
+
+                                             cloudCoverageHistogram = row[cloudCoverageHistogram],
+                                             detailedCloudCoverage = row[detailedCloudCoverage]))
 
 fun SummarizedMeasurementsTable.toYearlySummary(row: ResultRow) =
         YearlySummary(row[year],
@@ -204,4 +207,7 @@ fun SummarizedMeasurementsTable.toYearlySummary(row: ResultRow) =
                                             rainfallMillimeters = rainfallMillimeters.toEntity(row),
                                             snowfallMillimeters = snowfallMillimeters.toEntity(row),
                                             windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
-                                            visibilityMeters = visibilityMeters.toEntity(row)))
+                                            visibilityMeters = visibilityMeters.toEntity(row),
+
+                                            cloudCoverageHistogram = row[cloudCoverageHistogram],
+                                            detailedCloudCoverage = row[detailedCloudCoverage]))

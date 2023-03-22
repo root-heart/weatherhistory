@@ -2,6 +2,7 @@ package rootheart.codes.weatherhistory.database.summarized
 
 import org.joda.time.LocalDate
 import rootheart.codes.common.collections.nullsafeAvgDecimal
+import rootheart.codes.weatherhistory.database.daily.DailyMeasurementEntity
 
 fun groupMonthlyByYear(measurements: Collection<MonthlySummary>): Collection<YearlySummary> {
     return measurements
@@ -12,10 +13,17 @@ fun groupMonthlyByYear(measurements: Collection<MonthlySummary>): Collection<Yea
 }
 
 fun Collection<MonthlySummary>.summarizeMonthly(): SummarizedMeasurement {
-    val cloudCoverageHistogram = Array(10) { 0 }
-    for (m in this) {
-        m.measurements.cloudCoverageHistogram?.forEachIndexed { index, coverage -> cloudCoverageHistogram[index] += coverage }
-    }
+    val summarizedHistogram = Array(10) { 0 }
+    val detailedCloudCoverage = Array(size) { Array(10) { 0 } }
+    map(MonthlySummary::measurements)
+            .map { it.cloudCoverageHistogram }
+            .forEachIndexed { day, detailedHistogram ->
+                if (detailedHistogram != null) {
+                    detailedCloudCoverage[day] = detailedHistogram
+                    detailedHistogram.forEachIndexed { coverage, count -> summarizedHistogram[coverage] += count }
+                }
+            }
+
     return SummarizedMeasurement(stationId = first().measurements.stationId,
 
                                  airTemperatureCentigrade = summarizeMonthlyMinAvgMax { it.measurements.airTemperatureCentigrade },
@@ -25,8 +33,8 @@ fun Collection<MonthlySummary>.summarizeMonthly(): SummarizedMeasurement {
                                  visibilityMeters = summarizeMonthlyMinAvgMax { it.measurements.visibilityMeters },
                                  windSpeedMetersPerSecond = summarizeMonthlyAvgMax { it.measurements.windSpeedMetersPerSecond },
 
-                                 cloudCoverageHistogram = cloudCoverageHistogram,
-                                 detailedCloudCoverage = Array(0) { 0 },
+                                 cloudCoverageHistogram = summarizedHistogram,
+                                 detailedCloudCoverage = detailedCloudCoverage,
 
                                  sunshineMinutes = summarizeMonthlySums { it.measurements.sunshineMinutes },
                                  rainfallMillimeters = summarizeMonthlySums { it.measurements.rainfallMillimeters },
@@ -36,10 +44,17 @@ fun Collection<MonthlySummary>.summarizeMonthly(): SummarizedMeasurement {
 }
 
 fun Collection<YearlySummary>.summarizeYearly(): SummarizedMeasurement {
-    val cloudCoverageHistogram = Array(10) { 0 }
-    for (m in this) {
-        m.measurements.cloudCoverageHistogram?.forEachIndexed { index, coverage -> cloudCoverageHistogram[index] += coverage }
-    }
+    val summarizedHistogram = Array(10) { 0 }
+    val detailedCloudCoverage = Array(size) { Array(10) { 0 } }
+    map(YearlySummary::measurements)
+            .map { it.cloudCoverageHistogram }
+            .forEachIndexed { day, detailedHistogram ->
+                if (detailedHistogram != null) {
+                    detailedCloudCoverage[day] = detailedHistogram
+                    detailedHistogram.forEachIndexed { coverage, count -> summarizedHistogram[coverage] += count }
+                }
+            }
+
     return SummarizedMeasurement(stationId = first().measurements.stationId,
 
                                  airTemperatureCentigrade = summarizeYearlyMinAvgMax { it.measurements.airTemperatureCentigrade },
@@ -49,8 +64,8 @@ fun Collection<YearlySummary>.summarizeYearly(): SummarizedMeasurement {
                                  visibilityMeters = summarizeYearlyMinAvgMax { it.measurements.visibilityMeters },
                                  windSpeedMetersPerSecond = summarizeYearlyAvgMax { it.measurements.windSpeedMetersPerSecond },
 
-                                 cloudCoverageHistogram = cloudCoverageHistogram,
-                                 detailedCloudCoverage = Array(0) { 0 },
+                                 cloudCoverageHistogram = summarizedHistogram,
+                                 detailedCloudCoverage = detailedCloudCoverage,
 
                                  sunshineMinutes = summarizeYearlySums { it.measurements.sunshineMinutes },
                                  rainfallMillimeters = summarizeYearlySums { it.measurements.rainfallMillimeters },

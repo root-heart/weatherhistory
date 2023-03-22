@@ -1,12 +1,19 @@
 package rootheart.codes.weatherhistory.database.summarized
 
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.joda.time.DateTime
 import org.joda.time.LocalDate
+import rootheart.codes.common.strings.splitAndTrimTokens
+import rootheart.codes.common.strings.splitAndTrimTokensToList
 import rootheart.codes.weatherhistory.database.StationsTable
 import rootheart.codes.weatherhistory.database.intArray
 import rootheart.codes.weatherhistory.database.intArrayNullable
@@ -29,7 +36,7 @@ object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val rainfallMillimeters = sum("RAINFALL_MILLIMETERS", 6, 1)
     val snowfallMillimeters = sum("SNOWFALL_MILLIMETERS", 6, 1)
 
-    val detailedCloudCoverage = intArrayNullable("DETAILED_CLOUD_COVERAGE")
+    val detailedCloudCoverage = detailedHistogram("DETAILED_CLOUD_COVERAGE")
     val cloudCoverageHistogram = intArray("CLOUD_COVERAGE_HISTOGRAM")
     val detailedWindDirectionDegrees = intArrayNullable("DETAILED_WIND_DIRECTION_DEGREES")
 
@@ -61,6 +68,9 @@ private fun Table.sum(columnBaseName: String, precision: Int, scale: Int) =
                 date("MAX_${columnBaseName}_DATE").nullable(),
                 decimal("SUM_$columnBaseName", precision, scale).nullable()
         )
+
+private fun Table.detailedHistogram(columnName: String): Column<Array<Array<Int>>?> =
+        registerColumn(columnName, DetailedHistogramColumnType())
 
 class SummarizedMinAvgMaxColumns(
         val min: Column<BigDecimal?>,
@@ -154,3 +164,36 @@ class SummarizedSum(
         var maxDate: LocalDate? = null,
         var sum: BigDecimal? = null
 )
+
+
+class DetailedHistogramColumnType : ColumnType(true) {
+    override fun sqlType(): String = "TEXT"
+
+    override fun valueToDB(value: Any?): String? {
+        if (value is Array<*>) {
+            return value.map { it as Array<*> }
+                    .joinToString("|") { it.joinToString(",") }
+        }
+        return null
+    }
+
+    override fun valueFromDB(value: Any): Array<Array<Int?>?> {
+        if (value is String) {
+            return splitAndTrimTokens(value, '|', "null", { s ->
+                splitAndTrimTokens(s, ',', "null", { it.toInt() }).toTypedArray()
+            }).toTypedArray()
+        }
+        return arrayOf()
+    }
+
+    override fun notNullValueToDB(value: Any): Any {
+        if (value is Array<*>) {
+            if (value.isEmpty()) {
+                return ""
+            }
+            return value.joinToString(",")
+        } else {
+            return super.notNullValueToDB(value)
+        }
+    }
+}

@@ -15,7 +15,7 @@ class SummarizedMeasurementEntity(
         val rainfallMillimeters: SummarizedSum = SummarizedSum(),
         val snowfallMillimeters: SummarizedSum = SummarizedSum(),
 
-        var detailedCloudCoverage: Array<Int?>? = null,
+        var detailedCloudCoverage: Array<Array<Int>>? = null,
         var cloudCoverageHistogram: Array<Int>? = null,
         var detailedWindDirectionDegrees: Array<Int?>? = null)
 
@@ -31,7 +31,7 @@ class SummarizedMeasurement(
         val rainfallMillimeters: SummarizedSum = SummarizedSum(),
         val snowfallMillimeters: SummarizedSum = SummarizedSum(),
 
-        var detailedCloudCoverage: Array<Int?>? = null,
+        var detailedCloudCoverage: Array<Array<Int>>? = null,
         var cloudCoverageHistogram: Array<Int>? = null,
         var detailedWindDirectionDegrees: Array<Int?>? = null,
 )

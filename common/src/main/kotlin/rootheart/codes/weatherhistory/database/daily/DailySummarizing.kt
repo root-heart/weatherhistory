@@ -20,10 +20,17 @@ fun groupDailyByMonth(measurements: Collection<DailyMeasurementEntity>): Collect
 }
 
 fun Collection<DailyMeasurementEntity>.summarizeDaily(): SummarizedMeasurement {
-    val cloudCoverageHistogram = Array(10) { 0 }
-    for (m in map { it.measurements } ) {
-        m.cloudCoverageHistogram?.forEachIndexed { index, coverage -> cloudCoverageHistogram[index] += coverage }
-    }
+    val summarizedHistogram = Array(10) { 0 }
+    val detailedCloudCoverage = Array(size) { Array(10) { 0 } }
+    map(DailyMeasurementEntity::measurements)
+            .map { it.cloudCoverageHistogram }
+            .forEachIndexed { day, detailedHistogram ->
+                if (detailedHistogram != null) {
+                    detailedCloudCoverage[day] = detailedHistogram
+                    detailedHistogram.forEachIndexed { coverage, count -> summarizedHistogram[coverage] += count }
+                }
+            }
+
     return SummarizedMeasurement(stationId = first().stationId,
 
                                  airTemperatureCentigrade = summarizeDailyMinAvgMax { it.measurements.airTemperatureCentigrade },
@@ -36,8 +43,8 @@ fun Collection<DailyMeasurementEntity>.summarizeDaily(): SummarizedMeasurement {
                                  rainfallMillimeters = summarizeDailySums { it.measurements.rainfallMillimeters },
                                  snowfallMillimeters = summarizeDailySums { it.measurements.snowfallMillimeters },
 
-                                 cloudCoverageHistogram = cloudCoverageHistogram,
-                                 detailedCloudCoverage = Array(0) { 0 },
+                                 cloudCoverageHistogram = summarizedHistogram,
+                                 detailedCloudCoverage = detailedCloudCoverage,
                                  detailedWindDirectionDegrees = Array(0) { null })
 }
 

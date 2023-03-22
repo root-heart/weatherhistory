@@ -54,7 +54,10 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
                                               rainfallMillimeters = rainfallMillimeters.toEntity(row),
                                               snowfallMillimeters = snowfallMillimeters.toEntity(row),
                                               windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
-                                              visibilityMeters = visibilityMeters.toEntity(row)))
+                                              visibilityMeters = visibilityMeters.toEntity(row),
+
+                                              detailedCloudCoverage = row[detailedCloudCoverage],
+                                              cloudCoverageHistogram = row[cloudCoverageHistogram]))
     }
 }
 
