@@ -44,15 +44,17 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
         return DailyMeasurementEntity(stationId = row[stationId].value,
                                       date = row[date].toLocalDate(),
 
-                                      airTemperatureCentigrade = airTemperatureCentigrade.toEntity(row),
-                                      dewPointTemperatureCentigrade = dewPointTemperatureCentigrade.toEntity(row),
-                                      humidityPercent = humidityPercent.toEntity(row),
-                                      airPressureHectopascals = airPressureHectopascals.toEntity(row),
-                                      sunshineMinutes = sunshineMinutes.toEntity(row),
-                                      rainfallMillimeters = rainfallMillimeters.toEntity(row),
-                                      snowfallMillimeters = snowfallMillimeters.toEntity(row),
-                                      windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
-                                      visibilityMeters = visibilityMeters.toEntity(row))
+                                      measurements = DailyMeasurements(
+                                              airTemperatureCentigrade = airTemperatureCentigrade.toEntity(row),
+                                              dewPointTemperatureCentigrade = dewPointTemperatureCentigrade.toEntity(
+                                                      row),
+                                              humidityPercent = humidityPercent.toEntity(row),
+                                              airPressureHectopascals = airPressureHectopascals.toEntity(row),
+                                              sunshineMinutes = sunshineMinutes.toEntity(row),
+                                              rainfallMillimeters = rainfallMillimeters.toEntity(row),
+                                              snowfallMillimeters = snowfallMillimeters.toEntity(row),
+                                              windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
+                                              visibilityMeters = visibilityMeters.toEntity(row)))
     }
 }
 

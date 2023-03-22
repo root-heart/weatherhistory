@@ -21,20 +21,20 @@ fun groupDailyByMonth(measurements: Collection<DailyMeasurementEntity>): Collect
 
 fun Collection<DailyMeasurementEntity>.summarizeDaily(): SummarizedMeasurement {
     val cloudCoverageHistogram = Array(10) { 0 }
-    for (m in this) {
+    for (m in map { it.measurements } ) {
         m.cloudCoverageHistogram?.forEachIndexed { index, coverage -> cloudCoverageHistogram[index] += coverage }
     }
     return SummarizedMeasurement(stationId = first().stationId,
 
-                                 airTemperatureCentigrade = summarizeDailyMinAvgMax { it.airTemperatureCentigrade },
-                                 dewPointTemperatureCentigrade = summarizeDailyMinAvgMax { it.dewPointTemperatureCentigrade },
-                                 humidityPercent = summarizeDailyMinAvgMax { it.humidityPercent },
-                                 airPressureHectopascals = summarizeDailyMinAvgMax { it.airPressureHectopascals },
-                                 visibilityMeters = summarizeDailyMinAvgMax { it.visibilityMeters },
-                                 windSpeedMetersPerSecond = summarizeDailyAvgMax { it.windSpeedMetersPerSecond },
-                                 sunshineMinutes = summarizeDailySums { it.sunshineMinutes },
-                                 rainfallMillimeters = summarizeDailySums { it.rainfallMillimeters },
-                                 snowfallMillimeters = summarizeDailySums { it.snowfallMillimeters },
+                                 airTemperatureCentigrade = summarizeDailyMinAvgMax { it.measurements.airTemperatureCentigrade },
+                                 dewPointTemperatureCentigrade = summarizeDailyMinAvgMax { it.measurements.dewPointTemperatureCentigrade },
+                                 humidityPercent = summarizeDailyMinAvgMax { it.measurements.humidityPercent },
+                                 airPressureHectopascals = summarizeDailyMinAvgMax { it.measurements.airPressureHectopascals },
+                                 visibilityMeters = summarizeDailyMinAvgMax { it.measurements.visibilityMeters },
+                                 windSpeedMetersPerSecond = summarizeDailyAvgMax { it.measurements.windSpeedMetersPerSecond },
+                                 sunshineMinutes = summarizeDailySums { it.measurements.sunshineMinutes },
+                                 rainfallMillimeters = summarizeDailySums { it.measurements.rainfallMillimeters },
+                                 snowfallMillimeters = summarizeDailySums { it.measurements.snowfallMillimeters },
 
                                  cloudCoverageHistogram = cloudCoverageHistogram,
                                  detailedCloudCoverage = Array(0) { 0 },

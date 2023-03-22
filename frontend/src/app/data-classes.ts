@@ -23,7 +23,7 @@ export type MinMaxSumDetails = {
     details?: number[]
 }
 
-export class DailyMeasurement implements WithDate {
+export class DailyMeasurement {
     // It does not matter if I use a Date here. TypeScript will stupidly create a Measurement with a string for the
     // property firstDay. So when processing this Measurement in other places in the code, I will see a member of
     // type Date but with a string in it.
@@ -31,35 +31,17 @@ export class DailyMeasurement implements WithDate {
     date?: string
 
     measurements?: SummarizedMeasurement
-
-    getDate(): string {
-        return this.date!
-    }
-
 }
 
-export interface WithDate {
-    getDate(): string
-
-}
-
-export class YearlySummary implements WithDate {
+export class YearlySummary {
     year?: number
     measurements?: SummarizedMeasurement
-
-    getDate(): string {
-        return this.year!.toPrecision(0)
-    }
 }
 
-export class MonthlySummary implements WithDate {
+export class MonthlySummary {
     year?: number
     month?: number
     measurements?: SummarizedMeasurement
-
-    getDate(): string {
-        return this.year!.toPrecision(0) + "-" + this.month!.toPrecision(0)
-    }
 }
 
 export type SummarizedMeasurement = {

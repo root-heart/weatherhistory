@@ -110,7 +110,7 @@ fun Routing.stationsResource() {
                         val summary = details.summarizeMonthly()
 
                         return@transaction mapOf("summary" to summary,
-                                                 "details" to details.sortedBy { LocalDate(it.year, it.month ?: 1, 1) },
+                                                 "details" to details.sortedBy { LocalDate(it.year, it.month, 1) },
                                                  "resolution" to "day")
                     } else if (months != null) {
                         val details = with(SummarizedMeasurementsTable) {
@@ -141,7 +141,7 @@ fun Routing.stationsResource() {
                         }
                         val summary = details.summarizeYearly()
                         return@transaction mapOf("summary" to summary,
-                                                 "details" to details,
+                                                 "details" to details.sortedBy { it.year },
                                                  "resolution" to "day")
                     }
                 }

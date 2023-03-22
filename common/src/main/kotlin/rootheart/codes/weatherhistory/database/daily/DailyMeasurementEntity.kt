@@ -8,6 +8,10 @@ class DailyMeasurementEntity(
         val stationId: Long,
         val date: LocalDate,
 
+        val measurements: DailyMeasurements = DailyMeasurements()
+)
+
+class DailyMeasurements(
         val airTemperatureCentigrade: DailyMinAvgMax = DailyMinAvgMax(),
         val dewPointTemperatureCentigrade: DailyMinAvgMax = DailyMinAvgMax(),
         val humidityPercent: DailyMinAvgMax = DailyMinAvgMax(),

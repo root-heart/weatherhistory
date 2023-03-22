@@ -32,21 +32,21 @@ fun insertDailyMeasurementsIntoDatabase(measurements: List<DailyMeasurementEntit
             this[month] = it.date.monthOfYear
             this[day] = it.date.dayOfMonth
 
-            airTemperatureCentigrade.setValues(this, it.airTemperatureCentigrade)
-            dewPointTemperatureCentigrade.setValues(this, it.dewPointTemperatureCentigrade)
-            humidityPercent.setValues(this, it.humidityPercent)
-            airPressureHectopascals.setValues(this, it.airPressureHectopascals)
-            visibilityMeters.setValues(this, it.visibilityMeters)
-            windSpeedMetersPerSecond.setValues(this, it.windSpeedMetersPerSecond)
+            airTemperatureCentigrade.setValues(this, it.measurements.airTemperatureCentigrade)
+            dewPointTemperatureCentigrade.setValues(this, it.measurements.dewPointTemperatureCentigrade)
+            humidityPercent.setValues(this, it.measurements.humidityPercent)
+            airPressureHectopascals.setValues(this, it.measurements.airPressureHectopascals)
+            visibilityMeters.setValues(this, it.measurements.visibilityMeters)
+            windSpeedMetersPerSecond.setValues(this, it.measurements.windSpeedMetersPerSecond)
 
-            this[cloudCoverageHistogram] = it.cloudCoverageHistogram ?: Array(0) { 0 }
-            this[detailedCloudCoverage] = it.detailedCloudCoverage
+            this[cloudCoverageHistogram] = it.measurements.cloudCoverageHistogram ?: Array(0) { 0 }
+            this[detailedCloudCoverage] = it.measurements.detailedCloudCoverage
 
-            sunshineMinutes.setValues(this, it.sunshineMinutes)
-            rainfallMillimeters.setValues(this, it.rainfallMillimeters )
-            snowfallMillimeters.setValues(this, it.snowfallMillimeters)
+            sunshineMinutes.setValues(this, it.measurements.sunshineMinutes)
+            rainfallMillimeters.setValues(this, it.measurements.rainfallMillimeters )
+            snowfallMillimeters.setValues(this, it.measurements.snowfallMillimeters)
 
-            this[detailedWindDirectionDegrees] = it.detailedWindDirectionDegrees
+            this[detailedWindDirectionDegrees] = it.measurements.detailedWindDirectionDegrees
         }
     }
     log.info { "Inserted ${measurements.size} objects into the database" }

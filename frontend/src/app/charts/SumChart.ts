@@ -29,7 +29,7 @@ type MinMaxSumDetailsProperty = {
 export class SumChart {
     @Input() fill: string = "#cc3333"
     @Input() fill2: string = "#3333cc"
-    @Input() sum?: MinMaxSumDetailsProperty
+    @Input() sum: MinMaxSumDetailsProperty = "sunshineMinutes"
     @Input() valueConverter: (x?: number) => number | undefined = x => x
 
     @Input() set dataSource(c: Observable<SummaryData | undefined>) {
