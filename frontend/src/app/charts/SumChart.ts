@@ -1,19 +1,12 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {ChartResolution, getDefaultChartOptions, getXScale} from "./BaseChart";
+import {ChartResolution, getDateLabel, getDefaultChartOptions, getXScale} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
 import {HttpClient} from "@angular/common/http";
-import {
-    DailyMeasurement,
-    MinMaxSumDetails,
-    MonthlySummary,
-    SummarizedMeasurement,
-    SummaryData,
-    YearlySummary
-} from "../data-classes";
+import {MinMaxSumDetails, SummarizedMeasurement, SummaryData} from "../data-classes";
 import {Observable} from "rxjs";
 
 export type Sum = {
-    firstDay: string,
+    dateLabel: string,
     sum: number
 }
 
@@ -35,21 +28,12 @@ export class SumChart {
     @Input() set dataSource(c: Observable<SummaryData | undefined>) {
         c.subscribe(summaryData => {
             if (summaryData) {
-                // TODO this is duplicated in the other chart classes
-                let dateFunction: (m: DailyMeasurement | MonthlySummary | YearlySummary) => string
-                if (summaryData.details[0] instanceof DailyMeasurement) {
-                    dateFunction = (m: DailyMeasurement) => m.date!
-                } else if (summaryData.details[0] instanceof MonthlySummary) {
-                    dateFunction = (m: MonthlySummary) => m.year + "-" + m.month
-                } else {
-                    dateFunction = (m: YearlySummary) => "" + m.year
-                }
                 let minAvgMaxData = summaryData.details
                     .map(m => {
                         if (this.sum) {
                             let s = m.measurements![this.sum].sum
                             return <Sum>{
-                                firstDay: dateFunction(m),
+                                dateLabel: getDateLabel(m),
                                 sum: s == null ? null : this.valueConverter(s)
                             }
                         } else {
@@ -96,7 +80,7 @@ export class SumChart {
 
         getXScale(data, resolution, options, this.showAxes)
 
-        const labels = data.map(d => d.firstDay);
+        const labels = data.map(d => d.dateLabel);
 
         let config: ChartConfiguration = {
             type: "bar",

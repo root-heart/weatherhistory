@@ -1,20 +1,12 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
-import {ChartResolution, getDefaultChartOptions, getXScale} from "./BaseChart";
+import {ChartResolution, getDateLabel, getDefaultChartOptions, getXScale} from "./BaseChart";
 import 'chartjs-adapter-luxon';
-import {
-    AvgMaxDetails,
-    DailyMeasurement,
-    MinAvgMaxDetails,
-    MonthlySummary,
-    SummarizedMeasurement,
-    SummaryData, YearlySummary
-} from "../data-classes";
+import {AvgMaxDetails, MinAvgMaxDetails, SummarizedMeasurement, SummaryData} from "../data-classes";
 import {Observable} from "rxjs";
-import {DateTime} from "luxon";
 
-export type MinAvgMaxSummary = {
-    firstDay: string,
+type MinAvgMaxSummary = {
+    dateLabel: string,
     min: number,
     avg: number,
     max: number,
@@ -52,20 +44,12 @@ export class MinAvgMaxChart {
         c.subscribe(summaryData => {
             if (summaryData) {
                 // TODO this is duplicated in the other chart classes
-                let dateFunction: (m: DailyMeasurement | MonthlySummary | YearlySummary) => string
-                if (summaryData.details[0] instanceof DailyMeasurement) {
-                    dateFunction = (m: DailyMeasurement) => m.date!
-                } else if (summaryData.details[0] instanceof MonthlySummary) {
-                    dateFunction = (m: MonthlySummary) => m.year + "-" + m.month
-                } else {
-                    dateFunction = (m: YearlySummary) => "" + m.year
-                }
                 let minAvgMaxData: MinAvgMaxSummary[] = summaryData.details
                     .map(m => {
                         if (m && this.property) {
                             let measurement = m.measurements![this.property!]
                             return {
-                                firstDay: dateFunction(m),
+                                dateLabel: getDateLabel(m),
                                 min: "min" in measurement ? measurement.min : 0,
                                 avg: measurement.avg,
                                 max: measurement.max
@@ -132,7 +116,7 @@ export class MinAvgMaxChart {
 
         getXScale(data, resolution, options, this.showAxes)
 
-        const labels = data.map(d => d.firstDay);
+        const labels = data.map(d => d.dateLabel);
 
         let config: ChartConfiguration = {
             type: "line",

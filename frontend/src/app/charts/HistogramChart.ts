@@ -1,12 +1,12 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {ChartResolution, getDefaultChartOptions, getXScale} from "./BaseChart";
+import {ChartResolution, getDateLabel, getDefaultChartOptions, getXScale} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartDataset, ChartOptions, registerables} from "chart.js";
 import ChartjsPluginStacked100 from "chartjs-plugin-stacked100";
 import {Observable} from "rxjs";
-import {DailyMeasurement, MonthlySummary, SummaryData, YearlySummary} from "../data-classes";
+import {SummaryData} from "../data-classes";
 
 export type Histogram = {
-    firstDay: string,
+    dateLabel: string,
     histogram: number[]
 }
 
@@ -22,18 +22,9 @@ export class HistogramChart {
     @Input() set dataSource(c: Observable<SummaryData  | undefined>) {
         c.subscribe(summaryData => {
             if (summaryData) {
-                // TODO this is duplicated in the other chart classes
-                let dateFunction: (m: DailyMeasurement | MonthlySummary | YearlySummary) => string
-                if (summaryData.details[0] instanceof DailyMeasurement) {
-                    dateFunction = (m: DailyMeasurement) => m.date!
-                } else if (summaryData.details[0] instanceof MonthlySummary) {
-                    dateFunction = (m: MonthlySummary) => m.year + "-" + m.month
-                } else {
-                    dateFunction = (m: YearlySummary) => "" + m.year
-                }
                 let data = summaryData.details?.map(m => {
                     return <Histogram>{
-                        firstDay: dateFunction(m),
+                        dateLabel: getDateLabel(m),
                         histogram: m.measurements!.cloudCoverageHistogram
                     }
                 })
@@ -88,7 +79,7 @@ export class HistogramChart {
         getXScale(data, resolution, options, this.showAxes)
         options.scales!.x2 = {display: false}
 
-        const labels = data.map(d => d.firstDay);
+        const labels = data.map(d => d.dateLabel);
         // TODO this does not work yet
         const lengths = data.map(d => d.histogram).map(h => h.length);
         let maxLength = Math.max.apply(null, lengths)
