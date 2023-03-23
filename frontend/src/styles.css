@@ -1,13 +1,60 @@
-/*@import "~@ng-select/ng-select/themes/default.theme.css";*/
-/*@import "~@angular/material/prebuilt-themes/indigo-pink.css";*/
+:root {
+    --button-background-color: #444d;
+    --button-hover-color: #666d;
+
+    --fine-border-line: 1px solid #666;
+    --input-border-radius: 0.5rem;
+
+    --component-grid-row-height: 2rem;
+}
 
 * {
     box-sizing: border-box;
 }
 
 body {
-    background-color: #333;
+    background-color: #222;
     color: #e0e8ef;
-    font-family: "Roboto", "Arial", sans-serif;
+    font-family: "Roboto", sans-serif;
     margin: 0;
+}
+
+h1, h2 {
+    margin: 0;
+    text-align: center;
+}
+
+
+fieldset {
+    border: none;
+    border-top: var(--fine-border-line);
+    /*border-bottom: var(--fine-border-line);*/
+    padding: 1rem 0;
+}
+
+legend {
+    padding-inline-start: 1rem;
+    padding-inline-end: 1rem;
+    margin-inline-start: 1rem;
+}
+
+button, input {
+    border: var(--fine-border-line);
+    border-radius: var(--input-border-radius);
+    color: inherit;
+    padding: 0.3rem;
+    font-size: inherit;
+}
+
+button {
+    background-color: var(--button-background-color);
+}
+
+button:hover {
+    cursor: pointer;
+    background-color: var(--button-hover-color);
+}
+
+input {
+    background-color: #111;
 }

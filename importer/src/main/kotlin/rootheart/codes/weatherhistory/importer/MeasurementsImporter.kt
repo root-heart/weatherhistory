@@ -10,29 +10,20 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
-import rootheart.codes.common.collections.nullsafeAvgDecimal
-import rootheart.codes.common.collections.nullsafeAvgDecimals
-import rootheart.codes.common.collections.nullsafeAvgInt
-import rootheart.codes.common.collections.nullsafeAvgInts
-import rootheart.codes.common.collections.nullsafeMax
-import rootheart.codes.common.collections.nullsafeMin
-import rootheart.codes.common.collections.nullsafeSumDecimals
-import rootheart.codes.common.collections.nullsafeSumInts
+import rootheart.codes.common.collections.*
 import rootheart.codes.common.strings.splitAndTrimTokens
-import rootheart.codes.weatherhistory.database.Decimals
-import rootheart.codes.weatherhistory.database.Histogram
-import rootheart.codes.weatherhistory.database.Integers
-import rootheart.codes.weatherhistory.database.Interval
-import rootheart.codes.weatherhistory.database.Measurement
-import rootheart.codes.weatherhistory.database.MinAvgMax
-import rootheart.codes.weatherhistory.database.Station
-import rootheart.codes.weatherhistory.database.StationDao
+import rootheart.codes.weatherhistory.database.*
+import rootheart.codes.weatherhistory.database.daily.DailyMeasurementEntity
+import rootheart.codes.weatherhistory.database.daily.groupDailyByMonth
+import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurementEntity
+import rootheart.codes.weatherhistory.database.summarized.groupMonthlyByYear
 import java.io.ByteArrayInputStream
 import java.math.BigDecimal
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 import java.util.zip.ZipInputStream
+import kotlin.reflect.KMutableProperty0
 import kotlin.system.measureTimeMillis
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
@@ -87,7 +78,7 @@ fun importMeasurements(hourlyDirectory: HtmlDirectory, dailyDirectory: HtmlDirec
 @OptIn(ExperimentalTime::class)
 @DelicateCoroutinesApi
 private class MeasurementsImporter(val station: Station, val zippedDataFiles: Collection<ZippedDataFile>) {
-    val measurementByTime = ConcurrentHashMap<LocalDate, Measurement>()
+    val measurementByTime = ConcurrentHashMap<LocalDate, DailyMeasurementEntity>()
 
     private val unzipJobs = ArrayList<Job>()
     private val downloadJobs = ArrayList<Job>()
@@ -115,13 +106,54 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
             unzipJobs.joinAll()
 
             log.info { "Station ${station.id} - Summarizing ${measurementByTime.size} objects" }
-            val summaries = summarize(measurementByTime.values)
-            val measurements = measurementByTime.values + summaries
+            val monthlySummarized = groupDailyByMonth(measurementByTime.values)
+            val yearlySummarized = groupMonthlyByYear(monthlySummarized)
 
-            log.info { "Station ${station.id} - Inserting ${measurements.size} objects into the database" }
+            log.info { "Station ${station.id} - Inserting ${measurementByTime.size} detailed measurements into the database" }
+            measurementByTime.values.chunked(1024).parallelStream().forEach(::insertDailyMeasurementsIntoDatabase)
 
-            measurements.chunked(1024).parallelStream().forEach(::insertMeasurementsIntoDatabase)
-            log.info { "Station ${station.id} - Inserted ${measurements.size} objects into the database" }
+            log.info { "Station ${station.id} - Inserting ${monthlySummarized.size + yearlySummarized.size} summarized measurements into the database" }
+            monthlySummarized.map {
+                SummarizedMeasurementEntity(
+                        year = it.year,
+                        month = it.month,
+                        stationId = it.measurements.stationId,
+                        airTemperatureCentigrade = it.measurements.airTemperatureCentigrade,
+                        dewPointTemperatureCentigrade = it.measurements.dewPointTemperatureCentigrade,
+                        humidityPercent = it.measurements.humidityPercent,
+                        airPressureHectopascals = it.measurements.airPressureHectopascals,
+                        windSpeedMetersPerSecond = it.measurements.windSpeedMetersPerSecond,
+                        visibilityMeters = it.measurements.visibilityMeters,
+                        sunshineMinutes = it.measurements.sunshineMinutes,
+                        rainfallMillimeters = it.measurements.rainfallMillimeters,
+                        snowfallMillimeters = it.measurements.snowfallMillimeters,
+                        detailedCloudCoverage = it.measurements.detailedCloudCoverage,
+                        cloudCoverageHistogram = it.measurements.cloudCoverageHistogram,
+                        detailedWindDirectionDegrees = it.measurements.detailedWindDirectionDegrees,
+                )
+            }.let { insertSummarizedMeasurementsIntoDatabase(it) }
+
+            yearlySummarized.map {
+                SummarizedMeasurementEntity(
+                        year = it.year,
+                        month = null,
+                        stationId = it.measurements.stationId,
+                        airTemperatureCentigrade = it.measurements.airTemperatureCentigrade,
+                        dewPointTemperatureCentigrade = it.measurements.dewPointTemperatureCentigrade,
+                        humidityPercent = it.measurements.humidityPercent,
+                        airPressureHectopascals = it.measurements.airPressureHectopascals,
+                        windSpeedMetersPerSecond = it.measurements.windSpeedMetersPerSecond,
+                        visibilityMeters = it.measurements.visibilityMeters,
+                        sunshineMinutes = it.measurements.sunshineMinutes,
+                        rainfallMillimeters = it.measurements.rainfallMillimeters,
+                        snowfallMillimeters = it.measurements.snowfallMillimeters,
+                        detailedCloudCoverage = it.measurements.detailedCloudCoverage,
+                        cloudCoverageHistogram = it.measurements.cloudCoverageHistogram,
+                        detailedWindDirectionDegrees = it.measurements.detailedWindDirectionDegrees,
+                )
+            }.let { insertSummarizedMeasurementsIntoDatabase(it) }
+
+            log.info { "Station ${station.id} - Inserted measurements into the database" }
         }
     }
 
@@ -152,69 +184,57 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
         SemicolonSeparatedValues(columnNames, columnValues)
     }
 
+
+    // TODO introduce an object for hourly data
+    // when summarizing, start grouping from there
     private fun convert(semicolonSeparatedValues: SemicolonSeparatedValues, measurementType: MeasurementType) {
         val dateFormatter = if (measurementType == MeasurementType.DAILY) DATE_FORMATTER else DATE_TIME_FORMATTER
         for (row in semicolonSeparatedValues.rows) {
             val measurementTime = dateFormatter.parseLocalDateTime(row[COLUMN_NAME_MEASUREMENT_TIME])
             val day = measurementTime.toLocalDate()
             val hour = measurementTime.hourOfDay
-            val measurementRecord = measurementByTime.getOrPut(day) {
-                Measurement(station = station,
-                            firstDay = day,
-                            interval = Interval.DAY,
-                            temperatures = MinAvgMax(details = Array(DETAILS_SIZE) { null }),
-                            dewPointTemperatures = MinAvgMax(details = Array(DETAILS_SIZE) { null }),
-                            airPressure = MinAvgMax(details = Array(DETAILS_SIZE) { null }),
-                            humidity = MinAvgMax(details = Array(DETAILS_SIZE) { null }),
-                            wind = MinAvgMax(details = Array(DETAILS_SIZE) { null }),
-                            cloudCoverage = Histogram(histogram = Array(10) { 0 },
-                                                      details = Array(DETAILS_SIZE) { null }),
-                            visibility = MinAvgMax(details = Array(DETAILS_SIZE) { null }),
-                            rainfall = Decimals(values = Array(DETAILS_SIZE) { null }),
-                            snowfall = Decimals(values = Array(DETAILS_SIZE) { null }),
-                            sunshineDuration = Integers(values = Array(DETAILS_SIZE) { null }),
-                            detailedWindDirectionDegrees = Array(DETAILS_SIZE) { null }
-                )
+            val DailyMeasurementEntity = measurementByTime.getOrPut(day) {
+                DailyMeasurementEntity(stationId = station.id!!, date = day)
             }
             when (measurementType) {
-                MeasurementType.AIR_TEMPERATURE   -> setHourlyAirTemperatureData(measurementRecord, hour, row)
-                MeasurementType.CLOUD_COVERAGE    -> setHourlyCloudCoverageData(measurementRecord, hour, row)
-                MeasurementType.DEW_POINT         -> setHourlyDewPointData(measurementRecord, hour, row)
-                MeasurementType.MAX_WIND_SPEED    -> setHourlyMaxWindSpeedData(measurementRecord, hour, row)
-                MeasurementType.MOISTURE          -> setHourlyMoistureData(measurementRecord, hour, row)
-                MeasurementType.SUNSHINE_DURATION -> setHourlySunshineDurationData(measurementRecord, hour, row)
-                MeasurementType.VISIBILITY        -> setHourlyVisibilityData(measurementRecord, hour, row)
-                MeasurementType.WIND_SPEED        -> setHourlyWindSpeedData(measurementRecord, hour, row)
-                MeasurementType.PRECIPITATION     -> setHourlyPrecipitationData(row, measurementRecord, hour)
-                MeasurementType.DAILY             -> setDailyData(measurementRecord, row)
+                MeasurementType.AIR_TEMPERATURE   -> setHourlyAirTemperatureData(DailyMeasurementEntity, hour, row)
+                MeasurementType.CLOUD_COVERAGE    -> setHourlyCloudCoverageData(DailyMeasurementEntity, hour, row)
+                MeasurementType.DEW_POINT         -> setHourlyDewPointData(DailyMeasurementEntity, hour, row)
+                MeasurementType.MAX_WIND_SPEED    -> setHourlyMaxWindSpeedData(DailyMeasurementEntity, hour, row)
+                MeasurementType.MOISTURE          -> setHourlyMoistureData(DailyMeasurementEntity, hour, row)
+                MeasurementType.SUNSHINE_DURATION -> setHourlySunshineDurationData(DailyMeasurementEntity, hour, row)
+                MeasurementType.VISIBILITY        -> setHourlyVisibilityData(DailyMeasurementEntity, hour, row)
+                MeasurementType.WIND_SPEED        -> setHourlyWindSpeedData(DailyMeasurementEntity, hour, row)
+                MeasurementType.PRECIPITATION     -> setHourlyPrecipitationData(row, DailyMeasurementEntity, hour)
+                MeasurementType.DAILY             -> setDailyData(DailyMeasurementEntity, row)
             }
         }
 
         // TODO fix some data issues
         measurementByTime.values.forEach { m ->
-            m.airPressure.min = m.airPressure.details.nullsafeMin()
-            m.airPressure.max = m.airPressure.details.nullsafeMax()
 
-            m.dewPointTemperatures.min = m.dewPointTemperatures.details.nullsafeMin()
-            m.dewPointTemperatures.avg = m.dewPointTemperatures.details.nullsafeAvgDecimals()
-            m.dewPointTemperatures.max = m.dewPointTemperatures.details.nullsafeMax()
+            m.measurements.airPressureHectopascals.min = m.measurements.airPressureHectopascals.details?.nullsafeMin()
+            m.measurements.airPressureHectopascals.max = m.measurements.airPressureHectopascals.details?.nullsafeMax()
 
-            m.visibility.min = m.visibility.details.nullsafeMin()
-            m.visibility.avg = m.visibility.details.nullsafeAvgInts()
-            m.visibility.max = m.visibility.details.nullsafeMax()
+            m.measurements.dewPointTemperatureCentigrade.min = m.measurements.dewPointTemperatureCentigrade.details?.nullsafeMin()
+            m.measurements.dewPointTemperatureCentigrade.avg = m.measurements.dewPointTemperatureCentigrade.details?.nullsafeAvgDecimals()
+            m.measurements.dewPointTemperatureCentigrade.max = m.measurements.dewPointTemperatureCentigrade.details?.nullsafeMax()
 
-            m.humidity.min = m.humidity.details.nullsafeMin()
-            m.humidity.avg = m.humidity.details.nullsafeAvgDecimals()
-            m.humidity.max = m.humidity.details.nullsafeMax()
+            m.measurements.visibilityMeters.min = m.measurements.visibilityMeters.details?.nullsafeMin()
+            m.measurements.visibilityMeters.avg = m.measurements.visibilityMeters.details?.nullsafeAvgDecimals()
+            m.measurements.visibilityMeters.max = m.measurements.visibilityMeters.details?.nullsafeMax()
 
-            m.sunshineDuration.sum = m.sunshineDuration.values.filterNotNull().sum()
+            m.measurements.humidityPercent.min = m.measurements.humidityPercent.details?.nullsafeMin()
+            m.measurements.humidityPercent.avg = m.measurements.humidityPercent.details?.nullsafeAvgDecimals()
+            m.measurements.humidityPercent.max = m.measurements.humidityPercent.details?.nullsafeMax()
+
+            m.measurements.sunshineMinutes.sum = m.measurements.sunshineMinutes.details?.filterNotNull()?.sumOf { it }
 
             val histogram = Array(10) { 0 }
-            m.cloudCoverage.details
-                    .filterNotNull()
-                    .map { if (it == -1) 9 else it }
-                    .forEach { histogram[it]++ }
-            m.cloudCoverage.histogram = histogram
+            m.measurements.detailedCloudCoverage?.filterNotNull()
+                    ?.map { if (it == -1) 9 else it }
+                    ?.forEach { histogram[it]++ }
+            m.measurements.cloudCoverageHistogram = histogram
         }
 
 //        val list = measurementByTime.values.sortedBy { it.day }
@@ -235,130 +255,136 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
     }
 }
 
-private fun summarize(measurements: Collection<Measurement>): Collection<Measurement> {
-    val summarizedByMonth = measurements
-            .groupBy { LocalDate(it.firstDay.year, it.firstDay.monthOfYear, 1) }
-            .mapValues { (beginningOfMonth, measurements) ->
-                summarize(beginningOfMonth, measurements, Interval.MONTH)
-            }
-    val summarizedByYear = summarizedByMonth.values
-            .groupBy { LocalDate(it.firstDay.year, 1, 1) }
-            .mapValues { (beginningOfYear, measurements) ->
-                summarize(beginningOfYear, measurements, Interval.YEAR)
-            }
-    return summarizedByMonth.values + summarizedByYear.values
+//private fun summarize(measurements: Collection<DailyMeasurementEntity>): Collection<SummarizedMeasurementEntity> {
+//    val summarizedByMonth = measurements
+//            .groupBy { LocalDate(it.date.year, it.date.monthOfYear, 1) }
+//            .mapValues { summarizeDaily(it.value) }
+//    val summarizedByYear = summarizedByMonth.values
+//            .groupBy { LocalDate(it.date.year, 1, 1) }
+//            .mapValues { summarizeSummarized(it.value) }
+//    return summarizedByMonth.values + summarizedByYear.values
+//}
+//
+private fun setHourlyAirTemperatureData(
+        measurementRecord: DailyMeasurementEntity,
+        hour: Int,
+        row: SemicolonSeparatedValues.Row
+) {
+    setHourlyValue(measurementRecord.measurements.airTemperatureCentigrade::details, hour, row["TT_TU"]?.let(::BigDecimal))
+    setHourlyValue(measurementRecord.measurements.humidityPercent::details, hour, row["RF_TU"]?.let(::BigDecimal))
 }
 
-private fun summarize(beginningOfMonth: LocalDate, measurements: List<Measurement>,
-                      interval: Interval): Measurement {
-    val cloudCoverageHistogram = Array(10) { 0 }
-    for (m in measurements) {
-        m.cloudCoverage.histogram.forEachIndexed { index, coverage -> cloudCoverageHistogram[index] += coverage }
+private inline fun <reified N : Number> setHourlyValue(accessor: KMutableProperty0<Array<N?>?>, hour: Int, value: N?) {
+    val details = accessor.get() ?: Array<N?>(24) { null }.also(accessor::set)
+    details[hour] = value
+}
+
+private inline fun <reified N : Number> MinAvgMaxDetails<N>.setHourlyValue(hour: Int, value: N?) {
+    if (details == null) {
+        details = Array(24) { null }
     }
-
-    return Measurement(station = measurements[0].station,
-                       firstDay = beginningOfMonth,
-                       interval = interval,
-
-                       temperatures = summarizeDecimals(measurements, Measurement::temperatures),
-                       dewPointTemperatures = summarizeDecimals(measurements, Measurement::dewPointTemperatures),
-                       humidity = summarizeDecimals(measurements, Measurement::humidity),
-                       airPressure = summarizeDecimals(measurements, Measurement::airPressure),
-                       visibility = summarizeIntegers(measurements, Measurement::visibility),
-                       wind = summarizeDecimals(measurements, Measurement::wind),
-
-                       cloudCoverage = Histogram(histogram = cloudCoverageHistogram, details = Array(0) { 0 }),
-
-                       sunshineDuration = Integers(sum = measurements.nullsafeSumInts { it.sunshineDuration.sum },
-                                                   values = measurements.map { it.sunshineDuration.sum }.toTypedArray()),
-
-                       rainfall = Decimals(sum = measurements.nullsafeSumDecimals { it.rainfall.sum },
-                                           values = measurements.map { it.rainfall.sum }.toTypedArray()),
-
-                       snowfall = Decimals(sum = measurements.nullsafeSumDecimals { it.snowfall.sum },
-                                           values = measurements.map { it.snowfall.sum }.toTypedArray()),
-
-                       detailedWindDirectionDegrees = Array(0) { null })
+    details!![hour] = value
 }
 
-private fun setHourlyAirTemperatureData(measurementRecord: Measurement, hour: Int, row: SemicolonSeparatedValues.Row) {
-    measurementRecord.temperatures.details[hour] = row["TT_TU"]?.let(::BigDecimal)
-    measurementRecord.humidity.details[hour] = row["RF_TU"]?.let(::BigDecimal)
+private inline fun <reified N : Number> AvgMaxDetails<N>.setHourlyValue(hour: Int, value: N?) {
+    if (details == null) {
+        details = Array(24) { null }
+    }
+    details!![hour] = value
 }
 
-private fun setHourlyCloudCoverageData(measurementRecord: Measurement, hour: Int, row: SemicolonSeparatedValues.Row) {
-    measurementRecord.cloudCoverage.details[hour] = row["V_N"]?.toInt()
+private inline fun <reified N : Number> MinMaxSumDetails<N>.setHourlyValue(hour: Int, value: N?) {
+    if (details == null) {
+        details = Array(24) { null }
+    }
+    details!![hour] = value
 }
 
-private fun setHourlyDewPointData(measurementRecord: Measurement, hour: Int, row: SemicolonSeparatedValues.Row) {
-    measurementRecord.dewPointTemperatures.details[hour] = row["TD"]?.let(::BigDecimal)
+private fun Histogram.setHourlyValue(hour: Int, value: Int?) {
+    if (details == null) {
+        details = Array(24) { null }
+    }
+    details!![hour] = value
 }
 
-private fun setHourlyMaxWindSpeedData(measurementRecord: Measurement, hour: Int, row: SemicolonSeparatedValues.Row) {
-    measurementRecord.wind.details[hour] = row["FX_911"]?.let(::BigDecimal)
+private fun setHourlyCloudCoverageData(
+        measurementRecord: DailyMeasurementEntity,
+        hour: Int,
+        row: SemicolonSeparatedValues.Row
+) {
+    setHourlyValue(measurementRecord.measurements::detailedCloudCoverage, hour, row["V_N"]?.toInt())
 }
 
-private fun setHourlyMoistureData(measurementRecord: Measurement, hour: Int, row: SemicolonSeparatedValues.Row) {
-    measurementRecord.airPressure.details[hour] = row["P_STD"]?.let(::BigDecimal)
+private fun setHourlyDewPointData(measurementRecord: DailyMeasurementEntity, hour: Int,
+                                  row: SemicolonSeparatedValues.Row) {
+    setHourlyValue(measurementRecord.measurements.dewPointTemperatureCentigrade::details, hour, row["TD"]?.let(::BigDecimal))
 }
 
-private fun setHourlySunshineDurationData(measurementRecord: Measurement, hour: Int,
-                                          row: SemicolonSeparatedValues.Row) {
-    measurementRecord.sunshineDuration.values[hour] = row["SD_SO"]?.let(::BigDecimal)?.intValueExact()
+private fun setHourlyMaxWindSpeedData(
+        measurementRecord: DailyMeasurementEntity,
+        hour: Int,
+        row: SemicolonSeparatedValues.Row
+) {
+    setHourlyValue(measurementRecord.measurements.windSpeedMetersPerSecond::details, hour, row["FX_911"]?.let(::BigDecimal))
 }
 
-private fun setHourlyVisibilityData(measurementRecord: Measurement, hour: Int, row: SemicolonSeparatedValues.Row) {
-    measurementRecord.visibility.details[hour] = row["V_VV"]?.toInt()
+private fun setHourlyMoistureData(measurementRecord: DailyMeasurementEntity, hour: Int,
+                                  row: SemicolonSeparatedValues.Row) {
+    setHourlyValue(measurementRecord.measurements.airPressureHectopascals::details, hour, row["P_STD"]?.let(::BigDecimal))
 }
 
-private fun setHourlyWindSpeedData(measurementRecord: Measurement, hour: Int, row: SemicolonSeparatedValues.Row) {
-    measurementRecord.wind.details[hour] = row["F"]?.let(::BigDecimal)
-    measurementRecord.detailedWindDirectionDegrees[hour] = row["D"]?.toInt()
+private fun setHourlySunshineDurationData(
+        measurementRecord: DailyMeasurementEntity, hour: Int,
+        row: SemicolonSeparatedValues.Row
+) {
+    setHourlyValue(measurementRecord.measurements.sunshineMinutes::details, hour, row["SD_SO"]?.let(::BigDecimal))
 }
 
-private fun setHourlyPrecipitationData(row: SemicolonSeparatedValues.Row, measurementRecord: Measurement, hour: Int) {
+private fun setHourlyVisibilityData(
+        measurementRecord: DailyMeasurementEntity,
+        hour: Int,
+        row: SemicolonSeparatedValues.Row
+) {
+    setHourlyValue(measurementRecord.measurements.visibilityMeters::details, hour, row["V_VV"]?.let(::BigDecimal))
+}
+
+private fun setHourlyWindSpeedData(measurementRecord: DailyMeasurementEntity, hour: Int,
+                                   row: SemicolonSeparatedValues.Row) {
+    setHourlyValue(measurementRecord.measurements.windSpeedMetersPerSecond::details, hour, row["F"]?.let(::BigDecimal))
+    measurementRecord.measurements.detailedWindDirectionDegrees?.set(hour, row["D"]?.toInt())
+}
+
+private fun setHourlyPrecipitationData(
+        row: SemicolonSeparatedValues.Row,
+        measurementRecord: DailyMeasurementEntity,
+        hour: Int
+) {
     val precipitationTypeCodeString = row["WRTR"]
     if (precipitationTypeCodeString == "6") {
-        measurementRecord.rainfall.values[hour] = row["R1"]?.let(::BigDecimal)
+        setHourlyValue(measurementRecord.measurements.rainfallMillimeters::details, hour, row["R1"]?.let(::BigDecimal))
     } else if (precipitationTypeCodeString == "7") {
-        measurementRecord.snowfall.values[hour] = row["R1"]?.let(::BigDecimal)
+        setHourlyValue(measurementRecord.measurements.snowfallMillimeters::details, hour, row["R1"]?.let(::BigDecimal))
     }
 }
 
-private fun setDailyData(measurementRecord: Measurement, row: SemicolonSeparatedValues.Row) {
-    measurementRecord.wind.max = row["FX"]?.let(::BigDecimal)
-    measurementRecord.wind.avg = row["FM"]?.let(::BigDecimal)
+private fun setDailyData(measurementRecord: DailyMeasurementEntity, row: SemicolonSeparatedValues.Row) {
+    measurementRecord.measurements.windSpeedMetersPerSecond.max = row["FX"]?.let(::BigDecimal)
+    measurementRecord.measurements.windSpeedMetersPerSecond.avg = row["FM"]?.let(::BigDecimal)
     val precipitationType = row["RSKF"]
     if (precipitationType == "6") {
-        measurementRecord.rainfall.sum = row["RSK"]?.let(::BigDecimal)
+        measurementRecord.measurements.rainfallMillimeters.sum = row["RSK"]?.let(::BigDecimal)
     } else if (precipitationType == "7") {
-        measurementRecord.snowfall.sum = row["RSK"]?.let(::BigDecimal)
+        measurementRecord.measurements.snowfallMillimeters.sum = row["RSK"]?.let(::BigDecimal)
     }
     // measurementRecord.sumSunshineDurationMinutes = row["SDK"]?.let(::BigDecimal)?.multiply(sixty)?.intValueExact()
     // measurementRecord.snowheightCentimeters = row["SHK"]?.let(::BigDecimal)
-    measurementRecord.airPressure.avg = row["PM"]?.let(::BigDecimal)
-    measurementRecord.temperatures.avg = row["TMK"]?.let(::BigDecimal)
-    measurementRecord.humidity.avg = row["UPM"]?.let(::BigDecimal)
-    measurementRecord.temperatures.max = row["TXK"]?.let(::BigDecimal)
-    measurementRecord.temperatures.min = row["TNK"]?.let(::BigDecimal)
+    measurementRecord.measurements.airPressureHectopascals.avg = row["PM"]?.let(::BigDecimal)
+    measurementRecord.measurements.airTemperatureCentigrade.avg = row["TMK"]?.let(::BigDecimal)
+    measurementRecord.measurements.humidityPercent.avg = row["UPM"]?.let(::BigDecimal)
+    measurementRecord.measurements.airTemperatureCentigrade.max = row["TXK"]?.let(::BigDecimal)
+    measurementRecord.measurements.airTemperatureCentigrade.min = row["TNK"]?.let(::BigDecimal)
 }
 
-private fun summarizeDecimals(measurements: Collection<Measurement>,
-                              selector: (Measurement) -> MinAvgMax<BigDecimal?>) =
-        MinAvgMax<BigDecimal?>(min = measurements.nullsafeMin { selector(it).min },
-                               avg = measurements.nullsafeAvgDecimal { selector(it).avg },
-                               max = measurements.nullsafeMax { selector(it).max },
-                               details = measurements.map { selector(it).avg }.toTypedArray()
-        )
-
-private fun summarizeIntegers(measurements: Collection<Measurement>,
-                              selector: (Measurement) -> MinAvgMax<Int?>) =
-        MinAvgMax<Int?>(min = measurements.nullsafeMin { selector(it).min },
-                        avg = measurements.nullsafeAvgInt { selector(it).avg },
-                        max = measurements.nullsafeMax { selector(it).max },
-                        details = measurements.map { selector(it).avg }.toTypedArray())
-
-private const val DETAILS_SIZE = 24
 
 private fun fileIsMeasurementFile(filename: String) =
         filename.startsWith("produkt_") && filename.endsWith(".txt")
@@ -381,3 +407,4 @@ private val DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHH").withZo
 private val DATE_FORMATTER = DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC()
 
 private const val COLUMN_NAME_MEASUREMENT_TIME = "MESS_DATUM"
+

@@ -41,10 +41,11 @@ private fun Application.weatherHistory() {
     }
 }
 
+val DATE_TIME_FORMAT = org.joda.time.format.DateTimeFormat.forPattern("yyyy-MM-dd")
+
 private class LocalDateTypeAdapter : TypeAdapter<LocalDate>() {
-    private val formatter = org.joda.time.format.DateTimeFormat.forPattern("yyyy-MM-dd")
     override fun write(out: JsonWriter?, value: LocalDate?) {
-        out?.value(formatter.print(value))
+        out?.value(if (value == null) "null" else DATE_TIME_FORMAT.print(value))
     }
 
     override fun read(`in`: JsonReader?): LocalDate {
@@ -53,24 +54,25 @@ private class LocalDateTypeAdapter : TypeAdapter<LocalDate>() {
 }
 
 inline fun <reified T> PipelineContext<Unit, ApplicationCall>.requiredPathParam(name: String, map: (String) -> T?): T =
-    map(requiredPathParam(name)) ?: badRequest("value for parameter $name cannot be mapped to ${T::class}")
+        map(requiredPathParam(name)) ?: badRequest("value for parameter $name cannot be mapped to ${T::class}")
 
-inline fun <reified T> PipelineContext<Unit, ApplicationCall>.optPathParam(name: String, noinline map: (String) -> T?): T? =
-    call.parameters[name]?.let { tryMapOrBadRequest(it, map) }
+inline fun <reified T> PipelineContext<Unit, ApplicationCall>.optPathParam(name: String,
+                                                                           noinline map: (String) -> T?): T? =
+        call.parameters[name]?.let { tryMapOrBadRequest(it, map) }
 
 fun <T> PipelineContext<Unit, ApplicationCall>.optQueryParam(name: String, map: (String?) -> T?): T? =
-    map(call.request.queryParameters[name])
+        call.request.queryParameters[name]?.let { tryMapOrBadRequest(it, map) }
 
 fun PipelineContext<Unit, ApplicationCall>.requiredPathParam(name: String): String =
-    call.parameters[name] ?: badRequest("param $name required")
+        call.parameters[name] ?: badRequest("param $name required")
 
 
 fun <T> tryMapOrBadRequest(value: String, map: (String) -> T): T? =
-    try {
-        map(value)
-    } catch (e: Exception) {
-        badRequest("value can not be mapped")
-    }
+        try {
+            map(value)
+        } catch (e: Exception) {
+            badRequest("value can not be mapped")
+        }
 
 fun badRequest(message: String): Nothing = throw throw BadRequestException(message)
 

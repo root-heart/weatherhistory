@@ -1,16 +1,17 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {StationAndDateFilterComponent} from "../filter-header/station-and-date-filter.component";
-import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
+import {ChartResolution, getDateLabel, getDefaultChartOptions, getXScale} from "./BaseChart";
 import {Chart, ChartConfiguration, ChartDataset, ChartOptions, registerables} from "chart.js";
 import ChartjsPluginStacked100 from "chartjs-plugin-stacked100";
+import {Observable} from "rxjs";
+import {SummaryData} from "../data-classes";
 
 export type Histogram = {
-    firstDay: Date,
+    dateLabel: string,
     histogram: number[]
 }
 
 @Component({
-    selector: "histogram-chart[filterComponent]",
+    selector: "histogram-chart",
     template: "<canvas #chart></canvas>"
 })
 export class HistogramChart {
@@ -18,19 +19,24 @@ export class HistogramChart {
     @Input() fill2: string = "#3333cc"
     @Input() path: string = "cloud-coverage"
 
-    @Input() set filterComponent(c: StationAndDateFilterComponent) {
-        c.onFilterChanged.subscribe(event => {
-            let data = event.details.map(m => {
-                return <Histogram>{firstDay: m.firstDay, histogram: m.cloudCoverage}
-            })
-            this.setData(data)
+    @Input() set dataSource(c: Observable<SummaryData  | undefined>) {
+        c.subscribe(summaryData => {
+            if (summaryData) {
+                let data = summaryData.details?.map(m => {
+                    return <Histogram>{
+                        dateLabel: getDateLabel(m),
+                        histogram: m.measurements!.cloudCoverageHistogram
+                    }
+                })
+                this.setData(data, summaryData.resolution)
+            } else {
+                this.setData([], "month")
+            }
         })
     }
 
     @Input() includeZero: boolean = true
     @Input() showAxes: boolean = true
-    @Input() resolution: ChartResolution = "monthly"
-
     @ViewChild("chart") private canvas?: ElementRef
     private chart?: Chart
 
@@ -52,7 +58,7 @@ export class HistogramChart {
         Chart.register(...registerables, ChartjsPluginStacked100);
     }
 
-    public setData(data: Array<Histogram>): void {
+    public setData(data: Array<Histogram>, resolution: ChartResolution): void {
         if (this.chart) {
             this.chart.destroy();
         }
@@ -69,23 +75,12 @@ export class HistogramChart {
             beginAtZero: this.includeZero,
             display: this.showAxes
         }
-        options.scales!.x = {
-            type: "time",
-            time: {
-                unit: "month",
-                displayFormats: {
-                    month: "MMM",
-                    round: "day",
-                    bound: "ticks"
-                }
-            },
-            ticks: {minRotation: 0, maxRotation: 0, sampleSize: 12},
-            display: this.showAxes
-        }
+
+        getXScale(data, resolution, options, this.showAxes)
         options.scales!.x2 = {display: false}
 
-        const labels = data.map(d => d.firstDay);
-
+        const labels = data.map(d => d.dateLabel);
+        // TODO this does not work yet
         const lengths = data.map(d => d.histogram).map(h => h.length);
         let maxLength = Math.max.apply(null, lengths)
         let datasets: ChartDataset[] = []

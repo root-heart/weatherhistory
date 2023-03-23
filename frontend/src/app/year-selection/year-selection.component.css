@@ -1,0 +1,35 @@
+:host {
+    display: flex;
+    width: 100%;
+    gap: 0;
+}
+
+fa-icon {
+    margin: auto 0.1rem;
+    width: 2rem;
+    font-size: 60%;
+}
+
+#bigMinus {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+#minus, #plus {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+}
+
+input {
+    width: 4rem;
+    text-align: center;
+    flex-grow: 1;
+    border-radius: 0;
+}
+
+#bigPlus {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    /*border-left: none;*/
+}

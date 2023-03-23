@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { StationAndDateFilterComponent } from './station-and-date-filter.component';
+import { MapDropdown } from './map-dropdown.component';
 
 describe('FilterHeaderComponent', () => {
-  let component: StationAndDateFilterComponent;
-  let fixture: ComponentFixture<StationAndDateFilterComponent>;
+  let component: MapDropdown;
+  let fixture: ComponentFixture<MapDropdown>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ StationAndDateFilterComponent ]
+      declarations: [ MapDropdown ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(StationAndDateFilterComponent);
+    fixture = TestBed.createComponent(MapDropdown);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -1,24 +1,32 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
-import {ChartResolution, getDefaultChartOptions} from "./BaseChart";
-import {StationAndDateFilterComponent} from "../filter-header/station-and-date-filter.component";
-import {HttpClient} from "@angular/common/http";
+import {ChartResolution, getDateLabel, getDefaultChartOptions, getXScale} from "./BaseChart";
 import 'chartjs-adapter-luxon';
-import {Measurement} from "../SummaryData";
+import {AvgMaxDetails, MinAvgMaxDetails, SummarizedMeasurement, SummaryData} from "../data-classes";
+import {Observable} from "rxjs";
 
-export type MinAvgMaxSummary = {
-    firstDay: Date,
+type MinAvgMaxSummary = {
+    dateLabel: string,
     min: number,
     avg: number,
     max: number,
 }
+
+
+type MinAvgMaxDetailsProperty = {
+    [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends MinAvgMaxDetails ? K : never
+}[keyof SummarizedMeasurement]
+
+type AvgMaxDetailsProperty = {
+    [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends AvgMaxDetails ? K : never
+}[keyof SummarizedMeasurement]
 
 /**
  * If either filterComponent or path are not defined, this selector will not match. This ensures that at least these
  * properties are set
  */
 @Component({
-    selector: "min-avg-max-chart[filterComponent]",
+    selector: "min-avg-max-chart[]",
     template: "<canvas #chart></canvas>"
 })
 export class MinAvgMaxChart {
@@ -26,32 +34,41 @@ export class MinAvgMaxChart {
     @Input() fill: string = "#cc333320"
     @Input() lineWidth: number = 2
 
-    // @Input() path: string = "temperature"
-    @Input() min?: keyof Measurement
-    @Input() avg?: keyof Measurement
-    @Input() max?: keyof Measurement
+    @Input() property?: MinAvgMaxDetailsProperty | AvgMaxDetailsProperty
     @Input() logarithmic: boolean = false
     @Input() minValue?: number
     @Input() maxValue?: number
-    @Input() ticks?: Array<{value: number, label: string}>
+    @Input() ticks?: Array<{ value: number, label: string }>
 
-    @Input() set filterComponent(c: StationAndDateFilterComponent) {
-        c.onFilterChanged.subscribe(event => {
-            let minAvgMaxData = event.details.map(m => {
-                return <MinAvgMaxSummary>{
-                    firstDay: m.firstDay,
-                    min: this.min ? m[this.min] : 0,
-                    avg: this.avg ? m[this.avg] : 0,
-                    max: this.max ? m[this.max] : 0
-                }
-            })
-            this.setData(minAvgMaxData)
+    @Input() set dataSource(c: Observable<SummaryData | undefined>) {
+        c.subscribe(summaryData => {
+            if (summaryData) {
+                // TODO this is duplicated in the other chart classes
+                let minAvgMaxData: MinAvgMaxSummary[] = summaryData.details
+                    .map(m => {
+                        if (m && this.property) {
+                            let measurement = m.measurements![this.property!]
+                            return {
+                                dateLabel: getDateLabel(m),
+                                min: "min" in measurement ? measurement.min : 0,
+                                avg: measurement.avg,
+                                max: measurement.max
+                            }
+                        } else {
+                            return null
+                        }
+                    })
+                    .filter(d => d !== null && d !== undefined)
+                    .map(d => d!)
+                this.setData(minAvgMaxData, summaryData.resolution)
+            } else {
+                this.setData([], "month")
+            }
         })
     }
 
     @Input() includeZero: boolean = true
     @Input() showAxes: boolean = true
-    @Input() resolution: ChartResolution = "monthly"
 
     @ViewChild("chart") private canvas?: ElementRef
     private chart?: Chart
@@ -60,7 +77,7 @@ export class MinAvgMaxChart {
         Chart.register(...registerables);
     }
 
-    public setData(data: Array<MinAvgMaxSummary>): void {
+    public setData(data: Array<MinAvgMaxSummary>, resolution: ChartResolution): void {
         if (this.chart) {
             this.chart.destroy();
         }
@@ -86,7 +103,9 @@ export class MinAvgMaxChart {
             if (this.ticks) {
                 options.scales!.y!.min = this.ticks[0].value
                 options.scales!.y!.max = this.ticks[this.ticks.length - 1].value
-                options.scales!.y!.afterBuildTicks = (chart) => {chart.ticks = this.ticks!}
+                options.scales!.y!.afterBuildTicks = (chart) => {
+                    chart.ticks = this.ticks!
+                }
             }
         } else {
             options.scales!.y = {
@@ -95,19 +114,9 @@ export class MinAvgMaxChart {
             }
         }
 
-        options.scales!.x = {
-            type: "time",
-            time: {
-                unit: "month",
-                displayFormats: {
-                    month: "MMM"
-                }
-            },
-            ticks: {minRotation: 0, maxRotation: 0, sampleSize: 12},
-            display: this.showAxes
-        }
+        getXScale(data, resolution, options, this.showAxes)
 
-        const labels = data.map(d => d.firstDay);
+        const labels = data.map(d => d.dateLabel);
 
         let config: ChartConfiguration = {
             type: "line",

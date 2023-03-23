@@ -1,28 +1,28 @@
-import rootheart.codes.weatherhistory.restapp.resources.stations.measurementTypeColumnsMapping
+//import rootheart.codes.weatherhistory.restapp.resources.stations.measurementTypeColumnsMapping
 import java.net.URL
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 fun main() {
 //    val server = "192.168.178.51"
-    val server = "localhost"
-    val port = "8080"
-    val stationIds = 1..2
-    val measurementTypes = measurementTypeColumnsMapping.keys
-    val years = 1990..1991
-    val months = 1..12
-    val days = 10..20
-    val resolutions = listOf("monthly", "daily")
-    val urls = stationIds.map { "http://$server:$port/stations/$it" }
-        .flatMap { urlPart -> measurementTypes.map { "$urlPart/$it" } }
-        .flatMap { urlPart -> years.map { "$urlPart/$it" } }
-        .flatMap { urlPart -> months.map { "$urlPart/$it" } }
-        .flatMap { urlPart -> days.map { "$urlPart/$it" } }
-        .flatMap { urlPart -> resolutions.map { "$urlPart?resolution=$it" } }
-    .map(::URL)
+//    val server = "localhost"
+//    val port = "8080"
+//    val stationIds = 1..2
+//    val measurementTypes = measurementTypeColumnsMapping.keys
+//    val years = 1990..1991
+//    val months = 1..12
+//    val days = 10..20
+//    val resolutions = listOf("monthly", "daily")
+//    val urls = stationIds.map { "http://$server:$port/stations/$it" }
+//        .flatMap { urlPart -> measurementTypes.map { "$urlPart/$it" } }
+//        .flatMap { urlPart -> years.map { "$urlPart/$it" } }
+//        .flatMap { urlPart -> months.map { "$urlPart/$it" } }
+//        .flatMap { urlPart -> days.map { "$urlPart/$it" } }
+//        .flatMap { urlPart -> resolutions.map { "$urlPart?resolution=$it" } }
+//    .map(::URL)
 
 //    responseTimeTest(urls)
-    throughputTest(urls)
+//    throughputTest(urls)
 }
 
 // JDBC + ktor 2.1.3      min 308   max 1647   avg 436   med 567

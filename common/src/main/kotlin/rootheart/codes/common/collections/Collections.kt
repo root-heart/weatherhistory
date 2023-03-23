@@ -2,19 +2,28 @@ package rootheart.codes.common.collections
 
 import java.math.BigDecimal
 
-inline fun <T, N : Comparable<N>> Iterable<T>.nullsafeMin(selector: (T) -> N?): N? {
+inline fun <T, N> Iterable<T>.nullsafeMin(selector: (T) -> N?): N?
+        where N : Comparable<N>, N : Number {
     return nullsafeMin(iterator(), selector)
 }
 
-inline fun <T, N : Comparable<N>> Array<T>.nullsafeMin(selector: (T) -> N?): N? {
+inline fun <T, N> Array<T>.nullsafeMin(selector: (T) -> N?): N?
+        where N : Comparable<N>, N : Number {
     return nullsafeMin(iterator(), selector)
 }
 
-inline fun <N : Comparable<N>> Array<N?>.nullsafeMin(): N? {
+inline fun <N> Array<N?>.nullsafeMin(): N?
+        where N : Comparable<N>, N : Number {
     return nullsafeMin(iterator()) { it }
 }
 
-inline fun <T, N : Comparable<N>> nullsafeMin(iterator: Iterator<T>, selector: (T) -> N?): N? {
+inline fun <N> Iterable<N?>.nullsafeMin(): N?
+        where N : Comparable<N>, N : Number {
+    return nullsafeMin(iterator()) { it }
+}
+
+inline fun <T, N> nullsafeMin(iterator: Iterator<T>, selector: (T) -> N?): N?
+        where N : Comparable<N>, N : Number {
     if (!iterator.hasNext()) return null
     var minValue = selector(iterator.next())
     while (iterator.hasNext()) {
@@ -30,19 +39,28 @@ inline fun <T, N : Comparable<N>> nullsafeMin(iterator: Iterator<T>, selector: (
 
 ////////////////////////////////////////////////////////////////
 
-inline fun <T, N : Comparable<N>> Iterable<T>.nullsafeMax(selector: (T) -> N?): N? {
+inline fun <T, N> Iterable<T>.nullsafeMax(selector: (T) -> N?): N?
+        where N : Comparable<N>, N : Number {
     return nullsafeMax(iterator(), selector)
 }
 
-inline fun <T, N : Comparable<N>> Array<T>.nullsafeMax(selector: (T) -> N?): N? {
+inline fun <T, N> Array<T>.nullsafeMax(selector: (T) -> N?): N?
+        where N : Comparable<N>, N : Number {
     return nullsafeMax(iterator(), selector)
 }
 
-inline fun <N : Comparable<N>> Array<N?>.nullsafeMax(): N? {
+inline fun <N> Array<N?>.nullsafeMax(): N?
+        where N : Comparable<N>, N : Number {
     return nullsafeMax(iterator()) { it }
 }
 
-inline fun <T, N : Comparable<N>> nullsafeMax(iterator: Iterator<T>, selector: (T) -> N?): N? {
+inline fun <N> Iterable<N?>.nullsafeMax(): N?
+        where N : Comparable<N>, N : Number {
+    return nullsafeMax(iterator()) { it }
+}
+
+inline fun <T, N> nullsafeMax(iterator: Iterator<T>, selector: (T) -> N?): N?
+        where N : Comparable<N>, N : Number {
     if (!iterator.hasNext()) throw NoSuchElementException()
     var maxValue = selector(iterator.next())
     while (iterator.hasNext()) {
@@ -58,44 +76,63 @@ inline fun <T, N : Comparable<N>> nullsafeMax(iterator: Iterator<T>, selector: (
 
 ////////////////////////////////////////////////////////////////
 
-fun <E> Collection<E>.nullsafeAvgDecimal(selector: (E) -> BigDecimal?): BigDecimal? =
-        this.nullsafeSumDecimals(selector)
-                ?.let { sum ->
-                    val notNullValuesCount = mapNotNull(selector).count()
-                    sum / BigDecimal(notNullValuesCount)
-                }
+inline fun <E> Iterable<E>.nullsafeAvgDecimal(selector: (E) -> BigDecimal?): BigDecimal? =
+    this.nullsafeSumDecimals(selector)
+            ?.let { sum ->
+                val notNullValuesCount = mapNotNull(selector).count()
+                sum / BigDecimal(notNullValuesCount)
+            }
 
 fun <E> Collection<E>.nullsafeAvgInt(selector: (E) -> Int?): Int? =
-        this.nullsafeSumInts(selector)?.let { it / mapNotNull(selector).count() }
+    this.nullsafeSumInts(selector)?.let { it / mapNotNull(selector).count() }
 
-fun Array<BigDecimal?>.nullsafeAvgDecimals(): BigDecimal? =
-        nullsafeSum(iterator(), BigDecimal::plus) { it }
-                ?.let { sum ->
-                    val notNullValuesCount = filterNotNull().count()
-                    sum / BigDecimal(notNullValuesCount)
-                }
+fun Array<BigDecimal?>.nullsafeAvgDecimals(): BigDecimal? = nullsafeAvgDecimals(iterator())
+
+fun Iterable<BigDecimal?>.nullsafeAvgDecimals(): BigDecimal? = nullsafeAvgDecimals(iterator())
+
+fun nullsafeAvgDecimals(iterator: Iterator<BigDecimal?>): BigDecimal? =
+    nullsafeSum(iterator, BigDecimal::plus) { it }
+            ?.let { sum ->
+                val countNotNull = countNotNull(iterator)
+                return if (countNotNull == 0) null else sum / BigDecimal(countNotNull)
+            }
+
+
+fun <T> countNotNull(iterator: Iterator<T>): Int {
+    var notNullValuesCount = 0
+    while (iterator.hasNext()) {
+        if (iterator.next() != null) {
+            notNullValuesCount++
+        }
+    }
+    return notNullValuesCount
+}
+
 
 fun Array<Int?>.nullsafeAvgInts(): Int? =
-        nullsafeSum(iterator(), Int::plus) { it }?.let { it / filterNotNull().count() }
+    nullsafeSum(iterator(), Int::plus) { it }?.let { it / filterNotNull().count() }
+
+fun Iterable<Int?>.nullsafeAvgInts(): Int? =
+    nullsafeSum(iterator(), Int::plus) { it }?.let { it / filterNotNull().count() }
 
 
 ////////////////////////////////////////////////////////////////
 
-fun <E> Iterable<E>.nullsafeSumDecimals(selector: (E) -> BigDecimal?) =
-        nullsafeSumDecimals(iterator(), selector)
+inline fun <E> Iterable<E>.nullsafeSumDecimals(selector: (E) -> BigDecimal?) =
+    nullsafeSumDecimals(iterator(), selector)
 
 fun <E> Array<E>.nullsafeSumDecimals(selector: (E) -> BigDecimal?) =
-        nullsafeSum(iterator(), BigDecimal::plus, selector)
+    nullsafeSum(iterator(), BigDecimal::plus, selector)
 
-fun <E> nullsafeSumDecimals(iterator: Iterator<E>, selector: (E) -> BigDecimal?) =
-        nullsafeSum(iterator, BigDecimal::plus, selector)
+inline fun <E> nullsafeSumDecimals(iterator: Iterator<E>, selector: (E) -> BigDecimal?) =
+    nullsafeSum(iterator, BigDecimal::plus, selector)
 
 inline fun <T> Iterable<T>.nullsafeSumInts(selector: (T) -> Int?): Int? {
     return nullsafeSum(iterator(), Int::plus, selector)
 }
 
 fun <E> Array<E>.nullsafeSumInts(selector: (E) -> Int?) =
-        nullsafeSum(iterator(), Int::plus, selector)
+    nullsafeSum(iterator(), Int::plus, selector)
 
 inline fun <T, reified N : Number> nullsafeSum(
         iterator: Iterator<T>,

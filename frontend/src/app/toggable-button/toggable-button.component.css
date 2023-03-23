@@ -1,0 +1,17 @@
+:host {
+    display: inline-block;
+    width: 100%;
+}
+
+button {
+    border: none;
+    border-radius: 0;
+    display: flex;
+    gap: 0.5rem;
+    background-color: inherit;
+}
+
+button.selected {
+    background-color: #fff4;
+}
+

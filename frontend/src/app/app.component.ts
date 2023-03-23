@@ -1,12 +1,17 @@
-import {Component, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, ViewChild} from '@angular/core';
 import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.component";
 import {
+    faCalendarWeek,
     faCloud,
     faCloudShowersHeavy,
     faCloudSun,
     faSnowflake,
+    faSquare,
+    faSquareXmark,
     faSun
 } from '@fortawesome/free-solid-svg-icons';
+import {FilterService} from "./filter.service";
+import {DropdownService} from "./dropdown.service";
 
 export type MeasurementTypes = "temperature" | "humidity" | "airPressure" | "visibility"
 
@@ -15,7 +20,7 @@ export type MeasurementTypes = "temperature" | "humidity" | "airPressure" | "vis
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.css'],
 })
-export class AppComponent {
+export class AppComponent implements AfterViewInit {
     title = 'wetterchroniken.de/';
 
     @ViewChild('cloudinessChart')
@@ -23,13 +28,24 @@ export class AppComponent {
 
     measurementType?: MeasurementTypes
 
-    columnCount: number = 3
-
     faSun = faSun
     faCloudSun = faCloudSun
     faCloud = faCloud
     faRain = faCloudShowersHeavy
     faSnow = faSnowflake
+    faSquare = faSquare
+    faSquareChecked = faSquareXmark
+    faCalendar = faCalendarWeek
+
+
+    @ViewChild("dropdownBackground") dropdownBackground?: ElementRef
+
+    constructor(public filterService: FilterService, private dropdownService: DropdownService) {
+    }
+
+    ngAfterViewInit() {
+        this.dropdownService.dropdownBackground = this.dropdownBackground
+    }
 
     showDetails(measurementType: MeasurementTypes) {
         this.measurementType = measurementType
@@ -54,5 +70,8 @@ export class AppComponent {
         }
         return (part / sum * 100).toFixed(1) + "%"
     }
+
+
+
 }
 

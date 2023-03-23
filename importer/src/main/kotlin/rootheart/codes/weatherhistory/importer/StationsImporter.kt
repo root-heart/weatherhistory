@@ -41,8 +41,8 @@ fun importStations(stationsFiles: Collection<StationsFile>) {
                             federalState = line.substring(102).trim { it <= ' ' })
                 }
                 when (stationsFile.measurementType) {
-                    MeasurementType.CLOUD_COVERAGE  -> station.hasCloudinessData = true
-                    MeasurementType.AIR_TEMPERATURE -> station.hasTemperatureData = true
+                    MeasurementType.CLOUD_COVERAGE    -> station.hasCloudinessData = true
+                    MeasurementType.AIR_TEMPERATURE   -> station.hasTemperatureData = true
                     MeasurementType.SUNSHINE_DURATION -> station.hasSunshineData = true
                     MeasurementType.DEW_POINT         -> station.hasTemperatureData = true
                     MeasurementType.MAX_WIND_SPEED    -> station.hasWindData = true

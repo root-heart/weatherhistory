@@ -9,16 +9,29 @@ import io.ktor.server.routing.route
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.max
+import org.jetbrains.exposed.sql.min
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.LocalDate
-import rootheart.codes.weatherhistory.database.Histogram
-import rootheart.codes.weatherhistory.database.Interval
-import rootheart.codes.weatherhistory.database.MeasurementColumns
-import rootheart.codes.weatherhistory.database.MeasurementsTable
+import org.joda.time.Months
+import org.joda.time.Years
+import rootheart.codes.weatherhistory.database.MeasurementJson
 import rootheart.codes.weatherhistory.database.StationDao
+import rootheart.codes.weatherhistory.database.daily.DailyMeasurementTable
+import rootheart.codes.weatherhistory.database.daily.summarizeDaily
+import rootheart.codes.weatherhistory.database.summarized.MonthlySummary
+import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurement
+import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurementsTable
+import rootheart.codes.weatherhistory.database.summarized.YearlySummary
+import rootheart.codes.weatherhistory.database.summarized.summarizeYearly
+import rootheart.codes.weatherhistory.database.summarized.summarizeMonthly
+import rootheart.codes.weatherhistory.restapp.optPathParam
 import rootheart.codes.weatherhistory.restapp.requiredPathParam
 
 fun Routing.stationsResource() {
@@ -31,65 +44,170 @@ fun Routing.stationsResource() {
                 call.respond(StationDao.findById(stationId) ?: HttpStatusCode.NotFound)
             }
 
-            get("{measurementType}/{year}/{month?}/{day?}") {
+            get("summary/{years?}/{months?}") {
                 val stationId = requiredPathParam("stationId") { it.toLong() }
-                val columns = requiredPathParam("measurementType") { measurementTypeColumnsMapping[it] }
-                val year = requiredPathParam("year") { it.toInt() }
-//                val month = optPathParam("month") { it.toInt() }
-//                val day = optPathParam("day") { it.toInt() }
-//                if (month == null) {
-                val firstDay = LocalDate(year, 1, 1)
-                val lastDay = firstDay.plusYears(1)
-                val summary = columns.select(stationId, firstDay, lastDay, Interval.YEAR, columns::toMap)
-                val details = columns.select(stationId, firstDay, lastDay, Interval.MONTH, columns::toMap)
+                val years = requiredPathParam("years") { toInterval(it) }
+                val months = optPathParam("months") { toIntervalList(it) }
 
-//                } else if (day == null) {
-//                    val firstDay = LocalDate(year, month, 1)
-//                    val lastDay = firstDay.plusMonths(1)
-//                    val summary = columns.select(stationId, firstDay, lastDay, Interval.MONTH, columns::toMap)
-//                    val details = columns.select(stationId, firstDay, lastDay, Interval.DAY, columns::toMap)
-//
-//                } else {
-//                    val firstDay = LocalDate(year, month, day)
-//                    val lastDay = firstDay.plusDays(1)
-//                    val details = columns.select(stationId, firstDay, lastDay, Interval.DAY, columns::toMap)
-//                }
+                val data = transaction {
+                    val firstAndLastDay = with(DailyMeasurementTable) {
+                        var condition = this.stationId.eq(stationId)
+                                .and(year.greaterEq(years.start))
+                                .and(year.lessEq(years.end))
+                        if (months != null) {
+                            val monthsList = months.map { it.elements() }.flatten()
+                            condition = condition.and(month.inList(monthsList))
+                        }
 
-                val x = if (summary.isEmpty()) emptyMap() else summary[0]
-                call.respond(mapOf("summary" to x, "details" to details))
+                        slice(date.min(), date.max())
+                                .select(condition)
+                                .map {
+                                    val min = it[date.min()]
+                                    val max = it[date.max()]
+                                    if (min != null && max != null) {
+                                        return@map FirstAndLastDay(min.toLocalDate(), max.toLocalDate())
+                                    } else {
+                                        return@map null
+                                    }
+                                }
+                                .first() ?: return@transaction ArrayList<MeasurementJson>()
+                    }
+
+                    if (firstAndLastDay.monthsCount <= 2) {
+                        val details = with(DailyMeasurementTable) {
+                            var condition = this.stationId.eq(stationId)
+                                    .and(year.greaterEq(years.start))
+                                    .and(year.lessEq(years.end))
+                            if (months != null) {
+                                val monthsList = months.map { it.elements() }.flatten()
+                                condition = condition.and(month.inList(monthsList))
+                            }
+
+                            select(condition).map(::toEntity)
+                        }
+
+                        val summary = details.summarizeDaily()
+
+                        return@transaction mapOf(
+                                "summary" to summary,
+                                "details" to details.sortedBy { it.date },
+                                "resolution" to "day")
+                    } else if (firstAndLastDay.yearsCount <= 2) {
+                        val details = with(SummarizedMeasurementsTable) {
+                            var condition = this.stationId.eq(stationId)
+                                    .and(year.greaterEq(years.start))
+                                    .and(year.lessEq(years.end))
+                            if (months != null) {
+                                val monthsList = months.map { it.elements() }.flatten()
+                                condition = condition.and(month.inList(monthsList))
+                            } else {
+                                condition = condition.and(month.isNotNull())
+                            }
+
+                            select(condition).map(::toMonthlySummary)
+                        }
+
+                        val summary = details.summarizeMonthly()
+
+                        return@transaction mapOf("summary" to summary,
+                                                 "details" to details.sortedBy { LocalDate(it.year, it.month, 1) },
+                                                 "resolution" to "day")
+                    } else if (months != null) {
+                        val details = with(SummarizedMeasurementsTable) {
+                            val monthsList = months.map { it.elements() }.flatten()
+                            val condition = this.stationId.eq(stationId)
+                                    .and(year.greaterEq(years.start))
+                                    .and(year.lessEq(years.end))
+                                    .and(month.inList(monthsList))
+
+                            select(condition).groupBy { it[year] }
+                                    .mapValues { it.value.map(::toMonthlySummary) }
+                                    .mapValues { it.value.summarizeMonthly() }
+                                    .map { YearlySummary(it.key, it.value) }
+                        }
+
+                        val summary = details.summarizeYearly()
+
+                        return@transaction mapOf("summary" to summary,
+                                                 "details" to details.sortedBy { it.year },
+                                                 "resolution" to "day")
+                    } else {
+                        val details = with(SummarizedMeasurementsTable) {
+                            val condition = this.stationId.eq(stationId)
+                                    .and(year.greaterEq(years.start))
+                                    .and(year.lessEq(years.end))
+                                    .and(month.isNull())
+                            select(condition).map(::toYearlySummary)
+                        }
+                        val summary = details.summarizeYearly()
+                        return@transaction mapOf("summary" to summary,
+                                                 "details" to details.sortedBy { it.year },
+                                                 "resolution" to "day")
+                    }
+                }
+
+                call.respond(data)
             }
         }
     }
 }
 
-val measurementTypeColumnsMapping = mapOf("temperature" to MeasurementsTable.temperatures,
-                                          "air-pressure" to MeasurementsTable.airPressure,
-                                          "dew-point-temperature" to MeasurementsTable.dewPointTemperatures,
-                                          "humidity" to MeasurementsTable.humidity,
-                                          "visibility" to MeasurementsTable.visibility,
-                                          "wind-speed" to MeasurementsTable.windSpeed,
-                                          "sunshine-duration" to MeasurementsTable.sunshineDuration,
-                                          "rainfall" to MeasurementsTable.rainfall,
-                                          "snowfall" to MeasurementsTable.snowfall,
-                                          "cloud-coverage" to MeasurementsTable.cloudCoverage,
-                                          "summary" to MeasurementsTable.summaryColumns)
-
-private val requestResolutionToIntervalMapping =
-    mapOf("daily" to Interval.DAY, "monthly" to Interval.MONTH, "yearly" to Interval.YEAR)
-
-private fun MeasurementColumns.toMap(row: ResultRow): Map<String, Any?> {
-    val map = HashMap<String, Any?>()
-    map["firstDay"] = row[MeasurementsTable.firstDay].toLocalDate()
-    columns.forEach { map[it.second] = row[it.first] }
-    return map
+private data class FirstAndLastDay(val firstDay: LocalDate, val lastDay: LocalDate) {
+    val monthsCount get() = Months.monthsBetween(firstDay, lastDay.plusMonths(1)).months
+    val yearsCount get() = Years.yearsBetween(firstDay, lastDay.plusYears(1)).years
 }
 
-private fun <T> MeasurementColumns.select(stationId: Long, startInclusive: LocalDate, endExclusive: LocalDate,
-                                          resolution: Interval, mapper: (ResultRow) -> T) = transaction {
-    fields.select(MeasurementsTable.stationId.eq(stationId).and(MeasurementsTable.interval.eq(resolution))
-                          .and(MeasurementsTable.firstDay.greaterEq(startInclusive.toDateTimeAtStartOfDay()))
-                          .and(MeasurementsTable.firstDay.less(endExclusive.toDateTimeAtStartOfDay()))).map(mapper)
+private data class NumberInterval(val start: Int, val end: Int) {
+    fun elements(): List<Int> = (start..end).distinct()
 }
 
-data class DayClassHistogram(val icyDays: Int, val frostyDays: Int, val vegetationDays: Int, val summerDays: Int,
-                             val hotDays: Int, val desertDays: Int, val tropicNights: Int)
+private val intervalRegex = Regex("(?<start>\\d+)(-(?<end>\\d+))?")
+private fun toInterval(string: String): NumberInterval {
+    val found = intervalRegex.find(string)
+    if (found != null) {
+        val groups = found.groups as MatchNamedGroupCollection
+        val start = groups["start"]!!.value.toInt()
+        val end = groups["end"]?.value?.toInt() ?: start
+        return NumberInterval(start, end)
+    }
+    throw IllegalArgumentException()
+}
+
+private fun toIntervalList(string: String): List<NumberInterval> {
+    return string.split(',').map { it.trim() }.map { toInterval(it) }
+}
+
+fun SummarizedMeasurementsTable.toMonthlySummary(row: ResultRow) =
+        MonthlySummary(row[year],
+                       row[month] ?: 1,
+                       SummarizedMeasurement(stationId = row[stationId].value,
+                                             airTemperatureCentigrade = airTemperatureCentigrade.toEntity(row),
+                                             dewPointTemperatureCentigrade = dewPointTemperatureCentigrade.toEntity(
+                                                     row),
+                                             humidityPercent = humidityPercent.toEntity(row),
+                                             airPressureHectopascals = airPressureHectopascals.toEntity(row),
+                                             sunshineMinutes = sunshineMinutes.toEntity(row),
+                                             rainfallMillimeters = rainfallMillimeters.toEntity(row),
+                                             snowfallMillimeters = snowfallMillimeters.toEntity(row),
+                                             windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
+                                             visibilityMeters = visibilityMeters.toEntity(row),
+
+                                             cloudCoverageHistogram = row[cloudCoverageHistogram],
+                                             detailedCloudCoverage = row[detailedCloudCoverage]))
+
+fun SummarizedMeasurementsTable.toYearlySummary(row: ResultRow) =
+        YearlySummary(row[year],
+                      SummarizedMeasurement(stationId = row[stationId].value,
+                                            airTemperatureCentigrade = airTemperatureCentigrade.toEntity(row),
+                                            dewPointTemperatureCentigrade = dewPointTemperatureCentigrade.toEntity(
+                                                    row),
+                                            humidityPercent = humidityPercent.toEntity(row),
+                                            airPressureHectopascals = airPressureHectopascals.toEntity(row),
+                                            sunshineMinutes = sunshineMinutes.toEntity(row),
+                                            rainfallMillimeters = rainfallMillimeters.toEntity(row),
+                                            snowfallMillimeters = snowfallMillimeters.toEntity(row),
+                                            windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
+                                            visibilityMeters = visibilityMeters.toEntity(row),
+
+                                            cloudCoverageHistogram = row[cloudCoverageHistogram],
+                                            detailedCloudCoverage = row[detailedCloudCoverage]))

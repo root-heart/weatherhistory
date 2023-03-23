@@ -5,66 +5,106 @@ import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.transactions.transaction
-import rootheart.codes.weatherhistory.database.AvgMaxColumns
-import rootheart.codes.weatherhistory.database.Decimals
-import rootheart.codes.weatherhistory.database.DecimalsColumns
-import rootheart.codes.weatherhistory.database.Integers
-import rootheart.codes.weatherhistory.database.IntegersColumns
-import rootheart.codes.weatherhistory.database.Measurement
-import rootheart.codes.weatherhistory.database.MeasurementsTable
-import rootheart.codes.weatherhistory.database.MinAvgMax
-import rootheart.codes.weatherhistory.database.MinAvgMaxColumns
+import rootheart.codes.common.collections.AvgMaxDetails
+import rootheart.codes.common.collections.MinAvgMaxDetails
+import rootheart.codes.common.collections.MinMaxSumDetails
+import rootheart.codes.weatherhistory.database.AvgMaxDetailsColumns
+import rootheart.codes.weatherhistory.database.MinAvgMaxDetailsColumns
+import rootheart.codes.weatherhistory.database.MinMaxSumDetailsColumns
 import rootheart.codes.weatherhistory.database.StationsTable
+import rootheart.codes.weatherhistory.database.daily.DailyMeasurementEntity
+import rootheart.codes.weatherhistory.database.daily.DailyMeasurementTable
+import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurement
+import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurementEntity
+import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurementsTable
 
 private val log = KotlinLogging.logger {}
 
-fun insertMeasurementsIntoDatabase(measurements: List<Measurement>) = transaction {
+fun insertDailyMeasurementsIntoDatabase(measurements: List<DailyMeasurementEntity>) = transaction {
     val stationIds = measurements.mapNotNull { it.stationId }.distinct()
-    val query = StationsTable.select { StationsTable.id.inList(stationIds) }
-    val stationIdById = transaction { query.map { row -> row[StationsTable.id] }.associateBy { it.value } }
-    MeasurementsTable.batchInsert(measurements) {
-        this[MeasurementsTable.stationId] = stationIdById[it.stationId]!!
-        this[MeasurementsTable.firstDay] = it.firstDayDateTime
-        this[MeasurementsTable.interval] = it.interval
+    val stationIdById = StationsTable.select { StationsTable.id.inList(stationIds) }
+            .map { row -> row[StationsTable.id] }
+            .associateBy { it.value }
+    with (DailyMeasurementTable) {
+        batchInsert(measurements) {
+            this[stationId] = stationIdById[it.stationId]!!
+            this[year] = it.date.year
+            this[month] = it.date.monthOfYear
+            this[day] = it.date.dayOfMonth
 
-        copyMinAvgMax(it.temperatures, MeasurementsTable.temperatures)
-        copyMinAvgMax(it.dewPointTemperatures, MeasurementsTable.dewPointTemperatures)
-        copyMinAvgMax(it.humidity, MeasurementsTable.humidity)
-        copyMinAvgMax(it.airPressure, MeasurementsTable.airPressure)
-        copyMinAvgMax(it.visibility, MeasurementsTable.visibility)
-        copyAvgMax(it.wind, MeasurementsTable.windSpeed)
+            airTemperatureCentigrade.setValues(this, it.measurements.airTemperatureCentigrade)
+            dewPointTemperatureCentigrade.setValues(this, it.measurements.dewPointTemperatureCentigrade)
+            humidityPercent.setValues(this, it.measurements.humidityPercent)
+            airPressureHectopascals.setValues(this, it.measurements.airPressureHectopascals)
+            visibilityMeters.setValues(this, it.measurements.visibilityMeters)
+            windSpeedMetersPerSecond.setValues(this, it.measurements.windSpeedMetersPerSecond)
 
-        this[MeasurementsTable.cloudCoverage.histogram] = it.cloudCoverage.histogram
-        this[MeasurementsTable.cloudCoverage.details] = it.cloudCoverage.details
+            this[cloudCoverageHistogram] = it.measurements.cloudCoverageHistogram ?: Array(0) { 0 }
+            this[detailedCloudCoverage] = it.measurements.detailedCloudCoverage
 
-        copySum(it.sunshineDuration, MeasurementsTable.sunshineDuration)
-        copySum(it.rainfall, MeasurementsTable.rainfall)
-        copySum(it.snowfall, MeasurementsTable.snowfall)
+            sunshineMinutes.setValues(this, it.measurements.sunshineMinutes)
+            rainfallMillimeters.setValues(this, it.measurements.rainfallMillimeters )
+            snowfallMillimeters.setValues(this, it.measurements.snowfallMillimeters)
 
-        this[MeasurementsTable.detailedWindDirectionDegrees] = it.detailedWindDirectionDegrees
+            this[detailedWindDirectionDegrees] = it.measurements.detailedWindDirectionDegrees
+        }
     }
     log.info { "Inserted ${measurements.size} objects into the database" }
 }
 
-private fun <N : Number> BatchInsertStatement.copyMinAvgMax(from: MinAvgMax<N?>, to: MinAvgMaxColumns<N>) {
+fun insertSummarizedMeasurementsIntoDatabase(measurements: List<SummarizedMeasurementEntity>) = transaction {
+    val stationIds = measurements.mapNotNull { it.stationId }.distinct()
+    val stationIdById = StationsTable.select { StationsTable.id.inList(stationIds) }
+            .map { row -> row[StationsTable.id] }
+            .associateBy { it.value }
+    with (SummarizedMeasurementsTable) {
+        batchInsert(measurements) {
+            this[stationId] = stationIdById[it.stationId]!!
+            this[year] = it.year
+            this[month] = it.month
+
+            airTemperatureCentigrade.setValues(this, it.airTemperatureCentigrade)
+            dewPointTemperatureCentigrade.setValues(this, it.dewPointTemperatureCentigrade)
+            humidityPercent.setValues(this, it.humidityPercent)
+            airPressureHectopascals.setValues(this, it.airPressureHectopascals)
+            visibilityMeters.setValues(this, it.visibilityMeters)
+            windSpeedMetersPerSecond.setValues(this, it.windSpeedMetersPerSecond)
+
+            this[cloudCoverageHistogram] = it.cloudCoverageHistogram ?: Array(0) { 0 }
+            this[detailedCloudCoverage] = it.detailedCloudCoverage
+
+            sunshineMinutes.setValues(this, it.sunshineMinutes)
+            rainfallMillimeters.setValues(this, it.rainfallMillimeters)
+            snowfallMillimeters.setValues(this, it.snowfallMillimeters)
+
+            this[detailedWindDirectionDegrees] = it.detailedWindDirectionDegrees
+        }
+    }
+    log.info { "Inserted ${measurements.size} objects into the database" }
+}
+
+private fun <N : Number> BatchInsertStatement.copyMinAvgMax(from: MinAvgMaxDetails<N>, to: MinAvgMaxDetailsColumns<N>) {
     this[to.min] = from.min
+    this[to.minDay] = from.minDay?.toDateTimeAtStartOfDay()
     this[to.avg] = from.avg
     this[to.max] = from.max
+    this[to.maxDay] = from.maxDay?.toDateTimeAtStartOfDay()
     this[to.details] = from.details
 }
 
-private fun <N : Number> BatchInsertStatement.copyAvgMax(from: MinAvgMax<N?>, to: AvgMaxColumns<N>) {
+private fun <N : Number> BatchInsertStatement.copyAvgMax(from: AvgMaxDetails<N>, to: AvgMaxDetailsColumns<N>) {
     this[to.avg] = from.avg
     this[to.max] = from.max
+    this[to.maxDay] = from.maxDay?.toDateTimeAtStartOfDay()
     this[to.details] = from.details
 }
 
-private fun BatchInsertStatement.copySum(from: Integers, to: IntegersColumns) {
+private fun <N : Number> BatchInsertStatement.copySum(from: MinMaxSumDetails<N>, to: MinMaxSumDetailsColumns<N>) {
+    this[to.min] = from.min
+    this[to.minDay] = from.minDay?.toDateTimeAtStartOfDay()
+    this[to.max] = from.max
+    this[to.maxDay] = from.maxDay?.toDateTimeAtStartOfDay()
     this[to.sum] = from.sum
-    this[to.details] = from.values
+    this[to.details] = from.details
 }
 
-private fun BatchInsertStatement.copySum(from: Decimals, to: DecimalsColumns) {
-    this[to.sum] = from.sum
-    this[to.details] = from.values
-}

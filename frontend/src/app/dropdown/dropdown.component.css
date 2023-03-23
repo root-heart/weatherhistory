@@ -1,0 +1,49 @@
+:host {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+}
+
+button {
+    text-align: left;
+    padding: 0.5rem 1.5rem;
+    height: 100%;
+    width: 100%;
+}
+
+button > fa-icon {
+    margin-right: 1rem;
+}
+
+button.dropdownVisible {
+    border-bottom: none;
+    border-radius: var(--input-border-radius) var(--input-border-radius) 0 0;
+    position: relative;
+    z-index: 1000;
+}
+
+button.dropdownVisible:hover {
+    background-color: var(--button-background-color);
+}
+
+.dropdown {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+
+    background-color: var(--button-background-color);
+    z-index: 1000;
+
+    padding: 0 1.5rem 3rem;
+    border: var(--fine-border-line);
+    border-top: none;
+    border-bottom-left-radius: var(--input-border-radius);
+    border-bottom-right-radius: var(--input-border-radius);
+}
+
+hr {
+    margin: 0 0 0.5rem;
+    border: none;
+    border-bottom: var(--fine-border-line);
+}

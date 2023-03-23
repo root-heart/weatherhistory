@@ -3,19 +3,37 @@ package rootheart.codes.weatherhistory.database
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.Table
+import org.joda.time.DateTime
 import rootheart.codes.common.strings.splitAndTrimTokensToList
 import java.math.BigDecimal
 
 fun Table.decimalArray(name: String): Column<Array<BigDecimal?>> =
-    registerColumn(name, DecimalArrayColumnType())
+        registerColumn(name, DecimalArrayColumnType())
 
 fun Table.intArray(name: String): Column<Array<Int>> =
-    registerColumn(name, IntArrayColumnType())
+        registerColumn(name, IntArrayColumnType())
 
-fun Table.intArrayNullable(name: String): Column<Array<Int?>> =
-    registerColumn(name, IntArrayColumnType())
+fun Table.intArrayNullable(name: String): Column<Array<Int?>?> =
+        registerColumn(name, IntArrayColumnType())
 
-class DecimalArrayColumnType : ColumnType() {
+fun Table.decimalArrayNullable(name: String): Column<Array<BigDecimal?>?> =
+        registerColumn(name, DecimalArrayColumnType())
+
+fun Table.generatedDateColumn(name: String, definition: String): Column<DateTime> =
+        registerColumn(name, object : ColumnType(true) {
+            override fun sqlType(): String {
+                return "TIMESTAMP GENERATED ALWAYS AS ($definition) STORED"
+            }
+
+            override fun valueFromDB(value: Any): Any = when(value) {
+                is DateTime -> value
+                is java.sql.Date ->  DateTime(value.time)
+                is java.sql.Timestamp -> DateTime(value.time)
+                else -> valueFromDB(value.toString())
+            }
+        })
+
+class DecimalArrayColumnType : ColumnType(true) {
     override fun sqlType(): String = "TEXT"
 
     override fun valueToDB(value: Any?) = if (value is Array<*>) {
@@ -43,7 +61,7 @@ class DecimalArrayColumnType : ColumnType() {
     }
 }
 
-class IntArrayColumnType(nullable: Boolean = true) : ColumnType() {
+class IntArrayColumnType() : ColumnType(true) {
     override fun sqlType(): String = "TEXT"
 
     override fun valueToDB(value: Any?): Any? {

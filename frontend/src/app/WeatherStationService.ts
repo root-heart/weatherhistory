@@ -5,7 +5,10 @@ import {Injectable} from "@angular/core";
 export type WeatherStation = {
     id: bigint,
     name: string,
-    federalState: string
+    federalState: string,
+    latitude: number,
+    longitude: number,
+    height: number
 }
 
 export type WeatherStationList = Array<WeatherStation>;
