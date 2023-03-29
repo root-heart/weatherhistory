@@ -217,15 +217,15 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
             m.measurements.airPressureHectopascals.max = m.measurements.airPressureHectopascals.details?.nullsafeMax()
 
             m.measurements.dewPointTemperatureCentigrade.min = m.measurements.dewPointTemperatureCentigrade.details?.nullsafeMin()
-            m.measurements.dewPointTemperatureCentigrade.avg = m.measurements.dewPointTemperatureCentigrade.details?.nullsafeAvgDecimals()
+            m.measurements.dewPointTemperatureCentigrade.avg = m.measurements.dewPointTemperatureCentigrade.details?.nullsafeAvgDecimal()
             m.measurements.dewPointTemperatureCentigrade.max = m.measurements.dewPointTemperatureCentigrade.details?.nullsafeMax()
 
             m.measurements.visibilityMeters.min = m.measurements.visibilityMeters.details?.nullsafeMin()
-            m.measurements.visibilityMeters.avg = m.measurements.visibilityMeters.details?.nullsafeAvgDecimals()
+            m.measurements.visibilityMeters.avg = m.measurements.visibilityMeters.details?.nullsafeAvgDecimal()
             m.measurements.visibilityMeters.max = m.measurements.visibilityMeters.details?.nullsafeMax()
 
             m.measurements.humidityPercent.min = m.measurements.humidityPercent.details?.nullsafeMin()
-            m.measurements.humidityPercent.avg = m.measurements.humidityPercent.details?.nullsafeAvgDecimals()
+            m.measurements.humidityPercent.avg = m.measurements.humidityPercent.details?.nullsafeAvgDecimal()
             m.measurements.humidityPercent.max = m.measurements.humidityPercent.details?.nullsafeMax()
 
             m.measurements.sunshineMinutes.sum = m.measurements.sunshineMinutes.details?.filterNotNull()?.sumOf { it }

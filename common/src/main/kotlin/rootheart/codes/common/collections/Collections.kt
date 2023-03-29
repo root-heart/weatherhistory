@@ -86,9 +86,12 @@ inline fun <E> Iterable<E>.nullsafeAvgDecimal(selector: (E) -> BigDecimal?): Big
 fun <E> Collection<E>.nullsafeAvgInt(selector: (E) -> Int?): Int? =
     this.nullsafeSumInts(selector)?.let { it / mapNotNull(selector).count() }
 
-fun Array<BigDecimal?>.nullsafeAvgDecimals(): BigDecimal? = nullsafeAvgDecimals(iterator())
-
-fun Iterable<BigDecimal?>.nullsafeAvgDecimals(): BigDecimal? = nullsafeAvgDecimals(iterator())
+fun Array<BigDecimal?>.nullsafeAvgDecimal(): BigDecimal? = this.nullsafeSumDecimals { it }
+        ?.let { sum ->
+            val notNullValuesCount = mapNotNull { it } .count()
+            sum / BigDecimal(notNullValuesCount)
+        }
+//fun Iterable<BigDecimal?>.nullsafeAvgDecimals(): BigDecimal? = nullsafeAvgDecimals(iterator())
 
 fun nullsafeAvgDecimals(iterator: Iterator<BigDecimal?>): BigDecimal? =
     nullsafeSum(iterator, BigDecimal::plus) { it }
