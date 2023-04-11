@@ -1,15 +1,5 @@
 import {AfterViewInit, Component, ElementRef, ViewChild} from '@angular/core';
 import {CloudinessChart} from "./charts/cloudiness-chart/cloudiness-chart.component";
-import {
-    faCalendarWeek,
-    faCloud,
-    faCloudShowersHeavy,
-    faCloudSun,
-    faSnowflake,
-    faSquare,
-    faSquareXmark,
-    faSun
-} from '@fortawesome/free-solid-svg-icons';
 import {FilterService} from "./filter.service";
 import {DropdownService} from "./dropdown.service";
 import {Tab} from "./tab-view/tab-view.component";
@@ -31,16 +21,6 @@ export class AppComponent implements AfterViewInit {
     @ViewChild("temperatureChart") temperatureChart?: MinAvgMaxChart
     @ViewChild("qqq") qqq?: any
 
-    measurementType?: MeasurementTypes
-
-    faSun = faSun
-    faCloudSun = faCloudSun
-    faCloud = faCloud
-    faRain = faCloudShowersHeavy
-    faSnow = faSnowflake
-    faSquare = faSquare
-    faSquareChecked = faSquareXmark
-    faCalendar = faCalendarWeek
 
 
     @ViewChild("dropdownBackground") dropdownBackground?: ElementRef
@@ -58,41 +38,6 @@ export class AppComponent implements AfterViewInit {
             // this.temperatureChart?.updateChart()
 
         })
-    }
-
-    showDetails(measurementType: MeasurementTypes) {
-        this.measurementType = measurementType
-    }
-
-    divideBy60(x?: number): number | undefined {
-        return x ? x / 60 : undefined
-    }
-
-    percentageOfCloudCoverage(coverageHistogram: number[] | undefined, coverageIndices: number[]): string {
-        if (!coverageHistogram) {
-            return ""
-        }
-
-        let part = 0
-        let sum = 0
-        for (let i = 0; i < coverageHistogram.length; i++) {
-            if (coverageIndices.indexOf(i) !== -1) {
-                part += coverageHistogram[i]
-            }
-            sum += coverageHistogram[i]
-        }
-        return (part / sum * 100).toFixed(1) + "%"
-    }
-
-    // tabActivated(tab: Tab) {
-    //     console.log(tab)
-    // }
-
-    temperatureTabActivated(tab: Tab) {
-        // console.log("temperatureTabActivated")
-        // console.log(this.qqq)
-        // console.log(this.temperatureChart)
-        // this.temperatureChart?.updateChart()
     }
 }
 
