@@ -77,6 +77,11 @@ export class MinAvgMaxChart {
         Chart.register(...registerables);
     }
 
+    public updateChart() {
+        console.log("updating chart")
+        this.chart?.update()
+    }
+
     public setData(data: Array<MinAvgMaxSummary>, resolution: ChartResolution): void {
         if (this.chart) {
             this.chart.destroy();

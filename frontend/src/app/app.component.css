@@ -3,6 +3,10 @@
     display: block;
 }
 
+:host /deep/ .mat-tab-label {
+    color: #333;
+}
+
 nav {
     display: flex;
     justify-content: center;
@@ -39,7 +43,7 @@ hr {
 
 main {
     display: grid;
-    grid-template-columns: repeat(5, 17vw);
+    grid-template-columns: repeat(1, 87vw);
     grid-auto-rows: 20vw;
     grid-gap: 1vw 2vw;
     justify-content: center;

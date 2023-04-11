@@ -45,7 +45,7 @@ export class FilterService {
             this.http
                 .get<SummaryData>(url)
                 .subscribe(data => {
-                    console.log(data.details.map(x => x.measurements))
+                    // console.log(data.details.map(x => x.measurements))
                     this.currentData.next(data)
                     // hmm, something in angular does not work, so i have to refresh everything on my own here...
                     this.app.tick()

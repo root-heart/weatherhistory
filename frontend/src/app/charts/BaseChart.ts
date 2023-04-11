@@ -30,7 +30,7 @@ export function getDefaultChartOptions(): ChartOptions {
 }
 
 export function getXScale(data: { dateLabel: string }[], resolution: ChartResolution, options: ChartOptions, showAxis: boolean) {
-    console.log(data.map(d => d.dateLabel))
+    // console.log(data.map(d => d.dateLabel))
 
     options.scales!.x! = {
         type: "category",
@@ -42,7 +42,7 @@ export function getXScale(data: { dateLabel: string }[], resolution: ChartResolu
 }
 
 export function getDateLabel(m: DailyMeasurement | MonthlySummary | YearlySummary): string {
-    console.log(m)
+    // console.log(m)
     if ("date" in m) {
         return DateTime.fromFormat(m.date!, "yyyy-MM-dd").toFormat("dd.MM.")
     } else if ("month" in m && "year" in m) {

@@ -7,6 +7,7 @@ import {BehaviorSubject} from "rxjs";
     templateUrl: './toggable-button.component.html',
     styleUrls: ['./toggable-button.component.css']
 })
+// TODO should be renamed to something more like check box
 export class ToggableButtonComponent {
     @Input()
     subject?: BehaviorSubject<boolean>

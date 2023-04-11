@@ -73,7 +73,7 @@ fun Routing.stationsResource() {
                                 .first() ?: return@transaction ArrayList<MeasurementJson>()
                     }
 
-                    if (firstAndLastDay.monthsCount <= 2) {
+                    if (firstAndLastDay.monthsCount <= 12) {
                         val details = with(DailyMeasurementTable) {
                             var condition = this.stationId.eq(stationId)
                                     .and(year.greaterEq(years.start))

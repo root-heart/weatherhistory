@@ -21,11 +21,12 @@ import {ToggableButtonComponent} from './toggable-button/toggable-button.compone
 import {RangeSliderComponent} from './range-slider/range-slider.component';
 import {YearSelectionComponent} from './year-selection/year-selection.component';
 import {MonthSelectionComponent} from './month-selection/month-selection.component';
-import { WeatherStationSelectorComponent } from './weather-station-selector/weather-station-selector.component';
+import {WeatherStationSelectorComponent} from './weather-station-selector/weather-station-selector.component';
+import {TabView, Tab, TabButton, TabPane} from './tab-view/tab-view.component';
 
 @NgModule({
     declarations: [
-        AppComponent, CloudinessChart, MapDropdown, MinAvgMaxChart, SumChart, HistogramChart, Dropdown, DateRangeSelector, ToggableButtonComponent, RangeSliderComponent, YearSelectionComponent, MonthSelectionComponent, WeatherStationSelectorComponent
+        AppComponent, CloudinessChart, MapDropdown, MinAvgMaxChart, SumChart, HistogramChart, Dropdown, DateRangeSelector, ToggableButtonComponent, RangeSliderComponent, YearSelectionComponent, MonthSelectionComponent, WeatherStationSelectorComponent, TabView, Tab, TabButton, TabPane
     ],
     imports: [
         LeafletModule, BrowserAnimationsModule, BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule, MatTabsModule, FontAwesomeModule, NgxSliderModule

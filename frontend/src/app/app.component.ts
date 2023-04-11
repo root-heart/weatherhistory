@@ -12,6 +12,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {FilterService} from "./filter.service";
 import {DropdownService} from "./dropdown.service";
+import {Tab} from "./tab-view/tab-view.component";
+import {MinAvgMaxChart} from "./charts/MinAvgMaxChart";
 
 export type MeasurementTypes = "temperature" | "humidity" | "airPressure" | "visibility"
 
@@ -25,6 +27,9 @@ export class AppComponent implements AfterViewInit {
 
     @ViewChild('cloudinessChart')
     cloudinessChart?: CloudinessChart
+
+    @ViewChild("temperatureChart") temperatureChart?: MinAvgMaxChart
+    @ViewChild("qqq") qqq?: any
 
     measurementType?: MeasurementTypes
 
@@ -45,6 +50,14 @@ export class AppComponent implements AfterViewInit {
 
     ngAfterViewInit() {
         this.dropdownService.dropdownBackground = this.dropdownBackground
+        setTimeout(() => {
+            // console.log("ngAfterViewInit")
+            // console.log(this.qqq)
+            // console.log(this.temperatureChart)
+            //
+            // this.temperatureChart?.updateChart()
+
+        })
     }
 
     showDetails(measurementType: MeasurementTypes) {
@@ -71,7 +84,15 @@ export class AppComponent implements AfterViewInit {
         return (part / sum * 100).toFixed(1) + "%"
     }
 
+    // tabActivated(tab: Tab) {
+    //     console.log(tab)
+    // }
 
-
+    temperatureTabActivated(tab: Tab) {
+        // console.log("temperatureTabActivated")
+        // console.log(this.qqq)
+        // console.log(this.temperatureChart)
+        // this.temperatureChart?.updateChart()
+    }
 }
 
