@@ -2,7 +2,6 @@ import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {HttpClientModule} from '@angular/common/http';
 import {AppComponent} from './app.component';
-import {NgSelectModule} from '@ng-select/ng-select';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {CloudinessChart} from './charts/cloudiness-chart/cloudiness-chart.component';
 import {MatTabsModule} from "@angular/material/tabs";
@@ -12,7 +11,6 @@ import {SumChart} from "./charts/SumChart";
 import {HistogramChart} from "./charts/HistogramChart";
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {LeafletModule} from "@asymmetrik/ngx-leaflet";
-import {NgxSliderModule} from "@angular-slider/ngx-slider";
 import {FilterService} from "./filter.service";
 import {Dropdown} from './dropdown/dropdown.component';
 import {DateRangeSelector} from './date-range-dropdown/date-range-selector.component';
@@ -25,15 +23,20 @@ import {WeatherStationSelectorComponent} from './weather-station-selector/weathe
 import {TabView, Tab, TabButton, TabPane} from './tab-view/tab-view.component';
 import { NavigationComponent } from './navigation/navigation.component';
 import { StationChartsComponent } from './station-charts/station-charts.component';
+import { MinAvgMaxSvgChartComponent } from './charts/min-avg-max-svg-chart/min-avg-max-svg-chart.component';
+
 
 @NgModule({
     declarations: [
-        AppComponent, CloudinessChart, MapDropdown, MinAvgMaxChart, SumChart, HistogramChart, Dropdown, DateRangeSelector, ToggableButtonComponent, RangeSliderComponent, YearSelectionComponent, MonthSelectionComponent, WeatherStationSelectorComponent, TabView, Tab, TabButton, TabPane, NavigationComponent, StationChartsComponent
+        AppComponent, CloudinessChart, MapDropdown, MinAvgMaxChart, SumChart, HistogramChart, Dropdown, DateRangeSelector, ToggableButtonComponent, RangeSliderComponent, YearSelectionComponent, MonthSelectionComponent, WeatherStationSelectorComponent, TabView, Tab, TabButton, TabPane, NavigationComponent, StationChartsComponent, MinAvgMaxSvgChartComponent
     ],
     imports: [
-        LeafletModule, BrowserAnimationsModule, BrowserModule, HttpClientModule, NgSelectModule, FormsModule, ReactiveFormsModule, MatTabsModule, FontAwesomeModule, NgxSliderModule
+        LeafletModule, BrowserAnimationsModule, BrowserModule, HttpClientModule, FormsModule, ReactiveFormsModule, MatTabsModule, FontAwesomeModule
     ],
     providers: [FilterService],
+    exports: [
+        StationChartsComponent
+    ],
     bootstrap: [AppComponent]
 })
 export class AppModule {

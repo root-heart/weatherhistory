@@ -23,7 +23,7 @@ export class ToggableButtonComponent {
 
     clicked(): void {
         if (this.enabled) {
-            this.subject?.next(!this.subject.value)
+            this.subject?.next(!this.subject?.value)
         }
     }
 

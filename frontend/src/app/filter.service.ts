@@ -1,10 +1,10 @@
 import {DateTime} from "luxon";
-import {environment} from "../environments/environment";
 import {SummaryData} from "./data-classes";
 import {WeatherStation} from "./WeatherStationService";
 import {HttpClient} from "@angular/common/http";
 import {ApplicationRef, Injectable} from "@angular/core";
 import {BehaviorSubject} from "rxjs";
+import {environment} from "./environments/environment";
 
 @Injectable({
     providedIn: 'root'

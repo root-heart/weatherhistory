@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
-import {FilterService} from "../filter.service";
+import {FilterService} from "../../../filter.service";
 import {faAngleLeft, faAngleRight, faAnglesLeft, faAnglesRight} from "@fortawesome/free-solid-svg-icons";
 import {ControlValueAccessor} from "@angular/forms";
 import {BehaviorSubject} from "rxjs";

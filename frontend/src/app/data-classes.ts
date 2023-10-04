@@ -1,7 +1,4 @@
-import {BehaviorSubject, Subject} from "rxjs";
-import {WeatherStation} from "./WeatherStationService";
-import {DateTime} from "luxon";
-import {ChartResolution} from "./charts/BaseChart";
+export type ChartResolution = "day" | "month" | "year"
 
 export type AvgMaxDetails = {
     avg: number,

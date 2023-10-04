@@ -1,6 +1,5 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ViewEncapsulation} from '@angular/core';
 import {FilterService} from "../filter.service";
-import {DropdownService} from "../dropdown.service";
 import {MeasurementTypes} from "../app.component";
 import {
     faCalendarWeek,
@@ -12,15 +11,37 @@ import {
     faSquareXmark,
     faSun
 } from '@fortawesome/free-solid-svg-icons';
-import {ActivatedRoute, UrlSegment} from "@angular/router";
+import * as Highcharts from 'highcharts';
 
+import addMore from "highcharts/highcharts-more";
+
+addMore(Highcharts);
 
 @Component({
     selector: 'station-charts',
     templateUrl: './station-charts.component.html',
-    styleUrls: ['./station-charts.component.css']
+    styleUrls: ['./station-charts.component.css'],
+    encapsulation: ViewEncapsulation.None
 })
 export class StationChartsComponent implements OnInit {
+
+    updateFlag = false;
+
+    data = [1, 2, 3, 4];
+
+    Highcharts: typeof Highcharts = Highcharts;
+    temperatureChart?: Highcharts.Chart;
+    chartCallback: Highcharts.ChartCallbackFunction;
+
+    temperatureChartOptions: Highcharts.Options = {
+        chart: {styledMode: true, animation: false},
+        yAxis: [{title: {text: 'Air Temperature'}}],
+        tooltip: {shared: true},
+        plotOptions: {
+            line: {animation: false},
+            arearange: {animation: false}
+        }
+    }
 
     faSun = faSun
     faCloudSun = faCloudSun
@@ -33,6 +54,34 @@ export class StationChartsComponent implements OnInit {
     measurementType?: MeasurementTypes
 
     constructor(public filterService: FilterService) {
+        this.chartCallback = (c: any) => {
+            this.temperatureChart = c;
+        };
+
+        filterService.currentData.subscribe(data => {
+            if (data && this.temperatureChart) {
+                let airTemps = data.details
+                    .map(m => m.measurements)
+                    .filter(m => m)
+                    .map(m => m!.airTemperatureCentigrade)
+                    .filter(t => t)
+                let minMax = airTemps
+                    .map(t => [t!.min, t!.max]);
+                let avg = airTemps.map(t => t.avg)
+                while (this.temperatureChart.series.length > 0) {
+                    this.temperatureChart.series[0].remove()
+                }
+                this.temperatureChart.addSeries({
+                    type: 'arearange',
+                    data: minMax,
+                    lineWidth: 3
+                })
+                this.temperatureChart.addSeries({
+                    type: 'line',
+                    data: avg
+                })
+            }
+        })
     }
 
     ngOnInit(): void {
@@ -63,4 +112,5 @@ export class StationChartsComponent implements OnInit {
         }
         return (part / sum * 100).toFixed(1) + "%"
     }
+
 }

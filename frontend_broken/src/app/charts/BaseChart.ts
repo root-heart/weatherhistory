@@ -32,13 +32,13 @@ export function getDefaultChartOptions(): ChartOptions {
 export function getXScale(data: { dateLabel: string }[], resolution: ChartResolution, options: ChartOptions, showAxis: boolean) {
     // console.log(data.map(d => d.dateLabel))
 
-    options.scales!.x! = {
-        type: "category",
-        // labels: data.map(d => d.firstDay),
-        labels: data.map(d => d.dateLabel),
-        display: showAxis,
-        ticks: {minRotation: 0, maxRotation: 0, sampleSize: 12},
-    }
+    // options.scales!.x! = {
+    //     type: "category",
+    //     // labels: data.map(d => d.firstDay),
+    //     labels: data.map(d => d.dateLabel),
+    //     display: showAxis,
+    //     ticks: {minRotation: 0, maxRotation: 0, sampleSize: 12},
+    // }
 }
 
 export function getDateLabel(m: DailyMeasurement | MonthlySummary | YearlySummary): string {
@@ -49,6 +49,6 @@ export function getDateLabel(m: DailyMeasurement | MonthlySummary | YearlySummar
         return DateTime.fromObject({year: m.year, month: m.month}).toFormat("MMMM yyyy")
     } else if ("year" in m) {
         return DateTime.fromObject({year: m.year}).toFormat("yyyy")
-    } else
-        return DateTime.fromObject({year: 1979, month: 11, day: 11}).toFormat("dd.MM.yyyy")
+    }
+    return DateTime.fromObject({year: 1979, month: 11, day: 11}).toFormat("dd.MM.yyyy")
 }

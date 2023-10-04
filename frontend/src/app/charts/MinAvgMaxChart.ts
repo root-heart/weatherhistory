@@ -1,9 +1,7 @@
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {Chart, ChartConfiguration, ChartOptions, registerables} from "chart.js";
-import {ChartResolution, getDateLabel, getDefaultChartOptions, getXScale} from "./BaseChart";
-import 'chartjs-adapter-luxon';
 import {AvgMaxDetails, MinAvgMaxDetails, SummarizedMeasurement, SummaryData} from "../data-classes";
 import {Observable} from "rxjs";
+import {getDateLabel} from "./charts";
 
 type MinAvgMaxSummary = {
     dateLabel: string,
@@ -27,7 +25,7 @@ type AvgMaxDetailsProperty = {
  */
 @Component({
     selector: "min-avg-max-chart[]",
-    template: "<canvas #chart></canvas>"
+    template: "<div style='position: relative'><div style='position: absolute; top: 0; left: 0; bottom: 0; right: 0'><canvas #chart></canvas></div></div>"
 })
 export class MinAvgMaxChart {
     @Input() color: string = "#c33"

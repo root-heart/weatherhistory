@@ -6,7 +6,7 @@
 
     <div dropdown>
         <div class="map" leaflet [leafletOptions]="options">
-            <div *ngIf="stationsLayer !== undefined" [leafletLayer]="stationsLayer"></div>
+            <div *ngIf="stationsLayer !== undefined" [leafletLayer]="stationsLayer!"></div>
         </div>
     </div>
 </dropdown>

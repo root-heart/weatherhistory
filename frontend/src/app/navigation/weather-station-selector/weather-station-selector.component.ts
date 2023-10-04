@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {FilterService} from "../filter.service";
+import {FilterService} from "../../filter.service";
 
 @Component({
     selector: 'weather-station-selector',
