@@ -46,6 +46,15 @@ section > highcharts-chart {
     --highcharts-color-0: #ea2;
 }
 
+#precipitationChart {
+    --highcharts-color-0: hsl(210, 80%, 50%);
+    --highcharts-color-1: hsl(210, 90%, 95%);
+}
+
+#sunshineDurationChart .highcharts-point {
+    stroke-width: 0;
+}
+
 #cloudinessChart {
     --highcharts-color-0: hsl(210, 80%, 80%);
     --highcharts-color-1: hsl(210, 90%, 95%);

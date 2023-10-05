@@ -3,17 +3,17 @@
 
     <highcharts-chart class="chart" id="temperatureChart"
                       [Highcharts]="Highcharts"
-                      [options]="temperatureChartOptions"
+                      [options]="chartOptions"
                       [callbackFunction]="chartCallback">
     </highcharts-chart>
 
 
     <div class="summary">
-        <div>&#x2b9f; {{filterService.currentData?.value?.summary?.airTemperatureCentigrade?.min?.toFixed(1)}}°C</div>
+        <div>&#x2b9f; {{filterService.currentData.value?.summary?.airTemperatureCentigrade?.min?.toFixed(1)}}°C</div>
 
-        <div>&#8960; {{filterService.currentData?.value?.summary?.airTemperatureCentigrade?.avg?.toFixed(1)}}°C</div>
+        <div>&#8960; {{filterService.currentData.value?.summary?.airTemperatureCentigrade?.avg?.toFixed(1)}}°C</div>
 
-        <div>&#x2b9d; {{filterService.currentData?.value?.summary?.airTemperatureCentigrade?.max?.toFixed(1)}}°C</div>
+        <div>&#x2b9d; {{filterService.currentData.value?.summary?.airTemperatureCentigrade?.max?.toFixed(1)}}°C</div>
     </div>
 </section>
 
@@ -24,13 +24,13 @@
 
         <highcharts-chart class="chart" id="sunshineDurationChart"
                           [Highcharts]="Highcharts"
-                          [options]="sunshineDurationChartOptions"
+                          [options]="chartOptions"
                           [callbackFunction]="sunshineDurationChartCallback">
         </highcharts-chart>
 
         <div class="summary">
-            &#931; {{divideBy60(filterService.currentData?.value?.summary?.sunshineMinutes?.sum)?.toFixed(1)}}h
-            &#8960; {{divideBy60(filterService.currentData?.value?.summary?.sunshineMinutes?.sum)?.toFixed(1)}}h
+            &#931; {{divideBy60(filterService.currentData.value?.summary?.sunshineMinutes?.sum)?.toFixed(1)}}h
+            &#8960; {{divideBy60(filterService.currentData.value?.summary?.sunshineMinutes?.sum)?.toFixed(1)}}h
         </div>
 
     </section>
@@ -38,12 +38,18 @@
     <section>
         <h1>Niederschlag</h1>
 
+        <highcharts-chart class="chart" id="precipitationChart"
+                          [Highcharts]="Highcharts"
+                          [options]="chartOptions"
+                          [callbackFunction]="precipitationChartCallback">
+        </highcharts-chart>
+
         <div class="summary">
             <fa-icon [icon]="faRain"></fa-icon>
-            {{filterService.currentData?.value?.summary?.rainfallMillimeters?.sum?.toFixed(1)}}l/m²
+            {{filterService.currentData.value?.summary?.rainfallMillimeters?.sum?.toFixed(1)}}l/m²
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
             <fa-icon [icon]="faSnow"></fa-icon>
-            {{filterService.currentData?.value?.summary?.snowfallMillimeters?.sum?.toFixed(1)}}mm
+            {{filterService.currentData.value?.summary?.snowfallMillimeters?.sum?.toFixed(1)}}mm
         </div>
     </section>
 
@@ -51,9 +57,9 @@
         <h1>Wind</h1>
 
         <div class="summary">
-            &#8960; {{filterService.currentData?.value?.summary?.windSpeedMetersPerSecond?.avg?.toFixed(1)}}m/s
+            &#8960; {{filterService.currentData.value?.summary?.windSpeedMetersPerSecond?.avg?.toFixed(1)}}m/s
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{filterService.currentData?.value?.summary?.windSpeedMetersPerSecond?.max?.toFixed(1)}}m/s
+            &#x2b9d; {{filterService.currentData.value?.summary?.windSpeedMetersPerSecond?.max?.toFixed(1)}}m/s
         </div>
     </section>
 
@@ -67,11 +73,11 @@
         <h1>Luftfeuchtigkeit</h1>
 
         <div class="summary">
-            &#x2b9f; {{filterService.currentData?.value?.summary?.humidityPercent?.min?.toFixed(1)}}%
+            &#x2b9f; {{filterService.currentData.value?.summary?.humidityPercent?.min?.toFixed(1)}}%
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#8960; {{filterService.currentData?.value?.summary?.humidityPercent?.avg?.toFixed(1)}}%
+            &#8960; {{filterService.currentData.value?.summary?.humidityPercent?.avg?.toFixed(1)}}%
             &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-            &#x2b9d; {{filterService.currentData?.value?.summary?.humidityPercent?.max?.toFixed(1)}}%
+            &#x2b9d; {{filterService.currentData.value?.summary?.humidityPercent?.max?.toFixed(1)}}%
         </div>
     </section>
 
@@ -79,11 +85,11 @@
     <h1>Taupunkt</h1>
 
     <div class="summary">
-        &#x2b9f; {{filterService.currentData?.value?.summary?.dewPointTemperatureCentigrade?.min?.toFixed(1)}}°C
+        &#x2b9f; {{filterService.currentData.value?.summary?.dewPointTemperatureCentigrade?.min?.toFixed(1)}}°C
         &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-        &#8960; {{filterService.currentData?.value?.summary?.dewPointTemperatureCentigrade?.avg?.toFixed(1)}}°C
+        &#8960; {{filterService.currentData.value?.summary?.dewPointTemperatureCentigrade?.avg?.toFixed(1)}}°C
         &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-        &#x2b9d; {{filterService.currentData?.value?.summary?.dewPointTemperatureCentigrade?.max?.toFixed(1)}}°C
+        &#x2b9d; {{filterService.currentData.value?.summary?.dewPointTemperatureCentigrade?.max?.toFixed(1)}}°C
     </div>
 </section>
 
@@ -91,11 +97,11 @@
     <h1>Luftdruck</h1>
 
     <div class="summary">
-        &#x2b9f; {{filterService.currentData?.value?.summary?.airPressureHectopascals?.min?.toFixed(1)}}hPa
+        &#x2b9f; {{filterService.currentData.value?.summary?.airPressureHectopascals?.min?.toFixed(1)}}hPa
         &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-        &#8960; {{filterService.currentData?.value?.summary?.airPressureHectopascals?.avg?.toFixed(1)}}hPa
+        &#8960; {{filterService.currentData.value?.summary?.airPressureHectopascals?.avg?.toFixed(1)}}hPa
         &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-        &#x2b9d; {{filterService.currentData?.value?.summary?.airPressureHectopascals?.max?.toFixed(1)}}hPa
+        &#x2b9d; {{filterService.currentData.value?.summary?.airPressureHectopascals?.max?.toFixed(1)}}hPa
     </div>
 </section>
 
@@ -103,11 +109,11 @@
     <h1>Sichtweite</h1>
 
     <div class="summary">
-        &#x2b9f; {{filterService.currentData?.value?.summary?.visibilityMeters?.min?.toFixed(0)}}m
+        &#x2b9f; {{filterService.currentData.value?.summary?.visibilityMeters?.min?.toFixed(0)}}m
         &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-        &#8960; {{filterService.currentData?.value?.summary?.visibilityMeters?.avg?.toFixed(0)}}m
+        &#8960; {{filterService.currentData.value?.summary?.visibilityMeters?.avg?.toFixed(0)}}m
         &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
-        &#x2b9d; {{filterService.currentData?.value?.summary?.visibilityMeters?.max?.toFixed(0)}}m
+        &#x2b9d; {{filterService.currentData.value?.summary?.visibilityMeters?.max?.toFixed(0)}}m
     </div>
 </section>
 
@@ -116,18 +122,18 @@
 
     <highcharts-chart id="cloudinessChart"
                       [Highcharts]="Highcharts"
-                      [options]="cloudinessChartOptions"
+                      [options]="chartOptions"
                       [callbackFunction]="cloudinessChartCallback">
     </highcharts-chart>
 
     <div class="summary">
         <fa-icon [icon]="faSun"></fa-icon>
-        {{percentageOfCloudCoverage(filterService.currentData?.value?.summary?.cloudCoverageHistogram, [0, 1, 2])}}
+        {{percentageOfCloudCoverage(filterService.currentData.value?.summary?.cloudCoverageHistogram, [0, 1, 2])}}
         &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
         <fa-icon [icon]="faCloudSun"></fa-icon>
-        {{percentageOfCloudCoverage(filterService.currentData?.value?.summary?.cloudCoverageHistogram, [3, 4, 5])}}
+        {{percentageOfCloudCoverage(filterService.currentData.value?.summary?.cloudCoverageHistogram, [3, 4, 5])}}
         &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
         <fa-icon [icon]="faCloud"></fa-icon>
-        {{percentageOfCloudCoverage(filterService.currentData?.value?.summary?.cloudCoverageHistogram, [6, 7, 8, 9])}}
+        {{percentageOfCloudCoverage(filterService.currentData.value?.summary?.cloudCoverageHistogram, [6, 7, 8, 9])}}
     </div>
 </section>
