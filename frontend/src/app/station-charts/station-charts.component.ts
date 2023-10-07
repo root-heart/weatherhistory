@@ -124,7 +124,8 @@ export class StationChartsComponent implements OnInit {
                             stacking: 'percent',
                             pointPadding: 0,
                             groupPadding: 0,
-                            borderRadius: 0
+                            borderRadius: 0,
+                            borderWidth: 0
                         })
                     }
                 }

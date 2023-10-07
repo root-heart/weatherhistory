@@ -53,6 +53,29 @@ section > highcharts-chart {
     stroke-width: 0;
 }
 
+#windChart {
+    --highcharts-color-0: hsla(270, 80%, 65%, 50%);
+    --highcharts-color-1: hsl(270, 80%, 65%);
+}
+
+#humidityChart {
+    --highcharts-color-0: hsla(220, 80%, 30%, 50%);
+    --highcharts-color-1: hsl(220, 80%, 30%);
+
+}
+
+#dewPointTemperatureChart {
+    --highcharts-color-0: hsla(220, 80%, 70%, 50%);
+    --highcharts-color-1: hsl(220, 80%, 70%);
+
+}
+
+#airPressureChart {
+    --highcharts-color-0: hsla(120, 80%, 45%, 50%);
+    --highcharts-color-1: hsl(120, 80%, 45%);
+
+}
+
 #cloudinessChart {
     --highcharts-color-0: hsl(210, 80%, 80%);
     --highcharts-color-1: hsl(210, 90%, 95%);

@@ -35,7 +35,8 @@ import { MinAvgMaxSvgChartComponent } from './charts/min-avg-max-svg-chart/min-a
     ],
     providers: [FilterService],
     exports: [
-        StationChartsComponent
+        StationChartsComponent,
+        MinAvgMaxChart
     ],
     bootstrap: [AppComponent]
 })

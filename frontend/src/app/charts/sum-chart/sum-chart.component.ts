@@ -17,7 +17,8 @@ registerLocaleData(localeDe, 'de-DE', localeDeExtra);
 
 export type Sum = {
     dateLabel: number,
-    sum: number
+    sum?: number
+    sum2?: number
 }
 
 type MinMaxSumDetailsProperty = {
@@ -31,10 +32,10 @@ type MinMaxSumDetailsProperty = {
     styleUrls: ['./sum-chart.component.css']
 })
 export class SumChartComponent {
-    @Input() sum: MinMaxSumDetailsProperty = "sunshineMinutes"
+    @Input() sumProperty: MinMaxSumDetailsProperty = "sunshineMinutes"
+    @Input() sum2Property?: MinMaxSumDetailsProperty = undefined
     Highcharts: typeof Highcharts = Highcharts;
     chart?: Highcharts.Chart;
-    chartCallback: Highcharts.ChartCallbackFunction = c => this.chart = c
     chartOptions: Highcharts.Options = {
         chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},
         title: {text: undefined},
@@ -57,33 +58,45 @@ export class SumChartComponent {
         }
     }
 
-
     @Input() set dataSource(c: Observable<SummaryData | undefined>) {
         c.subscribe(summaryData => {
-            if (summaryData && this.chart) {
-                console.log('set sum data')
+            if (!this.chart || !this.sumProperty) return
+
+            while (this.chart.series.length > 0) {
+                this.chart.series[0].remove()
+            }
+            if (summaryData) {
                 let minAvgMaxData = summaryData.details
                     .map(m => {
-                        if (this.sum) {
-                            let s = m.measurements![this.sum].sum
-                            return {dateLabel: getDateLabel(m), sum: s}
-                        } else {
-                            return null
+                        let record: Sum = {
+                            dateLabel: getDateLabel(m),
+                            sum: m.measurements![this.sumProperty].sum
                         }
+                        if (this.sum2Property) {
+                            record.sum2 = m.measurements![this.sum2Property].sum
+                        }
+                        return record
                     })
                     .filter(d => d !== null && d !== undefined)
                     .map(d => d!)
-                while (this.chart.series.length > 0) {
-                    this.chart.series[0].remove()
-                }
+
                 this.chart.addSeries({
                     type: "column",
                     data: minAvgMaxData.map(d => [d.dateLabel, d.sum]),
                     borderRadius: 0
                 })
+                if (this.sum2Property) {
+                    this.chart.addSeries({
+                        type: "column",
+                        data: minAvgMaxData.map(d => [d.dateLabel, d.sum2]),
+                        borderRadius: 0
+                    })
+                }
             }
         })
     }
+
+    chartCallback: Highcharts.ChartCallbackFunction = c => this.chart = c
 
 
 }

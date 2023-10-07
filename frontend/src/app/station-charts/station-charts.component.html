@@ -31,7 +31,7 @@
     <h1>Sonnenschein</h1>
 
     <sum-chart class="chart" id="sunshineDurationChart"
-                   [sum]="'sunshineMinutes'" [dataSource]="filterService.currentData">
+               [sumProperty]="'sunshineMinutes'" [dataSource]="filterService.currentData">
     </sum-chart>
 
     <div class="summary">
@@ -44,8 +44,9 @@
 <section>
     <h1>Niederschlag</h1>
 
-    <sum-chart class="chart" id="precipitationChart" [sum]="'rainfallMillimeters'"
-                   [dataSource]="filterService.currentData"></sum-chart>
+    <sum-chart class="chart" id="precipitationChart"
+               [sumProperty]="'rainfallMillimeters'" [sum2Property]="'snowfallMillimeters'"
+               [dataSource]="filterService.currentData"></sum-chart>
 
     <div class="summary">
         <fa-icon [icon]="faRain"></fa-icon>
