@@ -2,7 +2,7 @@
 
 section {
     display: grid;
-    grid-template-columns: 30% 70%;
+    grid-template-columns: 20rem auto;
     width: 80vw;
     margin: 0 auto;
 }
@@ -21,12 +21,17 @@ section > .summary {
 }
 
 section > highcharts-chart {
-    grid-row: span 2;
     width: 100%;
-    display: block;
+    height: 100%;
     aspect-ratio: 3;
+    display: block;
+}
 
+.chart {
     --highcharts-background-color: #0000;
+    aspect-ratio: 3;
+    grid-row: span 2;
+
 }
 
 #temperatureChart {
@@ -34,13 +39,6 @@ section > highcharts-chart {
     --highcharts-color-1: #b00;
 }
 
-#temperatureChart .highcharts-line-series .highcharts-graph {
-    stroke-width: 2px;
-}
-
-#temperatureChart .highcharts-arearange-series .highcharts-graph {
-    stroke-width: 0;
-}
 
 #sunshineDurationChart {
     --highcharts-color-0: #ea2;

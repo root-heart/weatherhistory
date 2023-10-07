@@ -1,0 +1,38 @@
+:host {
+  margin: 1vw;
+  display: block;
+}
+
+:host /deep/ .mat-tab-label {
+  color: #333;
+}
+
+hr {
+  border: none;
+  border-bottom: var(--fine-border-line);
+  margin: 1rem 2vw;
+}
+
+/*map-dropdown {*/
+/*    width: 30rem;*/
+/*}*/
+
+.dropdown-background {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 888;
+
+  backdrop-filter: blur(0.5rem);
+}
+
+main {
+  display: grid;
+  grid-template-columns: repeat(1, 87vw);
+  grid-auto-rows: 20vw;
+  grid-gap: 1vw 2vw;
+  justify-content: center;
+}
+

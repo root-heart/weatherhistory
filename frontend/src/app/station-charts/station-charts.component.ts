@@ -36,15 +36,13 @@ export class StationChartsComponent implements OnInit {
 
     Highcharts: typeof Highcharts = Highcharts;
 
-    temperatureChart?: Highcharts.Chart;
     sunshineDurationChart?: Highcharts.Chart;
     cloudinessChart?: Highcharts.Chart;
-    precipitationChart?: Highcharts.Chart;
+    windDirectionChart?: Highcharts.Chart;
 
-    chartCallback: Highcharts.ChartCallbackFunction;
     sunshineDurationChartCallback: Highcharts.ChartCallbackFunction;
     cloudinessChartCallback: Highcharts.ChartCallbackFunction;
-    precipitationChartCallback: Highcharts.ChartCallbackFunction;
+    windDirectionChartCallback: Highcharts.ChartCallbackFunction;
 
     chartOptions: Highcharts.Options = {
         chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},
@@ -67,7 +65,6 @@ export class StationChartsComponent implements OnInit {
 
         }
     }
-
     faSun = faSun
     faCloudSun = faCloudSun
     faCloud = faCloud
@@ -79,47 +76,17 @@ export class StationChartsComponent implements OnInit {
     measurementType?: MeasurementTypes
 
     constructor(public filterService: FilterService) {
-        this.chartCallback = c => this.temperatureChart = c;
         this.sunshineDurationChartCallback = c => this.sunshineDurationChart = c
         this.cloudinessChartCallback = c => this.cloudinessChart = c
-        this.precipitationChartCallback = c => this.precipitationChart = c
-
+        this.windDirectionChartCallback = c => this.windDirectionChart = c
         filterService.currentData.subscribe(data => {
             if (data) {
-                if (this.temperatureChart) {
-                    let airTemps = data.details
-                        .map(m => (
-                            {date: getDateLabel(m), temps: m.measurements?.airTemperatureCentigrade}
-                        ));
-                    while (this.temperatureChart.series.length > 0) {
-                        this.temperatureChart.series[0].remove()
-                    }
-                    this.temperatureChart.addSeries({
-                        type: 'arearange',
-                        data: airTemps.map(t =>
-                            [t.date, t.temps?.min, t.temps?.max]
-                        ),
-                        lineWidth: 3,
-                        marker: {enabled: false},
-                        states: {hover: {enabled: false}}
-                    })
-                    this.temperatureChart.addSeries({
-                        type: 'line',
-                        data: airTemps.map(t =>
-                            [t.date, t.temps?.avg]
-                        ),
-                        marker: {enabled: false}
-                    })
-                }
-
                 if (this.sunshineDurationChart) {
                     let sunshineDurations = data.details
                         .map(m => (
                             {date: getDateLabel(m), sunshineDurations: m.measurements!.sunshineMinutes}
                         ));
-                    while (this.sunshineDurationChart.series.length > 0) {
-                        this.sunshineDurationChart.series[0].remove()
-                    }
+                    this.clearChart(this.sunshineDurationChart)
                     this.sunshineDurationChart.addSeries({
                         type: "column",
                         data: sunshineDurations.map(s =>
@@ -129,27 +96,15 @@ export class StationChartsComponent implements OnInit {
                     })
                 }
 
-                if (this.precipitationChart) {
-                    let sunshineDurations = data.details
+                if (this.windDirectionChart) {
+                    let windDirection = data.details
                         .map(m => (
-                            {date: getDateLabel(m), rain: m.measurements!.rainfallMillimeters, snow: m.measurements!.snowfallMillimeters}
+                            {date: getDateLabel(m), directions: m.measurements?.detailedWindDirectionDegrees}
                         ));
-                    while (this.precipitationChart.series.length > 0) {
-                        this.precipitationChart.series[0].remove()
-                    }
-                    this.precipitationChart.addSeries({
-                        type: "column",
-                        data: sunshineDurations.map(s =>
-                            [s.date, s.rain.sum!]
-                        ),
-                        borderRadius: 0
-                    })
-                    this.precipitationChart.addSeries({
-                        type: "column",
-                        data: sunshineDurations.map(s =>
-                            [s.date, s.snow.sum!]
-                        ),
-                        borderRadius: 0
+                    this.clearChart(this.windDirectionChart)
+                    this.windDirectionChart.addSeries({
+                        type: "scatter",
+                        data: windDirection.map(d => [d.date, d.directions])
                     })
                 }
 
@@ -158,9 +113,7 @@ export class StationChartsComponent implements OnInit {
                         .map(m => (
                             {date: getDateLabel(m), cloudiness: m.measurements?.cloudCoverageHistogram}
                         ));
-                    while (this.cloudinessChart.series.length > 0) {
-                        this.cloudinessChart.series[0].remove()
-                    }
+                    this.clearChart(this.cloudinessChart)
                     for (let i = 0; i <= 8; i++) {
                         this.cloudinessChart.addSeries({
                             type: "column",
@@ -182,7 +135,6 @@ export class StationChartsComponent implements OnInit {
     ngOnInit(): void {
 
     }
-
 
     showDetails(measurementType: MeasurementTypes) {
         this.measurementType = measurementType
@@ -206,6 +158,12 @@ export class StationChartsComponent implements OnInit {
             sum += coverageHistogram[i]
         }
         return (part / sum * 100).toFixed(1) + "%"
+    }
+
+    private clearChart(chart: Highcharts.Chart) {
+        while (chart.series.length > 0) {
+            chart.series[0].remove()
+        }
     }
 
 }
