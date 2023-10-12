@@ -30,22 +30,15 @@ registerLocaleData(localeDe, 'de-DE', localeDeExtra);
 })
 export class StationChartsComponent implements OnInit {
 
-    updateFlag = false;
-
-    data = [1, 2, 3, 4];
-
     Highcharts: typeof Highcharts = Highcharts;
-
-    sunshineDurationChart?: Highcharts.Chart;
     cloudinessChart?: Highcharts.Chart;
     windDirectionChart?: Highcharts.Chart;
-
-    sunshineDurationChartCallback: Highcharts.ChartCallbackFunction;
-    cloudinessChartCallback: Highcharts.ChartCallbackFunction;
-    windDirectionChartCallback: Highcharts.ChartCallbackFunction;
-
     chartOptions: Highcharts.Options = {
         chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},
+        boost: {
+            useGPUTranslations: true,
+            // usePreAllocated: true
+        },
         title: {text: undefined},
         xAxis: {
             type: 'datetime',
@@ -53,18 +46,51 @@ export class StationChartsComponent implements OnInit {
                 formatter: v => new Date(v.value).toLocaleDateString('de-DE', {month: "short"})
             },
         },
-        yAxis: [{title: {text: undefined}, reversedStacks: false}],
+        yAxis: [
+            {title: {text: undefined}, reversedStacks: false},
+        ],
         tooltip: {
             shared: true,
-            xDateFormat: "%d.%m.%Y"
+            xDateFormat: "%d.%m.%Y",
+            animation: false
         },
         plotOptions: {
             line: {animation: false},
             arearange: {animation: false},
-            column: {animation: false}
-
+            column: {animation: false},
+            scatter: {marker: {symbol: 'circle'}}
         }
     }
+
+    windDirectionChartOptions: Highcharts.Options = {
+        chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},
+        boost: {
+            useGPUTranslations: true,
+            // usePreAllocated: true
+        },
+        title: {text: undefined},
+        xAxis: {
+            type: 'datetime',
+            labels: {
+                formatter: v => new Date(v.value).toLocaleDateString('de-DE', {month: "short"})
+            },
+        },
+        yAxis: [
+            {title: {text: undefined}, min: 0, max: 360, tickInterval: 90, minorTickInterval: 45}
+        ],
+        tooltip: {
+            shared: true,
+            xDateFormat: "%d.%m.%Y",
+            animation: false
+        },
+        plotOptions: {
+            line: {animation: false},
+            arearange: {animation: false},
+            column: {animation: false},
+            scatter: {marker: {symbol: 'circle'}}
+        }
+    }
+
     faSun = faSun
     faCloudSun = faCloudSun
     faCloud = faCloud
@@ -76,35 +102,57 @@ export class StationChartsComponent implements OnInit {
     measurementType?: MeasurementTypes
 
     constructor(public filterService: FilterService) {
-        this.sunshineDurationChartCallback = c => this.sunshineDurationChart = c
-        this.cloudinessChartCallback = c => this.cloudinessChart = c
-        this.windDirectionChartCallback = c => this.windDirectionChart = c
         filterService.currentData.subscribe(data => {
             if (data) {
-                if (this.sunshineDurationChart) {
-                    let sunshineDurations = data.details
-                        .map(m => (
-                            {date: getDateLabel(m), sunshineDurations: m.measurements!.sunshineMinutes}
-                        ));
-                    this.clearChart(this.sunshineDurationChart)
-                    this.sunshineDurationChart.addSeries({
-                        type: "column",
-                        data: sunshineDurations.map(s =>
-                            [s.date, s.sunshineDurations.sum! / 60]
-                        ),
-                        borderRadius: 0
-                    })
-                }
-
                 if (this.windDirectionChart) {
-                    let windDirection = data.details
-                        .map(m => (
-                            {date: getDateLabel(m), directions: m.measurements?.detailedWindDirectionDegrees}
-                        ));
                     this.clearChart(this.windDirectionChart)
+
+                    let scatterData = data.details.map(m => ({
+                        date: getDateLabel(m),
+                        hourlyWindSpeeds: m.measurements?.detailedWindDirectionDegrees
+                    }))
+
+                    let s1 = []
+                    let s2 = []
+                    for (let sd of scatterData) {
+                        if (sd.hourlyWindSpeeds) {
+                            let sortedDistinctSpeeds = sd.hourlyWindSpeeds
+                                .filter(this.uniqueFilter)
+                                .sort(this.numberComparator)
+                            let gaps: number[] = []
+                            for (let i = 0; i < sortedDistinctSpeeds.length - 1; i++) {
+                                gaps.push(sortedDistinctSpeeds[i + 1] - sortedDistinctSpeeds[i])
+                            }
+                            gaps.push(sortedDistinctSpeeds[0] + 360 - sortedDistinctSpeeds[sortedDistinctSpeeds.length - 1])
+                            let indexOfMaxGap = this.indexOfMax(gaps)
+
+                            console.log(`sorted: ${sortedDistinctSpeeds}, gaps: ${gaps}, index of max gap: ${indexOfMaxGap}`)
+                            if (indexOfMaxGap == sortedDistinctSpeeds.length - 1) {
+                                let min = sortedDistinctSpeeds[0]
+                                let max = sortedDistinctSpeeds[sortedDistinctSpeeds.length - 1]
+                                console.log(`${min} - ${max}`)
+                                s1.push([sd.date, min, max])
+                            } else {
+                                let min = sortedDistinctSpeeds[indexOfMaxGap + 1]
+                                let max = sortedDistinctSpeeds[indexOfMaxGap]
+                                console.log(`${min} - ${max}`)
+                                s1.push([sd.date, min, 360])
+                                s2.push([sd.date, 0, max])
+                            }
+                        }
+                    }
+
+                    console.log(s1)
+                    console.log(s2)
                     this.windDirectionChart.addSeries({
-                        type: "scatter",
-                        data: windDirection.map(d => [d.date, d.directions])
+                        type: "columnrange",
+                        data: s1,
+                        grouping: false
+                    })
+                    this.windDirectionChart.addSeries({
+                        type: "columnrange",
+                        data: s2,
+                        grouping: false
                     })
                 }
 
@@ -133,12 +181,12 @@ export class StationChartsComponent implements OnInit {
         })
     }
 
+    cloudinessChartCallback: Highcharts.ChartCallbackFunction = c => this.cloudinessChart = c;
+
+    windDirectionChartCallback: Highcharts.ChartCallbackFunction = c => this.windDirectionChart = c;
+
     ngOnInit(): void {
 
-    }
-
-    showDetails(measurementType: MeasurementTypes) {
-        this.measurementType = measurementType
     }
 
     divideBy60(x?: number): number | undefined {
@@ -161,10 +209,39 @@ export class StationChartsComponent implements OnInit {
         return (part / sum * 100).toFixed(1) + "%"
     }
 
+    private uniqueFilter(value: any, index: number, self: number[]) {
+        return self.indexOf(value) === index;
+    }
+
+    /**
+     * It seems that JavaScript seems to sort an array of numbers lexicographically by default, meaning that the number
+     * 10 precedes the number 5 (which is absolute f***ing nonsense). To overcome this, I wrote this number comparator.
+     */
+    private numberComparator(a: number, b: number) {
+        return a - b;
+    }
+
     private clearChart(chart: Highcharts.Chart) {
         while (chart.series.length > 0) {
             chart.series[0].remove()
         }
     }
 
+    private indexOfMax(arr: number[]) {
+        if (arr.length === 0) {
+            return -1;
+        }
+
+        let max = arr[0];
+        let maxIndex = 0;
+
+        for (let i = 1; i < arr.length; i++) {
+            if (arr[i] > max) {
+                maxIndex = i;
+                max = arr[i];
+            }
+        }
+
+        return maxIndex;
+    }
 }

@@ -4,14 +4,12 @@ import {MinMaxSumDetails, SummarizedMeasurement, SummaryData} from "../../data-c
 import {getDateLabel} from "../charts";
 
 
-import * as Highcharts from 'highcharts';
-import addMore from "highcharts/highcharts-more";
 import {registerLocaleData} from "@angular/common";
-
 import localeDe from '@angular/common/locales/de';
 import localeDeExtra from '@angular/common/locales/extra/de';
 
-addMore(Highcharts);
+import {ChartComponentBase} from "../chart-component-base";
+
 registerLocaleData(localeDe, 'de-DE', localeDeExtra);
 
 
@@ -31,32 +29,9 @@ type MinMaxSumDetailsProperty = {
     templateUrl: './sum-chart.component.html',
     styleUrls: ['./sum-chart.component.css']
 })
-export class SumChartComponent {
+export class SumChartComponent extends ChartComponentBase {
     @Input() sumProperty: MinMaxSumDetailsProperty = "sunshineMinutes"
     @Input() sum2Property?: MinMaxSumDetailsProperty = undefined
-    Highcharts: typeof Highcharts = Highcharts;
-    chart?: Highcharts.Chart;
-    chartOptions: Highcharts.Options = {
-        chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},
-        title: {text: undefined},
-        xAxis: {
-            type: 'datetime',
-            labels: {
-                formatter: v => new Date(v.value).toLocaleDateString('de-DE', {month: "short"})
-            },
-        },
-        yAxis: [{title: {text: undefined}, reversedStacks: false}],
-        tooltip: {
-            shared: true,
-            xDateFormat: "%d.%m.%Y"
-        },
-        plotOptions: {
-            line: {animation: false},
-            arearange: {animation: false},
-            column: {animation: false}
-
-        }
-    }
 
     @Input() set dataSource(c: Observable<SummaryData | undefined>) {
         c.subscribe(summaryData => {
@@ -83,20 +58,20 @@ export class SumChartComponent {
                 this.chart.addSeries({
                     type: "column",
                     data: minAvgMaxData.map(d => [d.dateLabel, d.sum]),
-                    borderRadius: 0
+                    borderRadius: 0,
+                    stack: "s",
+                    stacking: "normal"
                 })
                 if (this.sum2Property) {
                     this.chart.addSeries({
                         type: "column",
                         data: minAvgMaxData.map(d => [d.dateLabel, d.sum2]),
-                        borderRadius: 0
+                        borderRadius: 0,
+                        stack: "s",
+                        stacking: "normal"
                     })
                 }
             }
         })
     }
-
-    chartCallback: Highcharts.ChartCallbackFunction = c => this.chart = c
-
-
 }

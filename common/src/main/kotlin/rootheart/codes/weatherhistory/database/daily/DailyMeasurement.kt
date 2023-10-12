@@ -41,23 +41,22 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
     }
 
     fun toEntity(row: ResultRow): DailyMeasurementEntity {
+        val measurements = DailyMeasurements(
+                airTemperatureCentigrade = airTemperatureCentigrade.toEntity(row),
+                dewPointTemperatureCentigrade = dewPointTemperatureCentigrade.toEntity(row),
+                humidityPercent = humidityPercent.toEntity(row),
+                airPressureHectopascals = airPressureHectopascals.toEntity(row),
+                sunshineMinutes = sunshineMinutes.toEntity(row),
+                rainfallMillimeters = rainfallMillimeters.toEntity(row),
+                snowfallMillimeters = snowfallMillimeters.toEntity(row),
+                windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
+                visibilityMeters = visibilityMeters.toEntity(row),
+                detailedWindDirectionDegrees = row[detailedWindDirectionDegrees],
+                detailedCloudCoverage = row[detailedCloudCoverage],
+                cloudCoverageHistogram = row[cloudCoverageHistogram])
         return DailyMeasurementEntity(stationId = row[stationId].value,
                                       date = row[date].toLocalDate(),
-
-                                      measurements = DailyMeasurements(
-                                              airTemperatureCentigrade = airTemperatureCentigrade.toEntity(row),
-                                              dewPointTemperatureCentigrade = dewPointTemperatureCentigrade.toEntity(
-                                                      row),
-                                              humidityPercent = humidityPercent.toEntity(row),
-                                              airPressureHectopascals = airPressureHectopascals.toEntity(row),
-                                              sunshineMinutes = sunshineMinutes.toEntity(row),
-                                              rainfallMillimeters = rainfallMillimeters.toEntity(row),
-                                              snowfallMillimeters = snowfallMillimeters.toEntity(row),
-                                              windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
-                                              visibilityMeters = visibilityMeters.toEntity(row),
-
-                                              detailedCloudCoverage = row[detailedCloudCoverage],
-                                              cloudCoverageHistogram = row[cloudCoverageHistogram]))
+                                      measurements = measurements)
     }
 }
 
@@ -115,22 +114,22 @@ class DailySumColums(
 }
 
 private fun Table.minAvgMax(columnBaseName: String, precision: Int, scale: Int) =
-        DailyMinAvgMaxColumns(
-                decimal("MIN_$columnBaseName", precision, scale).nullable(),
-                decimal("AVG_$columnBaseName", precision, scale).nullable(),
-                decimal("MAX_$columnBaseName", precision, scale).nullable(),
-                decimalArrayNullable("DETAILED_$columnBaseName"),
-        )
+    DailyMinAvgMaxColumns(
+            decimal("MIN_$columnBaseName", precision, scale).nullable(),
+            decimal("AVG_$columnBaseName", precision, scale).nullable(),
+            decimal("MAX_$columnBaseName", precision, scale).nullable(),
+            decimalArrayNullable("DETAILED_$columnBaseName"),
+    )
 
 private fun Table.avgMax(columnBaseName: String, precision: Int, scale: Int) =
-        DailyAvgMaxColumns(
-                decimal("AVG_$columnBaseName", precision, scale).nullable(),
-                decimal("MAX_$columnBaseName", precision, scale).nullable(),
-                decimalArrayNullable("DETAILED_$columnBaseName")
-        )
+    DailyAvgMaxColumns(
+            decimal("AVG_$columnBaseName", precision, scale).nullable(),
+            decimal("MAX_$columnBaseName", precision, scale).nullable(),
+            decimalArrayNullable("DETAILED_$columnBaseName")
+    )
 
 private fun Table.sum(columnBaseName: String, precision: Int, scale: Int) =
-        DailySumColums(
-                decimal("SUM_$columnBaseName", precision, scale).nullable(),
-                decimalArrayNullable("DETAILED_$columnBaseName"),
-        )
+    DailySumColums(
+            decimal("SUM_$columnBaseName", precision, scale).nullable(),
+            decimalArrayNullable("DETAILED_$columnBaseName"),
+    )

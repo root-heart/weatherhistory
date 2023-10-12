@@ -10,6 +10,7 @@ import localeDe from '@angular/common/locales/de';
 import localeDeExtra from '@angular/common/locales/extra/de';
 import {Observable} from "rxjs";
 import {getDateLabel} from "../charts";
+import {ChartComponentBase} from "../chart-component-base";
 
 addMore(Highcharts);
 registerLocaleData(localeDe, 'de-DE', localeDeExtra);
@@ -37,25 +38,23 @@ type AvgMaxDetailsProperty = {
   templateUrl: './min-avg-max-chart.component.html',
   styleUrls: ['./min-avg-max-chart.component.css']
 })
-export class MinAvgMaxChart {
+export class MinAvgMaxChart extends ChartComponentBase{
     @Input() property?: MinAvgMaxDetailsProperty | AvgMaxDetailsProperty
     @Input() set dataSource(c: Observable<SummaryData | undefined>) {
         c.subscribe(summaryData => {
-            console.log("data source set")
+            if (!this.property) {
+                return
+            }
             if (summaryData) {
                 // TODO this is duplicated in the other chart classes
                 let minAvgMaxData: MinAvgMaxSummary[] = summaryData.details
                     .map(m => {
-                        if (m && this.property) {
-                            let measurement = m.measurements![this.property!]
-                            return {
-                                dateLabel: getDateLabel(m),
-                                min: "min" in measurement ? measurement.min : 0,
-                                avg: measurement.avg,
-                                max: measurement.max
-                            }
-                        } else {
-                            return null
+                        let measurement = m.measurements![this.property!]
+                        return {
+                            dateLabel: getDateLabel(m),
+                            min: "min" in measurement ? measurement.min : 0,
+                            avg: measurement.avg,
+                            max: measurement.max
                         }
                     })
                     .filter(d => d !== null && d !== undefined)
@@ -65,32 +64,6 @@ export class MinAvgMaxChart {
                 this.setData([], "month")
             }
         })
-    }
-
-    Highcharts: typeof Highcharts = Highcharts;
-
-    chart?: Highcharts.Chart;
-    chartCallback: Highcharts.ChartCallbackFunction = c => this.chart = c
-    chartOptions: Highcharts.Options = {
-        chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},
-        title: {text: undefined},
-        xAxis: {
-            type: 'datetime',
-            labels: {
-                formatter: v => new Date(v.value).toLocaleDateString('de-DE', {month: "short"})
-            },
-        },
-        yAxis: [{title: {text: undefined}, reversedStacks: false}],
-        tooltip: {
-            shared: true,
-            xDateFormat: "%d.%m.%Y"
-        },
-        plotOptions: {
-            line: {animation: false},
-            arearange: {animation: false},
-            column: {animation: false}
-
-        }
     }
 
     public setData(data: Array<MinAvgMaxSummary>, resolution: ChartResolution): void {
