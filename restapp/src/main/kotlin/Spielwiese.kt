@@ -7,6 +7,8 @@ import kotlin.random.Random
 import kotlin.reflect.jvm.internal.impl.descriptors.Visibilities.Local
 
 fun main() {
+    val x = Array<Pair<Int, Int>?>(10) { null }
+    println(x.isArrayOf<Pair<Int, Int>>())
 
 //    println(Months.monthsBetween(LocalDate(2022, 1, 1), LocalDate(2022, 2,1)).months)
 //    val dir = File("C:\\Users\\kai\\Documents\\Scans")

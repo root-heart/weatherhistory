@@ -5,12 +5,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
-import rootheart.codes.weatherhistory.database.MeasurementsTable
-import rootheart.codes.weatherhistory.database.StationsTable
-import rootheart.codes.weatherhistory.database.decimalArrayNullable
-import rootheart.codes.weatherhistory.database.generatedDateColumn
-import rootheart.codes.weatherhistory.database.intArray
-import rootheart.codes.weatherhistory.database.intArrayNullable
+import rootheart.codes.weatherhistory.database.*
 import java.math.BigDecimal
 
 object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
@@ -31,7 +26,7 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
 
     val detailedCloudCoverage = intArrayNullable("DETAILED_CLOUD_COVERAGE")
     val cloudCoverageHistogram = intArray("CLOUD_COVERAGE_HISTOGRAM")
-    val detailedWindDirectionDegrees = intArrayNullable("DETAILED_WIND_DIRECTION_DEGREES")
+    val windDirectionDegrees = minMax("WIND_DIRECTION_DEGREES", 3, 0)
 
     val windSpeedMetersPerSecond = avgMax("WIND_SPEED_METERS_PER_SECOND", 4, 1)
     val visibilityMeters = minAvgMax("VISIBILITY_METERS", 6, 0)
@@ -51,12 +46,79 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
                 snowfallMillimeters = snowfallMillimeters.toEntity(row),
                 windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
                 visibilityMeters = visibilityMeters.toEntity(row),
-                detailedWindDirectionDegrees = row[detailedWindDirectionDegrees],
+                windDirectionDegrees = windDirectionDegrees.toEntity(row),
                 detailedCloudCoverage = row[detailedCloudCoverage],
                 cloudCoverageHistogram = row[cloudCoverageHistogram])
         return DailyMeasurementEntity(stationId = row[stationId].value,
                                       date = row[date].toLocalDate(),
                                       measurements = measurements)
+    }
+
+    private fun calculateMinAndMaxWindDirection(row: ResultRow): DailyMinMax {
+        val windDirections = row[windDirectionDegrees.details]
+        val gaps = ArrayList<BigDecimal>()
+        val sortedDistinctDirections = windDirections?.filterNotNull()
+                ?.distinct()
+                ?.sorted()
+            ?: return DailyMinMax()
+
+        for (index in 0..sortedDistinctDirections.size - 2) {
+            val direction = sortedDistinctDirections[index]
+            gaps.add(sortedDistinctDirections[index + 1] - direction)
+        }
+
+        if (sortedDistinctDirections.isEmpty()) {
+            return DailyMinMax()
+        }
+
+        gaps.add(sortedDistinctDirections[0] + BigDecimal(360) - sortedDistinctDirections[sortedDistinctDirections.size - 1])
+        val indexOfMaxGap = indexOfMax(gaps)
+        val windDirection = DailyMinMax()
+        if (indexOfMaxGap == sortedDistinctDirections.size - 1) {
+            windDirection.min = sortedDistinctDirections[0]
+            windDirection.max = sortedDistinctDirections[sortedDistinctDirections.size - 1]
+        } else {
+            windDirection.min = sortedDistinctDirections[indexOfMaxGap + 1]
+            windDirection.max = sortedDistinctDirections[indexOfMaxGap]
+        }
+        windDirection.details = windDirections
+        return windDirection
+    }
+
+    private fun indexOfMax(arr: List<BigDecimal>): Int {
+        if (arr.isEmpty()) {
+            return -1
+        }
+
+        var max = arr[0]
+        var maxIndex = 0
+
+        for (i in 1 until arr.size) {
+            if (arr[i] > max) {
+                maxIndex = i;
+                max = arr[i];
+            }
+        }
+
+        return maxIndex;
+    }
+}
+
+class DailyMinMaxColumns(
+        val min: Column<BigDecimal?>,
+        val max: Column<BigDecimal?>,
+        val details: Column<Array<BigDecimal?>?>
+) {
+    fun setValues(batch: BatchInsertStatement, values: DailyMinMax) {
+        batch[min] = values.min
+        batch[max] = values.max
+        batch[details] = values.details
+    }
+
+    fun toEntity(row: ResultRow): DailyMinMax {
+        return DailyMinMax(min = row[min],
+                           max = row[max],
+                           details = row[details])
     }
 }
 
@@ -117,6 +179,13 @@ private fun Table.minAvgMax(columnBaseName: String, precision: Int, scale: Int) 
     DailyMinAvgMaxColumns(
             decimal("MIN_$columnBaseName", precision, scale).nullable(),
             decimal("AVG_$columnBaseName", precision, scale).nullable(),
+            decimal("MAX_$columnBaseName", precision, scale).nullable(),
+            decimalArrayNullable("DETAILED_$columnBaseName"),
+    )
+
+private fun Table.minMax(columnBaseName: String, precision: Int, scale: Int) =
+    DailyMinMaxColumns(
+            decimal("MIN_$columnBaseName", precision, scale).nullable(),
             decimal("MAX_$columnBaseName", precision, scale).nullable(),
             decimalArrayNullable("DETAILED_$columnBaseName"),
     )

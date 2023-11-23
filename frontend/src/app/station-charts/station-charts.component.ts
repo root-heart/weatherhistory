@@ -28,7 +28,7 @@ registerLocaleData(localeDe, 'de-DE', localeDeExtra);
     styleUrls: ['./station-charts.component.css'],
     encapsulation: ViewEncapsulation.None
 })
-export class StationChartsComponent implements OnInit {
+export class StationChartsComponent {
 
     Highcharts: typeof Highcharts = Highcharts;
     cloudinessChart?: Highcharts.Chart;
@@ -102,56 +102,35 @@ export class StationChartsComponent implements OnInit {
     measurementType?: MeasurementTypes
 
     constructor(public filterService: FilterService) {
+        // TODO move wind direction chart related stuff into own component
         filterService.currentData.subscribe(data => {
             if (data) {
                 if (this.windDirectionChart) {
                     this.clearChart(this.windDirectionChart)
 
-                    let scatterData = data.details.map(m => ({
-                        date: getDateLabel(m),
-                        hourlyWindSpeeds: m.measurements?.detailedWindDirectionDegrees
-                    }))
+                    let scatterData = data.details
+                        .map(m => ({
+                            date: getDateLabel(m),
+                            hourlyWindSpeeds: m.measurements?.windDirectionDegrees
+                        }))
 
                     let s1 = []
-                    let s2 = []
                     for (let sd of scatterData) {
                         if (sd.hourlyWindSpeeds) {
-                            let sortedDistinctSpeeds = sd.hourlyWindSpeeds
-                                .filter(this.uniqueFilter)
-                                .sort(this.numberComparator)
-                            let gaps: number[] = []
-                            for (let i = 0; i < sortedDistinctSpeeds.length - 1; i++) {
-                                gaps.push(sortedDistinctSpeeds[i + 1] - sortedDistinctSpeeds[i])
-                            }
-                            gaps.push(sortedDistinctSpeeds[0] + 360 - sortedDistinctSpeeds[sortedDistinctSpeeds.length - 1])
-                            let indexOfMaxGap = this.indexOfMax(gaps)
-
-                            console.log(`sorted: ${sortedDistinctSpeeds}, gaps: ${gaps}, index of max gap: ${indexOfMaxGap}`)
-                            if (indexOfMaxGap == sortedDistinctSpeeds.length - 1) {
-                                let min = sortedDistinctSpeeds[0]
-                                let max = sortedDistinctSpeeds[sortedDistinctSpeeds.length - 1]
-                                console.log(`${min} - ${max}`)
+                            let min = sd.hourlyWindSpeeds.min
+                            let max = sd.hourlyWindSpeeds.max
+                            if (max > min) {
                                 s1.push([sd.date, min, max])
                             } else {
-                                let min = sortedDistinctSpeeds[indexOfMaxGap + 1]
-                                let max = sortedDistinctSpeeds[indexOfMaxGap]
-                                console.log(`${min} - ${max}`)
                                 s1.push([sd.date, min, 360])
-                                s2.push([sd.date, 0, max])
+                                s1.push([sd.date, 0, max])
                             }
                         }
                     }
 
-                    console.log(s1)
-                    console.log(s2)
                     this.windDirectionChart.addSeries({
                         type: "columnrange",
                         data: s1,
-                        grouping: false
-                    })
-                    this.windDirectionChart.addSeries({
-                        type: "columnrange",
-                        data: s2,
                         grouping: false
                     })
                 }
@@ -184,10 +163,6 @@ export class StationChartsComponent implements OnInit {
     cloudinessChartCallback: Highcharts.ChartCallbackFunction = c => this.cloudinessChart = c;
 
     windDirectionChartCallback: Highcharts.ChartCallbackFunction = c => this.windDirectionChart = c;
-
-    ngOnInit(): void {
-
-    }
 
     divideBy60(x?: number): number | undefined {
         return x ? x / 60 : undefined

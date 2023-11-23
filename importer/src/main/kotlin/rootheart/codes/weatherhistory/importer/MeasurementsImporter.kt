@@ -34,10 +34,10 @@ private val log = KotlinLogging.logger {}
 private val databaseExecutor = CoroutineScope(newFixedThreadPoolContext(32, "database-operations"))
 
 @DelicateCoroutinesApi
-private val unzipParseConvertExecutor = CoroutineScope(newFixedThreadPoolContext(8, "download-unzip-parse-convert"))
+private val unzipParseConvertExecutor = CoroutineScope(newFixedThreadPoolContext(16, "download-unzip-parse-convert"))
 
 @DelicateCoroutinesApi
-private val downloadThreads = CoroutineScope(newFixedThreadPoolContext(2, "download"))
+private val downloadThreads = CoroutineScope(newFixedThreadPoolContext(8, "download"))
 
 private val databaseInsertJobs = ArrayList<Job>()
 
@@ -212,46 +212,34 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
 
         // TODO fix some data issues
         measurementByTime.values.forEach { m ->
+            with (m.measurements) {
+                airPressureHectopascals.min = airPressureHectopascals.details?.nullsafeMin()
+                airPressureHectopascals.max = airPressureHectopascals.details?.nullsafeMax()
 
-            m.measurements.airPressureHectopascals.min = m.measurements.airPressureHectopascals.details?.nullsafeMin()
-            m.measurements.airPressureHectopascals.max = m.measurements.airPressureHectopascals.details?.nullsafeMax()
+                dewPointTemperatureCentigrade.min = dewPointTemperatureCentigrade.details?.nullsafeMin()
+                dewPointTemperatureCentigrade.avg = dewPointTemperatureCentigrade.details?.nullsafeAvgDecimal()
+                dewPointTemperatureCentigrade.max = dewPointTemperatureCentigrade.details?.nullsafeMax()
 
-            m.measurements.dewPointTemperatureCentigrade.min = m.measurements.dewPointTemperatureCentigrade.details?.nullsafeMin()
-            m.measurements.dewPointTemperatureCentigrade.avg = m.measurements.dewPointTemperatureCentigrade.details?.nullsafeAvgDecimal()
-            m.measurements.dewPointTemperatureCentigrade.max = m.measurements.dewPointTemperatureCentigrade.details?.nullsafeMax()
+                visibilityMeters.min = visibilityMeters.details?.nullsafeMin()
+                visibilityMeters.avg = visibilityMeters.details?.nullsafeAvgDecimal()
+                visibilityMeters.max = visibilityMeters.details?.nullsafeMax()
 
-            m.measurements.visibilityMeters.min = m.measurements.visibilityMeters.details?.nullsafeMin()
-            m.measurements.visibilityMeters.avg = m.measurements.visibilityMeters.details?.nullsafeAvgDecimal()
-            m.measurements.visibilityMeters.max = m.measurements.visibilityMeters.details?.nullsafeMax()
+                humidityPercent.min = humidityPercent.details?.nullsafeMin()
+                humidityPercent.avg = humidityPercent.details?.nullsafeAvgDecimal()
+                humidityPercent.max = humidityPercent.details?.nullsafeMax()
 
-            m.measurements.humidityPercent.min = m.measurements.humidityPercent.details?.nullsafeMin()
-            m.measurements.humidityPercent.avg = m.measurements.humidityPercent.details?.nullsafeAvgDecimal()
-            m.measurements.humidityPercent.max = m.measurements.humidityPercent.details?.nullsafeMax()
+                sunshineMinutes.sum = sunshineMinutes.details?.filterNotNull()?.sumOf { it }
 
-            m.measurements.sunshineMinutes.sum = m.measurements.sunshineMinutes.details?.filterNotNull()?.sumOf { it }
+                m.measurements.windDirectionDegrees.min = m.measurements.windDirectionDegrees.details?.nullsafeMin()
+                m.measurements.windDirectionDegrees.max = m.measurements.windDirectionDegrees.details?.nullsafeMax()
 
-            val histogram = Array(10) { 0 }
-            m.measurements.detailedCloudCoverage?.filterNotNull()
-                    ?.map { if (it == -1) 9 else it }
-                    ?.forEach { histogram[it]++ }
-            m.measurements.cloudCoverageHistogram = histogram
+                val histogram = Array(10) { 0 }
+                detailedCloudCoverage?.filterNotNull()
+                        ?.map { if (it == -1) 9 else it }
+                        ?.forEach { histogram[it]++ }
+                cloudCoverageHistogram = histogram
+            }
         }
-
-//        val list = measurementByTime.values.sortedBy { it.day }
-//        for ((index, measurement) in list.withIndex()) {
-//            if (measurement.precipitationMillimeters != null
-//                && measurement.precipitationMillimeters!! > BigDecimal.ZERO
-//                && measurement.precipitationType == null
-//            ) {
-//                if (index > 0) {
-//                    if (list[index - 1].precipitationType != null) {
-//                        measurement.precipitationType = list[index - 1].precipitationType
-//                    } else if (index < list.size - 1) {
-//                        measurement.precipitationType = list[index + 1].precipitationType
-//                    }
-//                }
-//            }
-//        }
     }
 }
 
@@ -351,7 +339,7 @@ private fun setHourlyVisibilityData(
 private fun setHourlyWindSpeedData(measurementRecord: DailyMeasurementEntity, hour: Int,
                                    row: SemicolonSeparatedValues.Row) {
     setHourlyValue(measurementRecord.measurements.windSpeedMetersPerSecond::details, hour, row["F"]?.let(::BigDecimal))
-    measurementRecord.measurements.detailedWindDirectionDegrees?.set(hour, row["D"]?.toInt())
+    setHourlyValue(measurementRecord.measurements.windDirectionDegrees::details, hour, row["D"]?.let(::BigDecimal))
 }
 
 private fun setHourlyPrecipitationData(
@@ -368,21 +356,25 @@ private fun setHourlyPrecipitationData(
 }
 
 private fun setDailyData(measurementRecord: DailyMeasurementEntity, row: SemicolonSeparatedValues.Row) {
-    measurementRecord.measurements.windSpeedMetersPerSecond.max = row["FX"]?.let(::BigDecimal)
-    measurementRecord.measurements.windSpeedMetersPerSecond.avg = row["FM"]?.let(::BigDecimal)
-    val precipitationType = row["RSKF"]
-    if (precipitationType == "6") {
-        measurementRecord.measurements.rainfallMillimeters.sum = row["RSK"]?.let(::BigDecimal)
-    } else if (precipitationType == "7") {
-        measurementRecord.measurements.snowfallMillimeters.sum = row["RSK"]?.let(::BigDecimal)
+    with (measurementRecord.measurements) {
+       windSpeedMetersPerSecond.max = row["FX"]?.let(::BigDecimal)
+       windSpeedMetersPerSecond.avg = row["FM"]?.let(::BigDecimal)
+        val precipitationType = row["RSKF"]
+        if (precipitationType == "6") {
+            rainfallMillimeters.sum = row["RSK"]?.let(::BigDecimal)
+        } else if (precipitationType == "7") {
+            snowfallMillimeters.sum = row["RSK"]?.let(::BigDecimal)
+        }
+        // measurementRecord.sumSunshineDurationMinutes = row["SDK"]?.let(::BigDecimal)?.multiply(sixty)?.intValueExact()
+        // measurementRecord.snowheightCentimeters = row["SHK"]?.let(::BigDecimal)
+        airPressureHectopascals.avg = row["PM"]?.let(::BigDecimal)
+        airTemperatureCentigrade.avg = row["TMK"]?.let(::BigDecimal)
+        humidityPercent.avg = row["UPM"]?.let(::BigDecimal)
+        airTemperatureCentigrade.max = row["TXK"]?.let(::BigDecimal)
+        airTemperatureCentigrade.min = row["TNK"]?.let(::BigDecimal)
+        windDirectionDegrees.min = windDirectionDegrees.details?.nullsafeMin()
+        windDirectionDegrees.max = windDirectionDegrees.details?.nullsafeMax()
     }
-    // measurementRecord.sumSunshineDurationMinutes = row["SDK"]?.let(::BigDecimal)?.multiply(sixty)?.intValueExact()
-    // measurementRecord.snowheightCentimeters = row["SHK"]?.let(::BigDecimal)
-    measurementRecord.measurements.airPressureHectopascals.avg = row["PM"]?.let(::BigDecimal)
-    measurementRecord.measurements.airTemperatureCentigrade.avg = row["TMK"]?.let(::BigDecimal)
-    measurementRecord.measurements.humidityPercent.avg = row["UPM"]?.let(::BigDecimal)
-    measurementRecord.measurements.airTemperatureCentigrade.max = row["TXK"]?.let(::BigDecimal)
-    measurementRecord.measurements.airTemperatureCentigrade.min = row["TNK"]?.let(::BigDecimal)
 }
 
 

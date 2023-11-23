@@ -46,7 +46,7 @@ fun insertDailyMeasurementsIntoDatabase(measurements: List<DailyMeasurementEntit
             rainfallMillimeters.setValues(this, it.measurements.rainfallMillimeters )
             snowfallMillimeters.setValues(this, it.measurements.snowfallMillimeters)
 
-            this[detailedWindDirectionDegrees] = it.measurements.detailedWindDirectionDegrees
+            windDirectionDegrees.setValues(this, it.measurements.windDirectionDegrees)
         }
     }
     log.info { "Inserted ${measurements.size} objects into the database" }

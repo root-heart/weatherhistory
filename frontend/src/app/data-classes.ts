@@ -1,5 +1,11 @@
 export type ChartResolution = "day" | "month" | "year"
 
+export type MinMaxDetails = {
+    min: number,
+    max: number, maxDay?: Date,
+    details?: number[]
+}
+
 export type AvgMaxDetails = {
     avg: number,
     max: number, maxDay?: Date,
@@ -53,7 +59,7 @@ export type SummarizedMeasurement = {
     snowfallMillimeters: MinMaxSumDetails,
     detailedCloudCoverage: number[],
     cloudCoverageHistogram: number[],
-    detailedWindDirectionDegrees: number[],
+    windDirectionDegrees: MinMaxDetails,
 }
 
 

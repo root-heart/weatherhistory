@@ -8,30 +8,30 @@ import rootheart.codes.common.strings.splitAndTrimTokensToList
 import java.math.BigDecimal
 
 fun Table.decimalArray(name: String): Column<Array<BigDecimal?>> =
-        registerColumn(name, DecimalArrayColumnType())
+    registerColumn(name, DecimalArrayColumnType())
 
 fun Table.intArray(name: String): Column<Array<Int>> =
-        registerColumn(name, IntArrayColumnType())
+    registerColumn(name, IntArrayColumnType())
 
 fun Table.intArrayNullable(name: String): Column<Array<Int?>?> =
-        registerColumn(name, IntArrayColumnType())
+    registerColumn(name, IntArrayColumnType())
 
 fun Table.decimalArrayNullable(name: String): Column<Array<BigDecimal?>?> =
-        registerColumn(name, DecimalArrayColumnType())
+    registerColumn(name, DecimalArrayColumnType())
 
 fun Table.generatedDateColumn(name: String, definition: String): Column<DateTime> =
-        registerColumn(name, object : ColumnType(true) {
-            override fun sqlType(): String {
-                return "TIMESTAMP GENERATED ALWAYS AS ($definition) STORED"
-            }
+    registerColumn(name, object : ColumnType(true) {
+        override fun sqlType(): String {
+            return "TIMESTAMP GENERATED ALWAYS AS ($definition) STORED"
+        }
 
-            override fun valueFromDB(value: Any): Any = when(value) {
-                is DateTime -> value
-                is java.sql.Date ->  DateTime(value.time)
-                is java.sql.Timestamp -> DateTime(value.time)
-                else -> valueFromDB(value.toString())
-            }
-        })
+        override fun valueFromDB(value: Any): Any = when (value) {
+            is DateTime           -> value
+            is java.sql.Date      -> DateTime(value.time)
+            is java.sql.Timestamp -> DateTime(value.time)
+            else                  -> valueFromDB(value.toString())
+        }
+    })
 
 class DecimalArrayColumnType : ColumnType(true) {
     override fun sqlType(): String = "TEXT"
@@ -65,10 +65,12 @@ class IntArrayColumnType() : ColumnType(true) {
     override fun sqlType(): String = "TEXT"
 
     override fun valueToDB(value: Any?): Any? {
-        return if (value is Array<*>) {
-            value.joinToString(",")
-        } else {
-            super.valueToDB(value)
+        return when (value) {
+            is Array<*> -> { value.joinToString(",") }
+            null        -> { null }
+            else        -> {
+                error("unexpected values " + value.javaClass)
+            }
         }
     }
 
@@ -86,7 +88,7 @@ class IntArrayColumnType() : ColumnType(true) {
             }
             return value.joinToString(",")
         } else {
-            return super.notNullValueToDB(value)
+            error("unexpected values " + value.javaClass)
         }
     }
 }

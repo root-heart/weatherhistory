@@ -21,10 +21,16 @@ class DailyMeasurements(
         val rainfallMillimeters: DailySum = DailySum(),
         val snowfallMillimeters: DailySum = DailySum(),
         val windSpeedMetersPerSecond: DailyAvgMax = DailyAvgMax(),
+        val windDirectionDegrees: DailyMinMax = DailyMinMax(),
 
         var detailedCloudCoverage: Array<Int?>? = null,
-        var cloudCoverageHistogram: Array<Int>? = null,
-        var detailedWindDirectionDegrees: Array<Int?>? = null,
+        var cloudCoverageHistogram: Array<Int>? = null
+)
+
+class DailyMinMax(
+        var min: BigDecimal? = null,
+        var max: BigDecimal? = null,
+        var details: Array<BigDecimal?>? = null,
 )
 
 class DailyAvgMax(

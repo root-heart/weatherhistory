@@ -97,11 +97,11 @@ fun Routing.stationsResource() {
                             var condition = this.stationId.eq(stationId)
                                     .and(year.greaterEq(years.start))
                                     .and(year.lessEq(years.end))
-                            if (months != null) {
+                            condition = if (months != null) {
                                 val monthsList = months.map { it.elements() }.flatten()
-                                condition = condition.and(month.inList(monthsList))
+                                condition.and(month.inList(monthsList))
                             } else {
-                                condition = condition.and(month.isNotNull())
+                                condition.and(month.isNotNull())
                             }
 
                             select(condition).map(::toMonthlySummary)
