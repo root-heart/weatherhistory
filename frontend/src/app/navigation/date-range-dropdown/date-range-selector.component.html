@@ -1,0 +1,21 @@
+<label>Von</label>
+<year-selection [year]="filterService.year"></year-selection>
+<label>Bis</label>
+<year-selection [year]="filterService.endYear"></year-selection>
+
+<label id="months-filter-label">Monate</label>
+<dropdown style="grid-column: span 3">
+    <div button>{{getButtonName()}}</div>
+
+    <div dropdown>
+        <toggable-button style="margin-bottom: 0.5rem" [subject]="filterService.wholeYear">Gesamtes Jahr</toggable-button>
+
+        <div class="grid">
+            <toggable-button *ngFor="let i of [0,1,2,3,4,5,6,7,8,9,10,11]"
+                             [enabled]="!filterService.wholeYear.value"
+                             [subject]="filterService.months[i]">
+                {{getMonthName(i + 1)}}
+            </toggable-button>
+        </div>
+    </div>
+</dropdown>

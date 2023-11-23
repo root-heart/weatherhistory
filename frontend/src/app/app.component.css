@@ -1,35 +1,38 @@
 :host {
-    position: relative;
+  margin: 1vw;
+  display: block;
 }
 
-h1 {
-    grid-column-start: 1;
-    grid-column-end: 2;
+:host /deep/ .mat-tab-label {
+  color: #333;
 }
 
-station-and-date-filter {
-
+hr {
+  border: none;
+  border-bottom: var(--fine-border-line);
+  margin: 1rem 2vw;
 }
 
-aside {
-    position: fixed;
-    left: 2rem;
-    top: 10rem;
-    bottom: 5rem;
-    width: 30rem;
+/*map-dropdown {*/
+/*    width: 30rem;*/
+/*}*/
+
+.dropdown-background {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 888;
+
+  backdrop-filter: blur(0.5rem);
 }
 
 main {
-    margin: 0 10rem;
-    /*margin-top: 10rem;*/
-    /*padding-top: 10rem;*/
+  display: grid;
+  grid-template-columns: repeat(1, 87vw);
+  grid-auto-rows: 20vw;
+  grid-gap: 1vw 2vw;
+  justify-content: center;
 }
 
-main > section > h1 {
-    grid-column-start: 1;
-    grid-column-end: 3;
-}
-
-main > section > article {
-    height: 100%;
-}

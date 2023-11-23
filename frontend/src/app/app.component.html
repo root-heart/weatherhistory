@@ -1,69 +1,15 @@
-<!--<div style="display: grid; width: 60%; grid-template-columns: repeat(14, auto)">-->
-<!--    <span>wetterchroniken.de/</span>-->
-<!--    <select>-->
-<!--        <option>Ort 1</option>-->
-<!--        <option>Ort 2</option>-->
-<!--        <option>Ort 3</option>-->
-<!--    </select>-->
-<!--    <input type="number">-->
-<!--    <select>-->
-<!--        <option>Ganzes Jahr</option>-->
-<!--        <option>Frühling</option>-->
-<!--        <option>Sommer</option>-->
-<!--        <option>Herbst</option>-->
-<!--        <option>Winter</option>-->
-<!--        <option>Januar</option>-->
-<!--        <option>Februar</option>-->
-<!--        <option>März</option>-->
-<!--        <option>April</option>-->
-<!--        <option>Mai</option>-->
-<!--        <option>Juni</option>-->
-<!--        <option>Juli</option>-->
-<!--        <option>August</option>-->
-<!--        <option>September</option>-->
-<!--        <option>Oktober</option>-->
-<!--        <option>November</option>-->
-<!--        <option>Dezember</option>-->
-<!--    </select>-->
-<!--</div>-->
+<header>
+    <h1>wetterchroniken</h1>
+</header>
 
-<station-and-date-filter (onFilterChanged)="filterChanged($event)"></station-and-date-filter>
+<navigation></navigation>
 
-<main>
-    <section>
-        <h1>Temperatur</h1>
-        min Temp: {{minTemperature}}
-        avg Temp: {{avgTemperature}}
-        max Temp: {{maxTemperature}}
-        <temperature-chart #temperatureChart></temperature-chart>
-    </section>
+<hr>
 
-    <section>
-        <h1>Niederschlag</h1>
-        <precipitation-chart #precipitationChart></precipitation-chart>
-    </section>
+<station-charts></station-charts>
 
-    <section>
-        <h1>Sonnenschein</h1>
-        Sonne: {{sumSunshineDuration}}
-        <sunshine-chart #sunshineChart></sunshine-chart>
-    </section>
-
-    <section>
-        <h1>Bewölkung</h1>
-        <cloudiness-chart #cloudinessChart></cloudiness-chart>
-    </section>
-
-    <section>
-        <h1>Luftdruck</h1>
-        <air-pressure-chart #airPressureChart></air-pressure-chart>
-    </section>
-
-    <section>
-        <h1>Wind</h1>
-        <wind-speed-chart #windSpeedChart></wind-speed-chart>
-    </section>
-
-</main>
+<router-outlet></router-outlet>
 
 
+
+<div class="dropdown-background" #dropdownBackground></div>

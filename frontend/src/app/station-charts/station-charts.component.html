@@ -1,0 +1,167 @@
+<section>
+    <h1>Temperatur</h1>
+
+    <min-avg-max-chart class="chart" id="temperatureChart" [property]="'airTemperatureCentigrade'"
+                       [dataSource]="filterService.currentData">
+
+    </min-avg-max-chart>
+
+    <div class="summary">
+
+        <table>
+            <tr>
+                <td>&#x2b9d;</td>
+                <td>{{filterService.currentData.value?.summary?.airTemperatureCentigrade?.max?.toFixed(1)}}°C</td>
+            </tr>
+            <tr>
+                <td>&#8960;</td>
+                <td> {{filterService.currentData.value?.summary?.airTemperatureCentigrade?.avg?.toFixed(1)}}°C</td>
+            </tr>
+            <tr>
+                <td>&#x2b9f;</td>
+                <td>{{filterService.currentData.value?.summary?.airTemperatureCentigrade?.min?.toFixed(1)}}°C</td>
+            </tr>
+        </table>
+
+    </div>
+</section>
+
+
+<section>
+    <h1>Sonnenschein</h1>
+
+    <sum-chart class="chart" id="sunshineDurationChart"
+               [sumProperty]="'sunshineMinutes'" [dataSource]="filterService.currentData">
+    </sum-chart>
+
+    <div class="summary">
+        &#931; {{divideBy60(filterService.currentData.value?.summary?.sunshineMinutes?.sum)?.toFixed(1)}}h
+        &#8960; {{divideBy60(filterService.currentData.value?.summary?.sunshineMinutes?.sum)?.toFixed(1)}}h
+    </div>
+
+</section>
+
+<section>
+    <h1>Niederschlag</h1>
+
+    <sum-chart class="chart" id="precipitationChart"
+               [sumProperty]="'rainfallMillimeters'" [sum2Property]="'snowfallMillimeters'"
+               [dataSource]="filterService.currentData"></sum-chart>
+
+    <div class="summary">
+        <fa-icon [icon]="faRain"></fa-icon>
+        {{filterService.currentData.value?.summary?.rainfallMillimeters?.sum?.toFixed(1)}}l/m²
+        &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+        <fa-icon [icon]="faSnow"></fa-icon>
+        {{filterService.currentData.value?.summary?.snowfallMillimeters?.sum?.toFixed(1)}}mm
+    </div>
+</section>
+
+<section>
+    <h1>Wind</h1>
+
+    <min-avg-max-chart class="chart" id="windChart" [property]="'windSpeedMetersPerSecond'"
+                       [dataSource]="filterService.currentData">
+
+    </min-avg-max-chart>
+
+    <div class="summary">
+        &#8960; {{filterService.currentData.value?.summary?.windSpeedMetersPerSecond?.avg?.toFixed(1)}}m/s
+        &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+        &#x2b9d; {{filterService.currentData.value?.summary?.windSpeedMetersPerSecond?.max?.toFixed(1)}}m/s
+    </div>
+</section>
+
+
+<section>
+    <h1>Windrichtung</h1>
+
+    <highcharts-chart class="chart" id="windDirectionChart"
+                      [Highcharts]="Highcharts"
+                      [options]="windDirectionChartOptions"
+                      [callbackFunction]="windDirectionChartCallback">
+    </highcharts-chart>
+
+</section>
+
+<section>
+    <h1>Luftfeuchtigkeit</h1>
+
+    <min-avg-max-chart class="chart" id="humidityChart"
+                       [property]="'humidityPercent'" [dataSource]="filterService.currentData">
+    </min-avg-max-chart>
+
+    <div class="summary">
+        &#x2b9f; {{filterService.currentData.value?.summary?.humidityPercent?.min?.toFixed(1)}}%
+        &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+        &#8960; {{filterService.currentData.value?.summary?.humidityPercent?.avg?.toFixed(1)}}%
+        &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+        &#x2b9d; {{filterService.currentData.value?.summary?.humidityPercent?.max?.toFixed(1)}}%
+    </div>
+</section>
+
+<section>
+    <h1>Taupunkt</h1>
+
+    <min-avg-max-chart class="chart" id="dewPointTemperatureChart"
+                       [property]="'dewPointTemperatureCentigrade'" [dataSource]="filterService.currentData">
+
+    </min-avg-max-chart>
+
+    <div class="summary">
+        &#x2b9f; {{filterService.currentData.value?.summary?.dewPointTemperatureCentigrade?.min?.toFixed(1)}}°C
+        &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+        &#8960; {{filterService.currentData.value?.summary?.dewPointTemperatureCentigrade?.avg?.toFixed(1)}}°C
+        &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+        &#x2b9d; {{filterService.currentData.value?.summary?.dewPointTemperatureCentigrade?.max?.toFixed(1)}}°C
+    </div>
+</section>
+
+<section>
+    <h1>Luftdruck</h1>
+
+    <min-avg-max-chart class="chart" id="airPressureChart"
+                       [property]="'airPressureHectopascals'" [dataSource]="filterService.currentData">
+    </min-avg-max-chart>
+
+    <div class="summary">
+        &#x2b9f; {{filterService.currentData.value?.summary?.airPressureHectopascals?.min?.toFixed(1)}}hPa
+        &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+        &#8960; {{filterService.currentData.value?.summary?.airPressureHectopascals?.avg?.toFixed(1)}}hPa
+        &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+        &#x2b9d; {{filterService.currentData.value?.summary?.airPressureHectopascals?.max?.toFixed(1)}}hPa
+    </div>
+</section>
+
+<section>
+    <h1>Sichtweite</h1>
+
+    <div class="summary">
+        &#x2b9f; {{filterService.currentData.value?.summary?.visibilityMeters?.min?.toFixed(0)}}m
+        &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+        &#8960; {{filterService.currentData.value?.summary?.visibilityMeters?.avg?.toFixed(0)}}m
+        &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+        &#x2b9d; {{filterService.currentData.value?.summary?.visibilityMeters?.max?.toFixed(0)}}m
+    </div>
+</section>
+
+<section>
+    <h1>Bewölkung</h1>
+
+    <highcharts-chart id="cloudinessChart"
+                      [Highcharts]="Highcharts"
+                      [options]="chartOptions"
+                      [callbackFunction]="cloudinessChartCallback">
+    </highcharts-chart>
+
+    <div class="summary">
+        <fa-icon [icon]="faSun"></fa-icon>
+        {{percentageOfCloudCoverage(filterService.currentData.value?.summary?.cloudCoverageHistogram, [0, 1, 2])}}
+        &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+        <fa-icon [icon]="faCloudSun"></fa-icon>
+        {{percentageOfCloudCoverage(filterService.currentData.value?.summary?.cloudCoverageHistogram, [3, 4, 5])}}
+        &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
+        <fa-icon [icon]="faCloud"></fa-icon>
+        {{percentageOfCloudCoverage(filterService.currentData.value?.summary?.cloudCoverageHistogram, [6, 7, 8, 9])}}
+    </div>
+</section>

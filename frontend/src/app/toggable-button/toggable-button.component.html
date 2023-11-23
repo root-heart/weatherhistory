@@ -1,0 +1,7 @@
+<button (click)="clicked()">
+    <fa-icon *ngIf="isCurrentlySelected()" [ngStyle]="{color: enabled ? '' : '#555'}" [icon]="checked"></fa-icon>
+    <fa-icon *ngIf="!isCurrentlySelected()" [ngStyle]="{color: enabled ? '' : '#555'}" [icon]="unchecked"></fa-icon>
+    <div [ngStyle]="{color: enabled ? '' : '#555'}">
+        <ng-content></ng-content>
+    </div>
+</button>

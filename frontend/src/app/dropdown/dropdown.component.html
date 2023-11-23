@@ -1,0 +1,11 @@
+<button [ngClass]="{dropdownVisible: dropdownVisible}" (click)="dropdownVisible = !dropdownVisible">
+    <ng-content select="[button]"></ng-content>
+</button>
+
+<div style="position: relative">
+    <div class="dropdown" [ngStyle]="{visibility: dropdownVisible ? 'visible' : 'hidden'}">
+        <hr>
+        <ng-content select="[dropdown]"></ng-content>
+    </div>
+</div>
+

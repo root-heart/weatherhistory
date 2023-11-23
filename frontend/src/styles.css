@@ -1,36 +1,60 @@
-@import "~@ng-select/ng-select/themes/default.theme.css";
+:root {
+  --button-background-color: #444d;
+  --button-hover-color: #666d;
 
+  --fine-border-line: 1px solid #666;
+  --input-border-radius: 0.5rem;
+
+  --component-grid-row-height: 2rem;
+}
+
+* {
+  box-sizing: border-box;
+}
 
 body {
-    background-color: #333;
-    color: #e0e8ef;
+  background-color: #222;
+  color: #e0e8ef;
+  font-family: "Roboto", sans-serif;
+  margin: 0;
 }
 
-html, body {
-    height: 100%;
+h1, h2 {
+  margin: 0;
+  text-align: center;
 }
 
-body {
-    margin: 0;
-    font-family: Roboto, "Helvetica Neue", sans-serif;
-    font-size: 1.3rem;
+
+fieldset {
+  border: none;
+  border-top: var(--fine-border-line);
+  /*border-bottom: var(--fine-border-line);*/
+  padding: 1rem 0;
 }
 
-input, button, .textInputElement {
-    font-size: 1.3rem;
-    padding: 0.6rem 0.8rem;
-    margin: 0;
-    border: 1px solid gray;
-    border-radius: 0.4rem;
+legend {
+  padding-inline-start: 1rem;
+  padding-inline-end: 1rem;
+  margin-inline-start: 1rem;
 }
 
-button:active {
-    background-color: red;
+button, input {
+  border: var(--fine-border-line);
+  border-radius: var(--input-border-radius);
+  color: inherit;
+  padding: 0.3rem;
+  font-size: inherit;
 }
 
-button:focus {
-    background-color: green;
+button {
+  background-color: var(--button-background-color);
 }
 
-input[type="text"] {
+button:hover {
+  cursor: pointer;
+  background-color: var(--button-hover-color);
+}
+
+input {
+  background-color: #111;
 }
