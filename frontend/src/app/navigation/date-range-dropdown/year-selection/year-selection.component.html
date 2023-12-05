@@ -1,13 +1,17 @@
-<button id="bigMinus" (click)="addToYears(-10)">
-    <fa-icon [icon]="bigMinus"></fa-icon>
-</button>
-<button id="minus" (click)="addToYears(-1)">
-    <fa-icon [icon]="minus"></fa-icon>
-</button>
-<input [(ngModel)]="yearValue">
-<button id="plus" (click)="addToYears(1)">
-    <fa-icon [icon]="plus"></fa-icon>
-</button>
-<button id="bigPlus" (click)="addToYears(10)">
-    <fa-icon [icon]="bigPlus"></fa-icon>
-</button>
+<label>{{ label }}</label>
+
+<div class="inputs">
+    <button id="bigMinus" (click)="addToYears(-10)">
+        <fa-icon [icon]="bigMinus"></fa-icon>
+    </button>
+    <button id="minus" (click)="addToYears(-1)">
+        <fa-icon [icon]="minus"></fa-icon>
+    </button>
+    <input [(ngModel)]="yearValue">
+    <button id="plus" (click)="addToYears(1)">
+        <fa-icon [icon]="plus"></fa-icon>
+    </button>
+    <button id="bigPlus" (click)="addToYears(10)">
+        <fa-icon [icon]="bigPlus"></fa-icon>
+    </button>
+</div>

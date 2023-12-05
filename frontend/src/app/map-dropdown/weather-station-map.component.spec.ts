@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { NavigationComponent } from './navigation.component';
+import { MapDropdown } from './weather-station-map.component';
 
-describe('NavigationComponentComponent', () => {
-  let component: NavigationComponent;
-  let fixture: ComponentFixture<NavigationComponent>;
+describe('FilterHeaderComponent', () => {
+  let component: MapDropdown;
+  let fixture: ComponentFixture<MapDropdown>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ NavigationComponent ]
+      declarations: [ MapDropdown ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(NavigationComponent);
+    fixture = TestBed.createComponent(MapDropdown);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

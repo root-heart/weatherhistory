@@ -1,26 +1,118 @@
 :host {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    padding: 2rem;
+}
+
+/*
+ * Styling ngx-slider is an incredible nightmare. Everything is positioned absolutely, there currently seems to be no
+ * way of making use of some CSS layouts to arrange the single elements. That causes the component to not know its own
+ * dimensions, leading to e.g. tick labels to overwrite other components if the default styling is used. Therefore, I
+ * defined some variables to allow a somewhat easy calculation of the overall height required. Although somehow
+ * practical, this solution seems ugly to me. But: It works better and is more customizable than the Angular Material
+ * counterpart.
+ */
+#years-slider::ng-deep {
+    .ngx-slider {
+        --bar-height: 1rem;
+        --knob-size: 1.5rem;
+        --bar-top: calc(var(--knob-size) - var(--bar-height) + 1rem);
+        --tick-gap: 0.25rem;
+        --tick-height: 0.25rem;
+        --tick-value-height: 1rem;
+
+        height: calc(var(--bar-top) + var(--bar-height) + var(--tick-gap) * 2 + var(--tick-height) + var(--tick-value-height));
+        margin: unset;
+        display: flex;
+
+        .ngx-slider-bar-wrapper {
+            margin: 0;
+            padding: 0;
+            top: var(--bar-top);
+            height: var(--bar-height);
+        }
+
+        .ngx-slider-bar {
+            background: #555;
+            height: 100%;
+            width: calc(100% - var(--knob-size));
+            margin: 0 calc(var(--knob-size) / 2);
+        }
+
+        .ngx-slider-selection {
+            background: #639;
+            border-radius: 0;
+            width: 100%;
+            /*width: calc(100% - var(--knob-size));*/
+            margin: 0;
+        }
+
+        .ngx-slider-pointer {
+            width: var(--knob-size);
+            height: var(--knob-size);
+            background-color: #639;
+            border: 2px solid white;
+            border-radius: 50%;
+            top: calc((var(--bar-height) - var(--knob-size)) / 2 + var(--bar-top));
+            bottom: unset;
+
+            &:after {
+                display: none;
+            }
+        }
+
+        .ngx-slider-bubble {
+            top: 0;
+            color: #888;
+            font-size: 80%;
+        }
+
+        .ngx-slider-limit {
+            font-weight: bold;
+            color: orange;
+        }
+
+        .ngx-slider-ticks {
+            top: calc(var(--bar-top) + var(--bar-height) + var(--tick-gap));
+            height: var(--tick-height);
+        }
+
+        .ngx-slider-tick {
+            width: 2px;
+            left: -1px;
+            height: 100%;
+            margin-left: calc(var(--knob-size) / 2);
+            border-radius: 0;
+            background: #999;
+            top: unset;
+
+            &.ngx-slider-selected {
+                background: #96c;
+            }
+        }
+
+        .ngx-slider-tick-value {
+            top: calc(var(--tick-gap) + var(--tick-height));
+            bottom: unset;
+            height: var(--tick-value-height);
+            font-size: 80%;
+        }
+    }
+}
+
+#monthsFilter {
     display: grid;
-    grid-template-columns: 6rem 10rem 3rem 10rem;
-    grid-gap: 0.5rem 1rem;
-    grid-auto-rows: var(--component-grid-row-height);
+    grid-template-columns: repeat(7, 1fr);
+
+    > toggable-button:first-child {
+        /*grid-column: 1 / 7;*/
+        grid-row: 1/3;
+    }
 }
 
 label {
     text-align: right;
     margin: auto 0;
-}
-
-.grid {
-    display: grid;
-    grid-gap: 0.2rem;
-    grid-template-columns: repeat(3, 1fr);
-    justify-items: stretch;
-    text-align: left;
-}
-
-.four-columns {
-}
-
-.month-selection {
-    grid-column: span 2;
 }

@@ -28,6 +28,8 @@ export class YearSelectionComponent {
         return this.yearModel
     }
 
+    @Input() label: string | undefined
+
     constructor() {
     }
 

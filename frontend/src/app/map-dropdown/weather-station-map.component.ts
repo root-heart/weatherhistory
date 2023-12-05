@@ -2,7 +2,7 @@ import {Component, Input, OnInit} from '@angular/core';
 import {WeatherStation, WeatherStationList, WeatherStationService} from "../WeatherStationService";
 import {
     Icon,
-    LatLng,
+    LatLng, LatLngBounds,
     Layer,
     LayerGroup,
     LeafletMouseEvent,
@@ -27,9 +27,9 @@ export class FilterChangedEvent {
 }
 
 @Component({
-    selector: 'map-dropdown',
-    templateUrl: './map-dropdown.component.html',
-    styleUrls: ['./map-dropdown.component.css']
+    selector: 'weather-station-map',
+    templateUrl: './weather-station-map.component.html',
+    styleUrls: ['./weather-station-map.component.css']
 })
 export class MapDropdown implements OnInit {
     @Input() background: HTMLElement | undefined
@@ -37,9 +37,15 @@ export class MapDropdown implements OnInit {
     stations: WeatherStationList = []
     options: MapOptions = {
         layers: getLayers(),
-        zoom: 6,
-        center: new LatLng(51.4, 10.447683),
+        // zoom: 6,
+        // center: new LatLng(51.4, 10.447683),
+        zoomDelta: 0.1,
+        zoomSnap: 0.1,
+        maxBoundsViscosity: 0.9,
     };
+
+    mapBounds = new LatLngBounds(new LatLng(47, 5.5), new LatLng(55.5, 15.5))
+
 
     stationsLayer?: Layer
 
