@@ -30,11 +30,13 @@ dependencies {
     testImplementation("org.codehaus.groovy.modules.http-builder:http-builder:0.7.1")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
 
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 }
 
-tasks.getByName<Test>("test") {
+tasks.test {
     useJUnitPlatform()
 }
+
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {
     languageVersion = "1.7"

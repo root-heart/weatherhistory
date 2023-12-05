@@ -14,6 +14,7 @@ import rootheart.codes.common.collections.*
 import rootheart.codes.common.strings.splitAndTrimTokens
 import rootheart.codes.weatherhistory.database.*
 import rootheart.codes.weatherhistory.database.daily.DailyMeasurementEntity
+import rootheart.codes.weatherhistory.database.daily.DailyMinMax
 import rootheart.codes.weatherhistory.database.daily.groupDailyByMonth
 import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurementEntity
 import rootheart.codes.weatherhistory.database.summarized.groupMonthlyByYear
@@ -230,8 +231,7 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
 
                 sunshineMinutes.sum = sunshineMinutes.details?.filterNotNull()?.sumOf { it }
 
-                m.measurements.windDirectionDegrees.min = m.measurements.windDirectionDegrees.details?.nullsafeMin()
-                m.measurements.windDirectionDegrees.max = m.measurements.windDirectionDegrees.details?.nullsafeMax()
+                calculateMinAndMaxWindDirection(m.measurements.windDirectionDegrees)
 
                 val histogram = Array(10) { 0 }
                 detailedCloudCoverage?.filterNotNull()
@@ -400,3 +400,53 @@ private val DATE_FORMATTER = DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC()
 
 private const val COLUMN_NAME_MEASUREMENT_TIME = "MESS_DATUM"
 
+private val NINE_NINETY = BigDecimal("990")
+
+fun calculateMinAndMaxWindDirection(windDirections: DailyMinMax) {
+    val details = windDirections.details
+    val gaps = ArrayList<BigDecimal>()
+    val sortedDistinctDirections = details?.distinct()
+            ?.filterNotNull()
+            ?.filter { it != NINE_NINETY}
+            ?.sorted()
+        ?: return
+
+    for (index in 0..sortedDistinctDirections.size - 2) {
+        val direction = sortedDistinctDirections[index]
+        gaps.add(sortedDistinctDirections[index + 1] - direction)
+    }
+
+    if (sortedDistinctDirections.isEmpty()) {
+        return
+    }
+
+    gaps.add(sortedDistinctDirections[0] + BigDecimal(360) - sortedDistinctDirections[sortedDistinctDirections.size - 1])
+    val indexOfMaxGap = indexOfMax(gaps)
+    if (indexOfMaxGap == sortedDistinctDirections.size - 1) {
+        windDirections.min = sortedDistinctDirections[0]
+        windDirections.max = sortedDistinctDirections[sortedDistinctDirections.size - 1]
+    } else {
+        windDirections.min = sortedDistinctDirections[indexOfMaxGap + 1]
+        windDirections.max = sortedDistinctDirections[indexOfMaxGap]
+    }
+}
+
+
+
+private fun indexOfMax(arr: List<BigDecimal>): Int {
+    if (arr.isEmpty()) {
+        return -1
+    }
+
+    var max = arr[0]
+    var maxIndex = 0
+
+    for (i in 1 until arr.size) {
+        if (arr[i] > max) {
+            maxIndex = i;
+            max = arr[i];
+        }
+    }
+
+    return maxIndex;
+}

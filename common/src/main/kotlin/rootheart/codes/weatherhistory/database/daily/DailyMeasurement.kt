@@ -53,55 +53,6 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
                                       date = row[date].toLocalDate(),
                                       measurements = measurements)
     }
-
-    private fun calculateMinAndMaxWindDirection(row: ResultRow): DailyMinMax {
-        val windDirections = row[windDirectionDegrees.details]
-        val gaps = ArrayList<BigDecimal>()
-        val sortedDistinctDirections = windDirections?.filterNotNull()
-                ?.distinct()
-                ?.sorted()
-            ?: return DailyMinMax()
-
-        for (index in 0..sortedDistinctDirections.size - 2) {
-            val direction = sortedDistinctDirections[index]
-            gaps.add(sortedDistinctDirections[index + 1] - direction)
-        }
-
-        if (sortedDistinctDirections.isEmpty()) {
-            return DailyMinMax()
-        }
-
-        gaps.add(sortedDistinctDirections[0] + BigDecimal(360) - sortedDistinctDirections[sortedDistinctDirections.size - 1])
-        val indexOfMaxGap = indexOfMax(gaps)
-        val windDirection = DailyMinMax()
-        if (indexOfMaxGap == sortedDistinctDirections.size - 1) {
-            windDirection.min = sortedDistinctDirections[0]
-            windDirection.max = sortedDistinctDirections[sortedDistinctDirections.size - 1]
-        } else {
-            windDirection.min = sortedDistinctDirections[indexOfMaxGap + 1]
-            windDirection.max = sortedDistinctDirections[indexOfMaxGap]
-        }
-        windDirection.details = windDirections
-        return windDirection
-    }
-
-    private fun indexOfMax(arr: List<BigDecimal>): Int {
-        if (arr.isEmpty()) {
-            return -1
-        }
-
-        var max = arr[0]
-        var maxIndex = 0
-
-        for (i in 1 until arr.size) {
-            if (arr[i] > max) {
-                maxIndex = i;
-                max = arr[i];
-            }
-        }
-
-        return maxIndex;
-    }
 }
 
 class DailyMinMaxColumns(
