@@ -1,21 +1,26 @@
-<label>Von</label>
-<year-selection [year]="filterService.year"></year-selection>
-<label>Bis</label>
-<year-selection [year]="filterService.endYear"></year-selection>
+<div>
+    <label>Zeitraum von</label>
+    <input type="number" (change)="fromChanged($event)" [value]="filterService.year.value"/>
 
-<label id="months-filter-label">Monate</label>
-<dropdown style="grid-column: span 3">
-    <div button>{{getButtonName()}}</div>
+    <label>bis</label>
+    <input type="number" (change)="toChanged($event)" [value]="filterService.endYear.value"/>
 
-    <div dropdown>
-        <toggable-button style="margin-bottom: 0.5rem" [subject]="filterService.wholeYear">Gesamtes Jahr</toggable-button>
+</div>
 
-        <div class="grid">
-            <toggable-button *ngFor="let i of [0,1,2,3,4,5,6,7,8,9,10,11]"
-                             [enabled]="!filterService.wholeYear.value"
-                             [subject]="filterService.months[i]">
-                {{getMonthName(i + 1)}}
-            </toggable-button>
-        </div>
-    </div>
-</dropdown>
+<div id="years-slider">
+    <ngx-slider
+        [options]="{floor: 1900, ceil: 2023, draggableRange: true, showTicksValues: true, tickStep: 10, tickValueStep: 10}"
+        [value]="filterService.year.value"
+        [highValue]="filterService.endYear.value"
+        (userChangeEnd)="updateFilterService($event)"/>
+</div>
+
+<div id="monthsFilter">
+    <toggable-button style="margin-bottom: 0.5rem" [subject]="filterService.wholeYear">Gesamtes Jahr</toggable-button>
+
+    <toggable-button *ngFor="let i of [0,1,2,3,4,5,6,7,8,9,10,11]"
+                     [enabled]="!filterService.wholeYear.value"
+                     [subject]="filterService.months[i]">
+        {{getMonthName(i + 1)}}
+    </toggable-button>
+</div>

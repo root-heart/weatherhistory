@@ -1,6 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {FilterService} from "../../filter.service";
 import {DateTime} from "luxon";
+import {ChangeContext, PointerType} from "ngx-slider-v2";
 
 @Component({
     selector: 'date-range-selector',
@@ -31,5 +32,23 @@ export class DateRangeSelector implements OnInit {
             .join(", ")
     }
 
+    updateFilterService(changeContext: ChangeContext) {
+        console.log(changeContext)
+        if (changeContext.pointerType == PointerType.Min) {
+            this.filterService.year.next(changeContext.value)
+        } else if (changeContext.pointerType == PointerType.Max) {
+            this.filterService.endYear.next(changeContext.highValue!)
+        } else {
+            // TODO range drag
+        }
+    }
+
+    fromChanged(event: Event) {
+        this.filterService.year.next(parseInt((<HTMLInputElement>event.target).value))
+    }
+
+    toChanged(event: Event) {
+        this.filterService.endYear.next(parseInt((<HTMLInputElement>event.target).value))
+    }
 }
 

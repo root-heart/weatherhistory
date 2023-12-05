@@ -1,10 +1,10 @@
 <header>
-    <h1>wetterchroniken</h1>
+    <h1>wetterchroniken für {{ filterService.selectedStation && filterService.selectedStation.name || 'einen Ort deiner Wahl' }}</h1>
 </header>
 
-<navigation></navigation>
+<weather-station-map></weather-station-map>
 
-<hr>
+<date-range-selector></date-range-selector>
 
 <station-charts></station-charts>
 

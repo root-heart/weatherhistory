@@ -25,8 +25,8 @@ registerLocaleData(localeDe, 'de-DE', localeDeExtra);
 @Component({
     selector: 'station-charts',
     templateUrl: './station-charts.component.html',
-    styleUrls: ['./station-charts.component.css'],
-    encapsulation: ViewEncapsulation.None
+    styleUrls: ['./station-charts.component.scss'],
+    // encapsulation: ViewEncapsulation.None
 })
 export class StationChartsComponent {
 
