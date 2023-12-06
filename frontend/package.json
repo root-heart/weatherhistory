@@ -25,7 +25,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.2.1",
     "@types/highcharts": "^7.0.0",
     "@types/leaflet": "^1.9.6",
-    "highcharts": "^11.1.0",
+    "highcharts": "^11.2.0",
     "highcharts-angular": "^3.1.2",
     "luxon": "^3.4.3",
     "ngx-slider-v2": "^16.0.2",

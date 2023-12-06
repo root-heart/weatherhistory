@@ -6,6 +6,134 @@
     gap: 2rem;
 }
 
+highcharts-chart {
+    width: 100%;
+    //height: 100%;
+    min-height: 120rem;
+
+    aspect-ratio: 3;
+    display: block;
+
+    .highcharts-tracker-line {
+        stroke-width: 4px;
+    }
+}
+
+::ng-deep {
+    .minMaxTemperature {
+        .highcharts-area {
+            fill: hsla(0, 90%, 40%, 50%);
+        }
+
+        .highcharts-graph {
+            stroke: hsl(0, 90%, 40%);
+            stroke-width: 1px;
+        }
+    }
+
+    .avgTemperature {
+        stroke: hsl(0, 90%, 40%);
+    }
+
+    .sunshine {
+        .highcharts-graph {
+            //fill: #ea2;
+            stroke: #ea2;
+            //border: none;
+            //stroke-width: 0;
+        }
+
+        .highcharts-area {
+            //stroke: #ea2;
+            fill: #ea23;
+
+        }
+    }
+
+    .rainfall .highcharts-point {
+        fill: hsl(210, 80%, 50%);
+    }
+
+    .snowfall .highcharts-point {
+        fill: hsl(210, 90%, 95%);
+    }
+
+    .maxWindSpeed {
+        .highcharts-area {
+            fill: hsla(270, 80%, 45%, 50%);
+        }
+
+        .highcharts-graph {
+            stroke: hsl(270, 80%, 45%);
+            stroke-width: 1px;
+        }
+    }
+
+    .avgWindSpeed {
+        //fill: hsl(270, 80%, 65%);
+        stroke: hsl(270, 80%, 45%);
+        stroke-width: 3px;
+
+
+    }
+
+    .minMaxHumidity {
+        .highcharts-area {
+            fill: hsla(220, 80%, 40%, 50%);
+        }
+
+        .highcharts-graph {
+            stroke: hsl(220, 80%, 40%);
+            stroke-width: 1px;
+        }
+    }
+
+    .avgHumidity {
+        stroke: hsl(220, 80%, 40%);
+    }
+
+    .cloudCoverage0 .highcharts-point {
+        fill: hsl(210, 80%, 80%);
+        stroke-width: 0;
+    }
+    .cloudCoverage1 .highcharts-point {
+        fill: hsl(210, 90%, 95%);
+        stroke-width: 0;
+    }
+    .cloudCoverage2 .highcharts-point {
+        fill: hsl(55, 80%, 90%);
+        stroke-width: 0;
+    }
+    .cloudCoverage3 .highcharts-point {
+        fill: hsl(55, 65%, 80%);
+        stroke-width: 0;
+    }
+    .cloudCoverage4 .highcharts-point {
+        fill: hsl(55, 45%, 70%);
+        stroke-width: 0;
+    }
+    .cloudCoverage5 .highcharts-point {
+        fill: hsl(55, 25%, 70%);
+        stroke-width: 0;
+    }
+    .cloudCoverage6 .highcharts-point {
+        fill: hsl(55, 5%, 65%);
+        stroke-width: 0;
+    }
+    .cloudCoverage7 .highcharts-point {
+        fill: hsl(55, 5%, 55%);
+        stroke-width: 0;
+    }
+    .cloudCoverage8 .highcharts-point {
+        fill: hsl(55, 5%, 45%);
+        stroke-width: 0;
+    }
+    .cloudCoverage9 .highcharts-point {
+        fill: hsl(55, 5%, 35%);
+        stroke-width: 0;
+    }
+}
+
 
 section {
     display: grid;
