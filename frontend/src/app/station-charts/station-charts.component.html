@@ -1,9 +1,7 @@
 <section>
     <h1>Temperatur</h1>
 
-    <min-avg-max-chart class="chart" id="temperatureChart" [property]="'airTemperatureCentigrade'"
-                       [dataSource]="filterService.currentData">
-    </min-avg-max-chart>
+    <min-avg-max-chart class="chart" id="temperatureChart" [property]="'airTemperatureCentigrade'"/>
 
     <dl class="summary">
         <dt>&#x2b9d;</dt>
@@ -22,9 +20,7 @@
 <section>
     <h1>Sonnenschein</h1>
 
-    <sum-chart class="chart" id="sunshineDurationChart"
-               [sumProperty]="'sunshineMinutes'" [dataSource]="filterService.currentData">
-    </sum-chart>
+    <sum-chart class="chart" id="sunshineDurationChart" [sumProperty]="'sunshineMinutes'"/>
 
     <div class="summary">
         &#931; {{divideBy60(filterService.currentData.value?.summary?.sunshineMinutes?.sum)?.toFixed(1)}}h
@@ -38,8 +34,8 @@
     <h1>Niederschlag</h1>
 
     <sum-chart class="chart" id="precipitationChart"
-               [sumProperty]="'rainfallMillimeters'" [sum2Property]="'snowfallMillimeters'"
-               [dataSource]="filterService.currentData"></sum-chart>
+               [sumProperty]="'rainfallMillimeters'"
+               [sum2Property]="'snowfallMillimeters'"/>
 
     <div class="summary">
         <fa-icon [icon]="faRain"></fa-icon>
@@ -55,9 +51,7 @@
 <section>
     <h1>Wind</h1>
 
-    <min-avg-max-chart class="chart" id="windChart" [property]="'windSpeedMetersPerSecond'"
-                       [dataSource]="filterService.currentData">
-    </min-avg-max-chart>
+    <min-avg-max-chart class="chart" id="windChart" [property]="'windSpeedMetersPerSecond'"/>
 
     <div class="summary">
         &#8960; {{filterService.currentData.value?.summary?.windSpeedMetersPerSecond?.avg?.toFixed(1)}}m/s
@@ -71,11 +65,7 @@
 <section>
     <h1>Windrichtung</h1>
 
-    <highcharts-chart class="chart" id="windDirectionChart"
-                      [Highcharts]="Highcharts"
-                      [options]="windDirectionChartOptions"
-                      [callbackFunction]="windDirectionChartCallback">
-    </highcharts-chart>
+    <wind-direction-chart class="chart" id="windDirectionChart"/>
 </section>
 
 <hr/>
@@ -83,9 +73,7 @@
 <section>
     <h1>Luftfeuchtigkeit</h1>
 
-    <min-avg-max-chart class="chart" id="humidityChart"
-                       [property]="'humidityPercent'" [dataSource]="filterService.currentData">
-    </min-avg-max-chart>
+    <min-avg-max-chart class="chart" id="humidityChart" [property]="'humidityPercent'"/>
 
     <div class="summary">
         &#x2b9f; {{filterService.currentData.value?.summary?.humidityPercent?.min?.toFixed(1)}}%
@@ -101,9 +89,7 @@
 <section>
     <h1>Taupunkt</h1>
 
-    <min-avg-max-chart class="chart" id="dewPointTemperatureChart"
-                       [property]="'dewPointTemperatureCentigrade'" [dataSource]="filterService.currentData">
-    </min-avg-max-chart>
+    <min-avg-max-chart class="chart" id="dewPointTemperatureChart" [property]="'dewPointTemperatureCentigrade'"/>
 
     <div class="summary">
         &#x2b9f; {{filterService.currentData.value?.summary?.dewPointTemperatureCentigrade?.min?.toFixed(1)}}°C
@@ -119,9 +105,7 @@
 <section>
     <h1>Luftdruck</h1>
 
-    <min-avg-max-chart class="chart" id="airPressureChart"
-                       [property]="'airPressureHectopascals'" [dataSource]="filterService.currentData">
-    </min-avg-max-chart>
+    <min-avg-max-chart class="chart" id="airPressureChart" [property]="'airPressureHectopascals'"/>
 
     <div class="summary">
         &#x2b9f; {{filterService.currentData.value?.summary?.airPressureHectopascals?.min?.toFixed(1)}}hPa

@@ -105,35 +105,6 @@ export class StationChartsComponent {
         // TODO move wind direction chart related stuff into own component
         filterService.currentData.subscribe(data => {
             if (data) {
-                if (this.windDirectionChart) {
-                    this.clearChart(this.windDirectionChart)
-
-                    let scatterData = data.details
-                        .map(m => ({
-                            date: getDateLabel(m),
-                            hourlyWindSpeeds: m.measurements?.windDirectionDegrees
-                        }))
-
-                    let s1 = []
-                    for (let sd of scatterData) {
-                        if (sd.hourlyWindSpeeds) {
-                            let min = sd.hourlyWindSpeeds.min
-                            let max = sd.hourlyWindSpeeds.max
-                            if (max > min) {
-                                s1.push([sd.date, min, max])
-                            } else {
-                                s1.push([sd.date, min, 360])
-                                s1.push([sd.date, 0, max])
-                            }
-                        }
-                    }
-
-                    this.windDirectionChart.addSeries({
-                        type: "columnrange",
-                        data: s1,
-                        grouping: false
-                    })
-                }
 
                 if (this.cloudinessChart) {
                     let cloudiness = data.details
