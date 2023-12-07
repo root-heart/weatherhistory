@@ -28,7 +28,7 @@ export class WindDirectionChart extends ChartComponentBase {
     windDirectionChartOptions: Highcharts.Options = {
         chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},
         colorAxis: {min: 0, minColor: 'rgb(70, 50, 80)', maxColor: 'rgb(210, 150, 240)'},
-        // legend: {enabled: false},
+        legend: {enabled: false},
         title: {text: undefined},
         tooltip: {
             shared: true,

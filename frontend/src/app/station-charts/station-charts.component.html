@@ -135,12 +135,14 @@
 <section>
     <h1>Bewölkung</h1>
 
-    <highcharts-chart id="cloudinessChart"
-                      class="chart"
-                      [Highcharts]="Highcharts"
-                      [options]="chartOptions"
-                      [callbackFunction]="cloudinessChartCallback">
-    </highcharts-chart>
+    <cloud-coverage-chart class="chart" id="cloudCoverageChart"/>
+
+<!--    <highcharts-chart id="cloudCoverageChart"-->
+<!--                      class="chart"-->
+<!--                      [Highcharts]="Highcharts"-->
+<!--                      [options]="chartOptions"-->
+<!--                      [callbackFunction]="cloudinessChartCallback">-->
+<!--    </highcharts-chart>-->
 
     <div class="summary">
         <fa-icon [icon]="faSun"></fa-icon>

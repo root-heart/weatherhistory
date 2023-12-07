@@ -1,29 +1,28 @@
-:host {
-    overflow: hidden;
-}
 
-highcharts-chart {
+#windDirectionChartDiv {
     width: 100%;
     height: 100%;
     display: block;
-}
 
-.highcharts-heatmap-series .highcharts-color-0 {
-    fill: none;
-    stroke: none;
-}
+    & > highcharts-chart {
+        width: 100%;
+        height: 100%;
+        display: block;
 
-.north, .south {
-    fill: #303030;
-    fill-opacity: 1;
-}
-
-.east, .west {
-    fill: #383838;
-    fill-opacity: 1;
-}
+    }
 
 
-.highcharts-grid-line {
-    stroke-width: 0;
+    .north, .south {
+        fill: #303030;
+        fill-opacity: 1;
+    }
+
+    .east, .west {
+        fill: #383838;
+        fill-opacity: 1;
+    }
+
+    .highcharts-grid-line {
+        stroke-width: 0;
+    }
 }
