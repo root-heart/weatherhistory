@@ -29,68 +29,6 @@ registerLocaleData(localeDe, 'de-DE', localeDeExtra);
     // encapsulation: ViewEncapsulation.None
 })
 export class StationChartsComponent {
-
-    Highcharts: typeof Highcharts = Highcharts;
-    cloudinessChart?: Highcharts.Chart;
-    windDirectionChart?: Highcharts.Chart;
-    chartOptions: Highcharts.Options = {
-        chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},
-        boost: {
-            useGPUTranslations: true,
-            // usePreAllocated: true
-        },
-        title: {text: undefined},
-        xAxis: {
-            type: 'datetime',
-            labels: {
-                formatter: v => new Date(v.value).toLocaleDateString('de-DE', {month: "short"})
-            },
-        },
-        yAxis: [
-            {title: {text: undefined}, reversedStacks: false},
-        ],
-        tooltip: {
-            shared: true,
-            xDateFormat: "%d.%m.%Y",
-            animation: false
-        },
-        plotOptions: {
-            line: {animation: false},
-            arearange: {animation: false},
-            column: {animation: false},
-            scatter: {marker: {symbol: 'circle'}}
-        }
-    }
-
-    windDirectionChartOptions: Highcharts.Options = {
-        chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},
-        boost: {
-            useGPUTranslations: true,
-            // usePreAllocated: true
-        },
-        title: {text: undefined},
-        xAxis: {
-            type: 'datetime',
-            labels: {
-                formatter: v => new Date(v.value).toLocaleDateString('de-DE', {month: "short"})
-            },
-        },
-        yAxis: [
-            {title: {text: undefined}, min: 0, max: 360, tickInterval: 90, minorTickInterval: 45}
-        ],
-        tooltip: {
-            shared: true,
-            xDateFormat: "%d.%m.%Y",
-            animation: false
-        },
-        plotOptions: {
-            line: {animation: false},
-            arearange: {animation: false},
-            column: {animation: false},
-            scatter: {marker: {symbol: 'circle'}}
-        }
-    }
-
     faSun = faSun
     faCloudSun = faCloudSun
     faCloud = faCloud
@@ -99,41 +37,9 @@ export class StationChartsComponent {
     faSquare = faSquare
     faSquareChecked = faSquareXmark
     faCalendar = faCalendarWeek
-    measurementType?: MeasurementTypes
 
     constructor(public filterService: FilterService) {
-        // TODO move wind direction chart related stuff into own component
-        filterService.currentData.subscribe(data => {
-            if (data) {
-
-                if (this.cloudinessChart) {
-                    let cloudiness = data.details
-                        .map(m => (
-                            {date: getDateLabel(m), cloudiness: m.measurements?.cloudCoverageHistogram}
-                        ));
-                    this.clearChart(this.cloudinessChart)
-                    for (let i = 0; i <= 8; i++) {
-                        this.cloudinessChart.addSeries({
-                            type: "column",
-                            data: cloudiness.map(c =>
-                                [c.date, c.cloudiness![i]]
-                            ),
-                            stack: 's',
-                            stacking: 'percent',
-                            pointPadding: 0,
-                            groupPadding: 0,
-                            borderRadius: 0,
-                            borderWidth: 0
-                        })
-                    }
-                }
-            }
-        })
     }
-
-    cloudinessChartCallback: Highcharts.ChartCallbackFunction = c => this.cloudinessChart = c;
-
-    windDirectionChartCallback: Highcharts.ChartCallbackFunction = c => this.windDirectionChart = c;
 
     divideBy60(x?: number): number | undefined {
         return x ? x / 60 : undefined

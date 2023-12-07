@@ -97,15 +97,7 @@ hr {
     --highcharts-color-1: hsl(120, 80%, 45%);
 }
 
-#cloudCoverageChart {
-    --highcharts-color-0: hsl(210, 80%, 80%);
-    --highcharts-color-1: hsl(210, 90%, 95%);
-    --highcharts-color-2: hsl(55, 80%, 90%);
-    --highcharts-color-3: hsl(55, 65%, 80%);
-    --highcharts-color-4: hsl(55, 45%, 70%);
-    --highcharts-color-5: hsl(55, 25%, 70%);
-    --highcharts-color-6: hsl(55, 5%, 65%);
-    --highcharts-color-7: hsl(55, 5%, 55%);
-    --highcharts-color-8: hsl(55, 5%, 45%);
-    --highcharts-color-9: hsl(55, 5%, 35%);
+#visibilityChart {
+    --highcharts-color-0: hsla(190, 20%, 90%, 50%);
+    --highcharts-color-1: hsl(190, 20%, 90%);
 }

@@ -121,6 +121,8 @@
 <section>
     <h1>Sichtweite</h1>
 
+    <min-avg-max-chart class="chart" id="visibilityChart" [property]="'visibilityMeters'"/>
+
     <div class="summary">
         &#x2b9f; {{filterService.currentData.value?.summary?.visibilityMeters?.min?.toFixed(0)}}m
         &nbsp;&nbsp;&#x25CF;&nbsp;&nbsp;
@@ -136,13 +138,6 @@
     <h1>Bewölkung</h1>
 
     <cloud-coverage-chart class="chart" id="cloudCoverageChart"/>
-
-<!--    <highcharts-chart id="cloudCoverageChart"-->
-<!--                      class="chart"-->
-<!--                      [Highcharts]="Highcharts"-->
-<!--                      [options]="chartOptions"-->
-<!--                      [callbackFunction]="cloudinessChartCallback">-->
-<!--    </highcharts-chart>-->
 
     <div class="summary">
         <fa-icon [icon]="faSun"></fa-icon>
