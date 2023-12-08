@@ -21,7 +21,7 @@ import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurements
 private val log = KotlinLogging.logger {}
 
 fun insertDailyMeasurementsIntoDatabase(measurements: List<DailyMeasurementEntity>) = transaction {
-    val stationIds = measurements.mapNotNull { it.stationId }.distinct()
+    val stationIds = measurements.map { it.stationId }.distinct()
     val stationIdById = StationsTable.select { StationsTable.id.inList(stationIds) }
             .map { row -> row[StationsTable.id] }
             .associateBy { it.value }

@@ -90,18 +90,4 @@ data class MeasurementEntity(
 }
 
 
-data class MeasurementJson(
-        val firstDay: LocalDate,
-        val temperature: MinAvgMaxDetails<BigDecimal> = MinAvgMaxDetails(),
-        val dewPointTemperature: MinAvgMaxDetails<BigDecimal> = MinAvgMaxDetails(),
-        val humidity: MinAvgMaxDetails<BigDecimal> = MinAvgMaxDetails(),
-        val airPressure: MinAvgMaxDetails<BigDecimal> = MinAvgMaxDetails(),
-        var cloudCoverage: List<Int> = emptyList(),
-        val sunshine: MinMaxSumDetails<Int> = MinMaxSumDetails(),
-        val rainfall: MinMaxSumDetails<BigDecimal> = MinMaxSumDetails(),
-        val snowfall: MinMaxSumDetails<BigDecimal> = MinMaxSumDetails(),
-        val windSpeed: AvgMaxDetails<BigDecimal> = AvgMaxDetails(),
-        val visibility: MinAvgMaxDetails<Int> = MinAvgMaxDetails(),
-)
-
 

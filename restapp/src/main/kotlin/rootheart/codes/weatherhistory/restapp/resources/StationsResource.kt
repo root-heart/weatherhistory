@@ -1,4 +1,4 @@
-package rootheart.codes.weatherhistory.restapp.resources.stations
+package rootheart.codes.weatherhistory.restapp.resources
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
@@ -14,15 +14,11 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.max
-import org.jetbrains.exposed.sql.min
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.LocalDate
-import org.joda.time.Months
-import org.joda.time.Years
-import rootheart.codes.weatherhistory.database.MeasurementJson
 import rootheart.codes.weatherhistory.database.StationDao
+import rootheart.codes.weatherhistory.database.daily.DailyMeasurementDao
 import rootheart.codes.weatherhistory.database.daily.DailyMeasurementTable
 import rootheart.codes.weatherhistory.database.daily.summarizeDaily
 import rootheart.codes.weatherhistory.database.summarized.MonthlySummary
@@ -31,8 +27,7 @@ import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurements
 import rootheart.codes.weatherhistory.database.summarized.YearlySummary
 import rootheart.codes.weatherhistory.database.summarized.summarizeYearly
 import rootheart.codes.weatherhistory.database.summarized.summarizeMonthly
-import rootheart.codes.weatherhistory.restapp.optPathParam
-import rootheart.codes.weatherhistory.restapp.requiredPathParam
+import rootheart.codes.weatherhistory.restapp.*
 
 fun Routing.stationsResource() {
     route("stations") {
@@ -50,28 +45,7 @@ fun Routing.stationsResource() {
                 val months = optPathParam("months") { toIntervalList(it) }
 
                 val data = transaction {
-                    val firstAndLastDay = with(DailyMeasurementTable) {
-                        var condition = this.stationId.eq(stationId)
-                                .and(year.greaterEq(years.start))
-                                .and(year.lessEq(years.end))
-                        if (months != null) {
-                            val monthsList = months.map { it.elements() }.flatten()
-                            condition = condition.and(month.inList(monthsList))
-                        }
-
-                        slice(date.min(), date.max())
-                                .select(condition)
-                                .map {
-                                    val min = it[date.min()]
-                                    val max = it[date.max()]
-                                    if (min != null && max != null) {
-                                        return@map FirstAndLastDay(min.toLocalDate(), max.toLocalDate())
-                                    } else {
-                                        return@map null
-                                    }
-                                }
-                                .first() ?: return@transaction ArrayList<MeasurementJson>()
-                    }
+                    val firstAndLastDay = DailyMeasurementDao.getFirstAndLastDay(stationId, years.start, years.end)
 
                     if (firstAndLastDay.monthsCount <= 12) {
                         val details = with(DailyMeasurementTable) {
@@ -83,7 +57,7 @@ fun Routing.stationsResource() {
                                 condition = condition.and(month.inList(monthsList))
                             }
 
-                            select(condition).map(::toEntity)
+                            select(condition).map { toEntity(it) }
                         }
 
                         val summary = details.summarizeDaily()
@@ -150,31 +124,6 @@ fun Routing.stationsResource() {
             }
         }
     }
-}
-
-private data class FirstAndLastDay(val firstDay: LocalDate, val lastDay: LocalDate) {
-    val monthsCount get() = Months.monthsBetween(firstDay, lastDay.plusMonths(1)).months
-    val yearsCount get() = Years.yearsBetween(firstDay, lastDay.plusYears(1)).years
-}
-
-private data class NumberInterval(val start: Int, val end: Int) {
-    fun elements(): List<Int> = (start..end).distinct()
-}
-
-private val intervalRegex = Regex("(?<start>\\d+)(-(?<end>\\d+))?")
-private fun toInterval(string: String): NumberInterval {
-    val found = intervalRegex.find(string)
-    if (found != null) {
-        val groups = found.groups as MatchNamedGroupCollection
-        val start = groups["start"]!!.value.toInt()
-        val end = groups["end"]?.value?.toInt() ?: start
-        return NumberInterval(start, end)
-    }
-    throw IllegalArgumentException()
-}
-
-private fun toIntervalList(string: String): List<NumberInterval> {
-    return string.split(',').map { it.trim() }.map { toInterval(it) }
 }
 
 fun SummarizedMeasurementsTable.toMonthlySummary(row: ResultRow) =
