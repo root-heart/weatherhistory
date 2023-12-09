@@ -52,7 +52,7 @@ export abstract class ChartComponentBase {
         }]
     }
 
-    protected getColorAxis() : Highcharts.ColorAxisOptions | null {
+    protected getColorAxis(): Highcharts.ColorAxisOptions | null {
         return null
     }
 }

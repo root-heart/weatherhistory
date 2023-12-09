@@ -22,7 +22,8 @@ import {MatSliderModule} from "@angular/material/slider";
 import {MatInputModule} from "@angular/material/input";
 import {NgxSliderModule} from "ngx-slider-v2";
 import { WindDirectionChart } from './charts/wind-direction-chart/wind-direction-chart.component';
-import { CloudCoverageChartComponent } from './charts/cloud-coverage-chart/cloud-coverage-chart.component';
+import { CloudCoverageChart } from './charts/cloud-coverage-chart/cloud-coverage-chart.component';
+import { HeatmapChart } from './charts/heatmap-chart/heatmap-chart.component';
 
 
 @NgModule({
@@ -33,7 +34,8 @@ import { CloudCoverageChartComponent } from './charts/cloud-coverage-chart/cloud
         MinAvgMaxChart,
         SumChartComponent,
         WindDirectionChart,
-        CloudCoverageChartComponent
+        CloudCoverageChart,
+        HeatmapChart
     ],
     imports: [
         BrowserModule,

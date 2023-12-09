@@ -1,15 +1,19 @@
 <section>
     <h1>Temperatur</h1>
 
-    <min-avg-max-chart class="chart" id="temperatureChart" [property]="'airTemperatureCentigrade'"
-                       [heatmapColorStops]="[{value: -30, color: '#a0f'},
-                                        {value: -20,  color :'#a6f'},
-                                        {value: -10, color: '#88d'},
-                                        {value: -2,  color:'#aad'},
-                                        {value: 2, color:'#ab3'},
+
+    <heatmap-chart class="chart" id="airTemperatureHeatmap" [detailProperty]="'airTemperatureCentigrade'"
+                   [colorStops]="[{value: -30, color: '#f7d8ff'},
+                                        {value: -20,  color :'#b00fe8'},
+                                        {value: -10, color: '#0e0ee8'},
+                                        {value: 0,  color:'#82a8ff'},
+                                        {value: 10, color:'#ab3'},
                                          {value: 20, color: '#fd3'},
                                          {value: 30,color: '#f60'},
                                           {value: 40, color: '#a00'}]"/>
+
+    <min-avg-max-chart class="chart" id="temperatureChart" [property]="'airTemperatureCentigrade'"/>
+
 
     <dl class="summary">
         <dt>&#x2b9d;</dt>
@@ -21,6 +25,7 @@
         <dt>&#x2b9f;</dt>
         <dd>{{filterService.currentData.value?.summary?.airTemperatureCentigrade?.min?.toFixed(1)}}°C</dd>
     </dl>
+
 </section>
 
 <hr/>
@@ -29,6 +34,9 @@
     <h1>Sonnenschein</h1>
 
     <sum-chart class="chart" id="sunshineDurationChart" [sumProperty]="'sunshineMinutes'"/>
+
+    <heatmap-chart class="chart" [detailProperty]="'sunshineMinutes'"
+                   [colorStops]="[{value: 0, color: 'rgba(40, 40, 40, 0)'}, {value: 60, color: 'rgba(238, 170, 34, 1)'}]"/>
 
     <div class="summary">
         &#931; {{divideBy60(filterService.currentData.value?.summary?.sunshineMinutes?.sum)?.toFixed(1)}}h

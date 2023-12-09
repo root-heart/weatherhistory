@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CloudCoverageChartComponent } from './cloud-coverage-chart.component';
+import { CloudCoverageChart } from './cloud-coverage-chart.component';
 
 describe('CloudCoverageChartComponent', () => {
-  let component: CloudCoverageChartComponent;
-  let fixture: ComponentFixture<CloudCoverageChartComponent>;
+  let component: CloudCoverageChart;
+  let fixture: ComponentFixture<CloudCoverageChart>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [CloudCoverageChartComponent]
+      declarations: [CloudCoverageChart]
     });
-    fixture = TestBed.createComponent(CloudCoverageChartComponent);
+    fixture = TestBed.createComponent(CloudCoverageChart);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

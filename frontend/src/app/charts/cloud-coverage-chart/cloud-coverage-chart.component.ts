@@ -13,12 +13,13 @@ import {FilterService} from "../../filter.service";
 import _ from 'lodash';
 import heatmap from 'highcharts/modules/heatmap';
 
+// TODO make me be a heatmap chart instead
 @Component({
     selector: 'cloud-coverage-chart',
     templateUrl: './cloud-coverage-chart.component.html',
     styleUrls: ['./cloud-coverage-chart.component.css']
 })
-export class CloudCoverageChartComponent extends ChartComponentBase {
+export class CloudCoverageChart extends ChartComponentBase {
     cloudCoverageChartOptions: Highcharts.Options = {
         chart: {
             styledMode: true,
@@ -77,7 +78,7 @@ export class CloudCoverageChartComponent extends ChartComponentBase {
 
             let scatterData: Highcharts.PointOptionsType[] = []
             data.details.forEach(m => {
-                let dateLabel = getDateLabel(m)
+                let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
                 let hours = m.detailedCloudCoverage?.length || 0;
                 for (let hour = 0; hour < hours; hour++) {
                     let cloudCoverage = m.detailedCloudCoverage[hour];
