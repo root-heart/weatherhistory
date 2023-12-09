@@ -36,22 +36,20 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
     }
 
     fun toEntity(row: ResultRow): DailyMeasurementEntity {
-        val measurements = DailyMeasurements(
-                airTemperatureCentigrade = airTemperatureCentigrade.toEntity(row),
-                dewPointTemperatureCentigrade = dewPointTemperatureCentigrade.toEntity(row),
-                humidityPercent = humidityPercent.toEntity(row),
-                airPressureHectopascals = airPressureHectopascals.toEntity(row),
-                sunshineMinutes = sunshineMinutes.toEntity(row),
-                rainfallMillimeters = rainfallMillimeters.toEntity(row),
-                snowfallMillimeters = snowfallMillimeters.toEntity(row),
-                windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
-                visibilityMeters = visibilityMeters.toEntity(row),
-                windDirectionDegrees = windDirectionDegrees.toEntity(row),
-                detailedCloudCoverage = row[detailedCloudCoverage],
-                cloudCoverageHistogram = row[cloudCoverageHistogram])
         return DailyMeasurementEntity(stationId = row[stationId].value,
-                                      date = row[date].toLocalDate(),
-                                      measurements = measurements)
+                                      dateInUtcMillis = row[date].millis,
+                                      airTemperatureCentigrade = airTemperatureCentigrade.toEntity(row),
+                                      dewPointTemperatureCentigrade = dewPointTemperatureCentigrade.toEntity(row),
+                                      humidityPercent = humidityPercent.toEntity(row),
+                                      airPressureHectopascals = airPressureHectopascals.toEntity(row),
+                                      sunshineMinutes = sunshineMinutes.toEntity(row),
+                                      rainfallMillimeters = rainfallMillimeters.toEntity(row),
+                                      snowfallMillimeters = snowfallMillimeters.toEntity(row),
+                                      windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
+                                      visibilityMeters = visibilityMeters.toEntity(row),
+                                      windDirectionDegrees = windDirectionDegrees.toEntity(row),
+                                      detailedCloudCoverage = row[detailedCloudCoverage],
+                                      cloudCoverageHistogram = row[cloudCoverageHistogram])
     }
 }
 

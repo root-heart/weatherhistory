@@ -2,15 +2,11 @@ package rootheart.codes.weatherhistory.database.daily
 
 import org.joda.time.LocalDate
 import rootheart.codes.common.collections.nullsafeAvgDecimal
-import rootheart.codes.weatherhistory.database.summarized.MonthlySummary
-import rootheart.codes.weatherhistory.database.summarized.SummarizedAvgMax
-import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurement
-import rootheart.codes.weatherhistory.database.summarized.SummarizedMinAvgMax
-import rootheart.codes.weatherhistory.database.summarized.SummarizedSum
+import rootheart.codes.weatherhistory.database.summarized.*
 
 
 fun groupDailyByMonth(measurements: Collection<DailyMeasurementEntity>): Collection<MonthlySummary> {
-    return measurements.groupBy { LocalDate(it.date.year, it.date.monthOfYear, 1) }
+    return measurements.groupBy { LocalDate(it.dateInUtcMillis).withDayOfMonth(1) }
             .mapValues {
                 MonthlySummary(year = it.key.year,
                                month = it.key.monthOfYear,
@@ -22,8 +18,7 @@ fun groupDailyByMonth(measurements: Collection<DailyMeasurementEntity>): Collect
 fun Collection<DailyMeasurementEntity>.summarizeDaily(): SummarizedMeasurement {
     val summarizedHistogram = Array(10) { 0 }
     val detailedCloudCoverage = Array(size) { Array(10) { 0 } }
-    map(DailyMeasurementEntity::measurements)
-            .map { it.cloudCoverageHistogram }
+    map { it.cloudCoverageHistogram }
             .forEachIndexed { day, detailedHistogram ->
                 if (detailedHistogram != null) {
                     detailedCloudCoverage[day] = detailedHistogram
@@ -33,15 +28,15 @@ fun Collection<DailyMeasurementEntity>.summarizeDaily(): SummarizedMeasurement {
 
     return SummarizedMeasurement(stationId = first().stationId,
 
-                                 airTemperatureCentigrade = summarizeDailyMinAvgMax { it.measurements.airTemperatureCentigrade },
-                                 dewPointTemperatureCentigrade = summarizeDailyMinAvgMax { it.measurements.dewPointTemperatureCentigrade },
-                                 humidityPercent = summarizeDailyMinAvgMax { it.measurements.humidityPercent },
-                                 airPressureHectopascals = summarizeDailyMinAvgMax { it.measurements.airPressureHectopascals },
-                                 visibilityMeters = summarizeDailyMinAvgMax { it.measurements.visibilityMeters },
-                                 windSpeedMetersPerSecond = summarizeDailyAvgMax { it.measurements.windSpeedMetersPerSecond },
-                                 sunshineMinutes = summarizeDailySums { it.measurements.sunshineMinutes },
-                                 rainfallMillimeters = summarizeDailySums { it.measurements.rainfallMillimeters },
-                                 snowfallMillimeters = summarizeDailySums { it.measurements.snowfallMillimeters },
+                                 airTemperatureCentigrade = summarizeDailyMinAvgMax { it.airTemperatureCentigrade },
+                                 dewPointTemperatureCentigrade = summarizeDailyMinAvgMax { it.dewPointTemperatureCentigrade },
+                                 humidityPercent = summarizeDailyMinAvgMax { it.humidityPercent },
+                                 airPressureHectopascals = summarizeDailyMinAvgMax { it.airPressureHectopascals },
+                                 visibilityMeters = summarizeDailyMinAvgMax { it.visibilityMeters },
+                                 windSpeedMetersPerSecond = summarizeDailyAvgMax { it.windSpeedMetersPerSecond },
+                                 sunshineMinutes = summarizeDailySums { it.sunshineMinutes },
+                                 rainfallMillimeters = summarizeDailySums { it.rainfallMillimeters },
+                                 snowfallMillimeters = summarizeDailySums { it.snowfallMillimeters },
 
                                  cloudCoverageHistogram = summarizedHistogram,
                                  detailedCloudCoverage = detailedCloudCoverage,
@@ -50,36 +45,41 @@ fun Collection<DailyMeasurementEntity>.summarizeDaily(): SummarizedMeasurement {
 
 
 fun Collection<DailyMeasurementEntity>.summarizeDailyMinAvgMax(
-        selector: (DailyMeasurementEntity) -> DailyMinAvgMax): SummarizedMinAvgMax {
+        selector: (DailyMeasurementEntity) -> DailyMinAvgMax
+): SummarizedMinAvgMax {
     val minMeasurement = filter { selector(it).min != null }.minByOrNull { selector(it).min!! }
     val maxMeasurement = filter { selector(it).max != null }.maxByOrNull { selector(it).max!! }
     return SummarizedMinAvgMax(
             min = minMeasurement?.let(selector)?.min,
-            minDate = minMeasurement?.date,
+//            minDate = minMeasurement?.dateInUtcMillis,
             avg = nullsafeAvgDecimal { selector(it).avg },
             max = maxMeasurement?.let(selector)?.max,
-            maxDate = maxMeasurement?.date)
+//            maxDate = maxMeasurement?.dateInUtcMillis
+    )
 }
 
 fun Collection<DailyMeasurementEntity>.summarizeDailyAvgMax(
-        selector: (DailyMeasurementEntity) -> DailyAvgMax): SummarizedAvgMax {
+        selector: (DailyMeasurementEntity) -> DailyAvgMax
+): SummarizedAvgMax {
     val maxMeasurement = filter { selector(it).max != null }.maxByOrNull { selector(it).max!! }
     return SummarizedAvgMax(
             avg = nullsafeAvgDecimal { selector(it).avg },
             max = maxMeasurement?.let(selector)?.max,
-            maxDate = maxMeasurement?.date)
+//            maxDate = maxMeasurement?.date
+    )
 }
 
 fun Collection<DailyMeasurementEntity>.summarizeDailySums(
-        selector: (DailyMeasurementEntity) -> DailySum): SummarizedSum {
+        selector: (DailyMeasurementEntity) -> DailySum
+): SummarizedSum {
     val notNullSums = filter { selector(it).sum != null }
     val minMeasurement = notNullSums.maxByOrNull { selector(it).sum!! }
     val maxMeasurement = notNullSums.maxByOrNull { selector(it).sum!! }
     return SummarizedSum(
             min = minMeasurement?.let(selector)?.sum,
-            minDate = minMeasurement?.date,
+//            minDate = minMeasurement?.date,
             max = maxMeasurement?.let(selector)?.sum,
-            maxDate = maxMeasurement?.date,
+//            maxDate = maxMeasurement?.date,
             sum = notNullSums.sumOf { selector(it).sum!! }
     )
 }

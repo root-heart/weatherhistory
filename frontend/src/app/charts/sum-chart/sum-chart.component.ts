@@ -36,11 +36,11 @@ export class SumChartComponent extends ChartComponentBase {
         filterService.currentData.subscribe(summaryData => {
             if (summaryData) {
                 this.sumSeries?.setData(summaryData.details.map(m => [
-                    getDateLabel(m), m.measurements![this.sumProperty].sum
+                    getDateLabel(m), m[this.sumProperty].sum
                 ]))
                 if (this.sum2Property) {
                     this.sum2Series?.setData(summaryData.details.map(m => [
-                        getDateLabel(m), m.measurements![this.sum2Property!].sum
+                        getDateLabel(m), m[this.sum2Property!].sum
                     ]))
                 }
             }

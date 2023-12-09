@@ -111,7 +111,7 @@ export class WindDirectionChart extends ChartComponentBase {
             let scatterData: Highcharts.PointOptionsType[] = []
             data.details.forEach(m => {
                 let dateLabel = getDateLabel(m)
-                let counted: _.Dictionary<number> = _.countBy(m.measurements?.windDirectionDegrees.details);
+                let counted: _.Dictionary<number> = _.countBy(m.windDirectionDegrees.details);
                 _.each(counted, (count, directionString) => {
                     scatterData.push([dateLabel, parseInt(directionString), count])
                 })

@@ -29,17 +29,30 @@ export abstract class ChartComponentBase {
                 formatter: v => new Date(v.value).toLocaleDateString('de-DE', {day: "numeric", month: "short"})
             },
         },
-        yAxis: {
-            id: "yAxis",
-            title: {text: undefined},
-            reversedStacks: false
-        },
+        yAxis: this.getYAxes()
+
     }
     chartCallback: Highcharts.ChartCallbackFunction = c => {
         this.chart = c
+        // this.getYAxes().forEach(a => c.addAxis(a))
+        let colorAxis = this.getColorAxis();
+        if (colorAxis) {
+            c.addColorAxis(colorAxis)
+        }
         this.createSeries(c)
     }
 
     protected abstract createSeries(chart: Highcharts.Chart): void
 
+    protected getYAxes(): Highcharts.AxisOptions[] {
+        return [{
+            id: "yAxis",
+            title: {text: undefined},
+            reversedStacks: false
+        }]
+    }
+
+    protected getColorAxis() : Highcharts.ColorAxisOptions | null {
+        return null
+    }
 }

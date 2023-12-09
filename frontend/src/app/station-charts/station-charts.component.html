@@ -1,7 +1,15 @@
 <section>
     <h1>Temperatur</h1>
 
-    <min-avg-max-chart class="chart" id="temperatureChart" [property]="'airTemperatureCentigrade'"/>
+    <min-avg-max-chart class="chart" id="temperatureChart" [property]="'airTemperatureCentigrade'"
+                       [heatmapColorStops]="[{value: -30, color: '#a0f'},
+                                        {value: -20,  color :'#a6f'},
+                                        {value: -10, color: '#88d'},
+                                        {value: -2,  color:'#aad'},
+                                        {value: 2, color:'#ab3'},
+                                         {value: 20, color: '#fd3'},
+                                         {value: 30,color: '#f60'},
+                                          {value: 40, color: '#a00'}]"/>
 
     <dl class="summary">
         <dt>&#x2b9d;</dt>

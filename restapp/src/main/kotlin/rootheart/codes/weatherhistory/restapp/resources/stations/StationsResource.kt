@@ -90,7 +90,7 @@ fun Routing.stationsResource() {
 
                         return@transaction mapOf(
                                 "summary" to summary,
-                                "details" to details.sortedBy { it.date },
+                                "details" to details.sortedBy { it.dateInUtcMillis },
                                 "resolution" to "day")
                     } else if (firstAndLastDay.yearsCount <= 2) {
                         val details = with(SummarizedMeasurementsTable) {

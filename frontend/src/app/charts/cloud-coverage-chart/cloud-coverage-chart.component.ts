@@ -78,9 +78,9 @@ export class CloudCoverageChartComponent extends ChartComponentBase {
             let scatterData: Highcharts.PointOptionsType[] = []
             data.details.forEach(m => {
                 let dateLabel = getDateLabel(m)
-                let hours = m.measurements?.detailedCloudCoverage?.length || 0;
+                let hours = m.detailedCloudCoverage?.length || 0;
                 for (let hour = 0; hour < hours; hour++) {
-                    let cloudCoverage = m.measurements?.detailedCloudCoverage[hour];
+                    let cloudCoverage = m.detailedCloudCoverage[hour];
                     if (cloudCoverage != null) {
                         scatterData.push([dateLabel, hour, cloudCoverage])
                     }

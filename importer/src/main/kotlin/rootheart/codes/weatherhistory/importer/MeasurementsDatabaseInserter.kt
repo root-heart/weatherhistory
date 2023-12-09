@@ -17,6 +17,7 @@ import rootheart.codes.weatherhistory.database.daily.DailyMeasurementTable
 import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurement
 import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurementEntity
 import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurementsTable
+import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
 
@@ -27,26 +28,27 @@ fun insertDailyMeasurementsIntoDatabase(measurements: List<DailyMeasurementEntit
             .associateBy { it.value }
     with (DailyMeasurementTable) {
         batchInsert(measurements) {
+            val date = org.joda.time.LocalDate(it.dateInUtcMillis)
             this[stationId] = stationIdById[it.stationId]!!
-            this[year] = it.date.year
-            this[month] = it.date.monthOfYear
-            this[day] = it.date.dayOfMonth
+            this[year] = date.year
+            this[month] = date.monthOfYear
+            this[day] = date.dayOfMonth
 
-            airTemperatureCentigrade.setValues(this, it.measurements.airTemperatureCentigrade)
-            dewPointTemperatureCentigrade.setValues(this, it.measurements.dewPointTemperatureCentigrade)
-            humidityPercent.setValues(this, it.measurements.humidityPercent)
-            airPressureHectopascals.setValues(this, it.measurements.airPressureHectopascals)
-            visibilityMeters.setValues(this, it.measurements.visibilityMeters)
-            windSpeedMetersPerSecond.setValues(this, it.measurements.windSpeedMetersPerSecond)
+            airTemperatureCentigrade.setValues(this, it.airTemperatureCentigrade)
+            dewPointTemperatureCentigrade.setValues(this, it.dewPointTemperatureCentigrade)
+            humidityPercent.setValues(this, it.humidityPercent)
+            airPressureHectopascals.setValues(this, it.airPressureHectopascals)
+            visibilityMeters.setValues(this, it.visibilityMeters)
+            windSpeedMetersPerSecond.setValues(this, it.windSpeedMetersPerSecond)
 
-            this[cloudCoverageHistogram] = it.measurements.cloudCoverageHistogram ?: Array(0) { 0 }
-            this[detailedCloudCoverage] = it.measurements.detailedCloudCoverage
+            this[cloudCoverageHistogram] = it.cloudCoverageHistogram ?: Array(0) { 0 }
+            this[detailedCloudCoverage] = it.detailedCloudCoverage
 
-            sunshineMinutes.setValues(this, it.measurements.sunshineMinutes)
-            rainfallMillimeters.setValues(this, it.measurements.rainfallMillimeters )
-            snowfallMillimeters.setValues(this, it.measurements.snowfallMillimeters)
+            sunshineMinutes.setValues(this, it.sunshineMinutes)
+            rainfallMillimeters.setValues(this, it.rainfallMillimeters )
+            snowfallMillimeters.setValues(this, it.snowfallMillimeters)
 
-            windDirectionDegrees.setValues(this, it.measurements.windDirectionDegrees)
+            windDirectionDegrees.setValues(this, it.windDirectionDegrees)
         }
     }
     log.info { "Inserted ${measurements.size} objects into the database" }
