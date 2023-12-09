@@ -11,6 +11,7 @@ import java.nio.charset.Charset
 private val log = KotlinLogging.logger {}
 
 private val stationFilter: (Station) -> Boolean = {
+//    it.externalId == "00691"
 //    it.externalId in setOf("00691", "01443", "05906", "01757", "07367")
     it.hasRecentData && it.hasTemperatureData && it.hasSunshineData && it.hasCloudinessData && it.hasAirPressureData && it.hasWindData
 }

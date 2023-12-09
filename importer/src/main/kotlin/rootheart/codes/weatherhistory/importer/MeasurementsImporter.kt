@@ -79,7 +79,7 @@ fun importMeasurements(hourlyDirectory: HtmlDirectory, dailyDirectory: HtmlDirec
 @OptIn(ExperimentalTime::class)
 @DelicateCoroutinesApi
 private class MeasurementsImporter(val station: Station, val zippedDataFiles: Collection<ZippedDataFile>) {
-    val measurementByTime = ConcurrentHashMap<Long, DailyMeasurementEntity>()
+    val measurementByTime = ConcurrentHashMap<LocalDate, DailyMeasurementEntity>()
 
     private val unzipJobs = ArrayList<Job>()
     private val downloadJobs = ArrayList<Job>()
@@ -192,10 +192,10 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
         val dateFormatter = if (measurementType == MeasurementType.DAILY) DATE_FORMATTER else DATE_TIME_FORMATTER
         for (row in semicolonSeparatedValues.rows) {
             val measurementTime = dateFormatter.parseDateTime(row[COLUMN_NAME_MEASUREMENT_TIME])
-            val day = measurementTime.millis
+            val day = measurementTime.toLocalDate()
             val hour = measurementTime.hourOfDay
             val DailyMeasurementEntity = measurementByTime.getOrPut(day) {
-                DailyMeasurementEntity(stationId = station.id!!, dateInUtcMillis = measurementTime.millis)
+                DailyMeasurementEntity(stationId = station.id!!, dateInUtcMillis = day.toDateTimeAtStartOfDay().millis)
             }
             when (measurementType) {
                 MeasurementType.AIR_TEMPERATURE   -> setHourlyAirTemperatureData(DailyMeasurementEntity, hour, row)

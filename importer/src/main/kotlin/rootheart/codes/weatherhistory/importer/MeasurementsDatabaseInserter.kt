@@ -21,6 +21,8 @@ import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
 
+private val existing: MutableSet<String> = HashSet()
+
 fun insertDailyMeasurementsIntoDatabase(measurements: List<DailyMeasurementEntity>) = transaction {
     val stationIds = measurements.mapNotNull { it.stationId }.distinct()
     val stationIdById = StationsTable.select { StationsTable.id.inList(stationIds) }
@@ -28,11 +30,18 @@ fun insertDailyMeasurementsIntoDatabase(measurements: List<DailyMeasurementEntit
             .associateBy { it.value }
     with (DailyMeasurementTable) {
         batchInsert(measurements) {
-            val date = org.joda.time.LocalDate(it.dateInUtcMillis)
+            val date = org.joda.time.LocalDateTime(it.dateInUtcMillis)
             this[stationId] = stationIdById[it.stationId]!!
             this[year] = date.year
             this[month] = date.monthOfYear
             this[day] = date.dayOfMonth
+
+            val tuple = "${it.stationId}, ${date.year}, ${date.monthOfYear}, ${date.dayOfMonth}"
+            if (existing.contains(tuple)) {
+                println("Found duplicate: $existing")
+            } else {
+                existing.add(tuple)
+            }
 
             airTemperatureCentigrade.setValues(this, it.airTemperatureCentigrade)
             dewPointTemperatureCentigrade.setValues(this, it.dewPointTemperatureCentigrade)
