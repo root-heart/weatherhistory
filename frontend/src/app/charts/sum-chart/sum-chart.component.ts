@@ -1,5 +1,5 @@
 import {Component, Input} from '@angular/core';
-import {MinMaxSumDetails, SummarizedMeasurement} from "../../data-classes";
+import {MinMaxSumDetails, SummarizedMeasurement, SummaryData} from "../../data-classes";
 import {getDateLabel} from "../charts";
 
 
@@ -33,40 +33,36 @@ export class SumChartComponent extends ChartComponentBase {
     private sum2Series?: Highcharts.Series
 
     constructor(filterService: FilterService) {
-        super()
-        filterService.currentData.subscribe(summaryData => {
-            if (!summaryData) {
-                return
-            }
+        super(filterService)
+    }
 
-            let sumData: number[][] = []
-            let sum2Data: number[][] = []
+    protected override async setChartData(summaryData: SummaryData) {
+        let sumData: number[][] = []
+        let sum2Data: number[][] = []
 
-            if (summaryData.details) {
-                summaryData.details.forEach(m => {
-                    let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
-                    let measurements = m[this.sumProperty!]
+        if (summaryData.details) {
+            summaryData.details.forEach(m => {
+                let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
+                let measurements = m[this.sumProperty!]
 
-                    if (measurements.sum) {
-                        sumData.push([dateLabel, measurements.sum])
+                if (measurements.sum) {
+                    sumData.push([dateLabel, measurements.sum])
+                }
+
+                if (this.sum2Property && m[this.sum2Property!]) {
+                    let sum2 = m[this.sum2Property!].sum
+                    if (sum2) {
+                        sum2Data.push([dateLabel, sum2])
                     }
+                }
+            })
+        }
 
-                    if (this.sum2Property && m[this.sum2Property!]) {
-                        let sum2 = m[this.sum2Property!].sum
-                        if (sum2) {
-                            sum2Data.push([dateLabel, sum2])
-                        }
-                    }
-                })
-            }
+        this.sumSeries?.setData(sumData, false)
+        this.sum2Series?.setData(sum2Data, false)
 
-            this.sumSeries?.setData(sumData, false)
-            this.sum2Series?.setData(sum2Data, false)
 
-            this.chart?.redraw()
-
-            this.chart?.hideLoading()
-        })
+        this.chart?.hideLoading()
     }
 
 

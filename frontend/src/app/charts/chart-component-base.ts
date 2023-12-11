@@ -1,5 +1,7 @@
 import * as Highcharts from 'highcharts';
 import addMore from "highcharts/highcharts-more";
+import {FilterService} from "../filter.service";
+import {SummaryData} from "../data-classes";
 
 addMore(Highcharts);
 
@@ -28,10 +30,21 @@ export abstract class ChartComponentBase {
             labels: {
                 formatter: v => new Date(v.value).toLocaleDateString('de-DE', {day: "numeric", month: "short"})
             },
+            ordinal: true
         },
         yAxis: this.getYAxes()
 
     }
+
+    protected constructor(filterService: FilterService) {
+        filterService.currentData.subscribe(summaryData => {
+            if (summaryData) {
+                this.setChartData(summaryData)
+                    .then(() => setTimeout(() => this.chart?.redraw(), 0))
+            }
+        })
+    }
+
     chartCallback: Highcharts.ChartCallbackFunction = c => {
         this.chart = c
         // this.getYAxes().forEach(a => c.addAxis(a))
@@ -41,6 +54,8 @@ export abstract class ChartComponentBase {
         }
         this.createSeries(c)
     }
+
+    protected abstract setChartData(summaryData: SummaryData): Promise<void>
 
     protected abstract createSeries(chart: Highcharts.Chart): void
 

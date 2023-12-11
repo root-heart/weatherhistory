@@ -12,6 +12,7 @@ import {ChartComponentBase} from "../chart-component-base";
 import {FilterService} from "../../filter.service";
 import _ from 'lodash';
 import heatmap from 'highcharts/modules/heatmap';
+import {SummaryData} from "../../data-classes";
 
 
 addMore(Highcharts);
@@ -102,23 +103,20 @@ export class WindDirectionChart extends ChartComponentBase {
     private windDirectionSeries?: Highcharts.Series;
 
     constructor(filterService: FilterService) {
-        super();
-        filterService.currentData.subscribe(data => {
-            if (!data) {
-                return
-            }
+        super(filterService);
+    }
 
-            let scatterData: Highcharts.PointOptionsType[] = []
-            data.details.forEach(m => {
-                let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
-                let counted: _.Dictionary<number> = _.countBy(m.windDirectionDegrees.details);
-                _.each(counted, (count, directionString) => {
-                    scatterData.push([dateLabel, parseInt(directionString), count])
-                })
+    protected override async setChartData(summaryData: SummaryData): Promise<void> {
+        let scatterData: Highcharts.PointOptionsType[] = []
+        summaryData.details.forEach(m => {
+            let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
+            let counted: _.Dictionary<number> = _.countBy(m.windDirectionDegrees.details);
+            _.each(counted, (count, directionString) => {
+                scatterData.push([dateLabel, parseInt(directionString), count])
             })
-
-            this.windDirectionSeries!.setData(scatterData)
         })
+
+        this.windDirectionSeries!.setData(scatterData)
     }
 
     protected createSeries(chart: Highcharts.Chart): void {

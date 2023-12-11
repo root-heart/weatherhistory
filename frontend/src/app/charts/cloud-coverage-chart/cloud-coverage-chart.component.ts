@@ -1,17 +1,10 @@
-import {Component, ViewEncapsulation} from '@angular/core';
+import {Component} from '@angular/core';
 import {getDateLabel} from "../charts";
 
-
-import {registerLocaleData} from "@angular/common";
-import localeDe from '@angular/common/locales/de';
-import localeDeExtra from '@angular/common/locales/extra/de';
-
 import * as Highcharts from 'highcharts';
-import addMore from "highcharts/highcharts-more";
 import {ChartComponentBase} from "../chart-component-base";
 import {FilterService} from "../../filter.service";
-import _ from 'lodash';
-import heatmap from 'highcharts/modules/heatmap';
+import {SummaryData} from "../../data-classes";
 
 // TODO make me be a heatmap chart instead
 @Component({
@@ -70,26 +63,23 @@ export class CloudCoverageChart extends ChartComponentBase {
     private cloudCoverageSeries?: Highcharts.Series;
 
     constructor(filterService: FilterService) {
-        super();
-        filterService.currentData.subscribe(data => {
-            if (!data) {
-                return
-            }
+        super(filterService);
+    }
 
-            let scatterData: Highcharts.PointOptionsType[] = []
-            data.details.forEach(m => {
-                let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
-                let hours = m.detailedCloudCoverage?.length || 0;
-                for (let hour = 0; hour < hours; hour++) {
-                    let cloudCoverage = m.detailedCloudCoverage[hour];
-                    if (cloudCoverage != null) {
-                        scatterData.push([dateLabel, hour, cloudCoverage])
-                    }
+    protected override async setChartData(summaryData: SummaryData): Promise<void> {
+        let scatterData: Highcharts.PointOptionsType[] = []
+        summaryData.details.forEach(m => {
+            let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
+            let hours = m.detailedCloudCoverage?.length || 0;
+            for (let hour = 0; hour < hours; hour++) {
+                let cloudCoverage = m.detailedCloudCoverage[hour];
+                if (cloudCoverage != null) {
+                    scatterData.push([dateLabel, hour, cloudCoverage])
                 }
-            })
-
-            this.cloudCoverageSeries!.setData(scatterData)
+            }
         })
+
+        this.cloudCoverageSeries!.setData(scatterData)
     }
 
     protected createSeries(chart: Highcharts.Chart): void {

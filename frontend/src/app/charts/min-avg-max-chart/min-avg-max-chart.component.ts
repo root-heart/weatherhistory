@@ -10,7 +10,7 @@ import * as Highcharts from 'highcharts';
 import addMore from "highcharts/highcharts-more";
 import {ChartComponentBase} from "../chart-component-base";
 import {FilterService} from "../../filter.service";
-import heatmap from "highcharts/modules/heatmap";
+
 
 addMore(Highcharts);
 registerLocaleData(localeDe, 'de-DE', localeDeExtra);
@@ -37,32 +37,27 @@ export class MinAvgMaxChart extends ChartComponentBase {
     private avgSeries?: Highcharts.Series
 
     constructor(filterService: FilterService) {
-        super();
-        filterService.currentData.subscribe(summaryData => {
-            if (!this.property || !summaryData) {
-                return
-            }
+        super(filterService);
+    }
 
-            this.chart?.showLoading("Aktualisiere Diagramm...")
-            let minMaxData: number[][] = []
-            let avgData: number[][] = []
-            if (summaryData.details) {
-                summaryData.details.forEach(m => {
-                    let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
-                    let measurements = m[this.property!]
+    protected override async setChartData(summaryData: SummaryData): Promise<void> {
+        this.chart?.showLoading("Aktualisiere Diagramm...")
+        let minMaxData: number[][] = []
+        let avgData: number[][] = []
+        if (summaryData.details) {
+            summaryData.details.forEach(m => {
+                let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
+                let measurements = m[this.property!]
 
-                    minMaxData.push([dateLabel, "min" in measurements ? measurements.min : 0, measurements.max])
-                    avgData.push([dateLabel, measurements.avg])
-                })
-            }
+                minMaxData.push([dateLabel, "min" in measurements ? measurements.min : 0, measurements.max])
+                avgData.push([dateLabel, measurements.avg])
+            })
+        }
 
-            this.minMaxSeries?.setData(minMaxData, false)
-            this.avgSeries?.setData(avgData, false)
+        this.minMaxSeries?.setData(minMaxData, false)
+        this.avgSeries?.setData(avgData, false)
 
-            this.chart?.redraw()
-
-            this.chart?.hideLoading()
-        })
+        this.chart?.hideLoading()
     }
 
     protected override createSeries(chart: Highcharts.Chart) {

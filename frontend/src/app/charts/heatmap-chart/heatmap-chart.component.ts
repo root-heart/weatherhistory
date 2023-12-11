@@ -3,7 +3,9 @@ import {ChartComponentBase} from "../chart-component-base";
 import * as Highcharts from "highcharts";
 import {FilterService} from "../../filter.service";
 import {getDateLabel} from "../charts";
-import {SummarizedMeasurement} from "../../data-classes";
+import {DailyMeasurement, MonthlySummary, SummarizedMeasurement, SummaryData, YearlySummary} from "../../data-classes";
+import HighchartsBoost from "highcharts/modules/boost"
+HighchartsBoost(Highcharts)
 
 type DetailsProperty = {
     [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends { details?: number[] } ? K : never
@@ -17,37 +19,36 @@ type DetailsProperty = {
 })
 export class HeatmapChart extends ChartComponentBase {
     @Input() detailProperty: DetailsProperty = "sunshineMinutes"
+    @Input() abc?: (m: DailyMeasurement | MonthlySummary | YearlySummary) => number[]
     @Input() colorStops?: { value: number, color: Highcharts.ColorString }[]
 
     private detailedSeries?: Highcharts.Series
 
     constructor(filterService: FilterService) {
-        super()
-        filterService.currentData.subscribe(summaryData => {
-            if (!summaryData) {
-                return
-            }
+        super(filterService)
+    }
 
-            let heatmapData: Highcharts.PointOptionsType[] = []
-            if (summaryData.details) {
-                summaryData.details.forEach(m => {
-                    let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
-                    let measurements = m[this.detailProperty!]
-                    let details = measurements.details
-                    if (details) {
-                        for (let hour = 0; hour < details.length; hour++) {
-                            let value = details[hour]
-                            if (value != null) {
-                                heatmapData.push([dateLabel, hour, details[hour]])
-                            }
+    protected override async setChartData(summaryData: SummaryData) {
+        let heatmapData: Highcharts.PointOptionsType[] = []
+        if (summaryData.details) {
+            summaryData.details.forEach(m => {
+                let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
+                let details = this.abc!(m)
+                if (details) {
+                    for (let hour = 0; hour < details.length; hour++) {
+                        let value = details[hour]
+                        if (value != null) {
+                            heatmapData.push([dateLabel, hour, details[hour]])
                         }
                     }
-                })
-            }
-            this.detailedSeries?.setData(heatmapData, false)
-            this.chart?.redraw()
-            this.chart?.hideLoading()
-        })
+                }
+            })
+        }
+        this.detailedSeries?.setData(heatmapData, false)
+    }
+
+    private queueRedrawChart() {
+        setTimeout(() => this.chart?.redraw(), 0)
     }
 
     protected createSeries(chart: Highcharts.Chart): void {
