@@ -18,7 +18,7 @@ fun groupDailyByMonth(measurements: Collection<DailyMeasurementEntity>): Collect
 fun Collection<DailyMeasurementEntity>.summarizeDaily(): SummarizedMeasurement {
     val summarizedHistogram = Array(10) { 0 }
     val detailedCloudCoverage = Array(size) { Array(10) { 0 } }
-    map { it.cloudCoverageHistogram }
+    map { it.cloudCoverage.histogram }
             .forEachIndexed { day, detailedHistogram ->
                 if (detailedHistogram != null) {
                     detailedCloudCoverage[day] = detailedHistogram

@@ -234,10 +234,10 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
                 calculateMinAndMaxWindDirection(windDirectionDegrees)
 
                 val histogram = Array(10) { 0 }
-                detailedCloudCoverage?.filterNotNull()
+                cloudCoverage.details?.filterNotNull()
                         ?.map { if (it == -1) 9 else it }
                         ?.forEach { histogram[it]++ }
-                cloudCoverageHistogram = histogram
+                cloudCoverage.histogram = histogram
             }
         }
     }
@@ -300,7 +300,7 @@ private fun setHourlyCloudCoverageData(
         hour: Int,
         row: SemicolonSeparatedValues.Row
 ) {
-    setHourlyValue(measurementRecord::detailedCloudCoverage, hour, row["V_N"]?.toInt())
+    setHourlyValue(measurementRecord.cloudCoverage::details, hour, row["V_N"]?.toInt())
 }
 
 private fun setHourlyDewPointData(measurementRecord: DailyMeasurementEntity, hour: Int,

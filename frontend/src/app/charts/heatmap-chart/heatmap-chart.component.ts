@@ -5,6 +5,7 @@ import {FilterService} from "../../filter.service";
 import {getDateLabel} from "../charts";
 import {DailyMeasurement, MonthlySummary, SummarizedMeasurement, SummaryData, YearlySummary} from "../../data-classes";
 import HighchartsBoost from "highcharts/modules/boost"
+
 HighchartsBoost(Highcharts)
 
 type DetailsProperty = {
@@ -19,8 +20,9 @@ type DetailsProperty = {
 })
 export class HeatmapChart extends ChartComponentBase {
     @Input() detailProperty: DetailsProperty = "sunshineMinutes"
-    @Input() abc?: (m: DailyMeasurement | MonthlySummary | YearlySummary) => number[]
-    @Input() colorStops?: { value: number, color: Highcharts.ColorString }[]
+    @Input() colorStops: { value: number, color: Highcharts.ColorString }[] = [
+        {value: 0, color: 'rgb(70, 50, 80)'},
+        {value: 100, color: 'rgb(210, 150, 240)'}]
 
     private detailedSeries?: Highcharts.Series
 
@@ -33,7 +35,7 @@ export class HeatmapChart extends ChartComponentBase {
         if (summaryData.details) {
             summaryData.details.forEach(m => {
                 let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
-                let details = this.abc!(m)
+                let details = m[this.detailProperty].details
                 if (details) {
                     for (let hour = 0; hour < details.length; hour++) {
                         let value = details[hour]
@@ -44,11 +46,10 @@ export class HeatmapChart extends ChartComponentBase {
                 }
             })
         }
+        if (this.detailProperty == "cloudCoverage") {
+            console.log(heatmapData)
+        }
         this.detailedSeries?.setData(heatmapData, false)
-    }
-
-    private queueRedrawChart() {
-        setTimeout(() => this.chart?.redraw(), 0)
     }
 
     protected createSeries(chart: Highcharts.Chart): void {
@@ -59,7 +60,6 @@ export class HeatmapChart extends ChartComponentBase {
             yAxis: "yAxisDetails",
         })
     }
-
 
     protected override getYAxes(): Highcharts.AxisOptions[] {
         return [{
@@ -74,20 +74,20 @@ export class HeatmapChart extends ChartComponentBase {
     }
 
     protected override getColorAxis(): Highcharts.ColorAxisOptions | null {
-        if (this.colorStops) {
-            let minStopValue = Math.min.apply(null, this.colorStops.map(s => s.value))
-            let maxStopValue = Math.max.apply(null, this.colorStops.map(s => s.value))
-            let heatmapColorStopsRelative: [number, Highcharts.ColorString][] = this.colorStops
-                .map(s => [(s.value - minStopValue) / (maxStopValue - minStopValue), s.color])
-            console.log(heatmapColorStopsRelative)
-
-            return {
-                stops: heatmapColorStopsRelative,
-                min: this.colorStops[0].value,
-                max: this.colorStops[this.colorStops.length - 1].value
-            }
-        } else {
-            return {minColor: 'rgb(70, 50, 80)', maxColor: 'rgb(210, 150, 240)'}
+        let minStopValue = Math.min.apply(null, this.colorStops.map(s => s.value))
+        let maxStopValue = Math.max.apply(null, this.colorStops.map(s => s.value))
+        let heatmapColorStopsRelative: [number, Highcharts.ColorString][] = this.colorStops
+            .map(s => [(s.value - minStopValue) / (maxStopValue - minStopValue), s.color])
+        let colorAxisOptions = {
+            id: `colorAxis_${this.detailProperty}`,
+            stops: heatmapColorStopsRelative,
+            min: this.colorStops[0].value,
+            max: this.colorStops[this.colorStops.length - 1].value,
+            startOnTick: false,
+            endOnTick: false
         }
+        console.log(colorAxisOptions)
+
+        return colorAxisOptions
     }
 }

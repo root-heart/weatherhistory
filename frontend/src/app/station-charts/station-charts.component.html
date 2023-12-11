@@ -36,7 +36,10 @@
     <sum-chart class="chart" id="sunshineDurationChart" [sumProperty]="'sunshineMinutes'"/>
 
     <heatmap-chart class="chart" [detailProperty]="'sunshineMinutes'"
-                   [colorStops]="[{value: 0, color: 'rgba(40, 40, 40, 0)'}, {value: 60, color: 'rgba(238, 170, 34, 1)'}]"/>
+                   [colorStops]="[
+                        {value: 0, color: '#282828'},
+                        {value: 1, color: '#433'},
+                        {value: 60, color: '#fa0'}]"/>
 
     <div class="summary">
         &#931; {{divideBy60(filterService.currentData.value?.summary?.sunshineMinutes?.sum)?.toFixed(1)}}h
@@ -153,7 +156,17 @@
 <section>
     <h1>Bewölkung</h1>
 
-    <cloud-coverage-chart class="chart" id="cloudCoverageChart"/>
+    <heatmap-chart class="chart" [detailProperty]="'cloudCoverage'"
+                   [colorStops]="[{value: -1, color: '#600'},
+                                    {value: 0, color: '#a3ccf5'},
+                                    {value: 1, color: '#e7f2fe'},
+                                    {value: 2, color: '#faf7d1'},
+                                    {value: 3, color: '#ede8ab'},
+                                    {value: 4, color: '#d5cf90'},
+                                    {value: 5, color: '#c9c6c3'},
+                                    {value: 6, color: '#999795'},
+                                    {value: 7, color: '#797877'},
+                                    {value: 8, color: '#535353'}]"/>
 
     <div class="summary">
         <fa-icon [icon]="faSun"></fa-icon>

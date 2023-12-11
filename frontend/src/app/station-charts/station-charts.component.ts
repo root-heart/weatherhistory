@@ -18,6 +18,7 @@ import {getDateLabel} from "../charts/charts";
 import {formatDate, registerLocaleData} from "@angular/common";
 import localeDe from '@angular/common/locales/de';
 import localeDeExtra from '@angular/common/locales/extra/de';
+import {DailyMeasurement, MonthlySummary, SummaryData, YearlySummary} from "../data-classes";
 
 addMore(Highcharts);
 registerLocaleData(localeDe, 'de-DE', localeDeExtra);

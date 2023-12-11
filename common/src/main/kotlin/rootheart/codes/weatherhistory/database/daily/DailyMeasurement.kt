@@ -48,8 +48,10 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
                                       windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
                                       visibilityMeters = visibilityMeters.toEntity(row),
                                       windDirectionDegrees = windDirectionDegrees.toEntity(row),
-                                      detailedCloudCoverage = row[detailedCloudCoverage],
-                                      cloudCoverageHistogram = row[cloudCoverageHistogram])
+                                      cloudCoverage = DailyDetailsAndHistogram(
+                                              details = row[detailedCloudCoverage],
+                                              histogram = row[cloudCoverageHistogram])
+        )
     }
 }
 

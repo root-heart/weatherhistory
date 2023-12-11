@@ -10,7 +10,9 @@ export abstract class ChartComponentBase {
     chart?: Highcharts.Chart;
     chartOptions: Highcharts.Options = {
         chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},
-        legend: {enabled: false},
+        legend: {
+            enabled: false
+        },
         title: {text: undefined},
         tooltip: {
             shared: true,
@@ -47,7 +49,6 @@ export abstract class ChartComponentBase {
 
     chartCallback: Highcharts.ChartCallbackFunction = c => {
         this.chart = c
-        // this.getYAxes().forEach(a => c.addAxis(a))
         let colorAxis = this.getColorAxis();
         if (colorAxis) {
             c.addColorAxis(colorAxis)

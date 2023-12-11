@@ -50,8 +50,8 @@ fun insertDailyMeasurementsIntoDatabase(measurements: List<DailyMeasurementEntit
             visibilityMeters.setValues(this, it.visibilityMeters)
             windSpeedMetersPerSecond.setValues(this, it.windSpeedMetersPerSecond)
 
-            this[cloudCoverageHistogram] = it.cloudCoverageHistogram ?: Array(0) { 0 }
-            this[detailedCloudCoverage] = it.detailedCloudCoverage
+            this[cloudCoverageHistogram] = it.cloudCoverage.histogram ?: Array(0) { 0 }
+            this[detailedCloudCoverage] = it.cloudCoverage.details
 
             sunshineMinutes.setValues(this, it.sunshineMinutes)
             rainfallMillimeters.setValues(this, it.rainfallMillimeters )

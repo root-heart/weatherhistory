@@ -42,7 +42,7 @@ export type SummarizedMeasurement = {
     sunshineMinutes: MinMaxSumDetails,
     rainfallMillimeters: MinMaxSumDetails,
     snowfallMillimeters: MinMaxSumDetails,
-    detailedCloudCoverage: number[],
+    cloudCoverage: {details: number[]},
     cloudCoverageHistogram: number[],
     windDirectionDegrees: MinMaxDetails,
 }
