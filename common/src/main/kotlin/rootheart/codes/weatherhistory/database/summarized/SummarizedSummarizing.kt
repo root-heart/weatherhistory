@@ -80,10 +80,11 @@ fun Collection<MonthlySummary>.summarizeMonthlyMinAvgMax(
     val maxMeasurement = filter { selector(it).max != null }.maxByOrNull { selector(it).max!! }
     return SummarizedMinAvgMax(
             min = minMeasurement?.let(selector)?.min,
-            minDate = LocalDate(minMeasurement?.year ?: 0, minMeasurement?.month ?: 1, 1),
+//            minDate = LocalDate(minMeasurement?.year ?: 0, minMeasurement?.month ?: 1, 1),
             avg = nullsafeAvgDecimal { selector(it).avg },
             max = maxMeasurement?.let(selector)?.max,
-            maxDate = LocalDate(maxMeasurement?.year ?: 0, maxMeasurement?.month ?: 1, 1))
+//            maxDate = LocalDate(maxMeasurement?.year ?: 0, maxMeasurement?.month ?: 1, 1)
+    )
 }
 
 fun Collection<MonthlySummary>.summarizeMonthlyAvgMax(
@@ -92,7 +93,8 @@ fun Collection<MonthlySummary>.summarizeMonthlyAvgMax(
     return SummarizedAvgMax(
             avg = nullsafeAvgDecimal { selector(it).avg },
             max = maxMeasurement?.let(selector)?.max,
-            maxDate = LocalDate(maxMeasurement?.year ?: 0, maxMeasurement?.month ?: 1, 1))
+//            maxDate = LocalDate(maxMeasurement?.year ?: 0, maxMeasurement?.month ?: 1, 1)
+    )
 }
 
 fun Collection<MonthlySummary>.summarizeMonthlySums(
@@ -102,9 +104,9 @@ fun Collection<MonthlySummary>.summarizeMonthlySums(
     val maxMeasurement = notNullSums.maxByOrNull { selector(it).sum!! }
     return SummarizedSum(
             min = minMeasurement?.let(selector)?.sum,
-            minDate = LocalDate(minMeasurement?.year ?: 0, minMeasurement?.month ?: 1, 1),
+//            minDate = LocalDate(minMeasurement?.year ?: 0, minMeasurement?.month ?: 1, 1),
             max = maxMeasurement?.let(selector)?.sum,
-            maxDate = LocalDate(maxMeasurement?.year ?: 0, maxMeasurement?.month ?: 1, 1),
+//            maxDate = LocalDate(maxMeasurement?.year ?: 0, maxMeasurement?.month ?: 1, 1),
             sum = notNullSums.sumOf { selector(it).sum!! }
     )
 }
@@ -115,10 +117,11 @@ fun Collection<YearlySummary>.summarizeYearlyMinAvgMax(
     val maxMeasurement = filter { selector(it).max != null }.maxByOrNull { selector(it).max!! }
     return SummarizedMinAvgMax(
             min = minMeasurement?.let(selector)?.min,
-            minDate = LocalDate(minMeasurement?.year ?: 0, 1, 1),
+//            minDate = LocalDate(minMeasurement?.year ?: 0, 1, 1),
             avg = nullsafeAvgDecimal { selector(it).avg },
             max = maxMeasurement?.let(selector)?.max,
-            maxDate = LocalDate(maxMeasurement?.year ?: 0, 1, 1))
+//            maxDate = LocalDate(maxMeasurement?.year ?: 0, 1, 1)
+    )
 }
 
 fun Collection<YearlySummary>.summarizeYearlyAvgMax(
@@ -127,7 +130,8 @@ fun Collection<YearlySummary>.summarizeYearlyAvgMax(
     return SummarizedAvgMax(
             avg = nullsafeAvgDecimal { selector(it).avg },
             max = maxMeasurement?.let(selector)?.max,
-            maxDate = LocalDate(maxMeasurement?.year ?: 0, 1, 1))
+//            maxDate = LocalDate(maxMeasurement?.year ?: 0, 1, 1)
+    )
 }
 
 fun Collection<YearlySummary>.summarizeYearlySums(
@@ -137,9 +141,9 @@ fun Collection<YearlySummary>.summarizeYearlySums(
     val maxMeasurement = notNullSums.maxByOrNull { selector(it).sum!! }
     return SummarizedSum(
             min = minMeasurement?.let(selector)?.sum,
-            minDate = LocalDate(minMeasurement?.year ?: 0, 1, 1),
+//            minDate = LocalDate(minMeasurement?.year ?: 0, 1, 1),
             max = maxMeasurement?.let(selector)?.sum,
-            maxDate = LocalDate(maxMeasurement?.year ?: 0, 1, 1),
+//            maxDate = LocalDate(maxMeasurement?.year ?: 0, 1, 1),
             sum = notNullSums.sumOf { selector(it).sum!! }
     )
 }

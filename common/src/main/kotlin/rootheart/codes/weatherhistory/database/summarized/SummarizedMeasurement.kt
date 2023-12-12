@@ -81,19 +81,19 @@ class SummarizedMinAvgMaxColumns(
 ) {
     fun setValues(batch: BatchInsertStatement, values: SummarizedMinAvgMax) {
         batch[min] = values.min
-        batch[minDate] = values.minDate?.toDateTimeAtStartOfDay()
+//        batch[minDate] = values.minDate?.toDateTimeAtStartOfDay()
         batch[avg] = values.avg
         batch[max] = values.max
-        batch[maxDate] = values.maxDate?.toDateTimeAtStartOfDay()
+//        batch[maxDate] = values.maxDate?.toDateTimeAtStartOfDay()
     }
 
     fun toEntity(row: ResultRow): SummarizedMinAvgMax {
         return SummarizedMinAvgMax(
                 min = row[min],
-                minDate = row[minDate]?.toLocalDate(),
+//                minDate = row[minDate]?.toLocalDate(),
                 avg = row[avg],
                 max = row[max],
-                maxDate = row[maxDate]?.toLocalDate(),
+//                maxDate = row[maxDate]?.toLocalDate(),
         )
     }
 }
@@ -106,15 +106,14 @@ class SummarizedAvgMaxColumns(
     fun setValues(batch: BatchInsertStatement, values: SummarizedAvgMax) {
         batch[avg] = values.avg
         batch[max] = values.max
-        batch[maxDate] = values.maxDate?.toDateTimeAtStartOfDay()
-
+//        batch[maxDate] = values.maxDate?.toDateTimeAtStartOfDay()
     }
 
     fun toEntity(row: ResultRow): SummarizedAvgMax {
         return SummarizedAvgMax(
                 avg = row[avg],
                 max = row[max],
-                maxDate = row[maxDate]?.toLocalDate(),
+//                maxDate = row[maxDate]?.toLocalDate(),
         )
     }
 }
@@ -128,18 +127,18 @@ class SummarizedSumColumns(
 ) {
     fun setValues(batch: BatchInsertStatement, values: SummarizedSum) {
         batch[min] = values.min
-        batch[minDate] = values.minDate?.toDateTimeAtStartOfDay()
+//        batch[minDate] = values.minDate?.toDateTimeAtStartOfDay()
         batch[max] = values.max
-        batch[maxDate] = values.maxDate?.toDateTimeAtStartOfDay()
+//        batch[maxDate] = values.maxDate?.toDateTimeAtStartOfDay()
         batch[sum] = values.sum
     }
 
     fun toEntity(row: ResultRow): SummarizedSum {
         return SummarizedSum(
                 min = row[min],
-                minDate = row[minDate]?.toLocalDate(),
+//                minDate = row[minDate]?.toLocalDate(),
                 max = row[max],
-                maxDate = row[maxDate]?.toLocalDate(),
+//                maxDate = row[maxDate]?.toLocalDate(),
                 sum = row[sum]
         )
     }
@@ -147,21 +146,23 @@ class SummarizedSumColumns(
 
 class SummarizedMinAvgMax(
         var min: BigDecimal? = null,
-        var minDate: LocalDate? = null,
+//        var minDate: LocalDate? = null,
         var avg: BigDecimal? = null,
         var max: BigDecimal? = null,
-        var maxDate: LocalDate? = null)
+//        var maxDate: LocalDate? = null
+)
 
 class SummarizedAvgMax(
         var avg: BigDecimal? = null,
         var max: BigDecimal? = null,
-        var maxDate: LocalDate? = null)
+//        var maxDate: LocalDate? = null
+)
 
 class SummarizedSum(
         var min: BigDecimal? = null,
-        var minDate: LocalDate? = null,
+//        var minDate: LocalDate? = null,
         var max: BigDecimal? = null,
-        var maxDate: LocalDate? = null,
+//        var maxDate: LocalDate? = null,
         var sum: BigDecimal? = null
 )
 

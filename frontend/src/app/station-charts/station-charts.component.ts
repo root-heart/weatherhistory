@@ -1,6 +1,5 @@
-import {Component, OnInit, ViewEncapsulation} from '@angular/core';
+import {Component} from '@angular/core';
 import {FilterService} from "../filter.service";
-import {MeasurementTypes} from "../app.component";
 import {
     faCalendarWeek,
     faCloud,
@@ -14,8 +13,7 @@ import {
 import * as Highcharts from 'highcharts';
 
 import addMore from "highcharts/highcharts-more";
-import {getDateLabel} from "../charts/charts";
-import {formatDate, registerLocaleData} from "@angular/common";
+import {registerLocaleData} from "@angular/common";
 import localeDe from '@angular/common/locales/de';
 import localeDeExtra from '@angular/common/locales/extra/de';
 
@@ -41,8 +39,16 @@ export class StationChartsComponent {
     constructor(public filterService: FilterService) {
     }
 
-    divideBy60(x?: number): number | undefined {
-        return x ? x / 60 : undefined
+    formatAsHour(value: number): string {
+        return formatAsHour(value)
+    }
+
+    yAxisMinutesAsHour(x: Highcharts.AxisLabelsFormatterContextObject): string {
+        return formatAsHour(x.value as number)
+    }
+
+    yAxisHours(x: Highcharts.AxisLabelsFormatterContextObject): string {
+        return formatAsHour(x.value as number * 60)
     }
 
     percentageOfCloudCoverage(coverageHistogram: number[] | undefined, coverageIndices: number[]): string {
@@ -61,39 +67,10 @@ export class StationChartsComponent {
         return (part / sum * 100).toFixed(1) + "%"
     }
 
-    private uniqueFilter(value: any, index: number, self: number[]) {
-        return self.indexOf(value) === index;
-    }
+}
 
-    /**
-     * It seems that JavaScript seems to sort an array of numbers lexicographically by default, meaning that the number
-     * 10 precedes the number 5 (which is absolute f***ing nonsense). To overcome this, I wrote this number comparator.
-     */
-    private numberComparator(a: number, b: number) {
-        return a - b;
-    }
-
-    private clearChart(chart: Highcharts.Chart) {
-        while (chart.series.length > 0) {
-            chart.series[0].remove()
-        }
-    }
-
-    private indexOfMax(arr: number[]) {
-        if (arr.length === 0) {
-            return -1;
-        }
-
-        let max = arr[0];
-        let maxIndex = 0;
-
-        for (let i = 1; i < arr.length; i++) {
-            if (arr[i] > max) {
-                maxIndex = i;
-                max = arr[i];
-            }
-        }
-
-        return maxIndex;
-    }
+function formatAsHour(value: number): string {
+    let hours = Math.floor(value / 60)
+    let minutes = (value % 60).toString().padStart(2, '0')
+    return `${hours}:${minutes}`
 }

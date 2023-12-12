@@ -16,9 +16,7 @@ import {DailyMeasurement, MonthlySummary, YearlySummary} from "../data-classes";
 
 export function getDateLabel(m: DailyMeasurement | MonthlySummary | YearlySummary): number {
     // console.log(m)
-    if ("date" in m) {
-        return DateTime.fromFormat(m.date!, "yyyy-MM-dd", {zone: "UTC"}).toJSDate().getTime()
-    } else if ("month" in m && "year" in m) {
+    if ("month" in m && "year" in m) {
         return DateTime.fromObject({year: m.year, month: m.month}).toJSDate().getTime()
     } else if ("year" in m) {
         return DateTime.fromObject({year: m.year}).toJSDate().getTime()

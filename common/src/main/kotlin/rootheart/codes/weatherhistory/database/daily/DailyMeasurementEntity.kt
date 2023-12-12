@@ -6,12 +6,8 @@ import java.math.BigDecimal
 
 class DailyMeasurementEntity(
         val stationId: Long,
-        val date: LocalDate,
+        val dateInUtcMillis: Long,
 
-        val measurements: DailyMeasurements = DailyMeasurements()
-)
-
-class DailyMeasurements(
         val airTemperatureCentigrade: DailyMinAvgMax = DailyMinAvgMax(),
         val dewPointTemperatureCentigrade: DailyMinAvgMax = DailyMinAvgMax(),
         val humidityPercent: DailyMinAvgMax = DailyMinAvgMax(),
@@ -22,9 +18,7 @@ class DailyMeasurements(
         val snowfallMillimeters: DailySum = DailySum(),
         val windSpeedMetersPerSecond: DailyAvgMax = DailyAvgMax(),
         val windDirectionDegrees: DailyMinMax = DailyMinMax(),
-
-        var detailedCloudCoverage: Array<Int?>? = null,
-        var cloudCoverageHistogram: Array<Int>? = null
+        var cloudCoverage: DailyDetailsAndHistogram = DailyDetailsAndHistogram()
 )
 
 class DailyMinMax(
@@ -51,3 +45,7 @@ class DailySum(
         var details: Array<BigDecimal?>? = null,
 )
 
+class DailyDetailsAndHistogram(
+        var details: Array<Int?>? = null,
+        var histogram: Array<Int>? = null
+)
