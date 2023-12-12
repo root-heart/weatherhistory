@@ -20,7 +20,6 @@ export class HeatmapChart extends ChartComponentBase {
     @Input() colorStops: { value: number, color: Highcharts.ColorString }[] = [
         {value: 0, color: 'rgb(70, 50, 80)'},
         {value: 100, color: 'rgb(210, 150, 240)'}]
-    private detailedSeries?: Highcharts.Series
 
     constructor(filterService: FilterService) {
         super(filterService)
@@ -42,22 +41,15 @@ export class HeatmapChart extends ChartComponentBase {
                 }
             })
         }
-        if (this.detailProperty == "cloudCoverage") {
-            console.log(heatmapData)
-        }
-        this.detailedSeries?.setData(heatmapData, false)
+        this.chart?.series[0].setData(heatmapData, false)
     }
 
-    protected override createSeries(chart: Highcharts.Chart): void {
-        this.detailedSeries = chart.addSeries({
+    protected override createSeries(): Highcharts.SeriesOptionsType[] {
+        return [{
             type: 'heatmap',
             colsize: 24 * 60 * 60 * 1000,
-            turboThreshold: 0,
-            yAxis: "yAxisDetails",
-            // TODO DRY
-            tooltip: {valueSuffix: this.unit},
-            name: this.name
-        })
+            turboThreshold: 0
+        }]
     }
 
     protected override getYAxes(): Highcharts.AxisOptions[] {
@@ -73,7 +65,8 @@ export class HeatmapChart extends ChartComponentBase {
         }]
     }
 
-    protected override getColorAxis(): Highcharts.ColorAxisOptions | null {
+    // TODO currently this needs to be executed manually AFTER colorStops are set. Perhaps this can be made a bit nicer
+    protected override getColorAxis(): Highcharts.ColorAxisOptions | undefined {
         let minStopValue = Math.min.apply(null, this.colorStops.map(s => s.value))
         let maxStopValue = Math.max.apply(null, this.colorStops.map(s => s.value))
         let heatmapColorStopsRelative: [number, Highcharts.ColorString][] = this.colorStops

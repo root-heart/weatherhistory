@@ -30,9 +30,6 @@ export class SumChartComponent extends ChartComponentBase {
     @Input() sum2Property?: MinMaxSumDetailsProperty = undefined
     @Input() valueTooltipFormatter?: (originalValue: number) => string
 
-    private sumSeries?: Highcharts.Series
-    private sum2Series?: Highcharts.Series
-
     constructor(filterService: FilterService) {
         super(filterService)
     }
@@ -65,38 +62,27 @@ export class SumChartComponent extends ChartComponentBase {
             })
         }
 
-        this.sumSeries?.setData(sumData, false)
-        this.sum2Series?.setData(sum2Data, false)
+        this.chart?.series[0]?.setData(sumData, false)
+        this.chart?.series[1]?.setData(sum2Data, false)
     }
 
-
-    protected override createSeries(chart: Highcharts.Chart) {
-        console.log('createSeries')
-
-        this.sumSeries = chart.addSeries({
+    protected override createSeries(): Highcharts.SeriesOptionsType[] {
+        let series: Highcharts.SeriesOptionsType[] = [{
             type: "column",
             borderRadius: 0,
             stack: "s",
-            stacking: "normal",
-            yAxis: "yAxisSum",
-            // TODO DRY
-            tooltip: {valueSuffix: this.unit},
-            name: this.name
-
-        })
+            stacking: "normal"
+        }]
 
         if (this.sum2Property) {
-            this.sum2Series = chart.addSeries({
+            series.push({
                 type: "column",
                 borderRadius: 0,
                 stack: "s",
-                stacking: "normal",
-                yAxis: "yAxisSum",
-                // TODO DRY
-                tooltip: {valueSuffix: this.unit},
-                name: this.name
+                stacking: "normal"
             })
         }
+        return series
     }
 
     protected override getYAxes(): Highcharts.AxisOptions[] {

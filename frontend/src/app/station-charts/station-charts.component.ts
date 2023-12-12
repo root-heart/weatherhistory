@@ -43,8 +43,12 @@ export class StationChartsComponent {
         return formatAsHour(value)
     }
 
-    yAxisHourFormatter(x: Highcharts.AxisLabelsFormatterContextObject): string {
+    yAxisMinutesAsHour(x: Highcharts.AxisLabelsFormatterContextObject): string {
         return formatAsHour(x.value as number)
+    }
+
+    yAxisHours(x: Highcharts.AxisLabelsFormatterContextObject): string {
+        return formatAsHour(x.value as number * 60)
     }
 
     percentageOfCloudCoverage(coverageHistogram: number[] | undefined, coverageIndices: number[]): string {

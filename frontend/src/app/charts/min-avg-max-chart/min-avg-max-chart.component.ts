@@ -32,9 +32,6 @@ type AvgMaxDetailsProperty = {
 export class MinAvgMaxChart extends ChartComponentBase {
     @Input() property?: MinAvgMaxDetailsProperty | AvgMaxDetailsProperty
 
-    private minMaxSeries?: Highcharts.Series
-    private avgSeries?: Highcharts.Series
-
     constructor(filterService: FilterService) {
         super(filterService);
     }
@@ -52,29 +49,22 @@ export class MinAvgMaxChart extends ChartComponentBase {
             })
         }
 
-        this.minMaxSeries?.setData(minMaxData, false)
-        this.avgSeries?.setData(avgData, false)
+        this.chart?.series[0]?.setData(minMaxData, false)
+        this.chart?.series[1]?.setData(avgData, false)
     }
 
-    protected override createSeries(chart: Highcharts.Chart) {
-        this.minMaxSeries = chart.addSeries({
+    protected override createSeries(): Highcharts.SeriesOptionsType[] {
+        return [{
             type: 'arearange',
             lineWidth: 3,
             marker: {enabled: false},
             states: {hover: {enabled: false}},
-            yAxis: "yAxisMinAvgMax",
-            // TODO DRY
-            tooltip: {valueSuffix: this.unit},
-            name: this.name
-        })
-        this.avgSeries = chart.addSeries({
+        }, {
             type: 'line',
             marker: {enabled: false},
             yAxis: "yAxisMinAvgMax",
-            // TODO DRY
-            tooltip: {valueSuffix: this.unit},
-            name: this.name + "Avg"
-        })
+
+        }]
     }
 
     protected override getYAxes(): Highcharts.AxisOptions[] {

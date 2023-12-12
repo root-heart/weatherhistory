@@ -30,6 +30,7 @@ export abstract class ChartComponentBase {
             column: {animation: false}
 
         },
+        series: this.createSeries(),
         xAxis: {
             id: "xAxis",
             crosshair: true,
@@ -42,8 +43,20 @@ export abstract class ChartComponentBase {
         yAxis: this.getYAxes()
     }
 
-    @Input() name: string = ""
-    @Input() unit: string = ""
+    @Input() set name(name: string) {
+        let series = this.chartOptions.series as Highcharts.SeriesOptionsType[]
+        series.forEach(s => {
+            s.name = name
+        })
+    }
+
+    @Input() set unit(unit: string) {
+        let series = this.chartOptions.series as Highcharts.SeriesOptionsType[]
+        series.forEach(s => {
+            // @ts-ignore
+            s.tooltip = {valueSuffix: unit}
+        })
+    }
 
     protected constructor(filterService: FilterService) {
         filterService.currentData.subscribe(summaryData => {
@@ -75,30 +88,11 @@ export abstract class ChartComponentBase {
         if (colorAxis) {
             c.addColorAxis(colorAxis)
         }
-        this.createSeries(c)
-    }
-
-    protected setUnit(unit: string) {
-        this.chart?.series.forEach(series => {
-            let options = series.options
-            // @ts-ignore
-            options.tooltip = {valueSuffix: unit}
-            series.update(options)
-        })
-    }
-
-    protected setName(name: string) {
-        this.chart?.series.forEach(series => {
-            let options = series.options
-            // @ts-ignore
-            options.name = name
-            series.update(options)
-        })
     }
 
     protected abstract setChartData(summaryData: SummaryData): Promise<void>
 
-    protected abstract createSeries(chart: Highcharts.Chart): void
+    protected abstract createSeries(): Highcharts.SeriesOptionsType[]
 
     protected getYAxes(): Highcharts.AxisOptions[] {
         return [{
@@ -108,9 +102,13 @@ export abstract class ChartComponentBase {
         }]
     }
 
-    protected getColorAxis(): Highcharts.ColorAxisOptions | null {
-        return null
+    protected getColorAxis(): Highcharts.ColorAxisOptions | undefined {
+        return undefined
     }
+
+    // protected getSeries(index:  number) : Highcharts.Series {
+    //
+    // }
 
     protected abstract getTooltipText(_: Highcharts.Tooltip): string
 }

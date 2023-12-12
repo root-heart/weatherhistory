@@ -26,6 +26,7 @@ registerLocaleData(localeDe, 'de-DE', localeDeExtra);
     encapsulation: ViewEncapsulation.None
 })
 export class WindDirectionChart extends ChartComponentBase {
+    // TODO DRY - use heatmap chart somehow
     windDirectionChartOptions: Highcharts.Options = {
         chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},
         colorAxis: {min: 0, minColor: 'rgb(70, 50, 80)', maxColor: 'rgb(210, 150, 240)'},
@@ -36,6 +37,7 @@ export class WindDirectionChart extends ChartComponentBase {
             xDateFormat: "%d.%m.%Y",
             animation: false
         },
+        series: this.createSeries(),
         xAxis: {
             id: "xAxis",
             crosshair: true,
@@ -100,7 +102,6 @@ export class WindDirectionChart extends ChartComponentBase {
         },
     }
 
-    private windDirectionSeries?: Highcharts.Series;
 
     constructor(filterService: FilterService) {
         super(filterService);
@@ -115,19 +116,18 @@ export class WindDirectionChart extends ChartComponentBase {
                 scatterData.push([dateLabel, parseInt(directionString), count])
             })
         })
-
-        this.windDirectionSeries!.setData(scatterData)
+        this.chart?.series[0]?.setData(scatterData)
     }
 
-    protected createSeries(chart: Highcharts.Chart): void {
-        this.windDirectionSeries = chart.addSeries({
+    protected createSeries(): Highcharts.SeriesOptionsType[] {
+        return [{
             type: 'heatmap',
             colsize: 24 * 60 * 60 * 1000,
             rowsize: 10,
             turboThreshold: 0,
             // enableMouseTracking: false,
             className: "windDirection"
-        })
+        }]
     }
 
     // TODO DRY somehow
