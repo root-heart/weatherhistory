@@ -31,7 +31,6 @@ type AvgMaxDetailsProperty = {
 })
 export class MinAvgMaxChart extends ChartComponentBase {
     @Input() property?: MinAvgMaxDetailsProperty | AvgMaxDetailsProperty
-    @Input() heatmapColorStops?: { value: number, color: Highcharts.ColorString }[]
 
     private minMaxSeries?: Highcharts.Series
     private avgSeries?: Highcharts.Series
@@ -41,7 +40,6 @@ export class MinAvgMaxChart extends ChartComponentBase {
     }
 
     protected override async setChartData(summaryData: SummaryData): Promise<void> {
-        this.chart?.showLoading("Aktualisiere Diagramm...")
         let minMaxData: number[][] = []
         let avgData: number[][] = []
         if (summaryData.details) {
@@ -56,8 +54,6 @@ export class MinAvgMaxChart extends ChartComponentBase {
 
         this.minMaxSeries?.setData(minMaxData, false)
         this.avgSeries?.setData(avgData, false)
-
-        this.chart?.hideLoading()
     }
 
     protected override createSeries(chart: Highcharts.Chart) {
@@ -67,11 +63,17 @@ export class MinAvgMaxChart extends ChartComponentBase {
             marker: {enabled: false},
             states: {hover: {enabled: false}},
             yAxis: "yAxisMinAvgMax",
+            // TODO DRY
+            tooltip: {valueSuffix: this.unit},
+            name: this.name
         })
         this.avgSeries = chart.addSeries({
             type: 'line',
             marker: {enabled: false},
             yAxis: "yAxisMinAvgMax",
+            // TODO DRY
+            tooltip: {valueSuffix: this.unit},
+            name: this.name + "Avg"
         })
     }
 
@@ -82,5 +84,25 @@ export class MinAvgMaxChart extends ChartComponentBase {
             reversedStacks: false,
             offset: 0
         }]
+    }
+
+    // TODO DRY somehow
+    protected override getTooltipText(_: Highcharts.Tooltip): string {
+        // there is some unexplainable (at least to me) TypeScript/JavaScript magic happening here, where 'this' is an
+        // object containing the members
+        // color, colorIndex, key, percentage, point, series, total, x, y
+        // beware: 'this' is not a reference to the enclosing class!!
+        // @ts-ignore
+        let tooltipInformation = this as TooltipInformation
+        let points = tooltipInformation.points
+        let series = points[0].series
+        let date = new Date(points[0].x)
+        let dateString = date.toLocaleDateString("de-DE", {day: "2-digit", month: "2-digit", year: "numeric"})
+        let unit = series.tooltipOptions.valueSuffix;
+        return `<b>${series.name}</b><br>`
+            + `Datum: ${dateString}<br>`
+            + `Höchstwert: ${points[0].point.high} ${unit}<br>`
+            + `Durchschnitt: ${points[1].point.y} ${unit}<br>`
+            + `Tiefstwert: ${points[0].point.y} ${unit}`
     }
 }

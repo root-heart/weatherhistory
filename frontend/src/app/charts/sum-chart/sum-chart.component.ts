@@ -16,7 +16,7 @@ addMore(Highcharts);
 registerLocaleData(localeDe, 'de-DE', localeDeExtra);
 
 type MinMaxSumDetailsProperty = {
-    [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends MinMaxSumDetails ? K : never
+    [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends { sum?: number } ? K : never
 }[keyof SummarizedMeasurement]
 
 
@@ -28,6 +28,7 @@ type MinMaxSumDetailsProperty = {
 export class SumChartComponent extends ChartComponentBase {
     @Input() sumProperty: MinMaxSumDetailsProperty = "sunshineMinutes"
     @Input() sum2Property?: MinMaxSumDetailsProperty = undefined
+    @Input() valueTooltipFormatter?: (originalValue: number) => string
 
     private sumSeries?: Highcharts.Series
     private sum2Series?: Highcharts.Series
@@ -37,7 +38,7 @@ export class SumChartComponent extends ChartComponentBase {
     }
 
     protected override async setChartData(summaryData: SummaryData) {
-        let sumData: number[][] = []
+        let sumData: Highcharts.PointOptionsType[] = []
         let sum2Data: number[][] = []
 
         if (summaryData.details) {
@@ -46,7 +47,13 @@ export class SumChartComponent extends ChartComponentBase {
                 let measurements = m[this.sumProperty!]
 
                 if (measurements.sum) {
-                    sumData.push([dateLabel, measurements.sum])
+                    sumData.push({
+                        x: dateLabel,
+                        y: measurements.sum,
+                        custom: {
+                            tooltipFormatter: this.valueTooltipFormatter
+                        }
+                    })
                 }
 
                 if (this.sum2Property && m[this.sum2Property!]) {
@@ -60,19 +67,22 @@ export class SumChartComponent extends ChartComponentBase {
 
         this.sumSeries?.setData(sumData, false)
         this.sum2Series?.setData(sum2Data, false)
-
-
-        this.chart?.hideLoading()
     }
 
 
     protected override createSeries(chart: Highcharts.Chart) {
+        console.log('createSeries')
+
         this.sumSeries = chart.addSeries({
             type: "column",
             borderRadius: 0,
             stack: "s",
             stacking: "normal",
-            yAxis: "yAxisSum"
+            yAxis: "yAxisSum",
+            // TODO DRY
+            tooltip: {valueSuffix: this.unit},
+            name: this.name
+
         })
 
         if (this.sum2Property) {
@@ -81,16 +91,45 @@ export class SumChartComponent extends ChartComponentBase {
                 borderRadius: 0,
                 stack: "s",
                 stacking: "normal",
-                yAxis: "yAxisSum"
+                yAxis: "yAxisSum",
+                // TODO DRY
+                tooltip: {valueSuffix: this.unit},
+                name: this.name
             })
         }
     }
 
     protected override getYAxes(): Highcharts.AxisOptions[] {
+        console.log('getYAxes')
+        console.log(this.yAxisLabelFormatter)
         return [{
             id: "yAxisSum",
             title: {text: undefined},
             reversedStacks: false,
+            labels: {
+                formatter: this.yAxisLabelFormatter
+            }
         }]
+    }
+
+    // TODO DRY somehow
+    protected override getTooltipText(_: Highcharts.Tooltip): string {
+        // there is some unexplainable (at least to me) TypeScript/JavaScript magic happening here, where 'this' is an
+        // object containing the members
+        // color, colorIndex, key, percentage, point, series, total, x, y
+        // beware: 'this' is not a reference to the enclosing class!!
+        // @ts-ignore
+        let tooltipInformation = this as TooltipInformation
+        let point = tooltipInformation.point
+        let series = tooltipInformation.series
+        let date = new Date(point.x)
+        let dateString = date.toLocaleDateString("de-DE", {day: "2-digit", month: "2-digit", year: "numeric"})
+        let value = point.y
+        if (point.custom?.tooltipFormatter) {
+            value = point.custom.tooltipFormatter(value)
+        }
+        return `<b>${series.name}</b><br>`
+            + `${dateString}: ${value} ${series.tooltipOptions.valueSuffix}`
+
     }
 }

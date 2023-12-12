@@ -3,10 +3,7 @@ import {ChartComponentBase} from "../chart-component-base";
 import * as Highcharts from "highcharts";
 import {FilterService} from "../../filter.service";
 import {getDateLabel} from "../charts";
-import {DailyMeasurement, MonthlySummary, SummarizedMeasurement, SummaryData, YearlySummary} from "../../data-classes";
-import HighchartsBoost from "highcharts/modules/boost"
-
-HighchartsBoost(Highcharts)
+import {SummarizedMeasurement, SummaryData} from "../../data-classes";
 
 type DetailsProperty = {
     [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends { details?: number[] } ? K : never
@@ -23,7 +20,6 @@ export class HeatmapChart extends ChartComponentBase {
     @Input() colorStops: { value: number, color: Highcharts.ColorString }[] = [
         {value: 0, color: 'rgb(70, 50, 80)'},
         {value: 100, color: 'rgb(210, 150, 240)'}]
-
     private detailedSeries?: Highcharts.Series
 
     constructor(filterService: FilterService) {
@@ -40,7 +36,7 @@ export class HeatmapChart extends ChartComponentBase {
                     for (let hour = 0; hour < details.length; hour++) {
                         let value = details[hour]
                         if (value != null) {
-                            heatmapData.push([dateLabel, hour, details[hour]])
+                            heatmapData.push([dateLabel, hour + 0.5, details[hour]])
                         }
                     }
                 }
@@ -52,12 +48,15 @@ export class HeatmapChart extends ChartComponentBase {
         this.detailedSeries?.setData(heatmapData, false)
     }
 
-    protected createSeries(chart: Highcharts.Chart): void {
+    protected override createSeries(chart: Highcharts.Chart): void {
         this.detailedSeries = chart.addSeries({
             type: 'heatmap',
             colsize: 24 * 60 * 60 * 1000,
             turboThreshold: 0,
             yAxis: "yAxisDetails",
+            // TODO DRY
+            tooltip: {valueSuffix: this.unit},
+            name: this.name
         })
     }
 
@@ -66,9 +65,10 @@ export class HeatmapChart extends ChartComponentBase {
             id: "yAxisDetails",
             title: {text: undefined},
             reversedStacks: false,
-            min: 0,
-            max: 23,
+            min: 0.5,
+            max: 23.5,
             tickInterval: 6,
+            startOnTick: false,
             endOnTick: false,
         }]
     }
@@ -78,7 +78,7 @@ export class HeatmapChart extends ChartComponentBase {
         let maxStopValue = Math.max.apply(null, this.colorStops.map(s => s.value))
         let heatmapColorStopsRelative: [number, Highcharts.ColorString][] = this.colorStops
             .map(s => [(s.value - minStopValue) / (maxStopValue - minStopValue), s.color])
-        let colorAxisOptions = {
+        return {
             id: `colorAxis_${this.detailProperty}`,
             stops: heatmapColorStopsRelative,
             min: this.colorStops[0].value,
@@ -86,8 +86,23 @@ export class HeatmapChart extends ChartComponentBase {
             startOnTick: false,
             endOnTick: false
         }
-        console.log(colorAxisOptions)
+    }
 
-        return colorAxisOptions
+    // TODO DRY somehow
+    protected override getTooltipText(_: Highcharts.Tooltip): string {
+        // there is some unexplainable (at least to me) TypeScript/JavaScript magic happening here, where 'this' is an
+        // object containing the members
+        // color, colorIndex, key, percentage, point, series, total, x, y
+        // beware: 'this' is not a reference to the enclosing class!!
+        // beware 2: that means that no method from this class can be called from this method
+        // @ts-ignore
+        let tooltipInformation = this as TooltipInformation
+        let point = tooltipInformation.point
+        let series = point.series
+        let date = new Date(point.x)
+        let dateString = date.toLocaleDateString("de-DE", {day: "2-digit", month: "2-digit", year: "numeric"})
+        return `<b>${series.name}</b><br>`
+            + `${dateString} ${point.y - 0.5}:00 Uhr: ${point.value} ${series.tooltipOptions.valueSuffix}`
+
     }
 }

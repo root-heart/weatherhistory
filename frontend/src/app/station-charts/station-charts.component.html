@@ -2,7 +2,10 @@
     <h1>Temperatur</h1>
 
 
-    <heatmap-chart class="chart" id="airTemperatureHeatmap" [detailProperty]="'airTemperatureCentigrade'"
+    <heatmap-chart class="chart" id="airTemperatureHeatmap"
+                   name="Lufttemperatur"
+                   unit="°C"
+                   [detailProperty]="'airTemperatureCentigrade'"
                    [colorStops]="[{value: -30, color: '#f7d8ff'},
                                         {value: -20,  color :'#b00fe8'},
                                         {value: -10, color: '#0e0ee8'},
@@ -12,7 +15,8 @@
                                          {value: 30,color: '#f60'},
                                           {value: 40, color: '#a00'}]"/>
 
-    <min-avg-max-chart class="chart" id="temperatureChart" [property]="'airTemperatureCentigrade'"/>
+    <min-avg-max-chart class="chart" id="temperatureChart" [property]="'airTemperatureCentigrade'"
+                       name="Lufttemperatur" unit="°C"/>
 
 
     <dl class="summary">
@@ -33,17 +37,23 @@
 <section>
     <h1>Sonnenschein</h1>
 
-    <sum-chart class="chart" id="sunshineDurationChart" [sumProperty]="'sunshineMinutes'"/>
+    <sum-chart class="chart" id="sunshineDurationChart" name="Sonnenschein" unit="h"
+               [sumProperty]="'sunshineMinutes'"
+               [yAxisLabelFormatter]="yAxisHourFormatter"
+                [valueTooltipFormatter]="formatAsHour"
+    />
 
-    <heatmap-chart class="chart" [detailProperty]="'sunshineMinutes'"
+    <heatmap-chart class="chart"
+                   name="Sonnenschein" unit="Minuten"
+                   [detailProperty]="'sunshineMinutes'"
                    [colorStops]="[
                         {value: 0, color: '#282828'},
                         {value: 1, color: '#433'},
                         {value: 60, color: '#fa0'}]"/>
 
     <div class="summary">
-        &#931; {{divideBy60(filterService.currentData.value?.summary?.sunshineMinutes?.sum)?.toFixed(1)}}h
-        &#8960; {{divideBy60(filterService.currentData.value?.summary?.sunshineMinutes?.sum)?.toFixed(1)}}h
+        &#931; {{formatAsHour(filterService.currentData.value?.summary?.sunshineMinutes?.sum || 0)}}h
+        &#8960; {{formatAsHour(filterService.currentData.value?.summary?.sunshineMinutes?.sum || 0)}}h
     </div>
 </section>
 
@@ -70,7 +80,8 @@
 <section>
     <h1>Wind</h1>
 
-    <min-avg-max-chart class="chart" id="windChart" [property]="'windSpeedMetersPerSecond'"/>
+    <min-avg-max-chart class="chart" id="windChart" [property]="'windSpeedMetersPerSecond'"
+                       name="Windgeschwindigkeit" unit="m/s"/>
 
     <div class="summary">
         &#8960; {{filterService.currentData.value?.summary?.windSpeedMetersPerSecond?.avg?.toFixed(1)}}m/s
@@ -92,7 +103,8 @@
 <section>
     <h1>Luftfeuchtigkeit</h1>
 
-    <min-avg-max-chart class="chart" id="humidityChart" [property]="'humidityPercent'"/>
+    <min-avg-max-chart class="chart" id="humidityChart" [property]="'humidityPercent'"
+                       name="Luftfeuchtigkeit" unit="%"/>
 
     <div class="summary">
         &#x2b9f; {{filterService.currentData.value?.summary?.humidityPercent?.min?.toFixed(1)}}%
@@ -108,7 +120,8 @@
 <section>
     <h1>Taupunkt</h1>
 
-    <min-avg-max-chart class="chart" id="dewPointTemperatureChart" [property]="'dewPointTemperatureCentigrade'"/>
+    <min-avg-max-chart class="chart" id="dewPointTemperatureChart" [property]="'dewPointTemperatureCentigrade'"
+                       name="Taupunkttemperatur" unit="°C"/>
 
     <div class="summary">
         &#x2b9f; {{filterService.currentData.value?.summary?.dewPointTemperatureCentigrade?.min?.toFixed(1)}}°C
@@ -124,7 +137,8 @@
 <section>
     <h1>Luftdruck</h1>
 
-    <min-avg-max-chart class="chart" id="airPressureChart" [property]="'airPressureHectopascals'"/>
+    <min-avg-max-chart class="chart" id="airPressureChart" [property]="'airPressureHectopascals'"
+                       name="Luftdruck" unit="hPa"/>
 
     <div class="summary">
         &#x2b9f; {{filterService.currentData.value?.summary?.airPressureHectopascals?.min?.toFixed(1)}}hPa
@@ -140,7 +154,8 @@
 <section>
     <h1>Sichtweite</h1>
 
-    <min-avg-max-chart class="chart" id="visibilityChart" [property]="'visibilityMeters'"/>
+    <min-avg-max-chart class="chart" id="visibilityChart" [property]="'visibilityMeters'"
+                       name="Sichtweite" unit="m"/>
 
     <div class="summary">
         &#x2b9f; {{filterService.currentData.value?.summary?.visibilityMeters?.min?.toFixed(0)}}m
@@ -156,7 +171,8 @@
 <section>
     <h1>Bewölkung</h1>
 
-    <heatmap-chart class="chart" [detailProperty]="'cloudCoverage'"
+    <heatmap-chart class="chart" name="Wolkenbedeckung" unit="/8"
+                   [detailProperty]="'cloudCoverage'"
                    [colorStops]="[{value: -1, color: '#600'},
                                     {value: 0, color: '#a3ccf5'},
                                     {value: 1, color: '#e7f2fe'},

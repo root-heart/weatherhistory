@@ -129,4 +129,22 @@ export class WindDirectionChart extends ChartComponentBase {
             className: "windDirection"
         })
     }
+
+    // TODO DRY somehow
+    protected override getTooltipText(_: Highcharts.Tooltip): string {
+        // there is some unexplainable (at least to me) TypeScript/JavaScript magic happening here, where 'this' is an
+        // object containing the members
+        // color, colorIndex, key, percentage, point, series, total, x, y
+        // beware: 'this' is not a reference to the enclosing class!!
+        // @ts-ignore
+        let tooltipInformation = this as TooltipInformation
+        let point = tooltipInformation.point
+        let series = tooltipInformation.series
+        console.log(tooltipInformation)
+        let date = new Date(point.x)
+        let dateString = date.toLocaleDateString("de-DE", {day: "2-digit", month: "2-digit", year: "numeric"})
+        return `<b>${series.name}</b><br>`
+            + `${dateString}: ${point.y} ${series.tooltipOptions.valueSuffix}`
+
+    }
 }
