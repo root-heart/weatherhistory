@@ -2,3 +2,5 @@
 /importer/build/
 /common/build/
 /build/
+/.gradle/
+/.idea/
