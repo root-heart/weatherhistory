@@ -10,6 +10,7 @@ import {HeatmapChart} from "../../charts/heatmap-chart/heatmap-chart.component";
 import * as Highcharts from 'highcharts';
 import addMore from "highcharts/highcharts-more";
 import {NgComponentOutlet} from "@angular/common";
+import {AirTemperatureChartComponent} from "../../charts/measurement/air-temperature-chart.component";
 
 addMore(Highcharts);
 
@@ -26,7 +27,7 @@ export class ChartTileComponent {
 
     private _year?: number
     get year(): number {
-        return this.getChartComponent()?.year || 2023
+        return this._year || 2023
     }
 
     set year(year: number) {
@@ -44,26 +45,21 @@ export class ChartTileComponent {
         this.weatherStation = station
     }
 
-    chartTypeSelected(chartType: ChartDefinition) {
-        this.chartComponent = chartType.component as Type<any>
-        this.inputs = {
-            "property": chartType.property,
-            "name": chartType.measurementName,
-            "unit": chartType.unit,
-        }
+    chartTypeSelected(chartType: Type<any>) {
+        this.chartComponent = chartType
         this.updateChartComponent()
     }
 
     chartComponent: Type<any> | null = null
-    inputs?: Record<string, unknown>
 
     private updateChartComponent() {
         this.changeDetector.detectChanges()
-        let chartComponent = this.getChartComponent()
-        if (chartComponent) {
-            console.log(`setting station ${this._weatherStation?.name} and year ${this._year} in chart component`)
-            if (this._weatherStation) chartComponent.weatherStation = this._weatherStation
-            if (this._year) chartComponent.year = this._year
+        if (this._weatherStation && this._year) {
+            let chartComponent = this.getChartComponent()
+            if (chartComponent) {
+                console.log(`setting station ${this._weatherStation?.name} and year ${this._year} in chart component`)
+                chartComponent.update(this._weatherStation, this._year)
+            }
         }
     }
 
@@ -77,13 +73,10 @@ export class ChartTileComponent {
         if (!componentRef) {
             return null
         }
-        return componentRef['instance'] as ChartComponentBase
+        let instance = componentRef['instance'];
+        if ("chart" in instance) {
+            return instance.chart as ChartComponentBase
+        }
+        return null
     }
-}
-
-export type ChartDefinition = {
-    component: typeof ChartComponentBase
-    property: keyof SummarizedMeasurement
-    measurementName: string
-    unit: string
 }

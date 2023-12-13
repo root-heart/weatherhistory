@@ -1,0 +1,9 @@
+import {Component, ViewChild} from '@angular/core';
+import {MinAvgMaxChart} from "../min-avg-max-chart/min-avg-max-chart.component";
+
+@Component({
+    template: '<min-avg-max-chart property="dewPointTemperatureCentigrade" name="Taupunkttemperatur" unit="°C" #chart/>'
+})
+export class DewPointTemperatureChartComponent {
+    @ViewChild("chart") chart!: MinAvgMaxChart
+}

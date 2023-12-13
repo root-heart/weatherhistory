@@ -16,17 +16,28 @@ import {LeafletModule} from "@asymmetrik/ngx-leaflet";
 import {FormsModule} from "@angular/forms";
 import {HttpClientModule} from '@angular/common/http';
 import {HighchartsChartModule} from "highcharts-angular";
-import { MinAvgMaxChart } from './charts/min-avg-max-chart/min-avg-max-chart.component';
-import { SumChartComponent } from './charts/sum-chart/sum-chart.component';
+import {MinAvgMaxChart} from './charts/min-avg-max-chart/min-avg-max-chart.component';
+import {SumChartComponent} from './charts/sum-chart/sum-chart.component';
 import {MatSliderModule} from "@angular/material/slider";
 import {MatInputModule} from "@angular/material/input";
 import {NgxSliderModule} from "ngx-slider-v2";
-import { WindDirectionChart } from './charts/wind-direction-chart/wind-direction-chart.component';
-import { HeatmapChart } from './charts/heatmap-chart/heatmap-chart.component';
-import { CustomizableDashboardComponent } from './customizable-dashboard/customizable-dashboard.component';
-import { ChartTileComponent } from './customizable-dashboard/chart-tile/chart-tile.component';
-import { StationSelectorComponent } from './station-selector/station-selector.component';
-import { ChartTypeSelectorComponent } from './customizable-dashboard/chart-type-selector/chart-type-selector.component';
+import {WindDirectionChart} from './charts/wind-direction-chart/wind-direction-chart.component';
+import {HeatmapChart} from './charts/heatmap-chart/heatmap-chart.component';
+import {CustomizableDashboardComponent} from './customizable-dashboard/customizable-dashboard.component';
+import {ChartTileComponent} from './customizable-dashboard/chart-tile/chart-tile.component';
+import {StationSelectorComponent} from './station-selector/station-selector.component';
+import {ChartTypeSelectorComponent} from './customizable-dashboard/chart-type-selector/chart-type-selector.component';
+import {AirTemperatureChartComponent} from './charts/measurement/air-temperature-chart.component';
+import {
+    DewPointTemperatureChartComponent
+} from "./charts/measurement/dew-point-temperature-chart.component";
+import { HumidityChartComponent } from './charts/measurement/humidity-chart.component';
+import { AirPressureChartComponent } from './charts/measurement/air-pressure-chart.component';
+import { VisibilityChartComponent } from './charts/measurement/visibility-chart.component';
+import {SunshineDurationChartComponent} from "./charts/measurement/sunshine-duration-chart.component";
+import { AirTemperatureHeatmapChartComponent } from './charts/measurement/air-temperature-heatmap-chart/air-temperature-heatmap-chart.component';
+import { SunshineDurationHeatmapChartComponent } from './charts/measurement/sunshine-duration-heatmap-chart/sunshine-duration-heatmap-chart.component';
+import { PrecipitationChartComponent } from './charts/measurement/precipitation-chart.component';
 
 
 @NgModule({
@@ -41,7 +52,16 @@ import { ChartTypeSelectorComponent } from './customizable-dashboard/chart-type-
         CustomizableDashboardComponent,
         ChartTileComponent,
         StationSelectorComponent,
-        ChartTypeSelectorComponent
+        ChartTypeSelectorComponent,
+        AirTemperatureChartComponent,
+        DewPointTemperatureChartComponent,
+        HumidityChartComponent,
+        AirPressureChartComponent,
+        VisibilityChartComponent,
+        SunshineDurationChartComponent,
+        AirTemperatureHeatmapChartComponent,
+        SunshineDurationHeatmapChartComponent,
+        PrecipitationChartComponent
     ],
     imports: [
         BrowserModule,

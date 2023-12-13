@@ -65,22 +65,6 @@ export abstract class ChartComponentBase {
         })
     }
 
-    private _weatherStation?: WeatherStation
-
-    set weatherStation(station: WeatherStation) {
-        console.log(`ChartComponentBase weatherStation set to ${station.name}`)
-        this._weatherStation = station
-        this.fetchMeasurementsIfPossible()
-    }
-
-    private _year?: number
-
-    set year(year: number) {
-        console.log(`ChartComponentBase year set to ${year}`)
-        this._year = year
-        this.fetchMeasurementsIfPossible()
-    }
-
     @Input() set yAxisLabelFormatter(f: Highcharts.AxisLabelsFormatterCallbackFunction) {
         let yAxes = this.chartOptions.yAxis as Highcharts.AxisOptions[]
         yAxes.forEach(a => {
@@ -116,14 +100,9 @@ export abstract class ChartComponentBase {
 
     protected abstract getTooltipText(_: Highcharts.Tooltip): string
 
-    private fetchMeasurementsIfPossible() {
-        if (!this._weatherStation || !this._year) {
-            console.log("incomplete")
-            return
-        }
-
-        console.log(`fetching ${this._weatherStation.name} ${this._year}`)
-        this.fetchMeasurementsService.fetchMeasurements(this._weatherStation, this._year)
+    update(weatherStation: WeatherStation, year: number) {
+        console.log(`fetching data for ${weatherStation.name} and year ${year}`)
+        this.fetchMeasurementsService.fetchMeasurements(weatherStation, year)
             .then(data => {
                 this.chart?.showLoading("Aktualisiere Diagramm...");
                 return data

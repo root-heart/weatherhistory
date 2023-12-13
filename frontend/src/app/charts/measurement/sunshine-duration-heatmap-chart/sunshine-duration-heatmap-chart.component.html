@@ -1,0 +1,7 @@
+<heatmap-chart #chart name="Sonnenschein" unit="Minuten"
+               [yAxisLabelFormatter]="yAxisHours"
+               [detailProperty]="'sunshineMinutes'"
+               [colorStops]="[
+                        {value: 0, color: '#0000'},
+                        {value: 1, color: '#433'},
+                        {value: 60, color: '#fa0'}]"/>
