@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Output, Type, ViewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, Output, Type, ViewChild} from '@angular/core';
 import {WeatherStation} from "../../WeatherStationService";
 import {ChartComponentBase} from "../../charts/chart-component-base";
 import {SummarizedMeasurement, SummaryData} from "../../data-classes";
@@ -19,45 +19,29 @@ addMore(Highcharts);
     styleUrls: ['./chart-tile.component.css']
 })
 export class ChartTileComponent {
-    // weatherStation?: WeatherStation = {
-    //     "id": 128 as unknown as bigint,
-    //     "name": "Freiburg",
-    //     "federalState": "Baden-Württemberg",
-    //     "height": 237,
-    //     "latitude": 48.0232,
-    //     "longitude": 7.8343
-    // }
-    // chartType: ChartType = {component: HeatmapChart, property: "airTemperatureCentigrade"}
-    // year?: number = 2023
-    @Output() weatherStationChanged = new EventEmitter<WeatherStation>()
-
     @ViewChild(NgComponentOutlet, {static: false}) ngComponentOutlet!: NgComponentOutlet
-    // protected readonly MinAvgMaxChart = MinAvgMaxChart;
-    // protected readonly WeatherStationMap = WeatherStationMap;
-    // protected readonly HeatmapChart = HeatmapChart;
 
-    constructor() {
+    constructor(private changeDetector: ChangeDetectorRef) {
     }
 
+    private _year?: number
     get year(): number {
         return this.getChartComponent()?.year || 2023
     }
 
     set year(year: number) {
-        let chartComponent = this.getChartComponent()
-        if (chartComponent) {
-            console.log(`setting year ${year} in chart component`)
-            chartComponent.year = year
-        }
+        this._year = year
+        this.updateChartComponent()
+    }
+
+    private _weatherStation?: WeatherStation
+    set weatherStation(station: WeatherStation) {
+        this._weatherStation = station
+        this.updateChartComponent()
     }
 
     weatherStationSelected(station: WeatherStation) {
-        this.weatherStationChanged.emit(station)
-        let chartComponent = this.getChartComponent()
-        if (chartComponent) {
-            console.log(`setting weather station ${station.name} in chart component`)
-            chartComponent.weatherStation = station
-        }
+        this.weatherStation = station
     }
 
     chartTypeSelected(chartType: ChartDefinition) {
@@ -67,17 +51,20 @@ export class ChartTileComponent {
             "name": chartType.measurementName,
             "unit": chartType.unit,
         }
+        this.updateChartComponent()
     }
 
     chartComponent: Type<any> | null = null
     inputs?: Record<string, unknown>
 
-    private ifDefinedCreateChart() {
-        // if (!this.weatherStation || !this.chartType || !this.year) {
-        //     return
-        // }
-
-
+    private updateChartComponent() {
+        this.changeDetector.detectChanges()
+        let chartComponent = this.getChartComponent()
+        if (chartComponent) {
+            console.log(`setting station ${this._weatherStation?.name} and year ${this._year} in chart component`)
+            if (this._weatherStation) chartComponent.weatherStation = this._weatherStation
+            if (this._year) chartComponent.year = this._year
+        }
     }
 
     private getChartComponent(): ChartComponentBase | null {
