@@ -1,0 +1,27 @@
+<button (click)="showMap()">
+    <fa-icon [icon]="faMapLocationDot"></fa-icon>
+    {{ selectedStation !== undefined ? selectedStation.name : "Bitte Ort wählen..." }}
+</button>
+
+<div *ngIf="mapVisible" class="modalBackground">
+    <div class="modalDialog">
+        <header>Bitte wählen Sie eine Wetterstation aus</header>
+
+        <weather-station-map [selectedStation]="selectedStation"
+                             (selectedStationChange)="selectedStationChangedOnMap($event)"/>
+
+        <dl>
+            <dt>Name der Wetterstation</dt>
+            <dd>{{ selectedStationOnMap?.name }}</dd>
+
+            <dt>Höhe über NN</dt>
+            <dd>{{ selectedStationOnMap?.height }} </dd>
+        </dl>
+
+        <ul>
+            <button (click)="closeDialogOk()">OK</button>
+            <button (click)="closeDialogCancel()">Schließen</button>
+        </ul>
+    </div>
+
+</div>
