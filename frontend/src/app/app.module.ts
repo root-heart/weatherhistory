@@ -11,7 +11,7 @@ import {StationChartsComponent} from "./station-charts/station-charts.component"
 import {AppComponent} from './app.component';
 import {RouterModule} from "@angular/router";
 import {FontAwesomeModule} from "@fortawesome/angular-fontawesome";
-import {MapDropdown} from "./map-dropdown/weather-station-map.component";
+import {WeatherStationMap} from "./weather-station-map/weather-station-map.component";
 import {LeafletModule} from "@asymmetrik/ngx-leaflet";
 import {FormsModule} from "@angular/forms";
 import {HttpClientModule} from '@angular/common/http';
@@ -23,17 +23,25 @@ import {MatInputModule} from "@angular/material/input";
 import {NgxSliderModule} from "ngx-slider-v2";
 import { WindDirectionChart } from './charts/wind-direction-chart/wind-direction-chart.component';
 import { HeatmapChart } from './charts/heatmap-chart/heatmap-chart.component';
+import { CustomizableDashboardComponent } from './customizable-dashboard/customizable-dashboard.component';
+import { ChartTileComponent } from './customizable-dashboard/chart-tile/chart-tile.component';
+import { StationSelectorComponent } from './station-selector/station-selector.component';
+import { ChartTypeSelectorComponent } from './customizable-dashboard/chart-type-selector/chart-type-selector.component';
 
 
 @NgModule({
     declarations: [
         AppComponent,
         ToggableButtonComponent, Dropdown, DateRangeSelector,
-        YearSelectionComponent, MonthSelectionComponent, MapDropdown, StationChartsComponent,
+        YearSelectionComponent, MonthSelectionComponent, WeatherStationMap, StationChartsComponent,
         MinAvgMaxChart,
         SumChartComponent,
         WindDirectionChart,
-        HeatmapChart
+        HeatmapChart,
+        CustomizableDashboardComponent,
+        ChartTileComponent,
+        StationSelectorComponent,
+        ChartTypeSelectorComponent
     ],
     imports: [
         BrowserModule,

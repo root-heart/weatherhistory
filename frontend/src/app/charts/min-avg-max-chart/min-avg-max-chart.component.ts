@@ -10,6 +10,7 @@ import * as Highcharts from 'highcharts';
 import addMore from "highcharts/highcharts-more";
 import {ChartComponentBase} from "../chart-component-base";
 import {FilterService} from "../../filter.service";
+import {FetchMeasurementsService} from "../../services/fetch-measurements.service";
 
 
 addMore(Highcharts);
@@ -32,8 +33,8 @@ type AvgMaxDetailsProperty = {
 export class MinAvgMaxChart extends ChartComponentBase {
     @Input() property?: MinAvgMaxDetailsProperty | AvgMaxDetailsProperty
 
-    constructor(filterService: FilterService) {
-        super(filterService);
+    constructor(fetchMeasurementsService: FetchMeasurementsService) {
+        super(fetchMeasurementsService);
     }
 
     protected override async setChartData(summaryData: SummaryData): Promise<void> {

@@ -11,6 +11,7 @@ import * as Highcharts from "highcharts";
 import addMore from "highcharts/highcharts-more";
 import {ChartComponentBase} from "../chart-component-base";
 import {FilterService} from "../../filter.service";
+import {FetchMeasurementsService} from "../../services/fetch-measurements.service";
 
 addMore(Highcharts);
 registerLocaleData(localeDe, 'de-DE', localeDeExtra);
@@ -30,8 +31,8 @@ export class SumChartComponent extends ChartComponentBase {
     @Input() sum2Property?: MinMaxSumDetailsProperty = undefined
     @Input() valueTooltipFormatter?: (originalValue: number) => string
 
-    constructor(filterService: FilterService) {
-        super(filterService)
+    constructor(fetchMeasurementsService: FetchMeasurementsService) {
+        super(fetchMeasurementsService);
     }
 
     protected override async setChartData(summaryData: SummaryData) {

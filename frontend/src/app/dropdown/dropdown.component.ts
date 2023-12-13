@@ -10,18 +10,15 @@ export class Dropdown implements OnInit, DropdownX {
     private dv: boolean = false
 
     set dropdownVisible(v: boolean) {
-        this.dropdownService.currentlyVisibleDropdown = v ? this : undefined
-        if (this.dropdownService.dropdownBackground) {
-            this.dropdownService.dropdownBackground.nativeElement.style.visibility = v ? "visible" : "hidden"
-        }
         this.dv = v
+        console.log(v)
     }
 
     get dropdownVisible(): boolean {
         return this.dv
     }
 
-    constructor(private dropdownService: DropdownService) {
+    constructor() {
     }
 
     ngOnInit(): void {

@@ -1,0 +1,32 @@
+@import url("https://code.highcharts.com/css/highcharts.css");
+
+:host {
+    display: grid;
+    grid-template-areas: "station charttype year  ."
+                         "chart   chart     chart chart";
+    grid-template-rows: 3rem auto;
+    grid-template-columns: 20rem 15rem 5rem 1fr;
+    gap: 1rem;
+}
+
+station-selector {
+    grid-area: station;
+}
+
+chart-type-selector {
+    grid-area: charttype;
+}
+
+#year {
+    grid-area: year;
+}
+
+#chartContainer {
+    grid-area: chart;
+}
+
+.chart {
+    width: 50rem;
+    height: 30rem;
+    display: block;
+}

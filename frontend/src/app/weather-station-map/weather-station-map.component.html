@@ -1,0 +1,8 @@
+<div class="map"
+     leaflet
+     [leafletOptions]="options"
+     [leafletFitBounds]="mapBounds"
+     [leafletMaxBounds]="mapBounds">
+    <div *ngIf="stationsLayer !== undefined"
+         [leafletLayer]="stationsLayer!"></div>
+</div>

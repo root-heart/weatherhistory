@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { MapDropdown } from './weather-station-map.component';
+import { WeatherStationMap } from './weather-station-map.component';
 
 describe('FilterHeaderComponent', () => {
-  let component: MapDropdown;
-  let fixture: ComponentFixture<MapDropdown>;
+  let component: WeatherStationMap;
+  let fixture: ComponentFixture<WeatherStationMap>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ MapDropdown ]
+      declarations: [ WeatherStationMap ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(MapDropdown);
+    fixture = TestBed.createComponent(WeatherStationMap);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

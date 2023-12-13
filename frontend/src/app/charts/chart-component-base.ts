@@ -1,8 +1,9 @@
 import * as Highcharts from 'highcharts';
 import addMore from "highcharts/highcharts-more";
-import {FilterService} from "../filter.service";
 import {SummaryData} from "../data-classes";
 import {Component, Input} from "@angular/core";
+import {FetchMeasurementsService} from "../services/fetch-measurements.service";
+import {WeatherStation} from "../WeatherStationService";
 
 addMore(Highcharts);
 
@@ -13,7 +14,10 @@ export abstract class ChartComponentBase {
     Highcharts: typeof Highcharts = Highcharts;
     chart?: Highcharts.Chart;
     chartOptions: Highcharts.Options = {
-        chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},
+        chart: {
+            styledMode: true,
+            animation: false
+        },
         legend: {
             enabled: false
         },
@@ -43,6 +47,9 @@ export abstract class ChartComponentBase {
         yAxis: this.getYAxes()
     }
 
+    protected constructor(protected fetchMeasurementsService: FetchMeasurementsService) {
+    }
+
     @Input() set name(name: string) {
         let series = this.chartOptions.series as Highcharts.SeriesOptionsType[]
         series.forEach(s => {
@@ -58,21 +65,23 @@ export abstract class ChartComponentBase {
         })
     }
 
-    protected constructor(filterService: FilterService) {
-        filterService.currentData.subscribe(summaryData => {
-            if (summaryData) {
-                this.chart?.showLoading("Aktualisiere Diagramm...")
-                this.setChartData(summaryData)
-                    .then(() => setTimeout(() => {
-                        this.chart?.hideLoading()
-                        this.chart?.redraw()
-                    }, 0))
-            }
-        })
+    private _weatherStation?: WeatherStation
+
+    set weatherStation(station: WeatherStation) {
+        console.log(`ChartComponentBase weatherStation set to ${station.name}`)
+        this._weatherStation = station
+        this.fetchMeasurementsIfPossible()
+    }
+
+    private _year?: number
+
+    set year(year: number) {
+        console.log(`ChartComponentBase year set to ${year}`)
+        this._year = year
+        this.fetchMeasurementsIfPossible()
     }
 
     @Input() set yAxisLabelFormatter(f: Highcharts.AxisLabelsFormatterCallbackFunction) {
-        console.log('set yAxisLabelFormatter')
         let yAxes = this.chartOptions.yAxis as Highcharts.AxisOptions[]
         yAxes.forEach(a => {
             a.labels = {
@@ -82,7 +91,6 @@ export abstract class ChartComponentBase {
     }
 
     chartCallback: Highcharts.ChartCallbackFunction = c => {
-        console.log('chartCallback')
         this.chart = c
         let colorAxis = this.getColorAxis();
         if (colorAxis) {
@@ -106,11 +114,28 @@ export abstract class ChartComponentBase {
         return undefined
     }
 
-    // protected getSeries(index:  number) : Highcharts.Series {
-    //
-    // }
-
     protected abstract getTooltipText(_: Highcharts.Tooltip): string
+
+    private fetchMeasurementsIfPossible() {
+        if (!this._weatherStation || !this._year) {
+            console.log("incomplete")
+            return
+        }
+
+        console.log(`fetching ${this._weatherStation.name} ${this._year}`)
+        this.fetchMeasurementsService.fetchMeasurements(this._weatherStation, this._year)
+            .then(data => {
+                this.chart?.showLoading("Aktualisiere Diagramm...");
+                return data
+            })
+            .then(data => {
+                this.setChartData(data)
+            })
+            .then(() => setTimeout(() => {
+                this.chart?.hideLoading()
+                this.chart?.redraw()
+            }, 0))
+    }
 }
 
 type TooltipPointInformation = {

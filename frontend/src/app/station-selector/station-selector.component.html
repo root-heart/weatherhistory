@@ -1,4 +1,4 @@
-<button (click)="showMap()">
+<button id="mapOpener" (click)="showMap()">
     <fa-icon [icon]="faMapLocationDot"></fa-icon>
     {{ selectedStation !== undefined ? selectedStation.name : "Bitte Ort wählen..." }}
 </button>

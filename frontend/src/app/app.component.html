@@ -1,15 +1,5 @@
 <header>
-    <h1>wetterchroniken für {{ filterService.selectedStation && filterService.selectedStation.name || 'einen Ort deiner Wahl' }}</h1>
+    <h1>wetterchroniken</h1>
 </header>
 
-<weather-station-map></weather-station-map>
-
-<date-range-selector></date-range-selector>
-
-<station-charts></station-charts>
-
-<router-outlet></router-outlet>
-
-
-
-<div class="dropdown-background" #dropdownBackground></div>
+<customizable-dashboard/>

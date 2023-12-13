@@ -10,7 +10,7 @@
                          "map       filter"
                          "map       charts"
                          "footer    footer";
-    grid-template-columns: 3fr 5fr;
+    grid-template-columns: 3fr 3fr;
     grid-template-rows: auto auto 1fr auto;
 }
 

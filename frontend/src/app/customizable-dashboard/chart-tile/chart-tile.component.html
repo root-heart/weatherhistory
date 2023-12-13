@@ -1,0 +1,11 @@
+<station-selector (stationSelected)="weatherStationSelected($event)"/>
+
+<chart-type-selector (chartTypeSelected)="chartTypeSelected($event)"/>
+
+<input id="year" type="number" [(ngModel)]="year" />
+
+<div id="chartContainer">
+    <ng-container *ngComponentOutlet="
+            chartComponent;
+            inputs: inputs"/>
+</div>

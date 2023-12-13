@@ -4,6 +4,7 @@ import * as Highcharts from "highcharts";
 import {FilterService} from "../../filter.service";
 import {getDateLabel} from "../charts";
 import {SummarizedMeasurement, SummaryData} from "../../data-classes";
+import {FetchMeasurementsService} from "../../services/fetch-measurements.service";
 
 type DetailsProperty = {
     [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends { details?: number[] } ? K : never
@@ -21,8 +22,8 @@ export class HeatmapChart extends ChartComponentBase {
         {value: 0, color: 'rgb(70, 50, 80)'},
         {value: 100, color: 'rgb(210, 150, 240)'}]
 
-    constructor(filterService: FilterService) {
-        super(filterService)
+    constructor(fetchMeasurementsService: FetchMeasurementsService) {
+        super(fetchMeasurementsService);
     }
 
     protected override async setChartData(summaryData: SummaryData) {

@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {WeatherStation, WeatherStationList, WeatherStationService} from "../WeatherStationService";
 import {
     Icon,
@@ -31,8 +31,9 @@ export class FilterChangedEvent {
     templateUrl: './weather-station-map.component.html',
     styleUrls: ['./weather-station-map.component.css']
 })
-export class MapDropdown implements OnInit {
-    @Input() background: HTMLElement | undefined
+export class WeatherStationMap implements OnInit {
+    @Input() selectedStation?: WeatherStation
+    @Output() selectedStationChange = new EventEmitter<WeatherStation>()
 
     stations: WeatherStationList = []
     options: MapOptions = {
@@ -45,11 +46,7 @@ export class MapDropdown implements OnInit {
     };
 
     mapBounds = new LatLngBounds(new LatLng(47, 5.5), new LatLng(55.5, 15.5))
-
-
     stationsLayer?: Layer
-
-    faMapLocationDot = faMapLocationDot
 
     constructor(private weatherStationService: WeatherStationService, public filterService: FilterService) {
         weatherStationService.getWeatherStations().subscribe(data => this.setStations(data));
@@ -82,8 +79,7 @@ export class MapDropdown implements OnInit {
     }
 
     private selectStation(mouseEvent: LeafletMouseEvent) {
-        this.filterService.selectedStation = mouseEvent.target.options.icon.options.station
-        this.filterService.fireFilterChangedEvent()
+        this.selectedStationChange.emit(mouseEvent.target.options.icon.options.station)
     }
 }
 

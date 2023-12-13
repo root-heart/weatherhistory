@@ -13,6 +13,7 @@ import {FilterService} from "../../filter.service";
 import _ from 'lodash';
 import heatmap from 'highcharts/modules/heatmap';
 import {SummaryData} from "../../data-classes";
+import {FetchMeasurementsService} from "../../services/fetch-measurements.service";
 
 
 addMore(Highcharts);
@@ -102,9 +103,8 @@ export class WindDirectionChart extends ChartComponentBase {
         },
     }
 
-
-    constructor(filterService: FilterService) {
-        super(filterService);
+    constructor(fetchMeasurementsService: FetchMeasurementsService) {
+        super(fetchMeasurementsService);
     }
 
     protected override async setChartData(summaryData: SummaryData): Promise<void> {
