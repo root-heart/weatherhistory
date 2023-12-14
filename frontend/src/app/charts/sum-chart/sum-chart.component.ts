@@ -62,31 +62,22 @@ export class SumChartComponent extends ChartComponentBase {
                 }
             })
         }
-
-        console.log(sumData)
-        console.log(sum2Data)
-
         this.chart?.series[0]?.setData(sumData, false)
         this.chart?.series[1]?.setData(sum2Data, false)
     }
 
     protected override createSeries(): Highcharts.SeriesOptionsType[] {
-        let series: Highcharts.SeriesOptionsType[] = [{
+        return [{
+            type: "column",
+            borderRadius: 0,
+            stack: "s",
+            stacking: "normal"
+        }, {
             type: "column",
             borderRadius: 0,
             stack: "s",
             stacking: "normal"
         }]
-
-        // if (this.sum2Property) {
-            series.push({
-                type: "column",
-                borderRadius: 0,
-                stack: "s",
-                stacking: "normal"
-            })
-        // }
-        return series
     }
 
     protected override getYAxes(): Highcharts.AxisOptions[] {
