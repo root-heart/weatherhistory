@@ -15,26 +15,11 @@ export class ChartTypeSelectorComponent {
         return this._selectedChartDefinition
     }
 
-    @Input() set selectedChartDefinition(d: ChartDefinition) {
-        this._selectedChartDefinition = d
-        this.selectedChartDefinitionChange.emit(d)
+    @Input() set selectedChartDefinition(chartDefinition: ChartDefinition) {
+        if (this._selectedChartDefinition != chartDefinition) {
+            this._selectedChartDefinition = chartDefinition
+            console.log(`emit chart definition change event ${chartDefinition.name}`)
+            this.selectedChartDefinitionChange.emit(chartDefinition)
+        }
     }
-
-    // availableChartTypes: Record<string, Type<any>> = {
-    //     "Lufttemperatur Min/Avg/Max": AirTemperatureChartComponent,
-    //     "Luftfeuchtigkeit Min/Avg/Max": HumidityChartComponent,
-    //     "Taupunkt Min/Avg/Max": DewPointTemperatureChartComponent,
-    //     "Luftdruck Min/Avg/Max": AirPressureChartComponent,
-    //     "Sichtweite Min/Avg/Max": VisibilityChartComponent,
-    //     "Sonnenscheindauer": SunshineDurationChartComponent,
-    //     "Lufttemperatur Details": AirTemperatureHeatmapChartComponent,
-    //     "Sonnenschein Details": SunshineDurationHeatmapChartComponent,
-    //     "Niederschlag": PrecipitationChartComponent
-    // }
-
-    // chartTypeChanged(event: Event) {
-    //     let select = event.target as HTMLSelectElement
-    //     let chartType = this.availableChartTypes[select.value]
-    //     this.chartTypeSelected.emit(chartType)
-    // }
 }

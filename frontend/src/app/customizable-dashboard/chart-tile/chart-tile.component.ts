@@ -50,27 +50,36 @@ export class ChartTileComponent {
         return this._chartDefinition
     }
 
-    set chartDefinition(d: ChartDefinition) {
-        this._chartDefinition = d
-        this.updateChartComponent()
+    set chartDefinition(chartDefinition: ChartDefinition) {
+        if (this._chartDefinition != chartDefinition) {
+            console.log(`set chart definition to ${chartDefinition.name}`)
+            this._chartDefinition = chartDefinition
+            this.updateChartComponent()
+        }
     }
 
-    private _year?: number
+    private _year: number = new Date().getFullYear()
 
     get year(): number {
-        return this._year || 2023
+        return this._year
     }
 
     set year(year: number) {
-        this._year = year
-        this.updateChartComponent()
+        if (this._year != year) {
+            console.log(`set year to ${year}`)
+            this._year = year
+            this.updateChartComponent()
+        }
     }
 
     private _weatherStation?: WeatherStation
 
     set weatherStation(station: WeatherStation) {
-        this._weatherStation = station
-        this.updateChartComponent()
+        if (this._weatherStation != station) {
+            console.log(`set weather station to ${station.name}`)
+            this._weatherStation = station
+            this.updateChartComponent()
+        }
     }
 
     weatherStationSelected(station: WeatherStation) {
@@ -78,6 +87,7 @@ export class ChartTileComponent {
     }
 
     private updateChartComponent() {
+        console.log("triggering change detector")
         this.changeDetector.detectChanges()
         if (this._weatherStation && this._year) {
             let chartComponent = this.getChartComponent()
