@@ -2,11 +2,9 @@
     <ng-content select="[button]"></ng-content>
 </button>
 
-<!--<div *ngIf="dropdownVisible" style="filter: blur(10px); position: fixed; left:0;top:0;right:0;bottom:0">-->
-    <div>
-        <div class="dropdown" [ngStyle]="{visibility: dropdownVisible ? 'visible' : 'hidden'}">
-            <hr>
-            <ng-content select="[dropdown]"></ng-content>
-        </div>
+<div style="position: relative">
+    <div class="dropdown" [ngStyle]="{visibility: dropdownVisible ? 'visible' : 'hidden'}">
+        <hr>
+        <ng-content select="[dropdown]"></ng-content>
     </div>
-<!--</div>-->
+</div>

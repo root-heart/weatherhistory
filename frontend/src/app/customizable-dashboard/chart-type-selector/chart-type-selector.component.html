@@ -1,3 +1,10 @@
-<select [(ngModel)]="selectedChartDefinition">
-    <option *ngFor="let chartDefinition of availableChartDefinitions" [ngValue]="chartDefinition">{{ chartDefinition.name }}</option>
-</select>
+<dropdown>
+    <div button>{{ selectedChartDefinition.name }}</div>
+
+    <div dropdown>
+        <div *ngFor="let chartDefinition of availableChartDefinitions"
+             (click)="selectedChartDefinition = chartDefinition">
+            {{ chartDefinition.name }}
+        </div>
+    </div>
+</dropdown>

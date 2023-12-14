@@ -4,7 +4,7 @@ import {ChartDefinition} from "../chart-tile/chart-tile.component";
 @Component({
     selector: 'chart-type-selector',
     templateUrl: './chart-type-selector.component.html',
-    styleUrls: ['./chart-type-selector.component.css']
+    styleUrls: ['./chart-type-selector.component.scss']
 })
 export class ChartTypeSelectorComponent {
     @Input() availableChartDefinitions: ChartDefinition[] = []

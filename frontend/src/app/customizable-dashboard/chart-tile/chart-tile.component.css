@@ -5,7 +5,7 @@
     grid-template-areas: "station charttype year  ."
                          "chart   chart     chart chart";
     grid-template-rows: 3rem auto;
-    grid-template-columns: 20rem 15rem 7rem 1fr;
+    grid-template-columns: 20rem 20rem 7rem 1fr;
     gap: 1rem;
 }
 

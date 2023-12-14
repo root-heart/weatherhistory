@@ -2,6 +2,7 @@
     display: inline-block;
     position: relative;
     width: 100%;
+    height: 100%;
 }
 
 button {
@@ -35,7 +36,7 @@ button.dropdownVisible:hover {
     background-color: var(--button-background-color);
     z-index: 1000;
 
-    padding: 0 1.5rem 3rem;
+    padding-bottom: 0.5rem;
     border: var(--fine-border-line);
     border-top: none;
     border-bottom-left-radius: var(--input-border-radius);

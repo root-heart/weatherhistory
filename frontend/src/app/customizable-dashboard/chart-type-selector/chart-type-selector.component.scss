@@ -1,0 +1,14 @@
+div[dropdown] {
+    display: flex;
+    flex-direction: column;
+    //gap: 0.5rem;
+
+    > div {
+        padding: 0.5rem 2rem;
+        cursor: pointer;
+
+        &:hover {
+            background-color: #9007;
+        }
+    }
+}

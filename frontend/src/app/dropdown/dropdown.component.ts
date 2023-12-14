@@ -1,30 +1,31 @@
-import {Component, OnInit} from '@angular/core';
-import {DropdownService, DropdownX} from "../dropdown.service";
+import {Component, ElementRef, OnInit} from '@angular/core';
 
 @Component({
     selector: 'dropdown',
     templateUrl: './dropdown.component.html',
-    styleUrls: ['./dropdown.component.css']
+    styleUrls: ['./dropdown.component.css'],
+    host: {
+        "(document:click)": "onclick($event)"
+    }
 })
-export class Dropdown implements OnInit, DropdownX {
-    private dv: boolean = false
+export class Dropdown {
+    private _dropdownVisible: boolean = false
 
-    set dropdownVisible(v: boolean) {
-        this.dv = v
-        console.log(v)
+    constructor(private elementRef: ElementRef) {
     }
 
     get dropdownVisible(): boolean {
-        return this.dv
+        return this._dropdownVisible
     }
 
-    constructor() {
+    set dropdownVisible(v: boolean) {
+        this._dropdownVisible = v
     }
 
-    ngOnInit(): void {
+    onclick(event: Event) {
+        if (!this.elementRef.nativeElement.contains(event.target)) {
+            this._dropdownVisible = false
+        }
     }
 
-    hide() {
-        this.dv = false
-    }
 }
