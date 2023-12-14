@@ -3,7 +3,7 @@
 
     <div dropdown>
         <div *ngFor="let chartDefinition of availableChartDefinitions"
-             (click)="selectedChartDefinition = chartDefinition">
+             (click)="selectDefinitionAndCloseDropdown(chartDefinition)">
             {{ chartDefinition.name }}
         </div>
     </div>
