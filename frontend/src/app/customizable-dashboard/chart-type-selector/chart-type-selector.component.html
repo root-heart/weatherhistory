@@ -1,3 +1,3 @@
-<select (change)="chartTypeChanged($event)">
-    <option *ngFor="let chartType of availableChartTypes | keyvalue">{{ chartType.key }}</option>
+<select [(ngModel)]="selectedChartDefinition">
+    <option *ngFor="let chartDefinition of availableChartDefinitions" [ngValue]="chartDefinition">{{ chartDefinition.name }}</option>
 </select>

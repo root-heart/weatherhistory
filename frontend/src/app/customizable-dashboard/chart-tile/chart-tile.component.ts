@@ -1,16 +1,23 @@
-import {ChangeDetectorRef, Component, EventEmitter, Output, Type, ViewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, Type, ViewChild} from '@angular/core';
 import {WeatherStation} from "../../WeatherStationService";
 import {ChartComponentBase} from "../../charts/chart-component-base";
-import {SummarizedMeasurement, SummaryData} from "../../data-classes";
-import {MinAvgMaxChart} from "../../charts/min-avg-max-chart/min-avg-max-chart.component";
-import {FilterService} from "../../filter.service";
-import {WeatherStationMap} from "../../weather-station-map/weather-station-map.component";
-import {HeatmapChart} from "../../charts/heatmap-chart/heatmap-chart.component";
 
 import * as Highcharts from 'highcharts';
 import addMore from "highcharts/highcharts-more";
 import {NgComponentOutlet} from "@angular/common";
 import {AirTemperatureChartComponent} from "../../charts/measurement/air-temperature-chart.component";
+import {HumidityChartComponent} from "../../charts/measurement/humidity-chart.component";
+import {DewPointTemperatureChartComponent} from "../../charts/measurement/dew-point-temperature-chart.component";
+import {AirPressureChartComponent} from "../../charts/measurement/air-pressure-chart.component";
+import {VisibilityChartComponent} from "../../charts/measurement/visibility-chart.component";
+import {SunshineDurationChartComponent} from "../../charts/measurement/sunshine-duration-chart.component";
+import {
+    AirTemperatureHeatmapChartComponent
+} from "../../charts/measurement/air-temperature-heatmap-chart/air-temperature-heatmap-chart.component";
+import {
+    SunshineDurationHeatmapChartComponent
+} from "../../charts/measurement/sunshine-duration-heatmap-chart/sunshine-duration-heatmap-chart.component";
+import {PrecipitationChartComponent} from "../../charts/measurement/precipitation-chart.component";
 
 addMore(Highcharts);
 
@@ -22,10 +29,34 @@ addMore(Highcharts);
 export class ChartTileComponent {
     @ViewChild(NgComponentOutlet, {static: false}) ngComponentOutlet!: NgComponentOutlet
 
+    availableChartDefinitions: ChartDefinition[] = [
+        {name: "Lufttemperatur Min/Avg/Max", component: AirTemperatureChartComponent},
+        {name: "Luftfeuchtigkeit Min/Avg/Max", component: HumidityChartComponent},
+        {name: "Taupunkt Min/Avg/Max", component: DewPointTemperatureChartComponent},
+        {name: "Luftdruck Min/Avg/Max", component: AirPressureChartComponent},
+        {name: "Sichtweite Min/Avg/Max", component: VisibilityChartComponent},
+        {name: "Sonnenscheindauer", component: SunshineDurationChartComponent},
+        {name: "Lufttemperatur Details", component: AirTemperatureHeatmapChartComponent},
+        {name: "Sonnenschein Details", component: SunshineDurationHeatmapChartComponent},
+        {name: "Niederschlag", component: PrecipitationChartComponent},
+    ]
+
     constructor(private changeDetector: ChangeDetectorRef) {
     }
 
+    private _chartDefinition: ChartDefinition = this.availableChartDefinitions[0]
+
+    get chartDefinition(): ChartDefinition {
+        return this._chartDefinition
+    }
+
+    set chartDefinition(d: ChartDefinition) {
+        this._chartDefinition = d
+        this.updateChartComponent()
+    }
+
     private _year?: number
+
     get year(): number {
         return this._year || 2023
     }
@@ -36,6 +67,7 @@ export class ChartTileComponent {
     }
 
     private _weatherStation?: WeatherStation
+
     set weatherStation(station: WeatherStation) {
         this._weatherStation = station
         this.updateChartComponent()
@@ -44,13 +76,6 @@ export class ChartTileComponent {
     weatherStationSelected(station: WeatherStation) {
         this.weatherStation = station
     }
-
-    chartTypeSelected(chartType: Type<any>) {
-        this.chartComponent = chartType
-        this.updateChartComponent()
-    }
-
-    chartComponent: Type<any> | null = null
 
     private updateChartComponent() {
         this.changeDetector.detectChanges()
@@ -80,3 +105,9 @@ export class ChartTileComponent {
         return null
     }
 }
+
+export type ChartDefinition = {
+    name: string,
+    component: Type<any>
+}
+
