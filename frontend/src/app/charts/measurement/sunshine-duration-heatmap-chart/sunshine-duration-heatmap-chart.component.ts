@@ -3,8 +3,7 @@ import {MinAvgMaxChart} from "../../min-avg-max-chart/min-avg-max-chart.componen
 import * as Highcharts from "highcharts";
 
 @Component({
-  templateUrl: './sunshine-duration-heatmap-chart.component.html',
-  styleUrls: ['./sunshine-duration-heatmap-chart.component.css']
+  templateUrl: './sunshine-duration-heatmap-chart.component.html'
 })
 export class SunshineDurationHeatmapChartComponent {
     @ViewChild("chart") chart!: MinAvgMaxChart

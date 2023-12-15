@@ -1,5 +1,5 @@
 import {Component, Input} from '@angular/core';
-import {MinMaxSumDetails, SummarizedMeasurement, SummaryData} from "../../data-classes";
+import {SummarizedMeasurement, SummaryData} from "../../data-classes";
 import {getDateLabel} from "../charts";
 
 
@@ -9,8 +9,7 @@ import localeDeExtra from '@angular/common/locales/extra/de';
 
 import * as Highcharts from "highcharts";
 import addMore from "highcharts/highcharts-more";
-import {ChartComponentBase} from "../chart-component-base";
-import {FilterService} from "../../filter.service";
+import {ChartBaseComponent} from "../chart-base.component";
 import {FetchMeasurementsService} from "../../services/fetch-measurements.service";
 
 addMore(Highcharts);
@@ -23,10 +22,14 @@ type MinMaxSumDetailsProperty = {
 
 @Component({
     selector: 'sum-chart',
-    templateUrl: './sum-chart.component.html',
-    styleUrls: ['./sum-chart.component.css']
+    template: `<highcharts-chart [Highcharts]='Highcharts' [options]='chartOptions' [callbackFunction]='chartCallback'/>`,
+    styles: [`
+        highcharts-chart {
+            display: block;
+            aspect-ratio: 3;
+        }`]
 })
-export class SumChartComponent extends ChartComponentBase {
+export class SumChartComponent extends ChartBaseComponent {
     @Input() sumProperty: MinMaxSumDetailsProperty = "sunshineMinutes"
     @Input() sum2Property?: MinMaxSumDetailsProperty = undefined
     @Input() valueTooltipFormatter?: (originalValue: number) => string

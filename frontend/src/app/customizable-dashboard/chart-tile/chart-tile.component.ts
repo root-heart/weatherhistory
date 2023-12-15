@@ -1,6 +1,6 @@
 import {ChangeDetectorRef, Component, Type, ViewChild} from '@angular/core';
 import {WeatherStation} from "../../WeatherStationService";
-import {ChartComponentBase} from "../../charts/chart-component-base";
+import {ChartBaseComponent} from "../../charts/chart-base.component";
 
 import * as Highcharts from 'highcharts';
 import addMore from "highcharts/highcharts-more";
@@ -102,7 +102,7 @@ export class ChartTileComponent {
         }
     }
 
-    private getChartComponent(): ChartComponentBase | null {
+    private getChartComponent(): ChartBaseComponent | null {
         let ngComponentOutlet = this.ngComponentOutlet;
         if (!ngComponentOutlet) {
             return null
@@ -114,7 +114,7 @@ export class ChartTileComponent {
         }
         let instance = componentRef['instance'];
         if ("chart" in instance) {
-            return instance.chart as ChartComponentBase
+            return instance.chart as ChartBaseComponent
         }
         return null
     }

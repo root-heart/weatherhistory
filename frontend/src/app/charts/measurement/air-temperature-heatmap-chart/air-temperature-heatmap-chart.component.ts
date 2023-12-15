@@ -3,8 +3,7 @@ import * as Highcharts from "highcharts";
 import {HeatmapChart} from "../../heatmap-chart/heatmap-chart.component";
 
 @Component({
-    templateUrl: './air-temperature-heatmap-chart.component.html',
-    styleUrls: ['./air-temperature-heatmap-chart.component.css']
+    templateUrl: './air-temperature-heatmap-chart.component.html'
 })
 export class AirTemperatureHeatmapChartComponent {
     @ViewChild("chart") chart!: HeatmapChart

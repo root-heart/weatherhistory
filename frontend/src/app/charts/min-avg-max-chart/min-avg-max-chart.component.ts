@@ -8,8 +8,7 @@ import localeDeExtra from '@angular/common/locales/extra/de';
 
 import * as Highcharts from 'highcharts';
 import addMore from "highcharts/highcharts-more";
-import {ChartComponentBase} from "../chart-component-base";
-import {FilterService} from "../../filter.service";
+import {ChartBaseComponent} from "../chart-base.component";
 import {FetchMeasurementsService} from "../../services/fetch-measurements.service";
 
 
@@ -27,10 +26,15 @@ type AvgMaxDetailsProperty = {
 
 @Component({
     selector: 'min-avg-max-chart',
-    templateUrl: './min-avg-max-chart.component.html',
-    styleUrls: ['./min-avg-max-chart.component.css']
+    template: `
+        <highcharts-chart [Highcharts]='Highcharts' [options]='chartOptions' [callbackFunction]='chartCallback'/>`,
+    styles: [`
+        highcharts-chart {
+            display: block;
+            aspect-ratio: 3;
+        }`]
 })
-export class MinAvgMaxChart extends ChartComponentBase {
+export class MinAvgMaxChart extends ChartBaseComponent {
     @Input() property?: MinAvgMaxDetailsProperty | AvgMaxDetailsProperty
 
     constructor(fetchMeasurementsService: FetchMeasurementsService) {

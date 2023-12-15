@@ -8,8 +8,7 @@ import localeDeExtra from '@angular/common/locales/extra/de';
 
 import * as Highcharts from 'highcharts';
 import addMore from "highcharts/highcharts-more";
-import {ChartComponentBase} from "../chart-component-base";
-import {FilterService} from "../../filter.service";
+import {ChartBaseComponent} from "../chart-base.component";
 import _ from 'lodash';
 import heatmap from 'highcharts/modules/heatmap';
 import {SummaryData} from "../../data-classes";
@@ -26,7 +25,7 @@ registerLocaleData(localeDe, 'de-DE', localeDeExtra);
     styleUrls: ['./wind-direction-chart.component.css'],
     encapsulation: ViewEncapsulation.None
 })
-export class WindDirectionChart extends ChartComponentBase {
+export class WindDirectionChart extends ChartBaseComponent {
     // TODO DRY - use heatmap chart somehow
     windDirectionChartOptions: Highcharts.Options = {
         chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},

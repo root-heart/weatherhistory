@@ -1,7 +1,6 @@
 import {Component, Input} from '@angular/core';
-import {ChartComponentBase} from "../chart-component-base";
+import {ChartBaseComponent} from "../chart-base.component";
 import * as Highcharts from "highcharts";
-import {FilterService} from "../../filter.service";
 import {getDateLabel} from "../charts";
 import {SummarizedMeasurement, SummaryData} from "../../data-classes";
 import {FetchMeasurementsService} from "../../services/fetch-measurements.service";
@@ -16,7 +15,7 @@ type DetailsProperty = {
     templateUrl: './heatmap-chart.component.html',
     styleUrls: ['./heatmap-chart.component.css']
 })
-export class HeatmapChart extends ChartComponentBase {
+export class HeatmapChart extends ChartBaseComponent {
     @Input() detailProperty: DetailsProperty = "sunshineMinutes"
     @Input() colorStops: { value: number, color: Highcharts.ColorString }[] = [
         {value: 0, color: 'rgb(70, 50, 80)'},

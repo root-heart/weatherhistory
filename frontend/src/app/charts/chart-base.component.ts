@@ -10,7 +10,7 @@ addMore(Highcharts);
 @Component({
     template: ""
 })
-export abstract class ChartComponentBase {
+export abstract class ChartBaseComponent {
     Highcharts: typeof Highcharts = Highcharts;
     chart?: Highcharts.Chart;
     chartOptions: Highcharts.Options = {
@@ -47,7 +47,10 @@ export abstract class ChartComponentBase {
         yAxis: this.getYAxes()
     }
 
+    protected componentThis: ChartBaseComponent
+
     protected constructor(protected fetchMeasurementsService: FetchMeasurementsService) {
+        this.componentThis = this
     }
 
     @Input() set name(name: string) {
@@ -82,6 +85,22 @@ export abstract class ChartComponentBase {
         }
     }
 
+    update(weatherStation: WeatherStation, year: number) {
+        console.log(`fetching data for ${weatherStation.name} and year ${year}`)
+        this.fetchMeasurementsService.fetchMeasurements(weatherStation, year)
+            .then(data => {
+                this.chart?.showLoading("Aktualisiere Diagramm...");
+                return data
+            })
+            .then(data => {
+                this.setChartData(data)
+            })
+            .then(() => setTimeout(() => {
+                this.chart?.hideLoading()
+                this.chart?.redraw()
+            }, 0))
+    }
+
     protected abstract setChartData(summaryData: SummaryData): Promise<void>
 
     protected abstract createSeries(): Highcharts.SeriesOptionsType[]
@@ -99,22 +118,6 @@ export abstract class ChartComponentBase {
     }
 
     protected abstract getTooltipText(_: Highcharts.Tooltip): string
-
-    update(weatherStation: WeatherStation, year: number) {
-        console.log(`fetching data for ${weatherStation.name} and year ${year}`)
-        this.fetchMeasurementsService.fetchMeasurements(weatherStation, year)
-            .then(data => {
-                this.chart?.showLoading("Aktualisiere Diagramm...");
-                return data
-            })
-            .then(data => {
-                this.setChartData(data)
-            })
-            .then(() => setTimeout(() => {
-                this.chart?.hideLoading()
-                this.chart?.redraw()
-            }, 0))
-    }
 }
 
 type TooltipPointInformation = {
