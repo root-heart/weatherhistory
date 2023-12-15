@@ -6,7 +6,7 @@
                          "station      charttype      year      ."
                          "chart        chart          chart     chart";
     grid-template-columns: 17rem 17rem 7rem 1fr;
-    grid-template-rows: auto 3rem auto;
+    grid-template-rows: auto 3rem 1fr;
     gap: 0.5rem 1rem;
 }
 
@@ -43,6 +43,7 @@ station-selector {
 #chartContainer {
     /*grid-area: chart;*/
     grid-column: span 7;
+    border: 1px solid green;
 }
 
 .chart {

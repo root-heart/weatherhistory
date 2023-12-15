@@ -1,17 +1,6 @@
 :host {
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    right: 0;
-
-    display: grid;
-    grid-template-areas: "header    header"
-                         "map       filter"
-                         "map       charts"
-                         "footer    footer";
-    grid-template-columns: 3fr 3fr;
-    grid-template-rows: auto auto 1fr auto;
+    display: flex;
+    flex-direction: column;
 }
 
 header {
@@ -59,10 +48,6 @@ hr {
     border-right: var(--accent-border-line);
     margin: 1rem 2vw;
 }
-
-/*map-dropdown {*/
-/*    width: 30rem;*/
-/*}*/
 
 .dropdown-background {
     position: fixed;
