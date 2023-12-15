@@ -1,0 +1,11 @@
+<button [ngClass]="{dropdownVisible: dropdownVisible}" (click)="dropdownVisible = !dropdownVisible">
+    {{ selectedElement ? elementToString(selectedElement) : "" }}
+</button>
+
+<div style="position: relative">
+    <div class="dropdown" [ngStyle]="{visibility: dropdownVisible ? 'visible' : 'hidden'}">
+        <div *ngFor="let element of elements" (click)="selectElement(element)">
+            {{ elementToString(element) }}
+        </div>
+    </div>
+</div>

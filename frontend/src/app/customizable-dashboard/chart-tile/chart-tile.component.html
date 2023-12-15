@@ -1,8 +1,14 @@
-<station-selector (stationSelected)="weatherStationSelected($event)"/>
+<label for="station">Ort</label>
+<station-selector (stationSelected)="weatherStationSelected($event)" id="station"/>
 
-<chart-type-selector [availableChartDefinitions]="availableChartDefinitions" [(selectedChartDefinition)]="chartDefinition"/>
+<label for="chartTypeDropdown">Diagramm</label>
+<dropdown-list id="chartTypeDropdown"
+               [elements]="availableChartDefinitions"
+               [(selectedElement)]="chartDefinition"
+               [elementToString]="getChartDefinitionName"/>
 
-<input id="year" type="number" [(ngModel)]="year" />
+<label for="year">Jahr</label>
+<input id="year" type="number" [(ngModel)]="year"/>
 
 <div id="chartContainer">
     <ng-container *ngComponentOutlet="chartDefinition.component"/>

@@ -86,6 +86,10 @@ export class ChartTileComponent {
         this.weatherStation = station
     }
 
+    getChartDefinitionName(chartDefinition: ChartDefinition) {
+        return chartDefinition.name
+    }
+
     private updateChartComponent() {
         console.log("triggering change detector")
         this.changeDetector.detectChanges()

@@ -3,7 +3,7 @@ import {BrowserModule} from '@angular/platform-browser';
 import {DateRangeSelector} from "./navigation/date-range-dropdown/date-range-selector.component";
 import {FilterService} from "./filter.service";
 import {YearSelectionComponent} from "./navigation/date-range-dropdown/year-selection/year-selection.component";
-import {Dropdown} from './dropdown/dropdown.component';
+import {DropdownList} from './dropdown/dropdown-list/dropdown-list.component';
 import {MonthSelectionComponent} from "./navigation/date-range-dropdown/month-selection/month-selection.component";
 import {ToggableButtonComponent} from './toggable-button/toggable-button.component';
 import {StationChartsComponent} from "./station-charts/station-charts.component";
@@ -26,7 +26,6 @@ import {HeatmapChart} from './charts/heatmap-chart/heatmap-chart.component';
 import {CustomizableDashboardComponent} from './customizable-dashboard/customizable-dashboard.component';
 import {ChartTileComponent} from './customizable-dashboard/chart-tile/chart-tile.component';
 import {StationSelectorComponent} from './station-selector/station-selector.component';
-import {ChartTypeSelectorComponent} from './customizable-dashboard/chart-type-selector/chart-type-selector.component';
 import {AirTemperatureChartComponent} from './charts/measurement/air-temperature-chart.component';
 import {
     DewPointTemperatureChartComponent
@@ -38,12 +37,13 @@ import {SunshineDurationChartComponent} from "./charts/measurement/sunshine-dura
 import { AirTemperatureHeatmapChartComponent } from './charts/measurement/air-temperature-heatmap-chart/air-temperature-heatmap-chart.component';
 import { SunshineDurationHeatmapChartComponent } from './charts/measurement/sunshine-duration-heatmap-chart/sunshine-duration-heatmap-chart.component';
 import { PrecipitationChartComponent } from './charts/measurement/precipitation-chart.component';
+import { DropdownBoxComponent } from './dropdown/dropdown-box/dropdown-box.component';
 
 
 @NgModule({
     declarations: [
         AppComponent,
-        ToggableButtonComponent, Dropdown, DateRangeSelector,
+        ToggableButtonComponent, DropdownList, DateRangeSelector,
         YearSelectionComponent, MonthSelectionComponent, WeatherStationMap, StationChartsComponent,
         MinAvgMaxChart,
         SumChartComponent,
@@ -52,7 +52,6 @@ import { PrecipitationChartComponent } from './charts/measurement/precipitation-
         CustomizableDashboardComponent,
         ChartTileComponent,
         StationSelectorComponent,
-        ChartTypeSelectorComponent,
         AirTemperatureChartComponent,
         DewPointTemperatureChartComponent,
         HumidityChartComponent,
@@ -61,7 +60,8 @@ import { PrecipitationChartComponent } from './charts/measurement/precipitation-
         SunshineDurationChartComponent,
         AirTemperatureHeatmapChartComponent,
         SunshineDurationHeatmapChartComponent,
-        PrecipitationChartComponent
+        PrecipitationChartComponent,
+        DropdownBoxComponent
     ],
     imports: [
         BrowserModule,

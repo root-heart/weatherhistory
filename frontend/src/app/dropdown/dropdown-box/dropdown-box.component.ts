@@ -1,18 +1,18 @@
-import {Component, ElementRef, OnInit} from '@angular/core';
+import {Component, ElementRef} from '@angular/core';
 
 @Component({
-    selector: 'dropdown',
-    templateUrl: './dropdown.component.html',
-    styleUrls: ['./dropdown.component.css'],
+    selector: 'app-dropdown-box',
+    templateUrl: './dropdown-box.component.html',
+    styleUrls: ['./dropdown-box.component.css'],
     host: {
         "(document:click)": "onclick($event)"
     }
 })
-export class Dropdown {
-    private _dropdownVisible: boolean = false
-
+export class DropdownBoxComponent {
     constructor(private elementRef: ElementRef) {
     }
+
+    private _dropdownVisible: boolean = false
 
     get dropdownVisible(): boolean {
         return this._dropdownVisible
@@ -27,5 +27,4 @@ export class Dropdown {
             this._dropdownVisible = false
         }
     }
-
 }

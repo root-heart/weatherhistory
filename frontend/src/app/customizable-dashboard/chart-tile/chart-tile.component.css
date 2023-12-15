@@ -2,18 +2,35 @@
 
 :host {
     display: grid;
-    grid-template-areas: "station charttype year  ."
-                         "chart   chart     chart chart";
-    grid-template-rows: 3rem auto;
-    grid-template-columns: 20rem 20rem 7rem 1fr;
-    gap: 1rem;
+    grid-template-areas: "stationLabel chartTypeLabel yearLabel ."
+                         "station      charttype      year      ."
+                         "chart        chart          chart     chart";
+    grid-template-columns: 17rem 17rem 7rem 1fr;
+    grid-template-rows: auto 3rem auto;
+    gap: 0.5rem 1rem;
+}
+
+label {
+    font-size: 80%;
+
+    &[for="station"] {
+        grid-area: stationLabel;
+    }
+
+    &[for="chartType"] {
+        grid-area: chartTypeLabel;
+    }
+
+    &[for="year"] {
+        grid-area: yearLabel;
+    }
 }
 
 station-selector {
     grid-area: station;
 }
 
-chart-type-selector {
+#chartTypeDropdown {
     grid-area: charttype;
 }
 
@@ -24,7 +41,8 @@ chart-type-selector {
 }
 
 #chartContainer {
-    grid-area: chart;
+    /*grid-area: chart;*/
+    grid-column: span 7;
 }
 
 .chart {
