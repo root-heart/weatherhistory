@@ -118,7 +118,7 @@ export class WindDirectionChart extends ChartBaseComponent {
         this.chart?.series[0]?.setData(scatterData)
     }
 
-    protected createSeries(): Highcharts.SeriesOptionsType[] {
+    protected override createSeries(): Highcharts.SeriesOptionsType[] {
         return [{
             type: 'heatmap',
             colsize: 24 * 60 * 60 * 1000,

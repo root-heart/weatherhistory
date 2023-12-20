@@ -38,6 +38,8 @@ import { AirTemperatureHeatmapChartComponent } from './charts/measurement/air-te
 import { SunshineDurationHeatmapChartComponent } from './charts/measurement/sunshine-duration-heatmap-chart/sunshine-duration-heatmap-chart.component';
 import { PrecipitationChartComponent } from './charts/measurement/precipitation-chart.component';
 import { DropdownBoxComponent } from './dropdown/dropdown-box/dropdown-box.component';
+import { CloudCoverageChartComponent } from './charts/measurement/cloud-coverage-chart/cloud-coverage-chart.component';
+import { SunshineCloudCoverageHeatmapChartComponent } from './charts/measurement/sunshine-cloud-coverage-heatmap-chart/sunshine-cloud-coverage-heatmap-chart.component';
 
 
 @NgModule({
@@ -61,7 +63,9 @@ import { DropdownBoxComponent } from './dropdown/dropdown-box/dropdown-box.compo
         AirTemperatureHeatmapChartComponent,
         SunshineDurationHeatmapChartComponent,
         PrecipitationChartComponent,
-        DropdownBoxComponent
+        DropdownBoxComponent,
+        CloudCoverageChartComponent,
+        SunshineCloudCoverageHeatmapChartComponent
     ],
     imports: [
         BrowserModule,

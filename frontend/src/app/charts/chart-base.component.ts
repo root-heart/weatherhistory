@@ -7,6 +7,7 @@ import {WeatherStation} from "../WeatherStationService";
 
 addMore(Highcharts);
 
+// TODO there is some duplication in extending classes, perhaps this can be removed by composition?
 @Component({
     template: ""
 })
@@ -47,10 +48,7 @@ export abstract class ChartBaseComponent {
         yAxis: this.getYAxes()
     }
 
-    protected componentThis: ChartBaseComponent
-
     protected constructor(protected fetchMeasurementsService: FetchMeasurementsService) {
-        this.componentThis = this
     }
 
     @Input() set name(name: string) {

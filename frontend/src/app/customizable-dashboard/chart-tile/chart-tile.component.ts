@@ -18,6 +18,9 @@ import {
     SunshineDurationHeatmapChartComponent
 } from "../../charts/measurement/sunshine-duration-heatmap-chart/sunshine-duration-heatmap-chart.component";
 import {PrecipitationChartComponent} from "../../charts/measurement/precipitation-chart.component";
+import {
+    CloudCoverageChartComponent
+} from "../../charts/measurement/cloud-coverage-chart/cloud-coverage-chart.component";
 
 addMore(Highcharts);
 
@@ -31,14 +34,15 @@ export class ChartTileComponent {
 
     availableChartDefinitions: ChartDefinition[] = [
         {name: "Lufttemperatur Min/Avg/Max", component: AirTemperatureChartComponent},
+        {name: "Lufttemperatur Details", component: AirTemperatureHeatmapChartComponent},
+        {name: "Sonnenscheindauer", component: SunshineDurationChartComponent},
+        {name: "Sonnenschein Details", component: SunshineDurationHeatmapChartComponent},
+        {name: "Wolkenbedeckung", component: CloudCoverageChartComponent},
+        {name: "Niederschlag", component: PrecipitationChartComponent},
+        {name: "Luftdruck Min/Avg/Max", component: AirPressureChartComponent},
         {name: "Luftfeuchtigkeit Min/Avg/Max", component: HumidityChartComponent},
         {name: "Taupunkt Min/Avg/Max", component: DewPointTemperatureChartComponent},
-        {name: "Luftdruck Min/Avg/Max", component: AirPressureChartComponent},
         {name: "Sichtweite Min/Avg/Max", component: VisibilityChartComponent},
-        {name: "Sonnenscheindauer", component: SunshineDurationChartComponent},
-        {name: "Lufttemperatur Details", component: AirTemperatureHeatmapChartComponent},
-        {name: "Sonnenschein Details", component: SunshineDurationHeatmapChartComponent},
-        {name: "Niederschlag", component: PrecipitationChartComponent},
     ]
 
     constructor(private changeDetector: ChangeDetectorRef) {
