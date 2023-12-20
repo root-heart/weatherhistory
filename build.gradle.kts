@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "1.7.20"
-    kotlin("plugin.serialization") version "1.7.20"
+    kotlin("jvm") version "1.9.0"
+    kotlin("plugin.serialization") version "1.9.0"
     groovy
     java
     application
@@ -32,7 +32,7 @@ subprojects {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.6.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("org.codehaus.groovy:groovy-all:3.0.8")
 
     testImplementation("org.spockframework:spock-core:2.0-groovy-3.0")

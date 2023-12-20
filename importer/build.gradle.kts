@@ -2,7 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm")
-    groovy
+    // there is currently no spock-groovy-version-combination that works with JDK 20. perhaps drop it completely?
+//    groovy
 }
 
 group = "rootheart.codes.weatherhistory"
@@ -24,10 +25,12 @@ dependencies {
         isTransitive = true
     }
 
-    testImplementation("org.spockframework:spock-core:2.0-groovy-3.0")
-    testImplementation("com.nagternal:spock-genesis:0.6.0")
-    testImplementation("org.mock-server:mockserver-netty:5.11.2")
-    testImplementation("org.codehaus.groovy.modules.http-builder:http-builder:0.7.1")
+//    testImplementation("org.spockframework:spock-core:2.3-groovy-4.0")
+//    no newer version for genesis. dates back to 2016...
+//    testImplementation("com.nagternal:spock-genesis:0.6.0")
+//    testImplementation("org.mock-server:mockserver-netty:5.15.0")
+//    no newer version for http-builder. dates back to 2014...
+//    testImplementation("org.codehaus.groovy.modules.http-builder:http-builder:0.7.1")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
