@@ -3,30 +3,19 @@ package rootheart.codes.weatherhistory.restapp.resources.stations
 import io.ktor.http.HttpStatusCode
 import io.ktor.resources.Resource
 import io.ktor.server.application.call
-import io.ktor.server.request.receiveStream
 import io.ktor.server.resources.get
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.math.RoundingMode
-import java.util.*
-import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.max
-import org.jetbrains.exposed.sql.min
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.joda.time.LocalDate
-import org.joda.time.Months
-import org.joda.time.Years
 import rootheart.codes.weatherhistory.database.daily.DailyMeasurementTable
-import rootheart.codes.weatherhistory.database.daily.DailyMinAvgMaxColumns
-import rootheart.codes.weatherhistory.database.daily.DailySumColums
 import rootheart.codes.weatherhistory.database.daily.HistogramData
 
 @Resource("{measurement}/{year}")

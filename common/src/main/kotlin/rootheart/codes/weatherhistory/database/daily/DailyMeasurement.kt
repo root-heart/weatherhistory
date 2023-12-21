@@ -1,21 +1,23 @@
 package rootheart.codes.weatherhistory.database.daily
 
+import java.math.BigDecimal
+import java.util.*
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.statements.BatchInsertStatement
-import rootheart.codes.weatherhistory.database.*
-import java.math.BigDecimal
-import java.util.*
-import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
 import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.transactions.transaction
+import rootheart.codes.weatherhistory.database.StationsTable
+import rootheart.codes.weatherhistory.database.decimalArrayNullable
+import rootheart.codes.weatherhistory.database.generatedDateColumn
+import rootheart.codes.weatherhistory.database.intArray
+import rootheart.codes.weatherhistory.database.intArrayNullable
 
 object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
     val stationId = reference("STATION_ID", StationsTable).index("FK_IDX_DETAILED_MEASUREMENT_STATION")
@@ -55,12 +57,7 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
 
     fun fetchMinAvgMaxData(columns: DailyMinAvgMaxColumns, stationId: Long, year: Int): List<MinAvgMaxData> {
         return fetchData(arrayOf(date, columns.min, columns.avg, columns.max), stationId, year) {
-            MinAvgMaxData(
-                    day = it[date].toDate(),
-                    min = it[columns.min],
-                    avg = it[columns.avg],
-                    max = it[columns.max]
-            )
+            MinAvgMaxData(it[date].toDate(), it[columns.min], it[columns.avg], it[columns.max])
         }
     }
 

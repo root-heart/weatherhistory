@@ -6,15 +6,7 @@ import io.ktor.server.application.call
 import io.ktor.server.resources.get
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
-import org.jetbrains.exposed.sql.ResultRow
-import org.joda.time.LocalDate
-import org.joda.time.Months
-import org.joda.time.Years
 import rootheart.codes.weatherhistory.database.StationDao
-import rootheart.codes.weatherhistory.database.summarized.MonthlySummary
-import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurement
-import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurementsTable
-import rootheart.codes.weatherhistory.database.summarized.YearlySummary
 
 @Resource("stations")
 class Stations
@@ -28,7 +20,7 @@ fun Routing.stationsResource() {
     }
 
     get<StationById> { request ->
-        call.respond(StationDao.findById(request.id.toLong()) ?: HttpStatusCode.NotFound)
+        call.respond(StationDao.findById(request.id) ?: HttpStatusCode.NotFound)
 
     }
 }
