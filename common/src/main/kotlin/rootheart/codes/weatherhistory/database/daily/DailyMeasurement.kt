@@ -67,12 +67,6 @@ class DailyMinMaxColumns(
         batch[max] = values.max
         batch[details] = values.details
     }
-
-    fun toEntity(row: ResultRow): DailyMinMax {
-        return DailyMinMax(min = row[min],
-                           max = row[max],
-                           details = row[details])
-    }
 }
 
 class DailyAvgMaxColumns(
@@ -84,12 +78,6 @@ class DailyAvgMaxColumns(
         batch[avg] = values.avg
         batch[max] = values.max
         batch[details] = values.details
-    }
-
-    fun toEntity(row: ResultRow): DailyAvgMax {
-        return DailyAvgMax(avg = row[avg],
-                           max = row[max],
-                           details = row[details])
     }
 }
 
@@ -105,13 +93,6 @@ class DailyMinAvgMaxColumns(
         batch[max] = values.max
         batch[details] = values.details
     }
-
-    fun toEntity(row: ResultRow): DailyMinAvgMax {
-        return DailyMinAvgMax(min = row[min],
-                              avg = row[avg],
-                              max = row[max],
-                              details = row[details])
-    }
 }
 
 class DailySumColums(
@@ -121,10 +102,6 @@ class DailySumColums(
     fun setValues(batch: BatchInsertStatement, values: DailySum) {
         batch[sum] = values.sum
         batch[details] = values.details
-    }
-
-    fun toEntity(row: ResultRow): DailySum {
-        return DailySum(sum = row[sum], details = row[details])
     }
 }
 
