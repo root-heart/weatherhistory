@@ -7,6 +7,15 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import rootheart.codes.weatherhistory.database.*
 import java.math.BigDecimal
+import java.util.*
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
     val stationId = reference("STATION_ID", StationsTable).index("FK_IDX_DETAILED_MEASUREMENT_STATION")
@@ -35,25 +44,45 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
         index(isUnique = true, stationId, year, month, day)
     }
 
-    fun toEntity(row: ResultRow): DailyMeasurementEntity {
-        return DailyMeasurementEntity(stationId = row[stationId].value,
-                                      dateInUtcMillis = row[date].millis,
-                                      airTemperatureCentigrade = airTemperatureCentigrade.toEntity(row),
-                                      dewPointTemperatureCentigrade = dewPointTemperatureCentigrade.toEntity(row),
-                                      humidityPercent = humidityPercent.toEntity(row),
-                                      airPressureHectopascals = airPressureHectopascals.toEntity(row),
-                                      sunshineMinutes = sunshineMinutes.toEntity(row),
-                                      rainfallMillimeters = rainfallMillimeters.toEntity(row),
-                                      snowfallMillimeters = snowfallMillimeters.toEntity(row),
-                                      windSpeedMetersPerSecond = windSpeedMetersPerSecond.toEntity(row),
-                                      visibilityMeters = visibilityMeters.toEntity(row),
-                                      windDirectionDegrees = windDirectionDegrees.toEntity(row),
-                                      cloudCoverage = DailyDetailsAndHistogram(
-                                              details = row[detailedCloudCoverage],
-                                              histogram = row[cloudCoverageHistogram])
-        )
+    fun <T> fetchData(columns: Array<Column<*>>, stationId: Long, year: Int, mapper: (ResultRow) -> T): List<T> {
+        val condition = this.stationId.eq(stationId).and(this.year.eq(year))
+        val data = transaction {
+            addLogger(StdOutSqlLogger)
+            slice(columns.distinct()).select(condition).map(mapper)
+        }
+        return data
+    }
+
+    fun fetchMinAvgMaxData(columns: DailyMinAvgMaxColumns, stationId: Long, year: Int): List<MinAvgMaxData> {
+        return fetchData(arrayOf(date, columns.min, columns.avg, columns.max), stationId, year) {
+            MinAvgMaxData(
+                    day = it[date].toDate(),
+                    min = it[columns.min],
+                    avg = it[columns.avg],
+                    max = it[columns.max]
+            )
+        }
+    }
+
+    fun <T> fetchHistogramData(column: Column<Array<T?>?>, stationId: Long, year: Int): List<HistogramData<T>> {
+        return fetchData(arrayOf(date, column), stationId, year) {
+            HistogramData(it[date].toDate(), it[column])
+        }
     }
 }
+
+class MinAvgMaxData(
+        val day: Date,
+        val min: BigDecimal?,
+        val avg: BigDecimal?,
+        val max: BigDecimal?
+)
+
+
+class HistogramData<T>(
+        val day: Date,
+        val data: Array<T?>?
+)
 
 class DailyMinMaxColumns(
         val min: Column<BigDecimal?>,

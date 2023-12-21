@@ -16,6 +16,7 @@ import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import org.joda.time.LocalDate
 import rootheart.codes.weatherhistory.database.WeatherDb
+import rootheart.codes.weatherhistory.restapp.resources.stations.measurementsResource
 import rootheart.codes.weatherhistory.restapp.resources.stations.stationsResource
 
 fun main() {
@@ -37,6 +38,7 @@ private fun Application.weatherHistory() {
 
     routing {
         stationsResource()
+        measurementsResource()
         static("web") { files(".") }
     }
 }
