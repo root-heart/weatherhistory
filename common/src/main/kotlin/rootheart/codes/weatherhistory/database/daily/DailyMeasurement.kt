@@ -64,6 +64,12 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
         }
     }
 
+    fun fetchSumData(columns: DailySumColums, stationId: Long, year: Int): List<SumData> {
+        return fetchData(arrayOf(date, columns.sum), stationId, year) {
+            SumData(it[date].toDate(), it[columns.sum])
+        }
+    }
+
     fun <T> fetchHistogramData(column: Column<Array<T?>?>, stationId: Long, year: Int): List<HistogramData<T>> {
         return fetchData(arrayOf(date, column), stationId, year) {
             HistogramData(it[date].toDate(), it[column])
@@ -78,6 +84,10 @@ class MinAvgMaxData(
         val max: BigDecimal?
 )
 
+class SumData(
+        val day: Date,
+        val sum: BigDecimal?
+)
 
 class HistogramData<T>(
         val day: Date,

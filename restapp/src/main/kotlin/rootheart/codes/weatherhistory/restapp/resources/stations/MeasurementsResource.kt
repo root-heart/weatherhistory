@@ -1,5 +1,6 @@
 package rootheart.codes.weatherhistory.restapp.resources.stations
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.resources.Resource
 import io.ktor.server.application.call
 import io.ktor.server.request.receiveStream
@@ -10,6 +11,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import java.util.*
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
 import org.jetbrains.exposed.sql.StdOutSqlLogger
@@ -24,40 +26,60 @@ import org.joda.time.Months
 import org.joda.time.Years
 import rootheart.codes.weatherhistory.database.daily.DailyMeasurementTable
 import rootheart.codes.weatherhistory.database.daily.DailyMinAvgMaxColumns
+import rootheart.codes.weatherhistory.database.daily.DailySumColums
 import rootheart.codes.weatherhistory.database.daily.HistogramData
 
-@Resource("cloud-coverage/{year}")
-class CloudCoverage(val stationById: StationById, val year: Int)
+@Resource("{measurement}/{year}")
+class MeasurementResource(val stationById: StationById, val measurement: String, val year: Int)
 
-@Resource("sunshine-duration/{year}")
-class SunshineDuration(val stationById: StationById, val year: Int)
+@Resource("{measurement}/histogram/{year}")
+class HistogramResource(val stationById: StationById, val measurement: String, val year: Int)
 
 @Resource("sunshine-cloud-coverage/{year}")
 class SunshineCloudCoverage(val stationById: StationById, val year: Int)
 
-@Resource("air-temperature/{year}")
-class AirTemperature(val stationById: StationById, val year: Int)
+private val minAvgMaxMeasurements = with(DailyMeasurementTable) {
+    mapOf("air-temperature" to airTemperatureCentigrade,
+          "dew-point-temperature" to dewPointTemperatureCentigrade,
+          "humidity" to humidityPercent,
+          "air-pressure" to airPressureHectopascals,
+          "visibility" to visibilityMeters)
+
+}
+
+private val sumMeasurements = with(DailyMeasurementTable) {
+    mapOf("sunshine" to sunshineMinutes,
+          "rain" to rainfallMillimeters,
+          "snow" to snowfallMillimeters)
+}
+
+private val histogramMeasurements = with(DailyMeasurementTable) {
+    mapOf("air-temperature" to airTemperatureCentigrade.details,
+          "sunshine" to sunshineMinutes.details,
+//          "cloud-coverage" to detailedCloudCoverage
+    )
+}
 
 fun Routing.measurementsResource() {
-    get<AirTemperature> { request ->
-        val data = DailyMeasurementTable.fetchMinAvgMaxData(DailyMeasurementTable.airTemperatureCentigrade,
-                                                            request.stationById.id,
-                                                            request.year)
-        call.respond(data)
+    get<MeasurementResource> { request ->
+        if (minAvgMaxMeasurements.containsKey(request.measurement)) {
+            val columns = minAvgMaxMeasurements[request.measurement]
+            call.respond(DailyMeasurementTable.fetchMinAvgMaxData(columns!!, request.stationById.id, request.year))
+        } else if (sumMeasurements.containsKey(request.measurement)) {
+            val columns = sumMeasurements[request.measurement]
+            call.respond(DailyMeasurementTable.fetchSumData(columns!!, request.stationById.id, request.year))
+        } else {
+            call.respond(HttpStatusCode.NotFound)
+        }
     }
 
-    get<CloudCoverage> { request ->
-        val histogramData = DailyMeasurementTable.fetchHistogramData(DailyMeasurementTable.detailedCloudCoverage,
-                                                                     request.stationById.id,
-                                                                     request.year)
-        call.respond(histogramData)
-    }
-
-    get<SunshineDuration> { request ->
-        val histogramData = DailyMeasurementTable.fetchHistogramData(DailyMeasurementTable.sunshineMinutes.details,
-                                                                     request.stationById.id,
-                                                                     request.year)
-        call.respond(histogramData)
+    get<HistogramResource> { request ->
+        val column = histogramMeasurements[request.measurement]
+        if (column != null) {
+            call.respond(DailyMeasurementTable.fetchHistogramData(column, request.stationById.id, request.year))
+        } else {
+            call.respond(HttpStatusCode.NotFound)
+        }
     }
 
     get<SunshineCloudCoverage> { m ->
