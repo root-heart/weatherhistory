@@ -1,7 +1,7 @@
 package rootheart.codes.weatherhistory.database.daily
 
+import java.io.Serializable
 import java.math.BigDecimal
-import java.util.*
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ResultRow
@@ -46,7 +46,7 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
         index(isUnique = true, stationId, year, month, day)
     }
 
-    fun <T> fetchData(columns: Array<Column<*>>, stationId: Long, year: Int, mapper: (ResultRow) -> T): List<T> {
+    fun <T> fetchData(columns: Array<Column<out Serializable?>>, stationId: Long, year: Int, mapper: (ResultRow) -> T): List<T> {
         val condition = this.stationId.eq(stationId).and(this.year.eq(year))
         val data = transaction {
             addLogger(StdOutSqlLogger)
@@ -54,42 +54,8 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
         }
         return data
     }
-
-    fun fetchMinAvgMaxData(columns: DailyMinAvgMaxColumns, stationId: Long, year: Int): List<MinAvgMaxData> {
-        return fetchData(arrayOf(date, columns.min, columns.avg, columns.max), stationId, year) {
-            MinAvgMaxData(it[date].toDate(), it[columns.min], it[columns.avg], it[columns.max])
-        }
-    }
-
-    fun fetchSumData(columns: DailySumColums, stationId: Long, year: Int): List<SumData> {
-        return fetchData(arrayOf(date, columns.sum), stationId, year) {
-            SumData(it[date].toDate(), it[columns.sum])
-        }
-    }
-
-    fun <T> fetchHistogramData(column: Column<Array<T?>?>, stationId: Long, year: Int): List<HistogramData<T>> {
-        return fetchData(arrayOf(date, column), stationId, year) {
-            HistogramData(it[date].toDate(), it[column])
-        }
-    }
 }
 
-class MinAvgMaxData(
-        val day: Date,
-        val min: BigDecimal?,
-        val avg: BigDecimal?,
-        val max: BigDecimal?
-)
-
-class SumData(
-        val day: Date,
-        val sum: BigDecimal?
-)
-
-class HistogramData<T>(
-        val day: Date,
-        val data: Array<T?>?
-)
 
 class DailyMinMaxColumns(
         val min: Column<BigDecimal?>,
