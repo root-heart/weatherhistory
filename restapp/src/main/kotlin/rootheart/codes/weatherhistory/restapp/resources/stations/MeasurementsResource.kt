@@ -101,7 +101,7 @@ enum class DetailedMeasurement(val column: Column<out Array<out Serializable?>?>
 @Resource("{measurement}/{year}")
 class MeasurementResource(val stationById: StationById, val measurement: Measurement, val year: Int)
 
-@Resource("{measurement}/{year}/details")
+@Resource("{measurement}/details/{year}")
 class DetailedMeasurementsResource(val stationById: StationById, val measurement: DetailedMeasurement, val year: Int)
 
 @Resource("sunshine-cloud-coverage/{year}")
@@ -150,8 +150,8 @@ private fun multiplyCloudCoverageAndSunshineDuration(
     val sunshineCloudCoverage = Array<Int?>(24) { null }
     for (hour in 0..23) {
         val cloudCoverage = cloudCoverages[hour]
-        val sunshineDuration = sunshineDurations[hour]
-        if (sunshineDuration != null && cloudCoverage != null) {
+        val sunshineDuration = sunshineDurations[hour] ?: 0
+        if (cloudCoverage != null) {
             sunshineCloudCoverage[hour] = (8 - cloudCoverage) * sunshineDuration / 8
         }
     }
