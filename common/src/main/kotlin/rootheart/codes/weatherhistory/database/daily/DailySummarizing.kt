@@ -1,10 +1,6 @@
 package rootheart.codes.weatherhistory.database.daily
 
-import org.joda.time.LocalDate
-import rootheart.codes.common.collections.nullsafeAvgDecimal
-import rootheart.codes.weatherhistory.database.summarized.*
-
-
+// TODO remove code?
 //fun groupDailyByMonth(measurements: Collection<DailyMeasurementEntity>): Collection<MonthlySummary> {
 //    return measurements.groupBy { LocalDate(it.dateInUtcMillis).withDayOfMonth(1) }
 //            .mapValues {

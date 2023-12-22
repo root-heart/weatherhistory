@@ -1,9 +1,6 @@
 package rootheart.codes.weatherhistory.database.summarized
 
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromStream
+import java.math.BigDecimal
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
@@ -11,13 +8,10 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.joda.time.DateTime
-import org.joda.time.LocalDate
 import rootheart.codes.common.strings.splitAndTrimTokens
-import rootheart.codes.common.strings.splitAndTrimTokensToList
 import rootheart.codes.weatherhistory.database.StationsTable
 import rootheart.codes.weatherhistory.database.intArray
 import rootheart.codes.weatherhistory.database.intArrayNullable
-import java.math.BigDecimal
 
 object SummarizedMeasurementsTable : LongIdTable("SUMMARIZED_MEASUREMENTS") {
     val stationId = reference("STATION_ID", StationsTable).index("FK_IDX_SUMMARIZED_MEASUREMENT_STATION")

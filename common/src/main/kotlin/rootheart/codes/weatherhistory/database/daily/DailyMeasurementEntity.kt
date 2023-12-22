@@ -1,8 +1,6 @@
 package rootheart.codes.weatherhistory.database.daily
 
-import org.joda.time.LocalDate
 import java.math.BigDecimal
-
 
 class DailyMeasurementEntity(
         val stationId: Long,

@@ -1,9 +1,6 @@
 package rootheart.codes.weatherhistory.database.summarized
 
-import org.joda.time.LocalDate
-import rootheart.codes.common.collections.nullsafeAvgDecimal
-import rootheart.codes.weatherhistory.database.daily.DailyMeasurementEntity
-
+// TODO remove code?
 //fun groupMonthlyByYear(measurements: Collection<MonthlySummary>): Collection<YearlySummary> {
 //    return measurements
 //            .groupBy { it.year }
