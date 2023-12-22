@@ -4,7 +4,7 @@ import * as Highcharts from "highcharts";
 
 @Component({
     template: `
-        <sum-chart #chart property='sunshineDurationMinutes' name='Sonnenschein' unit='h'
+        <sum-chart #chart measurementName="sunshine" name='Sonnenschein' unit='h'
                    [yAxisLabelFormatter]='yAxisMinutesAsHour' [valueTooltipFormatter]='formatAsHour'/>`,
     styles: [`sum-chart {
         --highcharts-color-0: rgb(238, 170, 34);

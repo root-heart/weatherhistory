@@ -1,9 +1,7 @@
 import {Component, Input} from '@angular/core';
 import {ChartBaseComponent} from "../chart-base.component";
 import * as Highcharts from "highcharts";
-import {getDateLabel} from "../charts";
-import {SummarizedMeasurement, SummaryData} from "../../data-classes";
-import {FetchMeasurementsService} from "../../services/fetch-measurements.service";
+import {SummarizedMeasurement} from "../../data-classes";
 
 type DetailsProperty = {
     [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends { details?: number[] } ? K : never
@@ -15,32 +13,26 @@ type DetailsProperty = {
     templateUrl: './heatmap-chart.component.html',
     styleUrls: ['./heatmap-chart.component.css']
 })
-export class HeatmapChart extends ChartBaseComponent {
+export class HeatmapChart extends ChartBaseComponent<[number, number[]]> {
     @Input() detailProperty: DetailsProperty = "sunshineMinutes"
     @Input() colorStops: { value: number, color: Highcharts.ColorString }[] = [
         {value: 0, color: 'rgb(70, 50, 80)'},
         {value: 100, color: 'rgb(210, 150, 240)'}]
 
-    constructor(fetchMeasurementsService: FetchMeasurementsService) {
-        super(fetchMeasurementsService);
-    }
-
-    protected override async setChartData(summaryData: SummaryData) {
+    protected override async setChartData(data: [number, number[]][]) {
         let heatmapData: Highcharts.PointOptionsType[] = []
-        if (summaryData.details) {
-            summaryData.details.forEach(m => {
-                let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
-                let details = m[this.detailProperty].details
-                if (details) {
-                    for (let hour = 0; hour < details.length; hour++) {
-                        let value = details[hour]
-                        if (value != null) {
-                            heatmapData.push([dateLabel, hour + 0.5, details[hour]])
-                        }
+        data.forEach(d => {
+            let dateLabel = d[0]
+            let details = d[1]
+            if (details) {
+                for (let hour = 0; hour < details.length; hour++) {
+                    let value = details[hour]
+                    if (value != null) {
+                        heatmapData.push([dateLabel, hour + 0.5, details[hour]])
                     }
                 }
-            })
-        }
+            }
+        })
         this.chart?.series[0].setData(heatmapData, false)
     }
 

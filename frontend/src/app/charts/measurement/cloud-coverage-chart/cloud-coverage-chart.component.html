@@ -1,6 +1,7 @@
 <heatmap-chart #chart class="chart" name="Wolkenbedeckung" unit="/8"
                [yAxisLabelFormatter]="yAxisHours"
                [detailProperty]="'cloudCoverage'"
+               measurementName="cloud-coverage/details"
                [colorStops]="[{value: -1, color: '#600'},
                                     {value: 0, color: '#a3ccf5'},
                                     {value: 1, color: '#e7f2fe'},

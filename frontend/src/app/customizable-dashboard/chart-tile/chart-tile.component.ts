@@ -17,10 +17,14 @@ import {
 import {
     SunshineDurationHeatmapChartComponent
 } from "../../charts/measurement/sunshine-duration-heatmap-chart/sunshine-duration-heatmap-chart.component";
-import {PrecipitationChartComponent} from "../../charts/measurement/precipitation-chart.component";
+import {RainChartComponent} from "../../charts/measurement/rain-chart.component";
 import {
     CloudCoverageChartComponent
 } from "../../charts/measurement/cloud-coverage-chart/cloud-coverage-chart.component";
+import {SnowChartComponent} from "../../charts/measurement/snow-chart.component";
+import {
+    SunshineCloudCoverageHeatmapChartComponent
+} from "../../charts/measurement/sunshine-cloud-coverage-heatmap-chart/sunshine-cloud-coverage-heatmap-chart.component";
 
 addMore(Highcharts);
 
@@ -38,11 +42,13 @@ export class ChartTileComponent {
         {name: "Sonnenscheindauer", component: SunshineDurationChartComponent},
         {name: "Sonnenschein Details", component: SunshineDurationHeatmapChartComponent},
         {name: "Wolkenbedeckung", component: CloudCoverageChartComponent},
-        {name: "Niederschlag", component: PrecipitationChartComponent},
+        {name: "Regen", component: RainChartComponent},
+        {name: "Schnee", component: SnowChartComponent},
         {name: "Luftdruck Min/Avg/Max", component: AirPressureChartComponent},
         {name: "Luftfeuchtigkeit Min/Avg/Max", component: HumidityChartComponent},
         {name: "Taupunkt Min/Avg/Max", component: DewPointTemperatureChartComponent},
         {name: "Sichtweite Min/Avg/Max", component: VisibilityChartComponent},
+        {name: "Sonne x Wolken", component: SunshineCloudCoverageHeatmapChartComponent},
     ]
 
     constructor(private changeDetector: ChangeDetectorRef) {
@@ -106,7 +112,7 @@ export class ChartTileComponent {
         }
     }
 
-    private getChartComponent(): ChartBaseComponent | null {
+    private getChartComponent(): ChartBaseComponent<any> | null {
         let ngComponentOutlet = this.ngComponentOutlet;
         if (!ngComponentOutlet) {
             return null
@@ -118,7 +124,7 @@ export class ChartTileComponent {
         }
         let instance = componentRef['instance'];
         if ("chart" in instance) {
-            return instance.chart as ChartBaseComponent
+            return instance.chart as ChartBaseComponent<any>
         }
         return null
     }

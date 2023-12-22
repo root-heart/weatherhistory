@@ -1,5 +1,4 @@
 import {Component, ViewEncapsulation} from '@angular/core';
-import {getDateLabel} from "../charts";
 
 
 import {registerLocaleData} from "@angular/common";
@@ -11,8 +10,6 @@ import addMore from "highcharts/highcharts-more";
 import {ChartBaseComponent} from "../chart-base.component";
 import _ from 'lodash';
 import heatmap from 'highcharts/modules/heatmap';
-import {SummaryData} from "../../data-classes";
-import {FetchMeasurementsService} from "../../services/fetch-measurements.service";
 
 
 addMore(Highcharts);
@@ -25,7 +22,7 @@ registerLocaleData(localeDe, 'de-DE', localeDeExtra);
     styleUrls: ['./wind-direction-chart.component.css'],
     encapsulation: ViewEncapsulation.None
 })
-export class WindDirectionChart extends ChartBaseComponent {
+export class WindDirectionChart extends ChartBaseComponent<[string, number[]]> {
     // TODO DRY - use heatmap chart somehow
     windDirectionChartOptions: Highcharts.Options = {
         chart: {styledMode: true, animation: false, zooming: {mouseWheel: {enabled: true}, type: "x"}},
@@ -102,15 +99,11 @@ export class WindDirectionChart extends ChartBaseComponent {
         },
     }
 
-    constructor(fetchMeasurementsService: FetchMeasurementsService) {
-        super(fetchMeasurementsService);
-    }
-
-    protected override async setChartData(summaryData: SummaryData): Promise<void> {
+    protected override async setChartData(data: [string, number[]][]): Promise<void> {
         let scatterData: Highcharts.PointOptionsType[] = []
-        summaryData.details.forEach(m => {
-            let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
-            let counted: _.Dictionary<number> = _.countBy(m.windDirectionDegrees.details);
+        data.forEach(d => {
+            let dateLabel = d[0]
+            let counted: _.Dictionary<number> = _.countBy(d[1]);
             _.each(counted, (count, directionString) => {
                 scatterData.push([dateLabel, parseInt(directionString), count])
             })

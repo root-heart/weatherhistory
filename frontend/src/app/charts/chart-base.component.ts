@@ -1,9 +1,10 @@
 import * as Highcharts from 'highcharts';
 import addMore from "highcharts/highcharts-more";
-import {SummaryData} from "../data-classes";
 import {Component, Input} from "@angular/core";
-import {FetchMeasurementsService} from "../services/fetch-measurements.service";
 import {WeatherStation} from "../WeatherStationService";
+import {HttpClient} from "@angular/common/http";
+import {environment} from "../environments/environment";
+import {firstValueFrom} from "rxjs";
 
 addMore(Highcharts);
 
@@ -11,7 +12,7 @@ addMore(Highcharts);
 @Component({
     template: ""
 })
-export abstract class ChartBaseComponent {
+export abstract class ChartBaseComponent<T> {
     Highcharts: typeof Highcharts = Highcharts;
     chart?: Highcharts.Chart;
     chartOptions: Highcharts.Options = {
@@ -48,7 +49,7 @@ export abstract class ChartBaseComponent {
         yAxis: this.getYAxes()
     }
 
-    protected constructor(protected fetchMeasurementsService: FetchMeasurementsService) {
+    constructor(private http: HttpClient) {
     }
 
     @Input() set name(name: string) {
@@ -75,6 +76,8 @@ export abstract class ChartBaseComponent {
         })
     }
 
+    @Input() measurementName!: string
+
     chartCallback: Highcharts.ChartCallbackFunction = c => {
         this.chart = c
         let colorAxis = this.getColorAxis();
@@ -84,8 +87,8 @@ export abstract class ChartBaseComponent {
     }
 
     update(weatherStation: WeatherStation, year: number) {
-        console.log(`fetching data for ${weatherStation.name} and year ${year}`)
-        this.fetchMeasurementsService.fetchMeasurements(weatherStation, year)
+        console.log(`fetching measurement ${this.measurementName} for ${weatherStation.name} and year ${year}`)
+        this.fetchData(weatherStation, year)
             .then(data => {
                 this.chart?.showLoading("Aktualisiere Diagramm...");
                 return data
@@ -99,7 +102,7 @@ export abstract class ChartBaseComponent {
             }, 0))
     }
 
-    protected abstract setChartData(summaryData: SummaryData): Promise<void>
+    protected abstract setChartData(data: T[]): Promise<void>
 
     protected abstract createSeries(): Highcharts.SeriesOptionsType[]
 
@@ -116,6 +119,12 @@ export abstract class ChartBaseComponent {
     }
 
     protected abstract getTooltipText(_: Highcharts.Tooltip): string
+
+    private fetchData(weatherStation: WeatherStation, year: number): Promise<T[]> {
+        let url = `${environment.apiServer}/stations/${weatherStation.id}/${this.measurementName}/${year}`
+        console.log(`fetching data from ${url}`)
+        return firstValueFrom(this.http.get<T[]>(url))
+    }
 }
 
 type TooltipPointInformation = {

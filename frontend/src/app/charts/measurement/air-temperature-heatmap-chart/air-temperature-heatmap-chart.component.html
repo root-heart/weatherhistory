@@ -1,6 +1,7 @@
 <heatmap-chart #chart name="Lufttemperatur" unit="°C"
                [yAxisLabelFormatter]="yAxisHours"
                [detailProperty]="'airTemperatureCentigrade'"
+               measurementName="air-temperature/details"
                [colorStops]="[{value: -30, color: '#f7d8ff'},
                                         {value: -20,  color :'#b00fe8'},
                                         {value: -10, color: '#0e0ee8'},

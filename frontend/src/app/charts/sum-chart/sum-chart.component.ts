@@ -1,8 +1,4 @@
 import {Component, Input} from '@angular/core';
-import {SummarizedMeasurement, SummaryData} from "../../data-classes";
-import {getDateLabel} from "../charts";
-
-
 import {registerLocaleData} from "@angular/common";
 import localeDe from '@angular/common/locales/de';
 import localeDeExtra from '@angular/common/locales/extra/de';
@@ -10,76 +6,39 @@ import localeDeExtra from '@angular/common/locales/extra/de';
 import * as Highcharts from "highcharts";
 import addMore from "highcharts/highcharts-more";
 import {ChartBaseComponent} from "../chart-base.component";
-import {FetchMeasurementsService} from "../../services/fetch-measurements.service";
 
 addMore(Highcharts);
 registerLocaleData(localeDe, 'de-DE', localeDeExtra);
 
-type MinMaxSumDetailsProperty = {
-    [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends { sum?: number } ? K : never
-}[keyof SummarizedMeasurement]
-
-
 @Component({
     selector: 'sum-chart',
-    template: `<highcharts-chart [Highcharts]='Highcharts' [options]='chartOptions' [callbackFunction]='chartCallback'/>`,
+    template: `
+        <highcharts-chart [Highcharts]='Highcharts' [options]='chartOptions' [callbackFunction]='chartCallback'/>`,
     styles: [`
         highcharts-chart {
             display: block;
             aspect-ratio: 3;
         }`]
 })
-export class SumChartComponent extends ChartBaseComponent {
-    @Input() sumProperty: MinMaxSumDetailsProperty = "sunshineMinutes"
-    @Input() sum2Property?: MinMaxSumDetailsProperty = undefined
+export class SumChartComponent extends ChartBaseComponent<[number, number]> {
     @Input() valueTooltipFormatter?: (originalValue: number) => string
 
-    constructor(fetchMeasurementsService: FetchMeasurementsService) {
-        super(fetchMeasurementsService);
-    }
+    protected override async setChartData(data: [number, number][]) {
+        let sumData = data.map(d => ({
+            x: d[0],
+            y: d[1],
+            custom: {
+                tooltipFormatter: this.valueTooltipFormatter
+            }
+        }))
 
-    protected override async setChartData(summaryData: SummaryData) {
-        let sumData: Highcharts.PointOptionsType[] = []
-        let sum2Data: number[][] = []
-
-        if (summaryData.details) {
-            summaryData.details.forEach(m => {
-                let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
-                let measurements = m[this.sumProperty!]
-
-                if (measurements.sum) {
-                    sumData.push({
-                        x: dateLabel,
-                        y: measurements.sum,
-                        custom: {
-                            tooltipFormatter: this.valueTooltipFormatter
-                        }
-                    })
-                }
-
-                if (this.sum2Property && m[this.sum2Property!]) {
-                    let sum2 = m[this.sum2Property!].sum
-                    if (sum2) {
-                        sum2Data.push([dateLabel, sum2])
-                    }
-                }
-            })
-        }
         this.chart?.series[0]?.setData(sumData, false)
-        this.chart?.series[1]?.setData(sum2Data, false)
     }
 
     protected override createSeries(): Highcharts.SeriesOptionsType[] {
         return [{
             type: "column",
-            borderRadius: 0,
-            stack: "s",
-            stacking: "normal"
-        }, {
-            type: "column",
-            borderRadius: 0,
-            stack: "s",
-            stacking: "normal"
+            borderRadius: 0
         }]
     }
 

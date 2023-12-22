@@ -13,6 +13,7 @@ export class AirTemperatureHeatmapChartComponent {
         return formatAsHour(x.value as number * 60)
     }
 
+
 }
 
 // TODO DRY

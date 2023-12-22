@@ -56,7 +56,7 @@ enum class Measurement(val columns: Array<Column<out Serializable?>>, val dataMa
     constructor(columns: DailyMinAvgMaxColumns)
             : this(arrayOf(DailyMeasurementTable.date, columns.min, columns.avg, columns.max),
                    {
-                       arrayOf(it[DailyMeasurementTable.date].toDate(),
+                       arrayOf(it[DailyMeasurementTable.date].millis,
                                it[columns.min],
                                it[columns.avg],
                                it[columns.max])
@@ -65,14 +65,14 @@ enum class Measurement(val columns: Array<Column<out Serializable?>>, val dataMa
     constructor(columns: DailyAvgMaxColumns)
             : this(arrayOf(DailyMeasurementTable.date, columns.avg, columns.max),
                    {
-                       arrayOf(it[DailyMeasurementTable.date].toDate(),
+                       arrayOf(it[DailyMeasurementTable.date].millis,
                                it[columns.avg],
                                it[columns.max])
                    })
 
     constructor(columns: DailySumColumns<*>)
             : this(arrayOf(DailyMeasurementTable.date, columns.sum),
-                   { arrayOf(it[DailyMeasurementTable.date].toDate(), it[columns.sum]) })
+                   { arrayOf(it[DailyMeasurementTable.date].millis, it[columns.sum]) })
 }
 
 enum class DetailedMeasurement(val column: Column<out Array<out Serializable?>?>) {
@@ -119,7 +119,7 @@ fun Routing.measurementsResource() {
         val data = with(request) {
             val columns = arrayOf(DailyMeasurementTable.date, measurement.column)
             DailyMeasurementTable.fetchData(columns, stationById.id, year) {
-                arrayOf(it[DailyMeasurementTable.date].toDate(), it[measurement.column])
+                arrayOf(it[DailyMeasurementTable.date].millis, it[measurement.column])
             }
         }
         call.respond(data)
@@ -133,9 +133,9 @@ fun Routing.measurementsResource() {
                 if (cloudCoverages != null && sunshineDurations != null) {
                     val sunshineCloudCoverage =
                         multiplyCloudCoverageAndSunshineDuration(cloudCoverages, sunshineDurations)
-                    arrayOf(it[date].toDate(), sunshineCloudCoverage)
+                    arrayOf(it[date].millis, sunshineCloudCoverage)
                 } else {
-                    arrayOf(it[date].toDate(), null)
+                    arrayOf(it[date].millis, null)
                 }
             }
         }

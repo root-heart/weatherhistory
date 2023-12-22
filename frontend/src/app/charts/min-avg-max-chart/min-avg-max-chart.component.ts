@@ -1,6 +1,4 @@
-import {Component, Input} from '@angular/core';
-import {AvgMaxDetails, MinAvgMaxDetails, SummarizedMeasurement, SummaryData} from "../../data-classes";
-import {getDateLabel} from "../charts";
+import {Component} from '@angular/core';
 
 import {registerLocaleData} from "@angular/common";
 import localeDe from '@angular/common/locales/de';
@@ -9,20 +7,9 @@ import localeDeExtra from '@angular/common/locales/extra/de';
 import * as Highcharts from 'highcharts';
 import addMore from "highcharts/highcharts-more";
 import {ChartBaseComponent} from "../chart-base.component";
-import {FetchMeasurementsService} from "../../services/fetch-measurements.service";
-
 
 addMore(Highcharts);
 registerLocaleData(localeDe, 'de-DE', localeDeExtra);
-
-type MinAvgMaxDetailsProperty = {
-    [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends MinAvgMaxDetails ? K : never
-}[keyof SummarizedMeasurement]
-
-type AvgMaxDetailsProperty = {
-    [K in keyof SummarizedMeasurement]: SummarizedMeasurement[K] extends AvgMaxDetails ? K : never
-}[keyof SummarizedMeasurement]
-
 
 @Component({
     selector: 'min-avg-max-chart',
@@ -34,25 +21,16 @@ type AvgMaxDetailsProperty = {
             aspect-ratio: 3;
         }`]
 })
-export class MinAvgMaxChart extends ChartBaseComponent {
-    @Input() property?: MinAvgMaxDetailsProperty | AvgMaxDetailsProperty
+export class MinAvgMaxChart extends ChartBaseComponent<[number, number, number, number]> {
+    protected override async setChartData(data: [number, number, number, number][]): Promise<void> {
+        let minMaxData: [number, number, number][] = []
+        let avgData: [number, number][] = []
 
-    constructor(fetchMeasurementsService: FetchMeasurementsService) {
-        super(fetchMeasurementsService);
-    }
-
-    protected override async setChartData(summaryData: SummaryData): Promise<void> {
-        let minMaxData: number[][] = []
-        let avgData: number[][] = []
-        if (summaryData.details) {
-            summaryData.details.forEach(m => {
-                let dateLabel = "dateInUtcMillis" in m ? m.dateInUtcMillis : getDateLabel(m)
-                let measurements = m[this.property!]
-
-                minMaxData.push([dateLabel, "min" in measurements ? measurements.min : 0, measurements.max])
-                avgData.push([dateLabel, measurements.avg])
+            data.forEach(d => {
+                let dateLabel = d[0]
+                minMaxData.push([dateLabel, d[1], d[3]])
+                avgData.push([dateLabel, d[2]])
             })
-        }
 
         this.chart?.series[0]?.setData(minMaxData, false)
         this.chart?.series[1]?.setData(avgData, false)

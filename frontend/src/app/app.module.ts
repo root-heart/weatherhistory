@@ -6,7 +6,6 @@ import {YearSelectionComponent} from "./navigation/date-range-dropdown/year-sele
 import {DropdownList} from './dropdown/dropdown-list/dropdown-list.component';
 import {MonthSelectionComponent} from "./navigation/date-range-dropdown/month-selection/month-selection.component";
 import {ToggableButtonComponent} from './toggable-button/toggable-button.component';
-import {StationChartsComponent} from "./station-charts/station-charts.component";
 
 import {AppComponent} from './app.component';
 import {RouterModule} from "@angular/router";
@@ -36,17 +35,18 @@ import { VisibilityChartComponent } from './charts/measurement/visibility-chart.
 import {SunshineDurationChartComponent} from "./charts/measurement/sunshine-duration-chart.component";
 import { AirTemperatureHeatmapChartComponent } from './charts/measurement/air-temperature-heatmap-chart/air-temperature-heatmap-chart.component';
 import { SunshineDurationHeatmapChartComponent } from './charts/measurement/sunshine-duration-heatmap-chart/sunshine-duration-heatmap-chart.component';
-import { PrecipitationChartComponent } from './charts/measurement/precipitation-chart.component';
+import { RainChartComponent } from './charts/measurement/rain-chart.component';
 import { DropdownBoxComponent } from './dropdown/dropdown-box/dropdown-box.component';
 import { CloudCoverageChartComponent } from './charts/measurement/cloud-coverage-chart/cloud-coverage-chart.component';
 import { SunshineCloudCoverageHeatmapChartComponent } from './charts/measurement/sunshine-cloud-coverage-heatmap-chart/sunshine-cloud-coverage-heatmap-chart.component';
+import {SnowChartComponent} from "./charts/measurement/snow-chart.component";
 
 
 @NgModule({
     declarations: [
         AppComponent,
         ToggableButtonComponent, DropdownList, DateRangeSelector,
-        YearSelectionComponent, MonthSelectionComponent, WeatherStationMap, StationChartsComponent,
+        YearSelectionComponent, MonthSelectionComponent, WeatherStationMap,
         MinAvgMaxChart,
         SumChartComponent,
         WindDirectionChart,
@@ -62,10 +62,11 @@ import { SunshineCloudCoverageHeatmapChartComponent } from './charts/measurement
         SunshineDurationChartComponent,
         AirTemperatureHeatmapChartComponent,
         SunshineDurationHeatmapChartComponent,
-        PrecipitationChartComponent,
+        RainChartComponent,
+        SnowChartComponent,
         DropdownBoxComponent,
         CloudCoverageChartComponent,
-        SunshineCloudCoverageHeatmapChartComponent
+        SunshineCloudCoverageHeatmapChartComponent,
     ],
     imports: [
         BrowserModule,
