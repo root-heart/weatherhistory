@@ -1,5 +1,10 @@
 package rootheart.codes.weatherhistory.importer
 
+import java.io.ByteArrayInputStream
+import java.math.BigDecimal
+import java.util.concurrent.ConcurrentHashMap
+import java.util.stream.Collectors
+import java.util.zip.ZipInputStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Job
@@ -10,20 +15,18 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
-import rootheart.codes.common.collections.*
+import rootheart.codes.common.collections.AvgMaxDetails
+import rootheart.codes.common.collections.Histogram
+import rootheart.codes.common.collections.MinAvgMaxDetails
+import rootheart.codes.common.collections.MinMaxSumDetails
+import rootheart.codes.common.collections.nullsafeAvgDecimal
+import rootheart.codes.common.collections.nullsafeMax
+import rootheart.codes.common.collections.nullsafeMin
 import rootheart.codes.common.strings.splitAndTrimTokens
-import rootheart.codes.weatherhistory.database.*
+import rootheart.codes.weatherhistory.database.Station
+import rootheart.codes.weatherhistory.database.StationDao
 import rootheart.codes.weatherhistory.database.daily.DailyMeasurementEntity
 import rootheart.codes.weatherhistory.database.daily.DailyMinMax
-import rootheart.codes.weatherhistory.database.daily.groupDailyByMonth
-import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurementEntity
-import rootheart.codes.weatherhistory.database.summarized.groupMonthlyByYear
-import java.io.ByteArrayInputStream
-import java.math.BigDecimal
-import java.util.*
-import java.util.concurrent.ConcurrentHashMap
-import java.util.stream.Collectors
-import java.util.zip.ZipInputStream
 import kotlin.reflect.KMutableProperty0
 import kotlin.system.measureTimeMillis
 import kotlin.time.ExperimentalTime
@@ -107,52 +110,52 @@ private class MeasurementsImporter(val station: Station, val zippedDataFiles: Co
             unzipJobs.joinAll()
 
             log.info { "Station ${station.id} - Summarizing ${measurementByTime.size} objects" }
-            val monthlySummarized = groupDailyByMonth(measurementByTime.values)
-            val yearlySummarized = groupMonthlyByYear(monthlySummarized)
-
+//            val monthlySummarized = groupDailyByMonth(measurementByTime.values)
+//            val yearlySummarized = groupMonthlyByYear(monthlySummarized)
+//
             log.info { "Station ${station.id} - Inserting ${measurementByTime.size} detailed measurements into the database" }
             measurementByTime.values.chunked(1024).parallelStream().forEach(::insertDailyMeasurementsIntoDatabase)
 
-            log.info { "Station ${station.id} - Inserting ${monthlySummarized.size + yearlySummarized.size} summarized measurements into the database" }
-            monthlySummarized.map {
-                SummarizedMeasurementEntity(
-                        year = it.year,
-                        month = it.month,
-                        stationId = it.measurements.stationId,
-                        airTemperatureCentigrade = it.measurements.airTemperatureCentigrade,
-                        dewPointTemperatureCentigrade = it.measurements.dewPointTemperatureCentigrade,
-                        humidityPercent = it.measurements.humidityPercent,
-                        airPressureHectopascals = it.measurements.airPressureHectopascals,
-                        windSpeedMetersPerSecond = it.measurements.windSpeedMetersPerSecond,
-                        visibilityMeters = it.measurements.visibilityMeters,
-                        sunshineMinutes = it.measurements.sunshineMinutes,
-                        rainfallMillimeters = it.measurements.rainfallMillimeters,
-                        snowfallMillimeters = it.measurements.snowfallMillimeters,
-                        detailedCloudCoverage = it.measurements.detailedCloudCoverage,
-                        cloudCoverageHistogram = it.measurements.cloudCoverageHistogram,
-                        detailedWindDirectionDegrees = it.measurements.detailedWindDirectionDegrees,
-                )
-            }.let { insertSummarizedMeasurementsIntoDatabase(it) }
-
-            yearlySummarized.map {
-                SummarizedMeasurementEntity(
-                        year = it.year,
-                        month = null,
-                        stationId = it.measurements.stationId,
-                        airTemperatureCentigrade = it.measurements.airTemperatureCentigrade,
-                        dewPointTemperatureCentigrade = it.measurements.dewPointTemperatureCentigrade,
-                        humidityPercent = it.measurements.humidityPercent,
-                        airPressureHectopascals = it.measurements.airPressureHectopascals,
-                        windSpeedMetersPerSecond = it.measurements.windSpeedMetersPerSecond,
-                        visibilityMeters = it.measurements.visibilityMeters,
-                        sunshineMinutes = it.measurements.sunshineMinutes,
-                        rainfallMillimeters = it.measurements.rainfallMillimeters,
-                        snowfallMillimeters = it.measurements.snowfallMillimeters,
-                        detailedCloudCoverage = it.measurements.detailedCloudCoverage,
-                        cloudCoverageHistogram = it.measurements.cloudCoverageHistogram,
-                        detailedWindDirectionDegrees = it.measurements.detailedWindDirectionDegrees,
-                )
-            }.let { insertSummarizedMeasurementsIntoDatabase(it) }
+//            log.info { "Station ${station.id} - Inserting ${monthlySummarized.size + yearlySummarized.size} summarized measurements into the database" }
+//            monthlySummarized.map {
+//                SummarizedMeasurementEntity(
+//                        year = it.year,
+//                        month = it.month,
+//                        stationId = it.measurements.stationId,
+//                        airTemperatureCentigrade = it.measurements.airTemperatureCentigrade,
+//                        dewPointTemperatureCentigrade = it.measurements.dewPointTemperatureCentigrade,
+//                        humidityPercent = it.measurements.humidityPercent,
+//                        airPressureHectopascals = it.measurements.airPressureHectopascals,
+//                        windSpeedMetersPerSecond = it.measurements.windSpeedMetersPerSecond,
+//                        visibilityMeters = it.measurements.visibilityMeters,
+//                        sunshineMinutes = it.measurements.sunshineMinutes,
+//                        rainfallMillimeters = it.measurements.rainfallMillimeters,
+//                        snowfallMillimeters = it.measurements.snowfallMillimeters,
+//                        detailedCloudCoverage = it.measurements.detailedCloudCoverage,
+//                        cloudCoverageHistogram = it.measurements.cloudCoverageHistogram,
+//                        detailedWindDirectionDegrees = it.measurements.detailedWindDirectionDegrees,
+//                )
+//            }.let { insertSummarizedMeasurementsIntoDatabase(it) }
+//
+//            yearlySummarized.map {
+//                SummarizedMeasurementEntity(
+//                        year = it.year,
+//                        month = null,
+//                        stationId = it.measurements.stationId,
+//                        airTemperatureCentigrade = it.measurements.airTemperatureCentigrade,
+//                        dewPointTemperatureCentigrade = it.measurements.dewPointTemperatureCentigrade,
+//                        humidityPercent = it.measurements.humidityPercent,
+//                        airPressureHectopascals = it.measurements.airPressureHectopascals,
+//                        windSpeedMetersPerSecond = it.measurements.windSpeedMetersPerSecond,
+//                        visibilityMeters = it.measurements.visibilityMeters,
+//                        sunshineMinutes = it.measurements.sunshineMinutes,
+//                        rainfallMillimeters = it.measurements.rainfallMillimeters,
+//                        snowfallMillimeters = it.measurements.snowfallMillimeters,
+//                        detailedCloudCoverage = it.measurements.detailedCloudCoverage,
+//                        cloudCoverageHistogram = it.measurements.cloudCoverageHistogram,
+//                        detailedWindDirectionDegrees = it.measurements.detailedWindDirectionDegrees,
+//                )
+//            }.let { insertSummarizedMeasurementsIntoDatabase(it) }
 
             log.info { "Station ${station.id} - Inserted measurements into the database" }
         }
@@ -325,7 +328,7 @@ private fun setHourlySunshineDurationData(
         measurementRecord: DailyMeasurementEntity, hour: Int,
         row: SemicolonSeparatedValues.Row
 ) {
-    setHourlyValue(measurementRecord.sunshineMinutes::details, hour, row["SD_SO"]?.let(::BigDecimal))
+    setHourlyValue(measurementRecord.sunshineMinutes::details, hour, row["SD_SO"]?.let(::BigDecimal)?.intValueExact())
 }
 
 private fun setHourlyVisibilityData(

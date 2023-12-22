@@ -125,7 +125,7 @@ class SummarizedSumColumns(
         val maxDate: Column<DateTime?>,
         val sum: Column<BigDecimal?>
 ) {
-    fun setValues(batch: BatchInsertStatement, values: SummarizedSum) {
+    fun setValues(batch: BatchInsertStatement, values: SummarizedSum<BigDecimal>) {
         batch[min] = values.min
 //        batch[minDate] = values.minDate?.toDateTimeAtStartOfDay()
         batch[max] = values.max
@@ -133,7 +133,7 @@ class SummarizedSumColumns(
         batch[sum] = values.sum
     }
 
-    fun toEntity(row: ResultRow): SummarizedSum {
+    fun toEntity(row: ResultRow): SummarizedSum<BigDecimal> {
         return SummarizedSum(
                 min = row[min],
 //                minDate = row[minDate]?.toLocalDate(),
@@ -158,12 +158,12 @@ class SummarizedAvgMax(
 //        var maxDate: LocalDate? = null
 )
 
-class SummarizedSum(
-        var min: BigDecimal? = null,
+class SummarizedSum<T:Comparable<T>>(
+        var min: T? = null,
 //        var minDate: LocalDate? = null,
-        var max: BigDecimal? = null,
+        var max: T? = null,
 //        var maxDate: LocalDate? = null,
-        var sum: BigDecimal? = null
+        var sum: T? = null
 )
 
 

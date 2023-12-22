@@ -14,10 +14,6 @@ import rootheart.codes.weatherhistory.database.MinMaxSumDetailsColumns
 import rootheart.codes.weatherhistory.database.StationsTable
 import rootheart.codes.weatherhistory.database.daily.DailyMeasurementEntity
 import rootheart.codes.weatherhistory.database.daily.DailyMeasurementTable
-import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurement
-import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurementEntity
-import rootheart.codes.weatherhistory.database.summarized.SummarizedMeasurementsTable
-import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
 
@@ -63,36 +59,36 @@ fun insertDailyMeasurementsIntoDatabase(measurements: List<DailyMeasurementEntit
     log.info { "Inserted ${measurements.size} objects into the database" }
 }
 
-fun insertSummarizedMeasurementsIntoDatabase(measurements: List<SummarizedMeasurementEntity>) = transaction {
-    val stationIds = measurements.mapNotNull { it.stationId }.distinct()
-    val stationIdById = StationsTable.select { StationsTable.id.inList(stationIds) }
-            .map { row -> row[StationsTable.id] }
-            .associateBy { it.value }
-    with (SummarizedMeasurementsTable) {
-        batchInsert(measurements) {
-            this[stationId] = stationIdById[it.stationId]!!
-            this[year] = it.year
-            this[month] = it.month
-
-            airTemperatureCentigrade.setValues(this, it.airTemperatureCentigrade)
-            dewPointTemperatureCentigrade.setValues(this, it.dewPointTemperatureCentigrade)
-            humidityPercent.setValues(this, it.humidityPercent)
-            airPressureHectopascals.setValues(this, it.airPressureHectopascals)
-            visibilityMeters.setValues(this, it.visibilityMeters)
-            windSpeedMetersPerSecond.setValues(this, it.windSpeedMetersPerSecond)
-
-            this[cloudCoverageHistogram] = it.cloudCoverageHistogram ?: Array(0) { 0 }
-            this[detailedCloudCoverage] = it.detailedCloudCoverage
-
-            sunshineMinutes.setValues(this, it.sunshineMinutes)
-            rainfallMillimeters.setValues(this, it.rainfallMillimeters)
-            snowfallMillimeters.setValues(this, it.snowfallMillimeters)
-
-            this[detailedWindDirectionDegrees] = it.detailedWindDirectionDegrees
-        }
-    }
-    log.info { "Inserted ${measurements.size} objects into the database" }
-}
+//fun insertSummarizedMeasurementsIntoDatabase(measurements: List<SummarizedMeasurementEntity>) = transaction {
+//    val stationIds = measurements.mapNotNull { it.stationId }.distinct()
+//    val stationIdById = StationsTable.select { StationsTable.id.inList(stationIds) }
+//            .map { row -> row[StationsTable.id] }
+//            .associateBy { it.value }
+//    with (SummarizedMeasurementsTable) {
+//        batchInsert(measurements) {
+//            this[stationId] = stationIdById[it.stationId]!!
+//            this[year] = it.year
+//            this[month] = it.month
+//
+//            airTemperatureCentigrade.setValues(this, it.airTemperatureCentigrade)
+//            dewPointTemperatureCentigrade.setValues(this, it.dewPointTemperatureCentigrade)
+//            humidityPercent.setValues(this, it.humidityPercent)
+//            airPressureHectopascals.setValues(this, it.airPressureHectopascals)
+//            visibilityMeters.setValues(this, it.visibilityMeters)
+//            windSpeedMetersPerSecond.setValues(this, it.windSpeedMetersPerSecond)
+//
+//            this[cloudCoverageHistogram] = it.cloudCoverageHistogram ?: Array(0) { 0 }
+//            this[detailedCloudCoverage] = it.detailedCloudCoverage
+//
+//            sunshineMinutes.setValues(this, it.sunshineMinutes)
+//            rainfallMillimeters.setValues(this, it.rainfallMillimeters)
+//            snowfallMillimeters.setValues(this, it.snowfallMillimeters)
+//
+//            this[detailedWindDirectionDegrees] = it.detailedWindDirectionDegrees
+//        }
+//    }
+//    log.info { "Inserted ${measurements.size} objects into the database" }
+//}
 
 private fun <N : Number> BatchInsertStatement.copyMinAvgMax(from: MinAvgMaxDetails<N>, to: MinAvgMaxDetailsColumns<N>) {
     this[to.min] = from.min

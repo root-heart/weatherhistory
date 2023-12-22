@@ -31,7 +31,7 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
     val humidityPercent = minAvgMax("HUMIDITY_PERCENT", 4, 1)
     val airPressureHectopascals = minAvgMax("AIR_PRESSURE_HECTOPASCALS", 6, 1)
 
-    val sunshineMinutes = sum("SUNSHINE_DURATION_MINUTES", 6, 0)
+    val sunshineMinutes = sumInt("SUNSHINE_DURATION_MINUTES")
     val rainfallMillimeters = sum("RAINFALL_MILLIMETERS", 6, 1)
     val snowfallMillimeters = sum("SNOWFALL_MILLIMETERS", 6, 1)
 
@@ -46,7 +46,12 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
         index(isUnique = true, stationId, year, month, day)
     }
 
-    fun <T> fetchData(columns: Array<Column<out Serializable?>>, stationId: Long, year: Int, mapper: (ResultRow) -> T): List<T> {
+    fun <T> fetchData(
+            columns: Array<Column<out Serializable?>>,
+            stationId: Long,
+            year: Int,
+            mapper: (ResultRow) -> T
+    ): List<T> {
         val condition = this.stationId.eq(stationId).and(this.year.eq(year))
         val data = transaction {
             addLogger(StdOutSqlLogger)
@@ -95,11 +100,11 @@ class DailyMinAvgMaxColumns(
     }
 }
 
-class DailySumColums(
-        val sum: Column<BigDecimal?>,
-        val details: Column<Array<BigDecimal?>?>
-) {
-    fun setValues(batch: BatchInsertStatement, values: DailySum) {
+class DailySumColumns<T>(
+        val sum: Column<T?>,
+        val details: Column<Array<T?>?>
+) where T : Serializable, T : Comparable<T> {
+    fun setValues(batch: BatchInsertStatement, values: DailySum<T>) {
         batch[sum] = values.sum
         batch[details] = values.details
     }
@@ -128,7 +133,13 @@ private fun Table.avgMax(columnBaseName: String, precision: Int, scale: Int) =
     )
 
 private fun Table.sum(columnBaseName: String, precision: Int, scale: Int) =
-    DailySumColums(
+    DailySumColumns(
             decimal("SUM_$columnBaseName", precision, scale).nullable(),
             decimalArrayNullable("DETAILED_$columnBaseName"),
+    )
+
+private fun Table.sumInt(columnBaseName: String) =
+    DailySumColumns(
+            integer("SUM_$columnBaseName").nullable(),
+            intArrayNullable("DETAILED_$columnBaseName"),
     )

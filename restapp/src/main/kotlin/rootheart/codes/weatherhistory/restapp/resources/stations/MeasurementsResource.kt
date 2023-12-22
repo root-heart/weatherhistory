@@ -6,15 +6,13 @@ import io.ktor.server.resources.get
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
 import java.io.Serializable
-import java.math.BigDecimal
-import java.math.RoundingMode
 import kotlinx.serialization.SerialName
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ResultRow
 import rootheart.codes.weatherhistory.database.daily.DailyAvgMaxColumns
 import rootheart.codes.weatherhistory.database.daily.DailyMeasurementTable
 import rootheart.codes.weatherhistory.database.daily.DailyMinAvgMaxColumns
-import rootheart.codes.weatherhistory.database.daily.DailySumColums
+import rootheart.codes.weatherhistory.database.daily.DailySumColumns
 
 private const val airTemperatureResourceName = "air-temperature"
 private const val humidityResourceName = "humidity"
@@ -72,7 +70,7 @@ enum class Measurement(val columns: Array<Column<out Serializable?>>, val dataMa
                                it[columns.max])
                    })
 
-    constructor(columns: DailySumColums)
+    constructor(columns: DailySumColumns<*>)
             : this(arrayOf(DailyMeasurementTable.date, columns.sum),
                    { arrayOf(it[DailyMeasurementTable.date].toDate(), it[columns.sum]) })
 }
@@ -130,17 +128,32 @@ fun Routing.measurementsResource() {
     get<SunshineCloudCoverage> { m ->
         val histogramData = with(DailyMeasurementTable) {
             fetchData(arrayOf(date, detailedCloudCoverage, sunshineMinutes.details), m.stationById.id, m.year) {
-                val sunshineCloudCoverage = Array<BigDecimal?>(24) { null }
-                for (i in 0..23) {
-                    val cloudCoverage = it[detailedCloudCoverage]?.get(i) ?: 0
-                    val sunshineDuration = it[sunshineMinutes.details]?.get(i) ?: BigDecimal.ZERO
-                    val cloudCoverageDecimal =
-                        BigDecimal(cloudCoverage).divide(BigDecimal(8), 3, RoundingMode.UNNECESSARY)
-                    sunshineCloudCoverage[i] = sunshineDuration * (BigDecimal.ONE - cloudCoverageDecimal)
+                val cloudCoverages = it[detailedCloudCoverage]
+                val sunshineDurations = it[sunshineMinutes.details]
+                if (cloudCoverages != null && sunshineDurations != null) {
+                    val sunshineCloudCoverage =
+                        multiplyCloudCoverageAndSunshineDuration(cloudCoverages, sunshineDurations)
+                    arrayOf(it[date].toDate(), sunshineCloudCoverage)
+                } else {
+                    arrayOf(it[date].toDate(), null)
                 }
-                arrayOf(it[date].toDate(), sunshineCloudCoverage)
             }
         }
         call.respond(histogramData)
     }
+}
+
+private fun multiplyCloudCoverageAndSunshineDuration(
+        cloudCoverages: Array<Int?>,
+        sunshineDurations: Array<Int?>
+): Array<Int?> {
+    val sunshineCloudCoverage = Array<Int?>(24) { null }
+    for (hour in 0..23) {
+        val cloudCoverage = cloudCoverages[hour]
+        val sunshineDuration = sunshineDurations[hour]
+        if (sunshineDuration != null && cloudCoverage != null) {
+            sunshineCloudCoverage[hour] = (8 - cloudCoverage) * sunshineDuration / 8
+        }
+    }
+    return sunshineCloudCoverage
 }

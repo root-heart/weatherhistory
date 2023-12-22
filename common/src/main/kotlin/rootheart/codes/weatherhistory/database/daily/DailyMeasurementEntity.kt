@@ -13,9 +13,9 @@ class DailyMeasurementEntity(
         val humidityPercent: DailyMinAvgMax = DailyMinAvgMax(),
         val airPressureHectopascals: DailyMinAvgMax = DailyMinAvgMax(),
         val visibilityMeters: DailyMinAvgMax = DailyMinAvgMax(),
-        val sunshineMinutes: DailySum = DailySum(),
-        val rainfallMillimeters: DailySum = DailySum(),
-        val snowfallMillimeters: DailySum = DailySum(),
+        val sunshineMinutes: DailySum<Int> = DailySum(),
+        val rainfallMillimeters: DailySum<BigDecimal> = DailySum(),
+        val snowfallMillimeters: DailySum<BigDecimal> = DailySum(),
         val windSpeedMetersPerSecond: DailyAvgMax = DailyAvgMax(),
         val windDirectionDegrees: DailyMinMax = DailyMinMax(),
         var cloudCoverage: DailyDetailsAndHistogram = DailyDetailsAndHistogram()
@@ -40,9 +40,9 @@ class DailyMinAvgMax(
         var details: Array<BigDecimal?>? = null,
 )
 
-class DailySum(
-        var sum: BigDecimal? = null,
-        var details: Array<BigDecimal?>? = null,
+class DailySum<T : Comparable<T>>(
+        var sum: T? = null,
+        var details: Array<T?>? = null,
 )
 
 class DailyDetailsAndHistogram(
