@@ -17,8 +17,12 @@ export abstract class ChartBaseComponent<T> {
     chart?: Highcharts.Chart;
     chartOptions: Highcharts.Options = {
         chart: {
+            animation: false,
+            spacing: [10, 0, 0, 0],
             styledMode: true,
-            animation: false
+        },
+        credits: {
+            enabled: false
         },
         legend: {
             enabled: false
