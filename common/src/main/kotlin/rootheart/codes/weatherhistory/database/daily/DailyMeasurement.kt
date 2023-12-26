@@ -55,7 +55,7 @@ object DailyMeasurementTable : LongIdTable("DAILY_MEASUREMENTS") {
         val condition = this.stationId.eq(stationId).and(this.year.eq(year))
         val data = transaction {
             addLogger(StdOutSqlLogger)
-            slice(columns.distinct()).select(condition).map(mapper)
+            slice(columns.distinct()).select(condition).orderBy(date).map(mapper)
         }
         return data
     }
