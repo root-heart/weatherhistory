@@ -1,7 +1,7 @@
-import {Component, ElementRef} from '@angular/core';
+import {Component, ElementRef, Input} from '@angular/core';
 
 @Component({
-    selector: 'app-dropdown-box',
+    selector: 'dropdown-box',
     templateUrl: './dropdown-box.component.html',
     styleUrls: ['./dropdown-box.component.css'],
     host: {
@@ -9,6 +9,8 @@ import {Component, ElementRef} from '@angular/core';
     }
 })
 export class DropdownBoxComponent {
+    @Input() width!: string
+
     constructor(private elementRef: ElementRef) {
     }
 

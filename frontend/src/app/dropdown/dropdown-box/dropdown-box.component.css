@@ -17,7 +17,7 @@ button > fa-icon {
 }
 
 button.dropdownVisible {
-    border-bottom: none;
+    /*border-bottom: none;*/
     border-radius: var(--input-border-radius) var(--input-border-radius) 0 0;
     position: relative;
     z-index: 1000;

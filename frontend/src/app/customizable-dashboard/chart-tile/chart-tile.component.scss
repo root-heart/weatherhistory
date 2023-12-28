@@ -51,3 +51,24 @@ station-selector {
     height: 30rem;
     display: block;
 }
+
+.chart-definition-group {
+    //display: flex;
+    //flex-direction: column;
+    //gap: 0.5rem;
+
+    header {
+        border-bottom: 1px solid #ccc;
+
+    }
+
+    .chart-definitions {
+
+        span {
+            display: block;
+        }
+        //display: grid;
+        //grid-template-columns: repeat(3, 1fr);
+    }
+
+}

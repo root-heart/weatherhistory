@@ -31,30 +31,43 @@ addMore(Highcharts);
 @Component({
     selector: 'chart-tile',
     templateUrl: './chart-tile.component.html',
-    styleUrls: ['./chart-tile.component.css']
+    styleUrls: ['./chart-tile.component.scss']
 })
 export class ChartTileComponent {
     @ViewChild(NgComponentOutlet, {static: false}) ngComponentOutlet!: NgComponentOutlet
 
-    availableChartDefinitions: ChartDefinition[] = [
-        {name: "Lufttemperatur Min/Avg/Max", component: AirTemperatureChartComponent},
-        {name: "Lufttemperatur Details", component: AirTemperatureHeatmapChartComponent},
-        {name: "Sonnenscheindauer", component: SunshineDurationChartComponent},
-        {name: "Sonnenschein Details", component: SunshineDurationHeatmapChartComponent},
-        {name: "Wolkenbedeckung", component: CloudCoverageChartComponent},
-        {name: "Regen", component: RainChartComponent},
-        {name: "Schnee", component: SnowChartComponent},
-        {name: "Luftdruck Min/Avg/Max", component: AirPressureChartComponent},
-        {name: "Luftfeuchtigkeit Min/Avg/Max", component: HumidityChartComponent},
-        {name: "Taupunkt Min/Avg/Max", component: DewPointTemperatureChartComponent},
-        {name: "Sichtweite Min/Avg/Max", component: VisibilityChartComponent},
-        {name: "Sonne x Wolken", component: SunshineCloudCoverageHeatmapChartComponent},
-    ]
+    airTemperatureSummary = {name: "Lufttemperatur Min/Avg/Max", component: AirTemperatureChartComponent};
+    airTemperatureDetails = {name: "Lufttemperatur Details", component: AirTemperatureHeatmapChartComponent};
+    dewPointTemperatureSummary = {name: "Taupunkt Min/Avg/Max", component: DewPointTemperatureChartComponent};
+// let dewPointTemperatureDetails = {name: "Taupunkt Min/Avg/Max", component: DewPointTemperatureChartComponent};
+
+    sunshineDurationSum = {name: "Sonnenscheindauer", component: SunshineDurationChartComponent};
+    sunshineDurationDetails = {name: "Sonnenschein Details", component: SunshineDurationHeatmapChartComponent};
+
+    rainSummary = {name: "Regen", component: RainChartComponent};
+    snowSummary = {name: "Schnee", component: SnowChartComponent};
+
+    airPressureSummary = {name: "Luftdruck Min/Avg/Max", component: AirPressureChartComponent}
+    humiditySummary = {name: "Luftfeuchtigkeit Min/Avg/Max", component: HumidityChartComponent}
+    visibilitySummary = {name: "Sichtweite Min/Avg/Max", component: VisibilityChartComponent}
+
+    cloudCoverageDetails = {name: "Wolkenbedeckung", component: CloudCoverageChartComponent};
+
+    sunshineCloudCoverageDetails = {name: "Sonne x Wolken", component: SunshineCloudCoverageHeatmapChartComponent}
+
+    // availableChartDefinitions: { name: string, definitions: ChartDefinition[] }[] = [
+    //     {name: "Temperatur", definitions: [this.airTemperatureSummary, this.airTemperatureDetails, this.dewPointTemperatureSummary]},
+    //     {name: "Sonnenschein", definitions: [this.sunshineDurationSum, this.sunshineDurationDetails]},
+    //     {name: "Niederschlag", definitions: [rainSummary, snowSummary]},
+    //     {name: "Bewölkung", definitions: [cloudCoverageDetails]},
+    //     {name: "kombinierte Werte", definitions: [sunshineCloudCoverageDetails]}
+    // ]
+
 
     constructor(private changeDetector: ChangeDetectorRef) {
     }
 
-    private _chartDefinition: ChartDefinition = this.availableChartDefinitions[0]
+    private _chartDefinition: ChartDefinition = this.airTemperatureSummary
 
     get chartDefinition(): ChartDefinition {
         return this._chartDefinition
