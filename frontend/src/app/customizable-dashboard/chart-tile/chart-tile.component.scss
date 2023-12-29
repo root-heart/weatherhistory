@@ -2,11 +2,10 @@
 
 :host {
     display: grid;
-    grid-template-areas: "stationLabel chartTypeLabel yearLabel ."
-                         "station      charttype      year      ."
-                         "chart        chart          chart     chart";
-    grid-template-columns: 17rem 17rem 7rem 1fr;
-    grid-template-rows: auto 3rem 1fr;
+    grid-template-areas: "stationLbl stationInp measLbl measInp typeLbl typeInp yearLbl yearInp ."
+                         "chart      chart      chart   chart   chart   chart   chart   chart   chart";
+    grid-template-columns: auto 17rem auto 14rem auto 10rem auto 6rem 1fr;
+    grid-template-rows: auto auto 1fr;
     gap: 0.5rem 1rem;
 }
 
@@ -14,36 +13,42 @@ label {
     font-size: 80%;
 
     &[for="station"] {
-        grid-area: stationLabel;
+        grid-area: stationLbl;
+    }
+
+    &[for="measurementDropdown"] {
+        grid-area: measLbl;
     }
 
     &[for="chartType"] {
-        grid-area: chartTypeLabel;
+        grid-area: typeLbl;
     }
 
     &[for="year"] {
-        grid-area: yearLabel;
+        grid-area: yearLbl;
     }
 }
 
 station-selector {
-    grid-area: station;
+    grid-area: stationInp;
+}
+
+#measurementDropdown {
+    grid-area: measInp;
 }
 
 #chartTypeDropdown {
-    grid-area: charttype;
+    grid-area: typeInp;
 }
 
 #year {
-    grid-area: year;
+    grid-area: yearInp;
     padding: 0 1rem;
     text-align: right;
 }
 
 #chartContainer {
-    /*grid-area: chart;*/
-    grid-column: span 7;
-    border: 1px solid green;
+    grid-area: chart;
 }
 
 .chart {

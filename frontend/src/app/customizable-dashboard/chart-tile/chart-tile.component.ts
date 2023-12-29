@@ -36,6 +36,24 @@ addMore(Highcharts);
 export class ChartTileComponent {
     @ViewChild(NgComponentOutlet, {static: false}) ngComponentOutlet!: NgComponentOutlet
 
+    private airTemperature = 'Lufttemperatur';
+    private airPressure = 'Luftdruck';
+    private humidity = 'Luftfeuchtigkeit';
+    private dewPoint = 'Taupunkttemperatur';
+    private sunshine = 'Sonnenschein';
+    private windDirection = 'Windrichtung';
+    private windSpeed = 'Windgeschwindigkeit';
+    private cloudCoverage = 'Bedeckungsgrad';
+    private cloudBase = 'Wolkenuntergrenze (WIP)';
+    private rain = 'Regen';
+    private snow = 'Schnee';
+    private visibility = 'Sichtweite';
+
+    measurementNames = [
+        this.airTemperature, this.airPressure, this.humidity, this.dewPoint, this.sunshine, this.windDirection,
+        this.windSpeed, this.cloudCoverage, this.cloudBase, this.rain, this.snow, this.visibility
+    ].sort((a, b) => a.localeCompare(b))
+
     airTemperatureSummary = {name: "Lufttemperatur Min/Avg/Max", component: AirTemperatureChartComponent};
     airTemperatureDetails = {name: "Lufttemperatur Details", component: AirTemperatureHeatmapChartComponent};
     dewPointTemperatureSummary = {name: "Taupunkt Min/Avg/Max", component: DewPointTemperatureChartComponent};
