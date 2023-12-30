@@ -40,6 +40,7 @@ import { DropdownBoxComponent } from './dropdown/dropdown-box/dropdown-box.compo
 import { CloudCoverageChartComponent } from './charts/measurement/cloud-coverage-chart/cloud-coverage-chart.component';
 import { SunshineCloudCoverageHeatmapChartComponent } from './charts/measurement/sunshine-cloud-coverage-heatmap-chart/sunshine-cloud-coverage-heatmap-chart.component';
 import {SnowChartComponent} from "./charts/measurement/snow-chart.component";
+import {KtdGridModule} from "@katoid/angular-grid-layout";
 
 
 @NgModule({
@@ -81,7 +82,8 @@ import {SnowChartComponent} from "./charts/measurement/snow-chart.component";
         MatSliderModule,
         MatSliderModule,
         MatInputModule,
-        NgxSliderModule
+        NgxSliderModule,
+        KtdGridModule
     ],
     providers: [FilterService],
     bootstrap: [AppComponent]

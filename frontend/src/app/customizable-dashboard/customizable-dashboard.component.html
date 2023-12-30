@@ -1,4 +1,10 @@
-<chart-tile/>
-<chart-tile/>
-<chart-tile/>
-<chart-tile/>
+<button (click)="addChart()">Chart hinzufügen</button>
+
+<ktd-grid [cols]="gridColumns" [rowHeight]="gridRowHeight" [layout]="layout" (layoutUpdated)="layout = $event">
+    <ktd-grid-item *ngFor="let item of layout; trackBy: trackById"
+                   [id]="item.id">
+        <header ktdGridDragHandle>Verschieben</header>
+        <chart-tile/>
+    </ktd-grid-item>
+</ktd-grid>
+

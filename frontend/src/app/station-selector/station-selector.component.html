@@ -3,8 +3,8 @@
     {{ selectedStation !== undefined ? selectedStation.name : "Bitte Ort wählen..." }}
 </button>
 
-<div *ngIf="mapVisible" class="modalBackground">
-    <div class="modalDialog">
+<dialog #dialog>
+    <div>
         <header>Bitte wählen Sie eine Wetterstation aus</header>
 
         <weather-station-map [selectedStation]="selectedStation"
@@ -23,5 +23,4 @@
             <button (click)="closeDialogCancel()">Schließen</button>
         </ul>
     </div>
-
-</div>
+</dialog>

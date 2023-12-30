@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, Type, ViewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, Input, Type, ViewChild} from '@angular/core';
 import {WeatherStation} from "../../WeatherStationService";
 import {ChartBaseComponent} from "../../charts/chart-base.component";
 
@@ -28,6 +28,26 @@ import {
 
 addMore(Highcharts);
 
+let airTemperature = 'Lufttemperatur';
+let airPressure = 'Luftdruck';
+let humidity = 'Luftfeuchtigkeit';
+let dewPoint = 'Taupunkttemperatur';
+let sunshine = 'Sonnenschein';
+let windDirection = 'Windrichtung';
+let windSpeed = 'Windgeschwindigkeit';
+let cloudCoverage = 'Bedeckungsgrad';
+let cloudBase = 'Wolkenuntergrenze (WIP)';
+let rain = 'Regen';
+let snow = 'Schnee';
+let visibility = 'Sichtweite';
+
+export type MeasurementName = "Lufttemperatur" | "Luftdruck";
+
+export type ChartTileConfiguration = {
+    measurementName: MeasurementName
+
+}
+
 @Component({
     selector: 'chart-tile',
     templateUrl: './chart-tile.component.html',
@@ -36,22 +56,9 @@ addMore(Highcharts);
 export class ChartTileComponent {
     @ViewChild(NgComponentOutlet, {static: false}) ngComponentOutlet!: NgComponentOutlet
 
-    private airTemperature = 'Lufttemperatur';
-    private airPressure = 'Luftdruck';
-    private humidity = 'Luftfeuchtigkeit';
-    private dewPoint = 'Taupunkttemperatur';
-    private sunshine = 'Sonnenschein';
-    private windDirection = 'Windrichtung';
-    private windSpeed = 'Windgeschwindigkeit';
-    private cloudCoverage = 'Bedeckungsgrad';
-    private cloudBase = 'Wolkenuntergrenze (WIP)';
-    private rain = 'Regen';
-    private snow = 'Schnee';
-    private visibility = 'Sichtweite';
-
     measurementNames = [
-        this.airTemperature, this.airPressure, this.humidity, this.dewPoint, this.sunshine, this.windDirection,
-        this.windSpeed, this.cloudCoverage, this.cloudBase, this.rain, this.snow, this.visibility
+        airTemperature, airPressure, humidity, dewPoint, sunshine, windDirection,
+        windSpeed, cloudCoverage, cloudBase, rain, snow, visibility
     ].sort((a, b) => a.localeCompare(b))
 
     airTemperatureSummary = {name: "Lufttemperatur Min/Avg/Max", component: AirTemperatureChartComponent};

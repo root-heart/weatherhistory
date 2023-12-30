@@ -1,6 +1,7 @@
-import {ChangeDetectorRef, Component, EventEmitter, Input, Output} from '@angular/core';
+import {ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
 import {faMapLocationDot} from "@fortawesome/free-solid-svg-icons";
 import {WeatherStation} from "../WeatherStationService";
+import {WeatherStationMap} from "../weather-station-map/weather-station-map.component";
 
 @Component({
   selector: 'station-selector',
@@ -8,19 +9,22 @@ import {WeatherStation} from "../WeatherStationService";
   styleUrls: ['./station-selector.component.scss']
 })
 export class StationSelectorComponent {
+    @ViewChild("dialog") dialog!: ElementRef<HTMLDialogElement>
+    @ViewChild(WeatherStationMap) map!: WeatherStationMap
+
     @Output() stationSelected = new EventEmitter<WeatherStation>()
 
     selectedStation?: WeatherStation
     selectedStationOnMap?: WeatherStation
     faMapLocationDot = faMapLocationDot
-    mapVisible: boolean = false
 
     constructor( private changeDetector: ChangeDetectorRef) {
 
     }
 
     showMap() {
-        this.mapVisible = true
+        this.dialog.nativeElement.showModal()
+        setTimeout(() => this.map.invalidateSize(), 0)
     }
 
     selectedStationChangedOnMap(station: WeatherStation) {
@@ -29,13 +33,13 @@ export class StationSelectorComponent {
     }
 
     closeDialogOk() {
+        this.dialog.nativeElement.close()
         this.selectedStation = this.selectedStationOnMap
         this.stationSelected.emit(this.selectedStationOnMap)
-        this.mapVisible = false
     }
 
     closeDialogCancel() {
+        this.dialog.nativeElement.close()
         this.selectedStationOnMap = this.selectedStation
-        this.mapVisible = false
     }
 }

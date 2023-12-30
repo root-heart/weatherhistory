@@ -9,7 +9,8 @@ import {
     MapOptions,
     Marker,
     MarkerOptions,
-    TileLayer
+    TileLayer,
+    Map
 } from "leaflet";
 import {FilterService} from "../filter.service";
 import {faMapLocationDot} from "@fortawesome/free-solid-svg-icons";
@@ -47,12 +48,22 @@ export class WeatherStationMap implements OnInit {
 
     mapBounds = new LatLngBounds(new LatLng(47, 5.5), new LatLng(55.5, 15.5))
     stationsLayer?: Layer
+    map?: Map
 
     constructor(private weatherStationService: WeatherStationService, public filterService: FilterService) {
         weatherStationService.getWeatherStations().subscribe(data => this.setStations(data));
     }
 
     ngOnInit(): void {
+    }
+
+    mapReady(map: Map) {
+        this.map = map
+    }
+
+    invalidateSize() {
+        this.map?.invalidateSize()
+        this.map?.fitBounds(this.mapBounds)
     }
 
     private setStations(stations: Array<WeatherStation>) {

@@ -1,9 +1,16 @@
-:host {
-    display: grid;
-    grid-template-rows: 1fr 1fr;
-    grid-template-columns: 1fr 1fr;
+/*:host {*/
+/*    display: grid;*/
+/*    grid-template-rows: 1fr 1fr;*/
+/*    grid-template-columns: 1fr 1fr;*/
+/*}*/
+
+div {
+    border: 1px solid white;
+    width: 100%;
+    height: 100%;
 }
 
-div  {
-    border: 1px solid white;
+header[ktdGridDragHandle] {
+    border: 1px solid red;
+    cursor: move;
 }

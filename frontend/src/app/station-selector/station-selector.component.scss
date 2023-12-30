@@ -1,3 +1,5 @@
+@import 'leaflet/dist/leaflet.css';
+
 #mapOpener {
     width: 100%;
     height: 100%;
@@ -14,62 +16,68 @@
     z-index: 1000;
 }
 
-.modalDialog {
+dialog {
     --dialog-width: 70rem;
     --dialog-height: 50rem;
 
-    position: fixed;
-    left: calc((100vw - var(--dialog-width)) / 2);
     width: var(--dialog-width);
-    top: calc((100vh - var(--dialog-height)) / 2);
     height: var(--dialog-height);
 
     border: 1px solid #ccc;
 
-    display: grid;
-    grid-template-areas: "header header"
+    &::backdrop {
+        backdrop-filter: blur(0.5rem);
+    }
+
+    > div {
+        display: grid;
+        grid-template-areas: "header header"
                          "map    stationinfo"
                          "map    buttons";
-    grid-template-columns: 2fr 1fr;
-    grid-template-rows: 3rem auto auto;
-}
+        grid-template-columns: 2fr 1fr;
+        grid-template-rows: 3rem auto auto;
+        height: 100%;
 
-header {
-    grid-area: header;
-    /*height: 3rem;*/
-    border-bottom: 1px solid #ccc;
-    background-color: #944;
-    color: #ccc;
-    text-align: center;
-    font-size: 150%;
-    vertical-align: center;
-}
+        header {
+            grid-area: header;
+            /*height: 3rem;*/
+            border-bottom: 1px solid #ccc;
+            background-color: #944;
+            color: #ccc;
+            text-align: center;
+            font-size: 150%;
+            vertical-align: center;
+        }
 
-weather-station-map {
-    grid-area: map;
-    position: relative;
-}
+        weather-station-map {
+            grid-area: map;
+            position: relative;
+        }
 
-dl {
-    grid-area: stationinfo;
+        dl {
+            grid-area: stationinfo;
 
-    display: flex;
-    flex-direction: column;
-    align-self: start;
-    gap: 0.5rem;
-    padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-self: start;
+            gap: 0.5rem;
+            padding: 1rem;
 
-    dt {
-        height: 1rem;
+            dt {
+                height: 1rem;
+            }
+
+            dd {
+                height: 3rem;
+                font-size: 150%;
+                border-bottom: 1px solid #ccc;
+                margin: 0 0 1rem;
+                white-space: nowrap;
+                overflow: hidden;
+                justify-self: end;
+            }
+        }
+
     }
-
-    dd {
-        height: 3rem;
-        font-size: 150%;
-        border-bottom: 1px solid #ccc;
-        margin: 0 0 1rem;
-        white-space: nowrap;
-        overflow: hidden;
-        justify-self: end;
-    }
 }
+
