@@ -21,11 +21,8 @@
             </select>
 
             <label for="chartType">Diagrammtyp</label>
-            <select id="chartType">
-                <option>monatlich</option>
-                <option>täglich</option>
-                <option>detailliert</option>
-                <option>Histogramm</option>
+            <select id="chartType" [(ngModel)]="chartType">
+                <option *ngFor="let type of measurementsAndChartTypes.get(measurementName)">{{ type }}</option>
             </select>
 
             <label for="year">Jahr</label>

@@ -55,7 +55,7 @@ export class CustomizableDashboardComponent {
     chartConfigurationConfirmed(chartConfig: ChartConfiguration) {
         console.log(chartConfig)
         this.currentlyConfiguredChartTile!.updateChartComponent(chartConfig.station,
-            chartConfig.measurementName, chartConfig.year)
+            chartConfig.measurementName, chartConfig.chartType, chartConfig.year)
     }
 }
 
