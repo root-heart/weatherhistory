@@ -41,6 +41,7 @@ import { CloudCoverageChartComponent } from './charts/measurement/cloud-coverage
 import { SunshineCloudCoverageHeatmapChartComponent } from './charts/measurement/sunshine-cloud-coverage-heatmap-chart/sunshine-cloud-coverage-heatmap-chart.component';
 import {SnowChartComponent} from "./charts/measurement/snow-chart.component";
 import {KtdGridModule} from "@katoid/angular-grid-layout";
+import { ChartConfigurationDialog } from './chart-configuration-dialog/chart-configuration-dialog.component';
 
 
 @NgModule({
@@ -68,6 +69,7 @@ import {KtdGridModule} from "@katoid/angular-grid-layout";
         DropdownBoxComponent,
         CloudCoverageChartComponent,
         SunshineCloudCoverageHeatmapChartComponent,
+        ChartConfigurationDialog,
     ],
     imports: [
         BrowserModule,

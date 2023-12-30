@@ -1,9 +1,3 @@
-/*:host {*/
-/*    display: grid;*/
-/*    grid-template-rows: 1fr 1fr;*/
-/*    grid-template-columns: 1fr 1fr;*/
-/*}*/
-
 div {
     border: 1px solid white;
     width: 100%;
@@ -11,6 +5,10 @@ div {
 }
 
 header[ktdGridDragHandle] {
-    border: 1px solid red;
-    cursor: move;
+    display: flex;
+    gap: 1rem;
+
+    > span {
+        cursor: move;
+    }
 }

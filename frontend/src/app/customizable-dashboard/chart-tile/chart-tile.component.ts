@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, Input, Type, ViewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, Type, ViewChild} from '@angular/core';
 import {WeatherStation} from "../../WeatherStationService";
 import {ChartBaseComponent} from "../../charts/chart-base.component";
 
@@ -11,42 +11,15 @@ import {DewPointTemperatureChartComponent} from "../../charts/measurement/dew-po
 import {AirPressureChartComponent} from "../../charts/measurement/air-pressure-chart.component";
 import {VisibilityChartComponent} from "../../charts/measurement/visibility-chart.component";
 import {SunshineDurationChartComponent} from "../../charts/measurement/sunshine-duration-chart.component";
-import {
-    AirTemperatureHeatmapChartComponent
-} from "../../charts/measurement/air-temperature-heatmap-chart/air-temperature-heatmap-chart.component";
-import {
-    SunshineDurationHeatmapChartComponent
-} from "../../charts/measurement/sunshine-duration-heatmap-chart/sunshine-duration-heatmap-chart.component";
 import {RainChartComponent} from "../../charts/measurement/rain-chart.component";
 import {
     CloudCoverageChartComponent
 } from "../../charts/measurement/cloud-coverage-chart/cloud-coverage-chart.component";
 import {SnowChartComponent} from "../../charts/measurement/snow-chart.component";
-import {
-    SunshineCloudCoverageHeatmapChartComponent
-} from "../../charts/measurement/sunshine-cloud-coverage-heatmap-chart/sunshine-cloud-coverage-heatmap-chart.component";
+import {airTemperature, MeasurementName} from "../../chart-configuration-dialog/chart-configuration-dialog.component";
 
 addMore(Highcharts);
 
-let airTemperature = 'Lufttemperatur';
-let airPressure = 'Luftdruck';
-let humidity = 'Luftfeuchtigkeit';
-let dewPoint = 'Taupunkttemperatur';
-let sunshine = 'Sonnenschein';
-let windDirection = 'Windrichtung';
-let windSpeed = 'Windgeschwindigkeit';
-let cloudCoverage = 'Bedeckungsgrad';
-let cloudBase = 'Wolkenuntergrenze (WIP)';
-let rain = 'Regen';
-let snow = 'Schnee';
-let visibility = 'Sichtweite';
-
-export type MeasurementName = "Lufttemperatur" | "Luftdruck";
-
-export type ChartTileConfiguration = {
-    measurementName: MeasurementName
-
-}
 
 @Component({
     selector: 'chart-tile',
@@ -56,29 +29,25 @@ export type ChartTileConfiguration = {
 export class ChartTileComponent {
     @ViewChild(NgComponentOutlet, {static: false}) ngComponentOutlet!: NgComponentOutlet
 
-    measurementNames = [
-        airTemperature, airPressure, humidity, dewPoint, sunshine, windDirection,
-        windSpeed, cloudCoverage, cloudBase, rain, snow, visibility
-    ].sort((a, b) => a.localeCompare(b))
-
-    airTemperatureSummary = {name: "Lufttemperatur Min/Avg/Max", component: AirTemperatureChartComponent};
-    airTemperatureDetails = {name: "Lufttemperatur Details", component: AirTemperatureHeatmapChartComponent};
-    dewPointTemperatureSummary = {name: "Taupunkt Min/Avg/Max", component: DewPointTemperatureChartComponent};
-// let dewPointTemperatureDetails = {name: "Taupunkt Min/Avg/Max", component: DewPointTemperatureChartComponent};
-
-    sunshineDurationSum = {name: "Sonnenscheindauer", component: SunshineDurationChartComponent};
-    sunshineDurationDetails = {name: "Sonnenschein Details", component: SunshineDurationHeatmapChartComponent};
-
-    rainSummary = {name: "Regen", component: RainChartComponent};
-    snowSummary = {name: "Schnee", component: SnowChartComponent};
-
-    airPressureSummary = {name: "Luftdruck Min/Avg/Max", component: AirPressureChartComponent}
-    humiditySummary = {name: "Luftfeuchtigkeit Min/Avg/Max", component: HumidityChartComponent}
-    visibilitySummary = {name: "Sichtweite Min/Avg/Max", component: VisibilityChartComponent}
-
-    cloudCoverageDetails = {name: "Wolkenbedeckung", component: CloudCoverageChartComponent};
-
-    sunshineCloudCoverageDetails = {name: "Sonne x Wolken", component: SunshineCloudCoverageHeatmapChartComponent}
+    chartComponent: Type<any> = AirTemperatureChartComponent
+//     airTemperatureSummary = {name: "Lufttemperatur Min/Avg/Max", component: AirTemperatureChartComponent};
+//     airTemperatureDetails = {name: "Lufttemperatur Details", component: AirTemperatureHeatmapChartComponent};
+//     dewPointTemperatureSummary = {name: "Taupunkt Min/Avg/Max", component: DewPointTemperatureChartComponent};
+// // let dewPointTemperatureDetails = {name: "Taupunkt Min/Avg/Max", component: DewPointTemperatureChartComponent};
+//
+//     sunshineDurationSum = {name: "Sonnenscheindauer", component: SunshineDurationChartComponent};
+//     sunshineDurationDetails = {name: "Sonnenschein Details", component: SunshineDurationHeatmapChartComponent};
+//
+//     rainSummary = {name: "Regen", component: RainChartComponent};
+//     snowSummary = {name: "Schnee", component: SnowChartComponent};
+//
+//     airPressureSummary = {name: "Luftdruck Min/Avg/Max", component: AirPressureChartComponent}
+//     humiditySummary = {name: "Luftfeuchtigkeit Min/Avg/Max", component: HumidityChartComponent}
+//     visibilitySummary = {name: "Sichtweite Min/Avg/Max", component: VisibilityChartComponent}
+//
+//     cloudCoverageDetails = {name: "Wolkenbedeckung", component: CloudCoverageChartComponent};
+//
+//     sunshineCloudCoverageDetails = {name: "Sonne x Wolken", component: SunshineCloudCoverageHeatmapChartComponent}
 
     // availableChartDefinitions: { name: string, definitions: ChartDefinition[] }[] = [
     //     {name: "Temperatur", definitions: [this.airTemperatureSummary, this.airTemperatureDetails, this.dewPointTemperatureSummary]},
@@ -88,66 +57,61 @@ export class ChartTileComponent {
     //     {name: "kombinierte Werte", definitions: [sunshineCloudCoverageDetails]}
     // ]
 
-
-    constructor(private changeDetector: ChangeDetectorRef) {
-    }
-
-    private _chartDefinition: ChartDefinition = this.airTemperatureSummary
-
-    get chartDefinition(): ChartDefinition {
-        return this._chartDefinition
-    }
-
-    set chartDefinition(chartDefinition: ChartDefinition) {
-        if (this._chartDefinition != chartDefinition) {
-            console.log(`set chart definition to ${chartDefinition.name}`)
-            this._chartDefinition = chartDefinition
-            this.updateChartComponent()
-        }
-    }
-
     private _year: number = new Date().getFullYear()
 
-    get year(): number {
+    get year() {
         return this._year
     }
 
-    set year(year: number) {
-        if (this._year != year) {
-            console.log(`set year to ${year}`)
-            this._year = year
-            this.updateChartComponent()
-        }
+    private _measurementName: MeasurementName = airTemperature
+
+    get measurementName() {
+        return this._measurementName
     }
 
     private _weatherStation?: WeatherStation
 
-    set weatherStation(station: WeatherStation) {
-        if (this._weatherStation != station) {
-            console.log(`set weather station to ${station.name}`)
-            this._weatherStation = station
-            this.updateChartComponent()
+    get weatherStation() {
+        return this._weatherStation
+    }
+
+    constructor(private changeDetector: ChangeDetectorRef) {
+    }
+
+    updateChartComponent(weatherStation: WeatherStation, measurementName: MeasurementName, year: number) {
+        if (measurementName === "Luftdruck") {
+            this.chartComponent = AirPressureChartComponent
+        } else if (measurementName === "Luftfeuchtigkeit") {
+            this.chartComponent = HumidityChartComponent
+        } else if (measurementName === "Taupunkttemperatur") {
+            this.chartComponent = DewPointTemperatureChartComponent
+        } else if (measurementName === "Sonnenschein") {
+            this.chartComponent = SunshineDurationChartComponent
+        } else if (measurementName === "Windrichtung") {
+        } else if (measurementName === "Windgeschwindigkeit") {
+        } else if (measurementName === "Wolkenuntergrenze (WIP)") {
+        } else if (measurementName === "Regen") {
+            this.chartComponent = RainChartComponent
+        } else if (measurementName === "Schnee") {
+            this.chartComponent = SnowChartComponent
+        } else if (measurementName === "Sichtweite") {
+            this.chartComponent = VisibilityChartComponent
+        } else if (measurementName === "Lufttemperatur") {
+            this.chartComponent = AirTemperatureChartComponent
+        } else if (measurementName === "Bedeckungsgrad") {
+            this.chartComponent = CloudCoverageChartComponent
         }
-    }
-
-    weatherStationSelected(station: WeatherStation) {
-        this.weatherStation = station
-    }
-
-    getChartDefinitionName(chartDefinition: ChartDefinition) {
-        return chartDefinition.name
-    }
-
-    private updateChartComponent() {
         console.log("triggering change detector")
         this.changeDetector.detectChanges()
-        if (this._weatherStation && this._year) {
+        setTimeout(() => {
             let chartComponent = this.getChartComponent()
             if (chartComponent) {
-                console.log(`setting station ${this._weatherStation?.name} and year ${this._year} in chart component`)
-                chartComponent.update(this._weatherStation, this._year)
+                console.log(`setting station ${weatherStation.name} and year ${year} in chart component`)
+                this._weatherStation = weatherStation
+                this._year = year
+                chartComponent.update(weatherStation, year)
             }
-        }
+        })
     }
 
     private getChartComponent(): ChartBaseComponent<any> | null {
