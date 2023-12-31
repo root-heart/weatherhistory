@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, Type, ViewChild} from '@angular/core'
+import {ChangeDetectorRef, Component, EventEmitter, Input, Output, Type, ViewChild} from '@angular/core'
 import {WeatherStation} from "../../WeatherStationService"
 import {ChartBaseComponent} from "../../charts/chart-base.component"
 
@@ -14,7 +14,11 @@ import {SunshineDurationChartComponent} from "../../charts/measurement/sunshine-
 import {RainChartComponent} from "../../charts/measurement/rain-chart.component"
 import {CloudCoverageChartComponent} from "../../charts/measurement/cloud-coverage-chart/cloud-coverage-chart.component"
 import {SnowChartComponent} from "../../charts/measurement/snow-chart.component"
-import {ChartType, MeasurementName,} from "../../chart-configuration-dialog/chart-configuration-dialog.component"
+import {
+    ChartConfiguration, ChartConfigurationDialog,
+    ChartType,
+    MeasurementName,
+} from "../../chart-configuration-dialog/chart-configuration-dialog.component"
 import {
     AirTemperatureHeatmapChartComponent
 } from "../../charts/measurement/air-temperature-heatmap-chart/air-temperature-heatmap-chart.component";
@@ -49,6 +53,10 @@ const chartComponents: {measurementName: MeasurementName, chartType: ChartType, 
 })
 export class ChartTileComponent {
     @ViewChild(NgComponentOutlet, {static: false}) ngComponentOutlet!: NgComponentOutlet
+    @ViewChild(ChartConfigurationDialog) chartConfigurationDialog!: ChartConfigurationDialog
+
+    @Input() gridId!: string
+    @Output() removeCallback = new EventEmitter<string>()
 
     chartComponent: Type<any> | undefined = AirTemperatureChartComponent
 
@@ -85,6 +93,29 @@ export class ChartTileComponent {
                 chartComponent.update(weatherStation, year)
             }
         })
+    }
+
+    openChartConfigurationDialog() {
+        this.chartConfigurationDialog.show(
+            this._weatherStation,
+            this._measurementName,
+            this._year
+        )
+    }
+
+    chartConfigurationConfirmed(chartConfig: ChartConfiguration) {
+        console.log(chartConfig)
+        this.updateChartComponent(chartConfig.station,
+            chartConfig.measurementName, chartConfig.chartType, chartConfig.year)
+    }
+
+    removeChart() {
+        this.removeCallback.emit(this.gridId)
+    }
+
+    reflowChart() {
+        let c = this.getChartComponent()
+        c?.reflowChart()
     }
 
     private getChartComponent(): ChartBaseComponent<any> | null {

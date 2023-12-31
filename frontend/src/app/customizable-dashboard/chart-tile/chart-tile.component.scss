@@ -1,79 +1,23 @@
 @import url("https://code.highcharts.com/css/highcharts.css");
 
 :host {
-    display: grid;
-    grid-template-areas: "stationLbl stationInp measLbl measInp typeLbl typeInp yearLbl yearInp ."
-                         "chart      chart      chart   chart   chart   chart   chart   chart   chart";
-    grid-template-columns: auto 17rem auto 14rem auto 10rem auto 6rem 1fr;
-    grid-template-rows: auto auto 1fr;
-    gap: 0.5rem 1rem;
+    // this is used to let #chartContainer position be fixed
+    transform: translate(0, 0);
 }
 
-label {
-    font-size: 80%;
+header[ktdGridDragHandle] {
+    display: block;
 
-    &[for="station"] {
-        grid-area: stationLbl;
+    > span {
+        cursor: move;
+        white-space: nowrap;
     }
-
-    &[for="measurementDropdown"] {
-        grid-area: measLbl;
-    }
-
-    &[for="chartType"] {
-        grid-area: typeLbl;
-    }
-
-    &[for="year"] {
-        grid-area: yearLbl;
-    }
-}
-
-station-selector {
-    grid-area: stationInp;
-}
-
-#measurementDropdown {
-    grid-area: measInp;
-}
-
-#chartTypeDropdown {
-    grid-area: typeInp;
-}
-
-#year {
-    grid-area: yearInp;
-    padding: 0 1rem;
-    text-align: right;
 }
 
 #chartContainer {
-    grid-area: chart;
-}
-
-.chart {
-    width: 50rem;
-    height: 30rem;
-    display: block;
-}
-
-.chart-definition-group {
-    //display: flex;
-    //flex-direction: column;
-    //gap: 0.5rem;
-
-    header {
-        border-bottom: 1px solid #ccc;
-
-    }
-
-    .chart-definitions {
-
-        span {
-            display: block;
-        }
-        //display: grid;
-        //grid-template-columns: repeat(3, 1fr);
-    }
-
+    position: fixed;
+    top: 2rem;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }

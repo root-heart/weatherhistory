@@ -17,7 +17,7 @@ registerLocaleData(localeDe, 'de-DE', localeDeExtra);
     styles: [`
         highcharts-chart {
             display: block;
-            aspect-ratio: 3;
+            height: 100%;
         }`]
 })
 export class SumChartComponent extends ChartBaseComponent<[number, number]> {

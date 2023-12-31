@@ -106,6 +106,10 @@ export abstract class ChartBaseComponent<T> {
             }, 0))
     }
 
+    reflowChart() {
+        this.chart?.reflow()
+    }
+
     protected abstract setChartData(data: T[]): Promise<void>
 
     protected abstract createSeries(): Highcharts.SeriesOptionsType[]

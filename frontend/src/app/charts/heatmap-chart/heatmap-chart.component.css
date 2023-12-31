@@ -1,6 +1,7 @@
 highcharts-chart {
     width: 100%;
+    height: 100%;
     display: block;
-    aspect-ratio: 3;
+    /*aspect-ratio: 3;*/
 
 }

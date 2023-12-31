@@ -1,15 +1,14 @@
 <button (click)="addChart()">Chart hinzufügen</button>
 
-<ktd-grid [cols]="gridColumns" [rowHeight]="gridRowHeight" [layout]="layout" (layoutUpdated)="layout = $event">
-    <ktd-grid-item *ngFor="let item of layout; trackBy: trackById"
-                   [id]="item.id">
-        <header ktdGridDragHandle>
-            <span>Verschieben</span>
-            <button (click)="openChartConfigurationDialog(item.id)">config</button>
-            <button (click)="removeChart(item.id)">remove</button>
-        </header>
-        <chart-tile/>
+<ktd-grid [cols]="gridColumns" [rowHeight]="gridRowHeight"
+          [layout]="layout"
+          [scrollableParent]="document"
+          [scrollSpeed]="10"
+          (layoutUpdated)="layout = $event"
+
+          (resizeEnded)="onResize()">
+    <ktd-grid-item *ngFor="let item of layout; trackBy: trackById" [id]="item.id" [transition]="'none'">
+        <chart-tile [gridId]="item.id" (removeCallback)="removeChart(item.id)"/>
     </ktd-grid-item>
 </ktd-grid>
 
-<chart-configuration-dialog (confirmed)="chartConfigurationConfirmed($event)"/>
