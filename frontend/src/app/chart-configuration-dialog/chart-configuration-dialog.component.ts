@@ -2,55 +2,61 @@ import {ChangeDetectorRef, Component, ElementRef, EventEmitter, Output, ViewChil
 import {WeatherStationMap} from "../weather-station-map/weather-station-map.component";
 import {WeatherStation} from "../WeatherStationService";
 
-export enum MeasurementName {
-    airTemperature = "Lufttemperatur",
-    airPressure = "Luftdruck",
-    humidity = "Luftfeuchtigkeit",
-    dewPoint = "Taupunkttemperatur",
-    sunshine = "Sonnenschein",
-    windDirection = "Windrichtung",
-    windSpeed = "Windgeschwindigkeit",
-    cloudCoverage = "Bedeckungsgrad",
-    cloudBase = "Wolkenuntergrenze (WIP)",
-    rain = "Regen",
-    snow = "Schnee",
-    visibility = "Sichtweite"
+export class ChartType {
+    constructor(public name: string) {
+    }
+
+    static daily = new ChartType("täglich")
+    static monthly = new ChartType("monatlich")
+    static histogram = new ChartType("Histogramm")
+    static details = new ChartType("Detailliert")
 }
 
-export enum ChartType {
-    daily = "daily",
-    monthly = "monthly",
-    histogram = "histogram",
-    details = "details"
+export class Measurement {
+    constructor(public name: string, public possibleChartType: ChartType[]) {
+    }
+
+    static airTemperature = new Measurement("Lufttemperatur", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
+    static airPressure = new Measurement("Luftdruck", [ChartType.monthly, ChartType.daily, ChartType.histogram])
+    static humidity = new Measurement("Luftfeuchtigkeit", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
+    static dewPoint = new Measurement("Taupunkttemperatur", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
+    static sunshine = new Measurement("Sonnenschein", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
+    static windDirection = new Measurement("Windrichtung", [])
+    static windSpeed = new Measurement("Windgeschwindigkeit", [])
+    static cloudCoverage = new Measurement("Bedeckungsgrad", [ChartType.details, ChartType.histogram])
+    static cloudBase = new Measurement("Wolkenuntergrenze (WIP)", [])
+    static rain = new Measurement("Regen", [ChartType.monthly, ChartType.daily, ChartType.histogram])
+    static snow = new Measurement("Schnee", [ChartType.monthly, ChartType.daily, ChartType.histogram])
+    static visibility = new Measurement("Sichtweite", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
 }
 
-export const ChartTypes = [
+export const chartTypes = [
     ChartType.monthly,
     ChartType.daily,
     ChartType.details,
     ChartType.histogram
 ] as const
 
-export const MeasurementNames = [
-    MeasurementName.airPressure,
-    MeasurementName.airTemperature,
-    MeasurementName.cloudBase,
-    MeasurementName.cloudCoverage,
-    MeasurementName.dewPoint,
-    MeasurementName.humidity,
-    MeasurementName.rain,
-    MeasurementName.snow,
-    MeasurementName.sunshine,
-    MeasurementName.visibility,
-    MeasurementName.windDirection,
-    MeasurementName.windSpeed,
+export const measurements = [
+    Measurement.airPressure,
+    Measurement.airTemperature,
+    Measurement.cloudBase,
+    Measurement.cloudCoverage,
+    Measurement.dewPoint,
+    Measurement.humidity,
+    Measurement.rain,
+    Measurement.snow,
+    Measurement.sunshine,
+    Measurement.visibility,
+    Measurement.windDirection,
+    Measurement.windSpeed,
 ] as const
 
 export type ChartConfiguration = {
-    station: WeatherStation
-    measurementName: MeasurementName
-    chartType: ChartType
-    year: number
+    station?: WeatherStation
+    measurement?: Measurement
+    chartType?: ChartType
+    year?: number
 }
 
 @Component({
@@ -64,32 +70,30 @@ export class ChartConfigurationDialog {
 
     @Output() confirmed = new EventEmitter<ChartConfiguration>()
 
-    availableMeasurementNames = MeasurementNames
+    availableMeasurements = measurements
 
-
-    measurementsAndChartTypes = new Map<MeasurementName, ChartType[]>([
-        [MeasurementName.airTemperature, [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram]],
-        [MeasurementName.airPressure, [ChartType.monthly, ChartType.daily, ChartType.histogram]],
-        [MeasurementName.humidity, [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram]],
-        [MeasurementName.dewPoint, [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram]],
-        [MeasurementName.sunshine, [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram]],
-        [MeasurementName.cloudCoverage, [ChartType.details, ChartType.histogram]],
-        [MeasurementName.rain, [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram]],
-        [MeasurementName.snow, [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram]],
-        [MeasurementName.visibility, [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram]],
-    ])
+    get chartTypes(): ChartType[] {
+        if (this.measurement === undefined) {
+            return []
+        }
+        let chartTypes = this.measurement?.possibleChartType
+        if (chartTypes === undefined) {
+            return []
+        }
+        return chartTypes
+    }
 
     selectedStation?: WeatherStation
-    measurementName = MeasurementName.airTemperature
-    chartType = ChartType.details
-    year: number = 2023
+    measurement?:  Measurement
+    chartType?: ChartType
+    year?: number
 
     constructor(private changeDetector: ChangeDetectorRef) {
     }
 
-    show(station: WeatherStation | undefined, measurementName: MeasurementName, year: number) {
+    show(station: WeatherStation | undefined, measurementName: Measurement | undefined, year?: number) {
         this.selectedStation = station
-        this.measurementName = measurementName
+        this.measurement = measurementName
         this.year = year
         this.dialog.nativeElement.showModal()
         setTimeout(() => this.map.invalidateSize(), 0)
@@ -100,10 +104,18 @@ export class ChartConfigurationDialog {
         this.changeDetector.detectChanges()
     }
 
+    measurementChanged(m: Measurement) {
+        this.measurement = m
+    }
+
+    chartTypeChanged(t: ChartType) {
+        this.chartType = t
+    }
+
     closeDialogOk() {
         if (this.selectedStation) {
             this.dialog.nativeElement.close()
-            this.confirmed.emit({station: this.selectedStation, year: this.year, measurementName: this.measurementName, chartType: this.chartType})
+            this.confirmed.emit({station: this.selectedStation, year: this.year, measurement: this.measurement, chartType: this.chartType})
         }
     }
 

@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, EventEmitter, Input, Output, Type, ViewChild} from '@angular/core'
+import {ChangeDetectorRef, Component, Type, ViewChild} from '@angular/core'
 import {WeatherStation} from "../../WeatherStationService"
 import {ChartBaseComponent} from "../../charts/chart-base.component"
 
@@ -15,9 +15,10 @@ import {RainChartComponent} from "../../charts/measurement/rain-chart.component"
 import {CloudCoverageChartComponent} from "../../charts/measurement/cloud-coverage-chart/cloud-coverage-chart.component"
 import {SnowChartComponent} from "../../charts/measurement/snow-chart.component"
 import {
-    ChartConfiguration, ChartConfigurationDialog,
+    ChartConfiguration,
+    ChartConfigurationDialog,
     ChartType,
-    MeasurementName,
+    Measurement,
 } from "../../chart-configuration-dialog/chart-configuration-dialog.component"
 import {
     AirTemperatureHeatmapChartComponent
@@ -29,19 +30,19 @@ import {
 
 addMore(Highcharts);
 
-const chartComponents: {measurementName: MeasurementName, chartType: ChartType, component: Type<any>}[] = [
-    {measurementName: MeasurementName.airTemperature, chartType: ChartType.daily, component: AirTemperatureChartComponent},
-    {measurementName: MeasurementName.airTemperature, chartType: ChartType.details, component: AirTemperatureHeatmapChartComponent},
-    {measurementName: MeasurementName.airPressure, chartType: ChartType.daily, component: AirPressureChartComponent},
-    {measurementName: MeasurementName.humidity, chartType: ChartType.daily, component: HumidityChartComponent},
-    {measurementName: MeasurementName.dewPoint, chartType: ChartType.details, component: DewPointTemperatureChartComponent},
-    {measurementName: MeasurementName.sunshine, chartType: ChartType.daily, component: SunshineDurationChartComponent},
-    {measurementName: MeasurementName.sunshine, chartType: ChartType.details, component: SunshineDurationHeatmapChartComponent},
-    {measurementName: MeasurementName.rain, chartType: ChartType.daily, component: RainChartComponent},
-    {measurementName: MeasurementName.snow, chartType: ChartType.daily, component: SnowChartComponent},
-    {measurementName: MeasurementName.visibility, chartType: ChartType.daily, component: VisibilityChartComponent},
-    {measurementName: MeasurementName.cloudCoverage, chartType: ChartType.details, component: CloudCoverageChartComponent},
-    {measurementName: MeasurementName.windDirection, chartType: ChartType.daily, component: WindDirectionChart},
+const chartComponents: {measurementName: Measurement, chartType: ChartType, component: Type<any>}[] = [
+    {measurementName: Measurement.airTemperature, chartType: ChartType.daily, component: AirTemperatureChartComponent},
+    {measurementName: Measurement.airTemperature, chartType: ChartType.details, component: AirTemperatureHeatmapChartComponent},
+    {measurementName: Measurement.airPressure, chartType: ChartType.daily, component: AirPressureChartComponent},
+    {measurementName: Measurement.humidity, chartType: ChartType.daily, component: HumidityChartComponent},
+    {measurementName: Measurement.dewPoint, chartType: ChartType.details, component: DewPointTemperatureChartComponent},
+    {measurementName: Measurement.sunshine, chartType: ChartType.daily, component: SunshineDurationChartComponent},
+    {measurementName: Measurement.sunshine, chartType: ChartType.details, component: SunshineDurationHeatmapChartComponent},
+    {measurementName: Measurement.rain, chartType: ChartType.daily, component: RainChartComponent},
+    {measurementName: Measurement.snow, chartType: ChartType.daily, component: SnowChartComponent},
+    {measurementName: Measurement.visibility, chartType: ChartType.daily, component: VisibilityChartComponent},
+    {measurementName: Measurement.cloudCoverage, chartType: ChartType.details, component: CloudCoverageChartComponent},
+    {measurementName: Measurement.windDirection, chartType: ChartType.daily, component: WindDirectionChart},
     // TODO {measurementName: cloudBase, chartType: daily, component: ?}
     // TODO {measurementName: windSpeed, chartType: daily, component: ?}
 ]
@@ -55,70 +56,57 @@ export class ChartTileComponent {
     @ViewChild(NgComponentOutlet, {static: false}) ngComponentOutlet!: NgComponentOutlet
     @ViewChild(ChartConfigurationDialog) chartConfigurationDialog!: ChartConfigurationDialog
 
-    @Input() gridId!: string
-    @Output() removeCallback = new EventEmitter<string>()
+    chartComponentType: Type<any> | undefined
 
-    chartComponent: Type<any> | undefined = AirTemperatureChartComponent
+    private year?: number
+    private measurement?: Measurement
+    private weatherStation?: WeatherStation
 
-    private _year: number = new Date().getFullYear()
-
-    get year() {
-        return this._year
+    get title(): string | undefined {
+        if (this.measurement && this.weatherStation && this.year) {
+            return `${this.measurement.name} | ${this.weatherStation.name} | ${this.year}`
+        }
+        return undefined
     }
 
-    private _measurementName = MeasurementName.airTemperature
-
-    get measurementName() {
-        return this._measurementName
-    }
-
-    private _weatherStation?: WeatherStation
-
-    get weatherStation() {
-        return this._weatherStation
-    }
-
-    constructor(private changeDetector: ChangeDetectorRef) {
-    }
-
-    updateChartComponent(weatherStation: WeatherStation, measurementName: MeasurementName, chartType: ChartType, year: number) {
-        this.chartComponent = chartComponents.find(v => v.measurementName === measurementName && v.chartType === chartType)?.component
+    updateChartComponent(weatherStation?: WeatherStation, measurement?: Measurement, chartType?: ChartType, year?: number) {
+        if (weatherStation === undefined || measurement === undefined || chartType === undefined || year === undefined) {
+            return
+        }
+        this.chartComponentType = chartComponents.find(v => v.measurementName === measurement && v.chartType === chartType)?.component
+        console.log(`determined chart component ${this.chartComponentType?.name} for measurement ${measurement.name} and chart type ${chartType.name}`)
         setTimeout(() => {
-            let chartComponent = this.getChartComponent()
-            if (chartComponent) {
-                console.log(`setting station ${weatherStation.name} and year ${year} in chart component`)
-                this._weatherStation = weatherStation
-                this._measurementName = measurementName
-                this._year = year
-                chartComponent.update(weatherStation, year)
+            let chartComponentInstance = this.getChartComponentInstance()
+            if (chartComponentInstance) {
+                console.log(`setting station ${weatherStation?.name} and year ${year} in chart component`)
+                this.weatherStation = weatherStation
+                this.measurement = measurement
+                this.year = year
+                chartComponentInstance.update(this.weatherStation, this.year)
             }
         })
     }
 
     openChartConfigurationDialog() {
         this.chartConfigurationDialog.show(
-            this._weatherStation,
-            this._measurementName,
-            this._year
+            this.weatherStation,
+            this.measurement,
+            this.year
         )
     }
 
     chartConfigurationConfirmed(chartConfig: ChartConfiguration) {
-        console.log(chartConfig)
-        this.updateChartComponent(chartConfig.station,
-            chartConfig.measurementName, chartConfig.chartType, chartConfig.year)
-    }
-
-    removeChart() {
-        this.removeCallback.emit(this.gridId)
+        this.updateChartComponent(
+            chartConfig.station, chartConfig.measurement, chartConfig.chartType, chartConfig.year)
     }
 
     reflowChart() {
-        let c = this.getChartComponent()
-        c?.reflowChart()
+        this.getChartComponentInstance()
+            ?.reflowChart()
     }
 
-    private getChartComponent(): ChartBaseComponent<any> | null {
+    // TODO fix this name clash with the member chartComponent
+    private getChartComponentInstance(): ChartBaseComponent<any> | null {
         let ngComponentOutlet = this.ngComponentOutlet;
         if (!ngComponentOutlet) {
             return null

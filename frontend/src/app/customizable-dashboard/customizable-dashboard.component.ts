@@ -36,7 +36,7 @@ export class CustomizableDashboardComponent {
         ];
     }
 
-    removeChart(id: string) {
+    removeTile(id: string) {
         console.log(this)
         this.layout = this.layout.filter(v => v.id !== id)
     }

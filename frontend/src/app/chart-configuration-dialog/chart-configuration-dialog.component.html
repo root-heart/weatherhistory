@@ -16,13 +16,13 @@
             <input id="height" type="text" readonly [value]="selectedStation?.height"/>
 
             <label for="measurement">Messwert</label>
-            <select id="measurement" [(ngModel)]="measurementName">
-                <option *ngFor="let name of availableMeasurementNames">{{ name }}</option>
+            <select id="measurement" [ngModel]="measurement" (ngModelChange)="measurementChanged($event)">
+                <option *ngFor="let m of availableMeasurements" [ngValue]="m">{{ m.name }}</option>
             </select>
 
             <label for="chartType">Diagrammtyp</label>
-            <select id="chartType" [(ngModel)]="chartType">
-                <option *ngFor="let type of measurementsAndChartTypes.get(measurementName)">{{ type }}</option>
+            <select id="chartType" [ngModel]="chartType" (ngModelChange)="chartTypeChanged($event)">
+                <option *ngFor="let type of chartTypes" [ngValue]="type">{{ type.name }}</option>
             </select>
 
             <label for="year">Jahr</label>

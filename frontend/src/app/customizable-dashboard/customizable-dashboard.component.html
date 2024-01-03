@@ -8,7 +8,13 @@
 
           (resizeEnded)="onResize()">
     <ktd-grid-item *ngFor="let item of layout; trackBy: trackById" [id]="item.id" [transition]="'none'">
-        <chart-tile [gridId]="item.id" (removeCallback)="removeChart(item.id)"/>
+        <header ktdGridDragHandle>
+            <span>{{ tile.title }}</span>
+            <button (click)="tile.openChartConfigurationDialog()">config</button>
+            <button (click)="removeTile(item.id)">remove</button>
+        </header>
+
+        <chart-tile #tile/>
     </ktd-grid-item>
 </ktd-grid>
 

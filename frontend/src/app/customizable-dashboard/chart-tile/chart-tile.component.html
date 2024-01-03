@@ -1,10 +1,5 @@
-<header ktdGridDragHandle>
-    <span>{{ weatherStation?.name }} | {{ measurementName }} | {{ year }}</span>
-    <button (click)="openChartConfigurationDialog()">config</button>
-    <button (click)="removeChart()">remove</button>
-</header>
 <div id="chartContainer">
-    <ng-container *ngComponentOutlet="chartComponent!"/>
+    <ng-container *ngComponentOutlet="chartComponentType!"/>
 </div>
 
 <chart-configuration-dialog (confirmed)="chartConfigurationConfirmed($event)"/>
