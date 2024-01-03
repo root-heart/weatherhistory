@@ -1,39 +1,57 @@
 <dialog #dialog>
     <div>
-        <header>Chart-Konfiguration</header>
+        <header>Diagramm-Konfiguration</header>
 
         <weather-station-map [selectedStation]="selectedStation"
                              (selectedStationChange)="selectedStationChangedOnMap($event)"/>
 
-        <dl>
-            <label for="station">Name der Wetterstation</label>
-            <input id="station" type="text" readonly [value]="selectedStation?.name"/>
+        <div id="configurationDetails">
+            <fieldset>
+                <legend>Ausgewählte Wetterstation</legend>
+                <div class="station selected" *ngIf="selectedStation">
+                    <span class="name">{{ selectedStation.name }}</span>
+                    <span class="additional-information">{{ selectedStation.federalState}}, {{ selectedStation.height }} m ü. HNH</span>
+                    <button (click)="removeSelectedStation()">&#x2716;</button>
+                </div>
+                <span class="station not-selected" *ngIf="!selectedStation">Bitte wähle eine Station auf der Karte</span>
+            </fieldset>
 
-            <label for="state">Bundesland</label>
-            <input id="state" type="text" readonly [value]="selectedStation?.federalState"/>
+            <fieldset>
+                <legend>Messwert</legend>
+                <div class="four-columns">
+                    <button *ngFor="let m of availableMeasurements" (click)="measurementChanged(m)"
+                            [ngClass]="{'selected': measurement == m}">
+                        <img [ngSrc]="'assets/' + m.iconName + '.png'" alt="icon" height="32" width="32"/>
+                        {{ m.name }}
+                    </button>
+                </div>
+            </fieldset>
 
-            <label for="height">Höhe über NN</label>
-            <input id="height" type="text" readonly [value]="selectedStation?.height"/>
+            <fieldset>
+                <legend>Diagrammtyp</legend>
+                <div class="four-columns">
+                    <button *ngFor="let type of chartTypes" (click)="chartTypeChanged(type)"
+                            [ngClass]="{'selected': chartType == type}">
+                        <img [ngSrc]="'assets/' + type.iconName + '.png'" alt="icon" height="32" width="32"/>
+                        {{ type.name }}
+                    </button>
+                </div>
+            </fieldset>
 
-            <label for="measurement">Messwert</label>
-            <select id="measurement" [ngModel]="measurement" (ngModelChange)="measurementChanged($event)">
-                <option *ngFor="let m of availableMeasurements" [ngValue]="m">{{ m.name }}</option>
-            </select>
+            <fieldset>
+                <legend>Jahr</legend>
+                <input type="range" id="year" min="1900" max="2024" step="1" [(ngModel)]="year"/>
+            </fieldset>
 
-            <label for="chartType">Diagrammtyp</label>
-            <select id="chartType" [ngModel]="chartType" (ngModelChange)="chartTypeChanged($event)">
-                <option *ngFor="let type of chartTypes" [ngValue]="type">{{ type.name }}</option>
-            </select>
-
-            <label for="year">Jahr</label>
-            <input id="year" type="number" [(ngModel)]="year"/>
-        </dl>
-
-
-
-        <ul>
-            <button (click)="closeDialogOk()">OK</button>
-            <button (click)="closeDialogCancel()">Schließen</button>
-        </ul>
+            <ul>
+                <button (click)="closeDialogOk()">OK</button>
+                <button (click)="closeDialogCancel()">Schließen</button>
+            </ul>
+        </div>
     </div>
+
+    <!--    icons by <a href="https://www.flaticon.com/free-icons/weather" title="weather icons">Weather icons created by-->
+    <!--    Muhammad_Usman - Flaticon</a>-->
+    <!--    <a href="https://www.flaticon.com/free-icons/compass" title="compass icons">Compass icons created by Muhammad_Usman-->
+    <!--        - Flaticon</a>-->
 </dialog>

@@ -8,8 +8,8 @@ header {
     position: sticky;
     top: 0;
 
-    color: #202326;
-    background-color: #e8e4e0;
+    color: var(--color-on-bright-background);
+    background-color: var(--bright-background-color);
     border-top: var(--accent-border-line);
     border-bottom: var(--fine-border-line);
     padding: 1rem;

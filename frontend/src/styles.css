@@ -5,9 +5,13 @@
     --fine-border-line: 1px solid #666;
     --input-border-radius: 0.2rem;
 
-    --accent-border-line: 3px solid #639;
+    --accent-color: #639;
+    --accent-border-line: 3px solid var(--accent-color);
 
     --component-grid-row-height: 2rem;
+
+    --bright-background-color: #e8e4e0;
+    --color-on-bright-background: #202326;
 }
 
 * {

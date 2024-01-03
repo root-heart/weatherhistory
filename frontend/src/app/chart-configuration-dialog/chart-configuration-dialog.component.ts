@@ -3,31 +3,31 @@ import {WeatherStationMap} from "../weather-station-map/weather-station-map.comp
 import {WeatherStation} from "../WeatherStationService";
 
 export class ChartType {
-    constructor(public name: string) {
+    constructor(public name: string, public iconName: string) {
     }
 
-    static daily = new ChartType("täglich")
-    static monthly = new ChartType("monatlich")
-    static histogram = new ChartType("Histogramm")
-    static details = new ChartType("Detailliert")
+    static daily = new ChartType("täglich", "daily")
+    static monthly = new ChartType("monatlich", "monthly")
+    static histogram = new ChartType("Histogramm", "histogram")
+    static details = new ChartType("Heatmap", "heatmap")
 }
 
 export class Measurement {
-    constructor(public name: string, public possibleChartType: ChartType[]) {
-    }
+    static airTemperature = new Measurement("Lufttemperatur", "thermometer", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
+    static airPressure = new Measurement("Luftdruck", "barometer", [ChartType.monthly, ChartType.daily, ChartType.histogram])
+    static humidity = new Measurement("Luftfeuchtigkeit", "humidity", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
+    static dewPoint = new Measurement("Taupunkt", "dew", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
+    static sunshine = new Measurement("Sonnenschein", "sun", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
+    static windDirection = new Measurement("Windrichtung", "compass", [])
+    static windSpeed = new Measurement("Windgeschwindigkeit", "wind", [])
+    static cloudCoverage = new Measurement("Wolkenbedeckung", "clouds", [ChartType.details, ChartType.histogram])
+    // static cloudBase = new Measurement("Wolkenuntergrenze (WIP)", [])
+    static rain = new Measurement("Regen", "rainy", [ChartType.monthly, ChartType.daily, ChartType.histogram])
+    static snow = new Measurement("Schnee", "snow", [ChartType.monthly, ChartType.daily, ChartType.histogram])
+    static visibility = new Measurement("Sichtweite", "foggy-night", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
 
-    static airTemperature = new Measurement("Lufttemperatur", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
-    static airPressure = new Measurement("Luftdruck", [ChartType.monthly, ChartType.daily, ChartType.histogram])
-    static humidity = new Measurement("Luftfeuchtigkeit", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
-    static dewPoint = new Measurement("Taupunkttemperatur", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
-    static sunshine = new Measurement("Sonnenschein", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
-    static windDirection = new Measurement("Windrichtung", [])
-    static windSpeed = new Measurement("Windgeschwindigkeit", [])
-    static cloudCoverage = new Measurement("Bedeckungsgrad", [ChartType.details, ChartType.histogram])
-    static cloudBase = new Measurement("Wolkenuntergrenze (WIP)", [])
-    static rain = new Measurement("Regen", [ChartType.monthly, ChartType.daily, ChartType.histogram])
-    static snow = new Measurement("Schnee", [ChartType.monthly, ChartType.daily, ChartType.histogram])
-    static visibility = new Measurement("Sichtweite", [ChartType.monthly, ChartType.daily, ChartType.details, ChartType.histogram])
+    constructor(public name: string, public iconName: string, public possibleChartType: ChartType[]) {
+    }
 }
 
 export const chartTypes = [
@@ -38,18 +38,17 @@ export const chartTypes = [
 ] as const
 
 export const measurements = [
-    Measurement.airPressure,
     Measurement.airTemperature,
-    Measurement.cloudBase,
-    Measurement.cloudCoverage,
-    Measurement.dewPoint,
-    Measurement.humidity,
     Measurement.rain,
-    Measurement.snow,
     Measurement.sunshine,
-    Measurement.visibility,
-    Measurement.windDirection,
     Measurement.windSpeed,
+    Measurement.windDirection,
+    Measurement.cloudCoverage,
+    Measurement.airPressure,
+    Measurement.humidity,
+    Measurement.dewPoint,
+    Measurement.snow,
+    Measurement.visibility,
 ] as const
 
 export type ChartConfiguration = {
@@ -104,6 +103,11 @@ export class ChartConfigurationDialog {
         this.changeDetector.detectChanges()
     }
 
+    removeSelectedStation() {
+        this.selectedStation = undefined
+        this.changeDetector.detectChanges()
+    }
+
     measurementChanged(m: Measurement) {
         this.measurement = m
     }
@@ -122,4 +126,6 @@ export class ChartConfigurationDialog {
     closeDialogCancel() {
         this.dialog.nativeElement.close()
     }
+
+    protected readonly Measurement = Measurement;
 }

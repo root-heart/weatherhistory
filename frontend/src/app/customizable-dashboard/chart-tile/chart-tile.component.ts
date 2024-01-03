@@ -35,7 +35,7 @@ const chartComponents: {measurementName: Measurement, chartType: ChartType, comp
     {measurementName: Measurement.airTemperature, chartType: ChartType.details, component: AirTemperatureHeatmapChartComponent},
     {measurementName: Measurement.airPressure, chartType: ChartType.daily, component: AirPressureChartComponent},
     {measurementName: Measurement.humidity, chartType: ChartType.daily, component: HumidityChartComponent},
-    {measurementName: Measurement.dewPoint, chartType: ChartType.details, component: DewPointTemperatureChartComponent},
+    {measurementName: Measurement.dewPoint, chartType: ChartType.daily, component: DewPointTemperatureChartComponent},
     {measurementName: Measurement.sunshine, chartType: ChartType.daily, component: SunshineDurationChartComponent},
     {measurementName: Measurement.sunshine, chartType: ChartType.details, component: SunshineDurationHeatmapChartComponent},
     {measurementName: Measurement.rain, chartType: ChartType.daily, component: RainChartComponent},

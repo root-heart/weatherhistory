@@ -42,6 +42,7 @@ import { SunshineCloudCoverageHeatmapChartComponent } from './charts/measurement
 import {SnowChartComponent} from "./charts/measurement/snow-chart.component";
 import {KtdGridModule} from "@katoid/angular-grid-layout";
 import { ChartConfigurationDialog } from './chart-configuration-dialog/chart-configuration-dialog.component';
+import {NgOptimizedImage} from "@angular/common";
 
 
 @NgModule({
@@ -85,7 +86,8 @@ import { ChartConfigurationDialog } from './chart-configuration-dialog/chart-con
         MatSliderModule,
         MatInputModule,
         NgxSliderModule,
-        KtdGridModule
+        KtdGridModule,
+        NgOptimizedImage
     ],
     providers: [FilterService],
     bootstrap: [AppComponent]
