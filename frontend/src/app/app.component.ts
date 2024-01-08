@@ -7,7 +7,7 @@ export type MeasurementTypes = "temperature" | "humidity" | "airPressure" | "vis
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements AfterViewInit {
   title = 'wetterchroniken.de/';
@@ -18,6 +18,7 @@ export class AppComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
+      // TODO remove
     this.dropdownService.dropdownBackground = this.dropdownBackground
     setTimeout(() => {
       // console.log("ngAfterViewInit")

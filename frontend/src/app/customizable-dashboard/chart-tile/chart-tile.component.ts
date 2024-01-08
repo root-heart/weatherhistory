@@ -31,18 +31,18 @@ import {
 addMore(Highcharts);
 
 const chartComponents: {measurementName: Measurement, chartType: ChartType, component: Type<any>}[] = [
-    {measurementName: Measurement.airTemperature, chartType: ChartType.daily, component: AirTemperatureChartComponent},
+    {measurementName: Measurement.airTemperature, chartType: ChartType.overview, component: AirTemperatureChartComponent},
     {measurementName: Measurement.airTemperature, chartType: ChartType.details, component: AirTemperatureHeatmapChartComponent},
-    {measurementName: Measurement.airPressure, chartType: ChartType.daily, component: AirPressureChartComponent},
-    {measurementName: Measurement.humidity, chartType: ChartType.daily, component: HumidityChartComponent},
-    {measurementName: Measurement.dewPoint, chartType: ChartType.daily, component: DewPointTemperatureChartComponent},
-    {measurementName: Measurement.sunshine, chartType: ChartType.daily, component: SunshineDurationChartComponent},
+    {measurementName: Measurement.airPressure, chartType: ChartType.overview, component: AirPressureChartComponent},
+    {measurementName: Measurement.humidity, chartType: ChartType.overview, component: HumidityChartComponent},
+    {measurementName: Measurement.dewPoint, chartType: ChartType.overview, component: DewPointTemperatureChartComponent},
+    {measurementName: Measurement.sunshine, chartType: ChartType.overview, component: SunshineDurationChartComponent},
     {measurementName: Measurement.sunshine, chartType: ChartType.details, component: SunshineDurationHeatmapChartComponent},
-    {measurementName: Measurement.rain, chartType: ChartType.daily, component: RainChartComponent},
-    {measurementName: Measurement.snow, chartType: ChartType.daily, component: SnowChartComponent},
-    {measurementName: Measurement.visibility, chartType: ChartType.daily, component: VisibilityChartComponent},
+    {measurementName: Measurement.rain, chartType: ChartType.overview, component: RainChartComponent},
+    {measurementName: Measurement.snow, chartType: ChartType.overview, component: SnowChartComponent},
+    {measurementName: Measurement.visibility, chartType: ChartType.overview, component: VisibilityChartComponent},
     {measurementName: Measurement.cloudCoverage, chartType: ChartType.details, component: CloudCoverageChartComponent},
-    {measurementName: Measurement.windDirection, chartType: ChartType.daily, component: WindDirectionChart},
+    {measurementName: Measurement.windDirection, chartType: ChartType.overview, component: WindDirectionChart},
     // TODO {measurementName: cloudBase, chartType: daily, component: ?}
     // TODO {measurementName: windSpeed, chartType: daily, component: ?}
 ]

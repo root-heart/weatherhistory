@@ -1,19 +1,22 @@
 package rootheart.codes.weatherhistory.importer
 
-import kotlinx.coroutines.DelicateCoroutinesApi
-import mu.KotlinLogging
-import org.joda.time.LocalDate
-import rootheart.codes.weatherhistory.database.Station
-import rootheart.codes.weatherhistory.database.StationsImporter
 import java.math.BigDecimal
 import java.nio.charset.Charset
+import kotlinx.coroutines.DelicateCoroutinesApi
+import mu.KotlinLogging
+import org.joda.time.DateTime
+import org.joda.time.LocalDate
+import org.joda.time.format.DateTimeFormat
+import rootheart.codes.weatherhistory.database.Station
+import rootheart.codes.weatherhistory.database.StationsImporter
 
 private val log = KotlinLogging.logger {}
+private val dateTimeFormatter = DateTimeFormat.forPattern("yyyyMMdd")
 
 private val stationFilter: (Station) -> Boolean = {
 //    it.externalId == "00691"
-//    it.externalId in setOf("00691", "01443", "05906", "01757", "07367")
-    it.hasRecentData && it.hasTemperatureData && it.hasSunshineData && it.hasCloudinessData && it.hasAirPressureData && it.hasWindData
+    it.externalId in setOf("00691", "01443", "05906", "01757", "07367")
+//    it.hasRecentData && it.hasTemperatureData && it.hasSunshineData && it.hasCloudinessData && it.hasAirPressureData && it.hasWindData
 }
 
 @DelicateCoroutinesApi
@@ -32,6 +35,7 @@ fun importStations(stationsFiles: Collection<StationsFile>) {
                 val line = lines[i]
                 val externalId = line.substring(0, 5)
                 val lastDay = line.substring(15, 23)
+                val d = DateTime.parse(line.substring(6, 14).trim { it <= ' ' }, dateTimeFormatter)
                 val station = stations.getOrPut(externalId) {
                     Station(externalSystem = "DWD",
                             externalId = externalId,
@@ -39,7 +43,10 @@ fun importStations(stationsFiles: Collection<StationsFile>) {
                             latitude = BigDecimal(line.substring(41, 50).trim { it <= ' ' }),
                             longitude = BigDecimal(line.substring(51, 60).trim { it <= ' ' }),
                             name = line.substring(61, 102).trim { it <= ' ' },
-                            federalState = line.substring(102).trim { it <= ' ' })
+                            federalState = line.substring(102).trim { it <= ' ' },
+                            firstMeasurementDate = DateTime.parse(line.substring(6, 14).trim { it <= ' ' }, dateTimeFormatter),
+                            lastMeasurementDate = DateTime.parse(line.substring(15, 23).trim { it <= ' ' }, dateTimeFormatter)
+                    )
                 }
                 when (stationsFile.measurementType) {
                     MeasurementType.CLOUD_COVERAGE    -> station.hasCloudinessData = true

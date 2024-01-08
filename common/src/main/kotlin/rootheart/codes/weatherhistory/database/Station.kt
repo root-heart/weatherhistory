@@ -1,14 +1,14 @@
 package rootheart.codes.weatherhistory.database
 
+import java.math.BigDecimal
+import java.util.concurrent.ConcurrentHashMap
 import mu.KotlinLogging
 import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import rootheart.codes.common.measureAndLogDuration
-import java.math.BigDecimal
-import java.util.concurrent.ConcurrentHashMap
+import org.joda.time.DateTime
 
 private val log = KotlinLogging.logger { }
 
@@ -20,6 +20,8 @@ object StationsTable : LongIdTable("STATIONS") {
     val height = integer("HEIGHT")
     val latitude = decimal("LATITUDE", 7, 4)
     val longitude = decimal("LONGITUDE", 7, 4)
+    val firstMeasurementDate = date("FIRST_MEASUREMENT_DATE")
+    val lastMeasurementDate = date("LAST_MEASUREMENT_DATE")
 
     init {
         index(isUnique = true, externalSystem, externalId)
@@ -33,7 +35,9 @@ object StationTableMapping : TableMapping<Station>(
     Station::federalState to StationsTable.federalState,
     Station::height to StationsTable.height,
     Station::latitude to StationsTable.latitude,
-    Station::longitude to StationsTable.longitude
+    Station::longitude to StationsTable.longitude,
+    Station::firstMeasurementDate to StationsTable.firstMeasurementDate,
+    Station::lastMeasurementDate to StationsTable.lastMeasurementDate
 )
 
 data class Station(
@@ -45,6 +49,8 @@ data class Station(
     val height: Int,
     val latitude: BigDecimal,
     val longitude: BigDecimal,
+    val firstMeasurementDate: DateTime,
+    val lastMeasurementDate: DateTime
 ) {
     var hasTemperatureData: Boolean = false
     var hasSunshineData: Boolean = false
@@ -93,6 +99,8 @@ object StationDao {
         federalState = row[StationsTable.federalState],
         height = row[StationsTable.height],
         latitude = row[StationsTable.latitude],
-        longitude = row[StationsTable.longitude]
+        longitude = row[StationsTable.longitude],
+        firstMeasurementDate = row[StationsTable.firstMeasurementDate],
+        lastMeasurementDate = row[StationsTable.lastMeasurementDate]
     )
 }

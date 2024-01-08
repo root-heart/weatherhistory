@@ -37,11 +37,6 @@ station-charts {
     overflow-y: auto;
 }
 
-
-:host /deep/ .mat-tab-label {
-    color: #333;
-}
-
 hr {
     grid-area: separator;
     border: none;
@@ -67,4 +62,3 @@ main {
     grid-gap: 1vw 2vw;
     justify-content: center;
 }
-

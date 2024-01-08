@@ -8,7 +8,9 @@ export type WeatherStation = {
     federalState: string,
     latitude: number,
     longitude: number,
-    height: number
+    height: number,
+    firstMeasurementDateString: string,
+    lastMeasurementDateString: string
 }
 
 export type WeatherStationList = Array<WeatherStation>;

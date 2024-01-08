@@ -1,0 +1,31 @@
+<div class="steps-list">
+    <div *ngFor="let step of steps"
+         class="step-summary"
+         [ngClass]="{'active': currentStep === step, 'disabled': !step.enabled}">
+
+        <header class="caption"
+                (click)="step.enabled ? currentStep = step : false">
+            {{step.caption}}
+        </header>
+
+        <div class="step-result">
+            <ng-container *ngIf="step.summary" [ngTemplateOutlet]="step.summary.content"></ng-container>
+        </div>
+    </div>
+</div>
+
+<div class="step-configuration">
+    <ng-container *ngIf="currentStep" [ngTemplateOutlet]="currentStep.body.content"></ng-container>
+</div>
+
+<nav class="dialog-navigation">
+    <div class="blank"></div>
+
+    <button (click)="cancel()">Abbrechen</button>
+
+    <div class="spacer"></div>
+
+    <button (click)="stepBack()">Zurück</button>
+    <button (click)="stepForward()" [disabled]="!currentStep?.complete" *ngIf="!isLastStep()">Weiter</button>
+    <button (click)="confirm()" *ngIf="isLastStep()">Fertigstellen</button>
+</nav>

@@ -43,6 +43,10 @@ import {SnowChartComponent} from "./charts/measurement/snow-chart.component";
 import {KtdGridModule} from "@katoid/angular-grid-layout";
 import { ChartConfigurationDialog } from './chart-configuration-dialog/chart-configuration-dialog.component';
 import {NgOptimizedImage} from "@angular/common";
+import { ConfigurationWizardComponent } from './configuration-wizard/configuration-wizard.component';
+import { ConfigurationWizardStepComponent } from './configuration-wizard/configuration-wizard-step.component';
+import { ConfigurationWizardStepSummaryComponent } from './configuration-wizard/configuration-wizard-step-summary.component';
+import { ConfigurationWizardStepBodyComponent } from './configuration-wizard/configuration-wizard-step-body.component';
 
 
 @NgModule({
@@ -71,6 +75,10 @@ import {NgOptimizedImage} from "@angular/common";
         CloudCoverageChartComponent,
         SunshineCloudCoverageHeatmapChartComponent,
         ChartConfigurationDialog,
+        ConfigurationWizardComponent,
+        ConfigurationWizardStepComponent,
+        ConfigurationWizardStepSummaryComponent,
+        ConfigurationWizardStepBodyComponent,
     ],
     imports: [
         BrowserModule,

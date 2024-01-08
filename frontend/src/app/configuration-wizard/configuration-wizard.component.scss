@@ -1,0 +1,45 @@
+:host {
+    display: grid;
+    grid-template-areas: "steps configuration"
+                         "steps navbuttons";
+    grid-template-columns: 30rem 1fr;
+    grid-template-rows: 1fr auto;
+}
+
+.steps-list {
+    grid-area: steps;
+}
+
+.step-configuration {
+    height: 100%;
+    grid-area: configuration;
+}
+
+.step-summary .caption {
+    cursor: pointer;
+}
+
+.step-summary.disabled .caption {
+    cursor: not-allowed;
+}
+
+.dialog-navigation {
+    grid-area: navbuttons;
+    border-top: var(--fine-border-line);
+
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+
+    > .blank {
+        flex-grow: 1;
+    }
+
+    > button {
+        width: 7rem;
+    }
+
+    .spacer {
+        width: 2rem;
+    }
+}

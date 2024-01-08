@@ -1,53 +1,115 @@
 <dialog #dialog>
     <div>
-        <header>Diagramm-Konfiguration</header>
+        <header class="header">{{ title }}</header>
 
-        <weather-station-map [selectedStation]="selectedStation"
-                             (selectedStationChange)="selectedStationChangedOnMap($event)"/>
+        <configuration-wizard (cancelled)="closeDialogCancel()" (confirmed)="closeDialogOk()">
+            <wizard-step caption="Wetterstation">
+                <wizard-step-summary>
+                    <div *ngIf="selectedStation === undefined" class="nothing-selected">
+                        keine Station ausgewählt
+                    </div>
 
-        <div id="configurationDetails">
-            <fieldset>
-                <legend>Ausgewählte Wetterstation</legend>
-                <div class="station selected" *ngIf="selectedStation">
-                    <span class="name">{{ selectedStation.name }}</span>
-                    <span class="additional-information">{{ selectedStation.federalState}}, {{ selectedStation.height }} m ü. HNH</span>
-                    <button (click)="removeSelectedStation()">&#x2716;</button>
-                </div>
-                <span class="station not-selected" *ngIf="!selectedStation">Bitte wähle eine Station auf der Karte</span>
-            </fieldset>
+                    <dl *ngIf="selectedStation" class="step-summary-card selectedStation">
+                        <dt>Name</dt>
+                        <dd>{{ selectedStation.name }}</dd>
+                        <dt>Bundesland</dt>
+                        <dd>{{ selectedStation.federalState }}</dd>
+                        <dt>Höhe</dt>
+                        <dd>{{ selectedStation.height }}m ü. HNH</dd>
+                    </dl>
+                </wizard-step-summary>
 
-            <fieldset>
-                <legend>Messwert</legend>
-                <div class="four-columns">
-                    <button *ngFor="let m of availableMeasurements" (click)="measurementChanged(m)"
-                            [ngClass]="{'selected': measurement == m}">
-                        <img [ngSrc]="'assets/' + m.iconName + '.png'" alt="icon" height="32" width="32"/>
-                        {{ m.name }}
-                    </button>
-                </div>
-            </fieldset>
+                <wizard-step-body>
+                    <weather-station-map [selectedStation]="selectedStation"
+                                         (selectedStationChange)="selectedStationChangedOnMap($event)"/>
+                </wizard-step-body>
+            </wizard-step>
 
-            <fieldset>
-                <legend>Diagrammtyp</legend>
-                <div class="four-columns">
-                    <button *ngFor="let type of chartTypes" (click)="chartTypeChanged(type)"
-                            [ngClass]="{'selected': chartType == type}">
-                        <img [ngSrc]="'assets/' + type.iconName + '.png'" alt="icon" height="32" width="32"/>
-                        {{ type.name }}
-                    </button>
-                </div>
-            </fieldset>
+            <wizard-step caption="Messwert">
+                <wizard-step-summary>
+                    <div *ngIf="measurement === undefined" class="nothing-selected">
+                        kein Messwert ausgewählt
+                    </div>
 
-            <fieldset>
-                <legend>Jahr</legend>
-                <input type="range" id="year" min="1900" max="2024" step="1" [(ngModel)]="year"/>
-            </fieldset>
+                    <div *ngIf="measurement" class="selectedMeasurement">
+                        <img [ngSrc]="'assets/' + measurement.iconName + '.png'" alt="icon" height="32" width="32"/>
+                        {{ measurement.name }}
+                    </div>
+                </wizard-step-summary>
 
-            <ul>
-                <button (click)="closeDialogOk()">OK</button>
-                <button (click)="closeDialogCancel()">Schließen</button>
-            </ul>
-        </div>
+                <wizard-step-body>
+                    <div class="select-measurement">
+                        <button *ngFor="let m of availableMeasurements" (click)="measurementChanged(m)"
+                                [ngClass]="{'selected': measurement == m}">
+                            <img [ngSrc]="'assets/' + m.iconName + '.png'" alt="icon" height="64" width="64"/>
+                            {{ m.name }}
+                        </button>
+                    </div>
+                </wizard-step-body>
+            </wizard-step>
+
+            <wizard-step caption="Darstellung" [enabled]="selectedStation !== undefined">
+                <wizard-step-summary>
+                    <div *ngIf="selectedStation === undefined">
+                        Bitte erst eine Wetterstation auswählen
+                    </div>
+
+                    <div *ngIf="chartType === undefined" class="nothing-selected">
+                        keine Darstellung ausgewählt
+                    </div>
+
+                    <div *ngIf="chartType" class="selectedMeasurement">
+                        <img [ngSrc]="'assets/' + chartType.iconName + '.png'" alt="icon" height="32" width="32"/>
+                        {{ chartType.name }}
+                    </div>
+                </wizard-step-summary>
+
+                <wizard-step-body>
+                    <div class="four-columns">
+                        <button *ngFor="let type of allChartTypes"
+                                (click)="chartTypeChanged(type)"
+                                [ngClass]="{'selected': chartType == type, 'disabled': chartTypes.indexOf(type) === -1}">
+                            <img [ngSrc]="'assets/' + type.iconName + '.png'" alt="icon" height="32" width="32"/>
+                            {{ type.name }}
+                        </button>
+                    </div>
+                </wizard-step-body>
+            </wizard-step>
+
+            <wizard-step caption="Zeitraum" [enabled]="selectedStation !== undefined">
+                <wizard-step-summary>
+                    <div *ngIf="selectedStation === undefined">
+                        Bitte erst eine Wetterstation auswählen
+                    </div>
+
+                    <ng-container *ngIf="selectedStation">
+                        <div *ngIf="year === undefined" class="nothing-selected">
+
+                        </div>
+                        <div *ngIf="year" class="selected-year">
+                            {{year}}
+                        </div>
+                    </ng-container>
+                </wizard-step-summary>
+
+                <wizard-step-body>
+                    <div id="year-slider-values">
+                        <span id="min-year">{{ minYear }}</span>
+                        <span id="year"
+                              [ngClass]="{'disabled': year === undefined}">{{ year || "Kein Jahr ausgewählt" }} </span>
+                        <span id="max-year">{{ maxYear }}</span>
+                    </div>
+                    <input type="range" [(ngModel)]="year" [min]="minYear" [max]="maxYear"/>
+
+
+                </wizard-step-body>
+            </wizard-step>
+
+            <wizard-step caption="Zusammenfassung">
+                <wizard-step-body>Zusammenfassung anschauen</wizard-step-body>
+            </wizard-step>
+        </configuration-wizard>
+
     </div>
 
     <!--    icons by <a href="https://www.flaticon.com/free-icons/weather" title="weather icons">Weather icons created by-->
